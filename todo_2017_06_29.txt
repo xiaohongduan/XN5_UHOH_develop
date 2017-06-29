@@ -1,0 +1,2 @@
+- Treemix: add built/cfg/cfg_treemix to built/cfg_template and change input routine to copy treemix parameter files to each project individually
+- check doc-files and add short documentations if missing
