@@ -7,6 +7,7 @@
 from waflib import Configure, Logs, Tools
 from os.path import expanduser
 import os
+import sys
 
 import subprocess
 
@@ -43,8 +44,8 @@ project_list_std = [
 top = '.'
 out = 'build'
 
-home = expanduser("~")
-default_prefix = home+'/expertn50/built'
+#home = expanduser("~")
+default_prefix = os.path.dirname(sys.argv[0]) + "/../built"
 
 def conf_get_svn_rev():
     try:
@@ -62,12 +63,13 @@ def conf_get_svn_rev():
         #            key, value = line.split(': ', 1)
         #            return '5.0 Rev ' + value.strip()
         #return '5.0 Rev 0'
-        p = subprocess.Popen(['git', 'describe'], stdout=subprocess.PIPE, \
+        p = subprocess.Popen(['git', 'describe','--always'], stdout=subprocess.PIPE, \
                 stderr=subprocess.STDOUT, close_fds=False)        
+        stdout = p.communicate()[0]
         if p.returncode == 0:
             lines = stdout.splitlines(True)
             for line in lines:
-                return '5.1 Rev ' + line
+                return '5.1 Rev ' + line.split("\n")[0]
         else:
             return '5.1 Rev 0'        
     except:
@@ -150,7 +152,7 @@ def options(opt):
 
     opt.add_option('--prefix', action='store', default=default_prefix,help='installation prefix [default='+default_prefix+']')
     opt.add_option('--debug', action='store_true', default=False, help='enable debugging')
-    opt.add_option('--without_database', action='store_true', default=False, help='Compiling without libgda! Expert-N has no Database!')
+    opt.add_option('--with_database', action='store_true', default=False, help='Compiling without libgda! Expert-N has no Database!')
     opt.add_option('--max_optimize', action='store_true', default=False, help='maximal optimization (speed)')
     opt.add_option('--USE_OPENMP', action='store_true', default=False,help='Compile Expert-N with OPENMP')
     opt.add_option('--USE_MPI', action='store_true', default=False,help='Compile Expert-N with Open MPI')
@@ -180,11 +182,12 @@ def configure(conf):
                     args='--cflags --libs')
     #check_libgda(conf)
 
-    if conf.options.without_database:
-        conf.define('XPN_WITHOUT_DATABASE',1)
-    else:
+    if conf.options.with_database:
         conf.check_cfg (package='libgda-4.0', uselib_store='LIBGDA', atleast_version='4.0.9',
                     args='--cflags --libs')
+    else:
+        conf.define('XPN_WITHOUT_DATABASE',1)    
+
 
 
 
