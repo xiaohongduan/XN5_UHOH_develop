@@ -1951,7 +1951,7 @@ int expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(expertn_modul_ba
 				
 			fStaFak = fCut / fHeight;
 			// Falls ohne Standing Pool gerechnet werden soll
-			 if(!iStandingResidues) fStaFak = (double)0; 
+			 //if(!iStandingResidues) fStaFak = (double)0; 
 			/* Berechnen stehender und liegender Anteil */
 			//fCResidue = (pPl->pBiomass->fBiomassAbvGround - pPl->pBiomass->fGrainWeight) * (double)0.4;
 			fCResidue = pPl->pBiomass->fStovWeight * (double)0.4;
