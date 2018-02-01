@@ -275,8 +275,8 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation.Solar Radiation [MJ m-2 day-1]",&(xpn->pCl->pWeather->fSolRad),-1,TRUE,TRUE);
 	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation.PAR [MJ m-2 day-1]",&(xpn->pCl->pWeather->fPAR),-1,TRUE,TRUE);
 	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Wind Speed.Wind Speed [m s-1]",&(xpn->pCl->pWeather->fWindSpeed),-1,TRUE,TRUE);
-
-
+    //xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation.DTR [J m-2 s-1]",&(xpn->pCl->pWeather->fDTR),-1,TRUE,TRUE);//Hong for GECROS
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation.DTR2 [J m-2 s-1]",&(xpn->pCl->pWeather->fDTR2),-1,TRUE,TRUE);//Hong for GECROS
 	// --------------------------------------------------------------------------------------------------------
 	// definition of special outputs, which fits to the measurement values:
 
@@ -433,7 +433,8 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNHumusMinerDay,"output.Nitrogen.Mineral/Immob.N Release in Humus",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNManureMinerDay,"output.Nitrogen.Mineral/Immob.N Release from Young Soil Org. Matter",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNLitterMinerDay,"output.Nitrogen.Mineral/Immob.N Release from Litter",0.0);
-
+    //xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Mineral/Immob.N fCFOMFast",&(xpn->pCh->pCLayer->fCFOMFast),-1,TRUE,TRUE);//Hong for NIMMOBR
+	
 	/* C - N Pools */
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CLitter,"output.Nitrogen.C and N Pools.C Litter 0-30 cm depth",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManure,"output.Nitrogen.C and N Pools.C Manure 0-30 cm depth",0.0);
@@ -1554,12 +1555,15 @@ int xpn_output_calc_var(xpn_output *self)
 
 			for(i = 1,pCL=pCh->pCLayer->pNext; pCL->pNext!=NULL; pCL=pCL->pNext,i++)
 				{
-					self->fNO3LeachCum+= pCL->fNO3LeachDay;
+					//self->fNO3LeachCum+= pCL->fNO3LeachDay;
 					//self->fNMinerCum+=(pCL->fHumusMinerR+pCL->fLitterMinerR+pCL->fManureMinerR) *pTi->pTimeStep->fAct;
 					self->fNO3DenitCum+=pCL->fNO3DenitCum;
 					self->fNH4NitrCum+=pCL->fNH4NitrCum;
 					self->fNImmobCum+=pCL->fNImmobCum;
-				}
+			
+				}							
+				
+			//self->fNO3LeachCum = pCh->pCProfile->fNO3LeachCum;
 
 			// N Transformations:
 			self->fUreaHydroDay = pCh->pCProfile->fUreaHydroDay;
@@ -1572,7 +1576,6 @@ int xpn_output_calc_var(xpn_output *self)
 			self->fNLitterImmobDay = pCh->pCProfile->fNLitterImmobDay;
 			self->fNManureImmobDay = pCh->pCProfile->fNManureImmobDay;
 			self->fNHumusImmobDay = pCh->pCProfile->fNHumusImmobDay;
-
 			self->NReleaseFrehOrgMatter = pCh->pCProfile->fNLitterMinerDay + pCh->pCProfile->fNManureMinerDay;
 
 			pCh->pCProfile->fUreaHydroDay = 0.0;
@@ -1741,9 +1744,9 @@ int xpn_output_calc_var(xpn_output *self)
 			pCL->fNH4NitrCum  += pCL->fNH4NitrR  * pTi->pTimeStep->fAct;
 			pCL->fNH4ToN2OCum += pCL->fNH4ToN2OR * pTi->pTimeStep->fAct;
 			pCL->fNImmobCum  += pCL->fNImmobR * pTi->pTimeStep->fAct;
+									
 		}
-
-
+		
 // N Transformations:
 	for(i = 0,pCL=pCh->pCLayer,pWL=pWa->pWLayer; pCL->pNext!=NULL; pCL=pCL->pNext,pWL=pWL->pNext,i++)
 		{
@@ -1751,13 +1754,13 @@ int xpn_output_calc_var(xpn_output *self)
 			pCh->pCProfile->fNHumusMinerDay  += pCL->fHumusMinerR * pTi->pTimeStep->fAct;
 			pCh->pCProfile->fNH4NitrDay += pCL->fNH4NitrR * pTi->pTimeStep->fAct;
 			pCh->pCProfile->fNO3DenitDay += pCL->fNO3DenitR * pTi->pTimeStep->fAct;
-			pCh->pCProfile->fNImmobDay += pCL->fNImmobR * pTi->pTimeStep->fAct;
+			pCh->pCProfile->fNImmobDay += pCL->fNImmobR * pTi->pTimeStep->fAct;						
 			pCh->pCProfile->fNLitterMinerDay +=  pCL->fLitterMinerR * pTi->pTimeStep->fAct;
 			pCh->pCProfile->fNManureMinerDay += pCL->fManureMinerR * pTi->pTimeStep->fAct;
 			pCh->pCProfile->fNLitterImmobDay +=  pCL->fNLitterImmobR * pTi->pTimeStep->fAct;
-			pCh->pCProfile->fNManureImmobDay  += pCL->fNLitterImmobR * pTi->pTimeStep->fAct;
-			pCh->pCProfile->fNHumusImmobDay +=pCL->fNHumusImmobR * pTi->pTimeStep->fAct;
-			pCL->fNO3LeachDay += pWL->fFlux * (pCL->fUreaNSoilConcOld + pCL->fUreaNSoilConc) / 2.0 / kgPhaTomgPsqm;
+			//pCh->pCProfile->fNManureImmobDay  += pCL->fNLitterImmobR * pTi->pTimeStep->fAct; //Hong: incorrect!
+			pCh->pCProfile->fNManureImmobDay  += pCL->fNManureImmobR * pTi->pTimeStep->fAct;
+			pCh->pCProfile->fNHumusImmobDay +=pCL->fNHumusImmobR * pTi->pTimeStep->fAct;			
 
 			/*		pCP->fUreaLeachDay += pWL->fFlux *
 			                                   * (pCL->fUreaNSoilConcOld + pCL->fUreaNSoilConc)
@@ -1789,7 +1792,14 @@ int xpn_output_calc_var(xpn_output *self)
 			                                / (float)2.0 / kgPhaTomgPsqm;*/
 
 		}
-
+		
+//		pCh->pCProfile->fNO3LeachDay  += pWL->fFlux* (pCL->fNO3NSoilConcOld + pCL->fNO3NSoilConc)/ (double)2.0 / kgPhaTomgPsqm;
+//		          self->fNO3LeachCum  += pWL->fFlux* (pCL->fNO3NSoilConcOld + pCL->fNO3NSoilConc)/ (double)2.0 / kgPhaTomgPsqm;
+//        pCh->pCProfile->fNO3LeachDay  += pWL->fFlux* (pCL->fNO3NSoilConcOld + pCL->fNO3NSoilConc)/ (double)2.0 / 100;
+//		          self->fNO3LeachCum  += pWL->fFlux* (pCL->fNO3NSoilConcOld + pCL->fNO3NSoilConc)/ (double)2.0 / 100;
+        
+		
+		self->fNO3LeachCum  =pCh->pCProfile->dNO3LeachCum;//Hong added on 20171027
 //======================================C - N Pools =============================================================
 	self->CLitter = 0.0;
 	self->CManure = 0.0;
