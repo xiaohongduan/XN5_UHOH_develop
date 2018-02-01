@@ -21,7 +21,9 @@ G_BEGIN_DECLS
 			GECROS_TYPE))
 #define IS_GECROS_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),\
 			GECROS_TYPE))
-
+//Test of Hong
+#define SET_IF_99(x1,y1) if (x1==-99.0) x1=(y1);
+//End of Test
 typedef struct _gecros			gecros;
 typedef struct _gecrosClass		gecrosClass;
 
@@ -420,8 +422,20 @@ struct _gecros
 	//Hong 2016-08-08: change for Sebastian Gayler and Arne Poyda
 	int      iDayAftSow;
 	//End of Hong
+	
+	int __ERROR; //added by Hong on 20180124
 };
 
+#define C_DEBUG(var) 
+//	xpn_register_var_add_double(self->parent.pXSys->var_list,#var,var,__LINE__,TRUE);
+
+#define C_DEBUG_LOC_IN_ARRAY(var,i)
+/*	{\
+	gchar *S;\
+	S  = g_strdup_printf("%s[%d]",#var,i);\
+	xpn_register_var_add_double(self->parent.pXSys->var_list,S,var,__LINE__,TRUE); \
+	g_free(S);\
+	}\*/
 
 // public class member function:
 G_MODULE_EXPORT int gecros_Init_and_AllocMemory(gecros *self);

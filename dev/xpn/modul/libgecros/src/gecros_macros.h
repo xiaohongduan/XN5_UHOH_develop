@@ -122,6 +122,27 @@
 			}\
 	}\
 //Hong: for crop rotation 2017-01-30	
+#define GET_INI_INT_OPTIONAL(var,groupname,key,std_value)\
+{\
+		gboolean key_exists;\
+		error = NULL; \
+		key_exists = g_key_file_has_key(keyfile,groupname,key,&error);\
+		if (key_exists==FALSE) \
+			{ \
+				gchar *S;\
+				S = g_strdup_printf  ("Init var %s.%s (in file %s) is missing. Standard Value (%d) taken instead!\n",groupname,key,filename,std_value);\
+				PRINT_ERROR(S);\
+				g_free(S);\
+			}\
+		if (key_exists==FALSE)\
+			{\
+				var = std_value;\
+			} else\
+			{\
+				GET_INI_INT(var,groupname,key);\
+			}\
+	}\
+
 #define GET_INI_INT_ARRAY_OPTIONAL(var,var_size,expected_len,std_value,groupname,key) \
 	{\
 		gboolean key_exists,group_exists;\
