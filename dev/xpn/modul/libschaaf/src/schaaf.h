@@ -29,9 +29,9 @@ struct _schaaf
 {
 	expertn_modul_base parent;
 	/* add your public declarations here */
-	
 	char *ini_filename;
 	
+	int first_fertil_done; //added by F.H. on 20171220 
 	int fertil_done;
 	
 	// Mineral fertilization

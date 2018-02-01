@@ -52,56 +52,35 @@ int schaaf_fertilizer(schaaf* self)
     PNFERTILIZER pNF = xpn->pMa->pNFertilizer;
 	
     if ((pNF != NULL) && (pNF->Day > 0)) {
-		if (self->first_fertil_done == 0){
-			if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
-									xpn->pTi->pSimTime->mon,
-									xpn->pTi->pSimTime->mday,
-									pNF->Year,
-									pNF->Month,
-									pNF->Day) == 0)){
-				self->first_fertil_done += 1;
-				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
-					schaaf_mineral_fertilization(self);
-				if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
-					schaaf_organic_fertilization(self);
-			}
-		}
-		else{
-				if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
-									xpn->pTi->pSimTime->mon,
-									xpn->pTi->pSimTime->mday,
-									pNF->pNext->Year,
-									pNF->pNext->Month,
-									pNF->pNext->Day) == 0)) {
-					xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext;
-					pNF = xpn->pMa->pNFertilizer;
-					if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
-						schaaf_mineral_fertilization(self);
-					if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
-						schaaf_organic_fertilization(self);
-				}
-		}
-		
+        if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
+                                   xpn->pTi->pSimTime->mon,
+                                   xpn->pTi->pSimTime->mday,
+                                   pNF->Year,
+                                   pNF->Month,
+                                   pNF->Day) == 0) &&
+            (self->fertil_done == 0)) {
+            self->fertil_done += 1;
+            if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
+                schaaf_mineral_fertilization(self);
+            if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+                schaaf_organic_fertilization(self);
+        }
+        InfiltrationOrgDuenger(self);
+        InfiltrationOrgDuengerRegen(self);
+        MinerOrgDuengHoff(self);
+        NitrOrgNH4Hoff(self);
 
- /*       if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
+        if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
                                    xpn->pTi->pSimTime->mon,
                                    xpn->pTi->pSimTime->mday,
                                    pNF->Year,
                                    pNF->Month,
                                    pNF->Day) == 0) &&
             xpn->pMa->pNFertilizer->pNext != NULL) {
-            
-            self->fertil_done = 0;*/
-
-	}
-	
-	if (self->first_fertil_done >0)
-	{
-        InfiltrationOrgDuenger(self);
-        InfiltrationOrgDuengerRegen(self);
-        MinerOrgDuengHoff(self);
-        NitrOrgNH4Hoff(self);
-	}
+            xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext;
+            self->fertil_done = 0;
+        }
+    }
 
     return RET_SUCCESS;
 }
@@ -134,13 +113,11 @@ int schaaf_mineral_fertilization(schaaf* self) //Hong: =TSFertilizer()?
     } else {
         pCh->pCProfile->fNH4NSurf += pMa->pNFertilizer->fNH4N;
     }
-//Begin of Hong: changed after XN3 on 20171201
-/*
-    pCh->pCProfile->fUreaNSurf += pMa->pNFertilizer->fUreaN;
-    pCh->pCProfile->fNManureSurf += pMa->pNFertilizer->fNorgManure;
-    pCh->pCProfile->fCManureSurf += pMa->pNFertilizer->fCorgManure;
-    pCh->pCProfile->fCNManureSurf += pMa->pNFertilizer->fOrgManureCN;
-*/
+//Begin of Hong: changed after XN3 
+    //pCh->pCProfile->fUreaNSurf += pMa->pNFertilizer->fUreaN;
+    //pCh->pCProfile->fNManureSurf += pMa->pNFertilizer->fNorgManure;
+    //pCh->pCProfile->fCManureSurf += pMa->pNFertilizer->fCorgManure;
+    //pCh->pCProfile->fCNManureSurf += pMa->pNFertilizer->fOrgManureCN;
 	
 		//SG 20161009: For DAISY model - Partitioning of fNorgManure and fCorgManure
 		// Scott Demyan: "current partition of 100% to AOM2 causes too little stabilization"
@@ -159,9 +136,9 @@ int schaaf_mineral_fertilization(schaaf* self) //Hong: =TSFertilizer()?
 		pCh->pCProfile->fCHumusSurf  += (float)0.1*pMa->pNFertilizer->fCorgManure;
 		pCh->pCProfile->fCNHumusSurf += pMa->pNFertilizer->fOrgManureCN;
 //End of Hong
-
+	
     InitOrgDuenger(self);
-    //InfiltrationOrgDuenger(self);
+    InfiltrationOrgDuenger(self);
 
     S2 = xpn_time_get_formated_date(pTi->pSimTime->iyear, pTi->pSimTime->fTimeY, FALSE);
     S = g_strdup_printf("%s: Fertilization: %s, %d kg/ha NO3-N, %d kg/ha NH4-N, %d kg/ha Urea-N",
@@ -507,7 +484,7 @@ int InfiltrationOrgDuenger(schaaf* self)
     infFeuchte = pWa->pWLayer->pNext->fContAct / pSo->pSWater->pNext->fContFK;
 
     /* Infiltration findet nut statt, wenn der Boden nicht gefroren ist.*/
-    if ((pHe->pHLayer->pNext->fSoilTemp > (double)0.0)){
+    if ((pHe->pHLayer->pNext->fSoilTemp > (double)0.0) &&(NewDay(pTi))){
         /* Eine Infiltration wird fuer die Fraktionen Ammonium,
            org. N und org. Substanz berechnet. */
 
@@ -582,6 +559,15 @@ int InfiltrationOrgDuenger(schaaf* self)
         pCh->pCProfile->fCManureSurf -= inforgC*dT;
         pCh->pCLayer->pNext->fCManure += inforgC*dT;
 		
+		//Test of Hong
+    if((pCh->pCLayer->pNext->fNImmobR>0)&&(pCh->pCLayer->pNext->fCManure>0))
+	{
+		//printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
+		//printf("pCL->fCFOMFast: %f\n", pCL->fCFOMFast);
+		//printf("pCh->pCLayer->pNext->fCManure-6: %f\n", pCh->pCLayer->pNext->fCManure);
+	}
+		
+		
 		
         if (pCh->pCLayer->pNext->fNManure > (double)0.0) {
             pCh->pCLayer->pNext->fManureCN = pCh->pCLayer->pNext->fCManure / pCh->pCLayer->pNext->fNManure;
@@ -645,7 +631,6 @@ int InfiltrationOrgDuengerRegen(schaaf* self)
                     //pCh->pCLayer->pNext->fNH4Manure += sicknh4;
 					pCh->pCProfile->fNH4ManureSurf -= sicknh4*dT; //Hong changed on 20171128
                     pCh->pCLayer->pNext->fNH4Manure += sicknh4*dT;
-					
                 }
 
                 if (pCh->pCProfile->fNManureSurf > (double)0.0) {
@@ -654,7 +639,6 @@ int InfiltrationOrgDuengerRegen(schaaf* self)
                     //pCh->pCLayer->pNext->fNManure += sickorgN;
 					pCh->pCProfile->fNManureSurf -= sickorgN*dT; //Hong changed on 20171128
                     pCh->pCLayer->pNext->fNManure += sickorgN*dT; //Hong changed on 20171128
-					
                 }
 
                 if (pCh->pCProfile->fCManureSurf > (double)0.0) {
@@ -663,7 +647,15 @@ int InfiltrationOrgDuengerRegen(schaaf* self)
                     //pCh->pCLayer->pNext->fCManure += sickorgC;
 					pCh->pCProfile->fCManureSurf -= sickorgC*dT; //Hong changed on 20171128
                     pCh->pCLayer->pNext->fCManure += sickorgC*dT; //Hong changed on 20171128
-									
+					
+//Test of Hong
+    if((pCh->pCLayer->pNext->fNImmobR>0)&&(pCh->pCLayer->pNext->fCManure>0))
+	{
+		//printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
+		//printf("pCL->fCFOMFast: %f\n", pCL->fCFOMFast);
+		//printf("pCh->pCLayer->pNext->fCManure-7: %f\n", pCh->pCLayer->pNext->fCManure);
+	}
+					
                 }
             } 
 			else {
@@ -672,8 +664,7 @@ int InfiltrationOrgDuengerRegen(schaaf* self)
                     //pCh->pCProfile->fNH4ManureSurf -= sicknh4;
                     //	pCh->pCLayer->pNext->fNH4Manure     += sicknh4;
 					pCh->pCProfile->fNH4ManureSurf -= sicknh4*dT; //Hong changed on 20171128
-                		                
-				}
+                }
 
                 if (pCh->pCProfile->fNManureSurf > (double)0.0) {
                     sickorgN = pCh->pCProfile->fNManureSurf * (double)0.02 * ((double)1.0 - wirkNied);
@@ -681,7 +672,6 @@ int InfiltrationOrgDuengerRegen(schaaf* self)
                     //pCh->pCLayer->pNext->fNManure += sickorgN;
 					pCh->pCProfile->fNManureSurf -= sickorgN*dT; //Hong changed on 20171128
                     pCh->pCLayer->pNext->fNManure += sickorgN*dT; //Hong changed on 20171128
-					
                 }
 
                 if (pCh->pCProfile->fCManureSurf > (double)0.0) {
@@ -690,7 +680,20 @@ int InfiltrationOrgDuengerRegen(schaaf* self)
                     //pCh->pCLayer->pNext->fCManure += sickorgC;
 					pCh->pCProfile->fCManureSurf -= sickorgC*dT; //Hong changed on 20171128
                     pCh->pCLayer->pNext->fCManure += sickorgC*dT; //Hong changed on 20171128
-											
+					
+					
+					//Test of Hong
+if ((xpn_time_compare_date(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,
+		    2010,9,7) ==0 ))	{				
+    if((pCh->pCLayer->pNext->fNImmobR>0)&&(pCh->pCLayer->pNext->fCManure>0))
+	{
+		//printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
+		//self->Zahl++;
+		//printf("self->Zahl: %d\n", self->Zahl);
+		//printf("pCh->pCLayer->pNext->fCManure-8: %f\n", pCh->pCLayer->pNext->fCManure);
+		//printf("sickorgC: %f\n", sickorgC);
+	}
+				}
                 }
             }
         }
@@ -810,6 +813,13 @@ int MinerOrgDuengHoff(schaaf* self)
             pCL->fCManure -= freeOrgC * dT;						
             pSL->fCHumus += freeOrgC * dT;
 			
+			//Test of Hong
+    if((pCL->fNImmobR>0)&&(pCL->fCManure>0))
+	{
+		//printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
+		//printf("pCL->fCFOMFast: %f\n", pCL->fCFOMFast);
+		//printf("pCL->fCManure-5: %f\n", pCL->fCManure);
+	}
         }
     }
 
@@ -906,6 +916,13 @@ signed short int InfiltrationOrgDuengerBeregnung(EXP_POINTER)
                 pCh->pCProfile->fCManureSurf -= sickorgC;
                 pCh->pCLayer->pNext->fCManure += sickorgC;
 				
+				//Test of Hong
+    if((pCh->pCLayer->pNext->fNImmobR>0)&&(pCh->pCLayer->pNext->fCManure>0))
+	{
+		//printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
+		//printf("pCL->fCFOMFast: %f\n", pCL->fCFOMFast);
+		//printf("pCh->pCLayer->pNext->fCManure-9: %f\n", pCh->pCLayer->pNext->fCManure);
+	}
             }
         }
     }
@@ -1171,8 +1188,7 @@ int read_fertilizers(schaaf* self)
             }
 
             pMa->pNFertilizer = fertil_first;
-            //self->fertil_done = 0;
-			self->first_fertil_done = 0;// changed by Florian on 20171220
+            self->fertil_done = 0;
 
             self->ini_filename = g_strdup_printf("%s", ini_filename);
             free(ini_filename);
