@@ -177,13 +177,16 @@ int balance_run(balance *self)
 
 	  /***************************** Mineralisierung ***********************************/
 
+//Added by Hong on 20180124, for consistence in daisy_miner.c
+      //pCP->dNMinerCum  += (pCL->fLitterMinerR + pCL->fManureMinerR + pCL->fHumusMinerR) * dt;     
+     pCP->dNMinerCum  += (pCL->fMinerR) * dt;   
+//End of Hong    
 
-      pCP->dNMinerCum  += (pCL->fLitterMinerR + pCL->fManureMinerR + pCL->fHumusMinerR) * dt;     
-       
       pCP->dNImmobCum  += pCL->fNImmobR * dt;
-    
+	     
 	  if(fSimDepth <= (float)300) 
-		  pCP->dNetNMinerCum30 += (pCL->fLitterMinerR + pCL->fManureMinerR + pCL->fHumusMinerR - pCL->fNLitterImmobR) * dt;
+		  //pCP->dNetNMinerCum30 += (pCL->fLitterMinerR + pCL->fManureMinerR + pCL->fHumusMinerR - pCL->fNLitterImmobR) * dt;
+		  pCP->dNetNMinerCum30 += (pCL->fMinerR - pCL->fNLitterImmobR) * dt; //Added by Hong on 20180124, for consistence in daisy_miner.c
 	}
 
 /******************************* Volatisation ************************************/
@@ -245,7 +248,6 @@ int balance_run(balance *self)
 	pCB->dNBalCorrect = -pCP->dN2OEmisCum;
 
 	pCB->dNBalance = pCB->dNProfile + pCB->dNOutputCum - pCB->fNProfileStart - pCB->dNInputCum - pCB->dNBalCorrect;// Was ist das? - pCB->dNBalCorrect;
-
 	
 	// Atmosphere:
 	self->cum_dust1+=xpn->pCh->pAtmos->dustr1*dt;
