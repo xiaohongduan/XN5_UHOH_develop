@@ -813,7 +813,7 @@ typedef struct stplantClimate
 typedef struct stModelParam  *PMODELPARAM;
 typedef struct stModelParam
 	{
-	//int		iEmergenceDay; 
+	int		iEmergenceDay; 
 	//int		iHarvestDay;
 	int   EmergenceDay;
 	int   EmergenceMonth;

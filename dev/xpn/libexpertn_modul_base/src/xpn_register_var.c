@@ -813,8 +813,7 @@ int getStringColumn(char *dest,char *source,char *seperator,int column)
 						}
 					else
 						{
-							//dest=NULL;
-                            strcpy(dest,(char*)"");
+							dest=NULL;
 							return 1;
 						}
 				}

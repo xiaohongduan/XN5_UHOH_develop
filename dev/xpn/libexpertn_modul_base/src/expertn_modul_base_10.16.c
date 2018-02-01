@@ -1951,7 +1951,9 @@ int expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(expertn_modul_ba
 				
 			fStaFak = fCut / fHeight;
 			// Falls ohne Standing Pool gerechnet werden soll
-			 if(!iStandingResidues) fStaFak = (double)0; 
+			// if(!iStandingResidues) fStaFak = (double)0;//Hong: XN3 uses this 
+			//fStaFak=0.0;//Test of Hong
+			
 			/* Berechnen stehender und liegender Anteil */
 			//fCResidue = (pPl->pBiomass->fBiomassAbvGround - pPl->pBiomass->fGrainWeight) * (double)0.4;
 			fCResidue = pPl->pBiomass->fStovWeight * (double)0.4;
@@ -2013,93 +2015,46 @@ int expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(expertn_modul_ba
 				}
 */				
 // End of Hong
-					   
-// Hong: added for Scott Demyan et al. 2016.10.06
-/*
-double DELT;
-DELT = (double)self->pTi->pTimeStep->fAct; //Hong 20170810
-if(pPl->pModelParam->cResidueCarryOff==0)
-              {	                         		       
-			        pCP->fCStandCropRes  += fCStandR*DELT; 
-					
-			        pCP->fCLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac)*DELT; 
-					
-				    pCP->fCManureSurf    += ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac)*DELT; 
+/*					   
 
-				    pCP->fNStandCropRes  += fNStandR*DELT; 
-					
-				    pCP->fNLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac)*DELT; 
-					
-			        pCP->fNManureSurf    += ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac)*DELT;
-
-              }
-		else 
-		  {
-            pCP->fCStandCropRes += fCStandR*DELT; 
-            pCP->fNStandCropRes += fNStandR*DELT;
-						
-          }
-
-		pMa->pLitter->fRootC = (pPl->pBiomass->fRootWeight+pPl->pBiomass->fDeadRootWeight) * (double)0.4 ; // 40% C in Biomasse
-
-        if (pPl->pPltNitrogen->fRootCont > (double) 0.0)
-		 {
-	      pMa->pLitter->fRootCN = (pPl->pBiomass->fRootWeight+pPl->pBiomass->fDeadRootWeight) * (double)0.4
-                                                    /(pPl->pPltNitrogen->fRootCont+pPl->pPltNitrogen->fDeadRootNw);
-	
-		  
-         }
-       else
-        {
-          pMa->pLitter->fRootCN =(double)0.1;// ep 250399 fRootCN=0.1 overestimates NLitter
-        
-}	
-*/            
-// End of Hong
-
-// Hong: added for Scott Demyan et al. 2016.10.06
-	
+// Hong: added for Scott Demyan et al. 2016.10.06	
 if(pPl->pModelParam->cResidueCarryOff==0)
               {	                         		       
 			        pCP->fCStandCropRes  += fCStandR; 
 					
+			        pCP->fCLitterSurf    += pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac; 
 					
-					
-			        pCP->fCLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac); 
-					
-				    pCP->fCManureSurf    += ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac); 
-
+				    pCP->fCManureSurf    += (1.0- pPl->pGenotype->fResidueAMO1Frac)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac; 
+                   
 				    pCP->fNStandCropRes  += fNStandR; 
 					
-				    pCP->fNLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac); 
+				    pCP->fNLitterSurf    += pPl->pGenotype->fResidueAMO1Frac*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac; 
 					
-			        pCP->fNManureSurf    += ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac);
-
+			        pCP->fNManureSurf    += (1.0- pPl->pGenotype->fResidueAMO1Frac)*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac;
 
               }
 		else 
 		  {
             pCP->fCStandCropRes += fCStandR; 
             pCP->fNStandCropRes += fNStandR;
-						
           }
 
 		pMa->pLitter->fRootC = (pPl->pBiomass->fRootWeight+pPl->pBiomass->fDeadRootWeight) * (double)0.4 ; // 40% C in Biomasse
+
 
         if (pPl->pPltNitrogen->fRootCont > (double) 0.0)
 		 {
 	      pMa->pLitter->fRootCN = (pPl->pBiomass->fRootWeight+pPl->pBiomass->fDeadRootWeight) * (double)0.4
                                                     /(pPl->pPltNitrogen->fRootCont+pPl->pPltNitrogen->fDeadRootNw);
-	
-		  
          }
        else
         {
           pMa->pLitter->fRootCN =(double)0.1;// ep 250399 fRootCN=0.1 overestimates NLitter
-        
-}	
-           
+        }	
+            
 // End of Hong
+
+
 							   			
 			// Berechnen des schichtmaessigen Anteils
 			for (pSL = pSo->pSLayer->pNext,
@@ -2114,7 +2069,7 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 					RootSum += RootProp;
 					pMat1Local[i2] = RootProp;
 				}
-						   				
+/*						   				
 			// Anteilsmaessige Verteilung auf die Bodenschichten.
 			for (pSL = pSo->pSLayer->pNext,
 			        pCL = pCh->pCLayer->pNext,i2=0;
@@ -2134,6 +2089,27 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 					else
 						pCL->fLitterCN =(double)0.1;
 				}
+*/				
+			// Anteilsmaessige Verteilung auf die Bodenschichten.
+			for (pSL = pSo->pSLayer->pNext,
+			        pCL = pCh->pCLayer->pNext,i2=0;
+			        ((pSL->pNext != NULL)&&
+			         (pCL->pNext != NULL));
+			        pSL = pSL->pNext,
+			        pCL = pCL->pNext,i2++)
+				{
+					factor = pMat1Local[i2] / RootSum;
+					amount = pMa->pLitter->fRootC * factor;
+					pCL->fCLitter += amount;
+					pCL->fNLitter += amount/ pMa->pLitter->fRootCN;
+					if((pCL->fCLitter>EPSILON)&&(pCL->fNLitter>EPSILON))
+						{
+							pCL->fLitterCN = pCL->fCLitter / pCL->fNLitter;
+						}
+					else
+						pCL->fLitterCN =(double)0.1;
+				}	
+				
 			free(pMat1Local);
 										   			
 			
