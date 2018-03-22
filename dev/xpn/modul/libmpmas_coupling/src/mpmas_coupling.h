@@ -56,6 +56,8 @@ struct _mpmas_coupling
     struct_module **XPN_Moduls_full; 
 	
 	xnmpmasDate dataTransferDate;
+	
+	char *cropModel; //added on 20180319, to distinguish gecros and CERES/SPASS
     //End of Hong
     
     // Mineral + Organic fertilization
