@@ -50,12 +50,24 @@ int mpmas_coupling_Load(mpmas_coupling *self)
     
 	//get the original module list of each xpn: 
     self->XPN_Moduls_full= g_malloc0(sizeof(struct_module*)*Module_len);
-    
+	
+	//added by Hong on 20180319
+	//self->cropModel="cropmodel";//zum Test
+	//self->cropModel_done=0;
+	
     for (p=0;p<Module_len;p++)
         {
             self->XPN_Moduls_full[p]=g_malloc0(sizeof(struct_module));
             memcpy(self->XPN_Moduls_full[p],xpn_class[id]->XPN_Moduls[p],sizeof(struct_module));
-        }
+ /*       
+		if ((strcmp(xpn_class[id]->XPN_Moduls[p]->SubModul,"gecros_BiomassGrowth")==0)) //added by Hong on 20180319
+				{
+				self->cropModel="gecros";
+				//self->cropModel_done=1;
+				PRINT_MESSAGE(xpn,1,"gecros used");
+				}
+*/		
+		}
 //End of Hong   
      
     //self->WRITE_mpmas_xn =(STRUCT_WRITE_mpmas_xn*)xpn_register_var_get_pointer(xpn->pXSys->var_list,"pWRITE_mpmas_xn");
@@ -122,6 +134,7 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
     PLAYERROOT pLR2;
     PCPARAM pPA2;
     PCPROFILE pCP2;
+	
 // End of Hong
 
     char *S, *S2;
@@ -148,7 +161,9 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
     get_daily_air_and_soil_temperatures(self);
     
 // Begin of Hong: ######################## turn-on / turn-off modules and data transfer ######################################### 
-    	
+    //added by Hong on 20180319: 
+	self->cropModel = xpn_register_var_get_pointer(xpn->pXSys->var_list, "Config.plant.biomass growth");
+     		
 	//memset(stopDate, 0, sizeof (xnmpmasDate));
 	if ((self->mpmas_to_xn->updateManagement==1))
     {
@@ -160,8 +175,8 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
             {  
               // turn-off module
                for (p=0;p<Module_len;p++)
-                   { 
-					 if ((strcmp(xpn_class[id]->XPN_Moduls[p]->SubModul,"database")!=0)&&(strcmp(xpn_class[xpn->pXSys->id]->XPN_Moduls[p]->SubModul,"mpmas")!=0))// solange SubModul != ""database"&&"mpmas", soll ausgeschaltet werden
+                   { 	   					   
+					   if ((strcmp(xpn_class[id]->XPN_Moduls[p]->SubModul,"database")!=0)&&(strcmp(xpn_class[xpn->pXSys->id]->XPN_Moduls[p]->SubModul,"mpmas")!=0))// solange SubModul != ""database"&&"mpmas", soll ausgeschaltet werden
                         {
                            xpn_class[id]->XPN_Moduls[p]->run=NULL;
                            xpn_class[id]->XPN_Moduls[p]->global_run=NULL;
@@ -192,8 +207,8 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
 		  
 		  //2.1.(1)turn-on module by copy of XPN_Moduls_full
           for (p=0;p<Module_len;p++)
-                {           
-                  memcpy(xpn_class[id]->XPN_Moduls[p],self->XPN_Moduls_full[p],sizeof(struct_module));
+                {                              
+					memcpy(xpn_class[id]->XPN_Moduls[p],self->XPN_Moduls_full[p],sizeof(struct_module));
             
                  } 
 		  PRINT_MESSAGE(xpn,1,"module turned on");// for debug	
@@ -312,8 +327,8 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
 	 		  
           //2.2.(2) turn-off module
           for (p=0;p<Module_len;p++)
-          { 
-              if ((strcmp(xpn_class[id]->XPN_Moduls[p]->SubModul,"database")!=0)&&(strcmp(xpn_class[xpn->pXSys->id]->XPN_Moduls[p]->SubModul,"mpmas")!=0))// solange SubModul != ""database"&&"mpmas", soll ausgeschaltet werden
+          {                 
+                if ((strcmp(xpn_class[id]->XPN_Moduls[p]->SubModul,"database")!=0)&&(strcmp(xpn_class[xpn->pXSys->id]->XPN_Moduls[p]->SubModul,"mpmas")!=0))// solange SubModul != ""database"&&"mpmas", soll ausgeschaltet werden
                         {
                            xpn_class[id]->XPN_Moduls[p]->run=NULL;
                            xpn_class[id]->XPN_Moduls[p]->global_run=NULL;
@@ -363,7 +378,7 @@ if (NewDay(pTi))
 			      //1.1 read cover crop info if any
 					if ((self->mpmas_to_xn->coverCropCode[0] != '\0')&&(xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->mpmas_to_xn->coverCropSowDate.year,self->mpmas_to_xn->coverCropSowDate.month,self->mpmas_to_xn->coverCropSowDate.day)<=0))         
 					{
-                    PRINT_MESSAGE(xpn,1,"read new cover crop info:");
+                    PRINT_MESSAGE(xpn,1,"read new cover crop info");
 					
 					self->new_plant = 1;
 					self->daysSinceBBCH1 = 0;
@@ -394,7 +409,13 @@ if (NewDay(pTi))
 					
 					pPl->pModelParam->cResidueCarryOff = 0; //residuals of coverCrop liegen lassen
 
- 				// read plant ini file:
+				// read cover crop ini file:
+				    //1.1.1 in case of using crop model GECROS, just go on
+				 
+					 //1.1.2 in case of using crop model CERES/SPASS, crop ini file has to be reloaded. 	
+				
+				if(strcmp(self->cropModel,"GECROS BiomassGrowth")!=0) //added by Hong on 20180319
+				{ 
 	                S  = g_strdup_printf("Config.ceres.%s", pPl->pGenotype->acCropName);
                     read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
                     g_free(S);
@@ -430,7 +451,7 @@ if (NewDay(pTi))
                         }
 
 				    expertn_modul_base_PlantVariableInitiation(pPl, pSo, pSI);
-										
+				}					
 				   } //end new configuration necessary for coverCrop
 			
 			// 1.2 read crop info (sometimes after tillage of cover crop residues)
@@ -468,6 +489,11 @@ if (NewDay(pTi))
                     // maybe needs to read the plant model
 		
 					// read plant ini file:
+					 //1.1.1 in case of using crop model GECROS, just go on
+				 
+					 //1.1.2 in case of using crop model CERES/SPASS, crop ini file has to be reloaded. 	      
+					if(strcmp(self->cropModel,"GECROS BiomassGrowth")!=0) //added by Hong on 20180319
+				{ 
 	                S  = g_strdup_printf("Config.ceres.%s", pPl->pGenotype->acCropName);
                     read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
                     g_free(S);
@@ -503,7 +529,7 @@ if (NewDay(pTi))
                         }
 		
 					expertn_modul_base_PlantVariableInitiation(pPl, pSo, pSI);
-									
+				}					
 				}//end new configuration necessary of crop	
 																			
 		} //end self->new_plant = 0;
