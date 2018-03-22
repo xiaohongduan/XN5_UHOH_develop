@@ -121,8 +121,8 @@ int daisy_miner_run(daisy_miner *self)
   
 
   /* 8. Variablen für die Original Reduktionsfunktionen*/
-//  const double T0= (double)0;              /* Parameter für Temperatur-Korrektur */
-//  const double T1= (double)20;
+  const double T0= (double)0;              /* Parameter für Temperatur-Korrektur */
+  const double T1= (double)20;
  
   //Hong: Temperaturabhängigkeit für DAISY Abbauraten (für Scott Demyan)
   double fTempCorr_CAOM1, fTempCorr_CAOM2;
@@ -238,11 +238,26 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
    	
 	/* 1. Temperatur-Reduktionsfunktion, Q10 Funktion*/
 //Hong    corr.Temp = abspower(pPA->fMinerQ10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); // refer to LEACHN miner.c, Q10-Funktion.
-    corr.Temp = abspowerDBL(pPA->fMinerQ10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0));    // abspowerDBL() do the same calculation as abspower() 
+//   corr.Temp = abspowerDBL(pPA->fMinerQ10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0));    // abspowerDBL() do the same calculation as abspower() #deactivated by Moritz
 	
 	//Hong: Temperaturabhängigkeit für DAISY Abbauraten (für Scott Demyan)
 	/* Pool specific temperature functions begin below (Scott Demyan, 2015.07.06)*/	
 	if (self->iTempCorr == 1)
+	{
+      fTempCorr_CAOM1 = abspowerDBL(self->fParCAOM1Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/ // abspowerDBL() do the same calculation as abspower()
+	  fTempCorr_CAOM2 = abspowerDBL(self->fParCAOM2Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/
+      fTempCorr_CBOM1 = abspowerDBL(self->fParCBOM1Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/
+	  fTempCorr_CBOM2 = abspowerDBL(self->fParCBOM2Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/
+      fTempCorr_CSOM1 = abspowerDBL(self->fParCSOM1Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/ 
+	  fTempCorr_CSOM2 = abspowerDBL(self->fParCSOM2Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/
+      fTempCorr_DBOM1 = abspowerDBL(self->fParDBOM1Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/
+	  fTempCorr_DBOM2 = abspowerDBL(self->fParDBOM2Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/
+      fTempCorr_MBOM1 = abspowerDBL(self->fParMBOM1Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/
+	  fTempCorr_MBOM2 = abspowerDBL(self->fParMBOM2Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/
+	   
+	}
+	
+		if (self->iTempCorr == 3)
 	{
       fTempCorr_CAOM1 = abspowerDBL(self->fParCAOM1Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/ // abspowerDBL() do the same calculation as abspower()
 	  fTempCorr_CAOM2 = abspowerDBL(self->fParCAOM2Q10,((pHL->fSoilTemp - pPA->fMinerTempB)/(double)10.0)); /* exponential*/
@@ -275,7 +290,7 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 
 
    /* Original Reduktionsfunktionen 
-    1. Temperatur-Reduktionsfunktion
+    1. Temperatur-Reduktionsfunktion*/
 	if (pHL->fSoilTemp >= T1 ) 
        corr.Temp = (double) exp((double)0.47 - (double)0.027 * (double)pHL->fSoilTemp
                + (double)0.00193 * (double)pHL->fSoilTemp * (double)pHL->fSoilTemp);
@@ -285,7 +300,7 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
                    
     else 
        corr.Temp = (double)0.0;                        
- */
+ 
 
   /* 3. Tongehalt-Reduktonsfunktion*/
     if (pSL->fClay <= C0)
@@ -371,6 +386,23 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 	fBOM2_DeathC    = pCL->fCMicBiomFast * BOM2death                  * fTempCorr_DBOM1 * corr.Feucht;
     fBOM1_MainC     = pCL->fCMicBiomSlow * BOM1maintenance            * fTempCorr_MBOM1 * corr.Feucht * corr.Lehm;
     fBOM2_MainC     = pCL->fCMicBiomFast * BOM2maintenance            * fTempCorr_MBOM2 * corr.Feucht;
+	}
+	if ((double)pHL->fSoilTemp > 10 ) 
+	{	
+	if (self->iTempCorr == 3)
+	{
+    fCAOM1DecayR    = pCL->fCFOMSlow     * pCL->fFOMSlowDecMaxR       * fTempCorr_CAOM1 * corr.Feucht;
+    fCAOM2DecayR    = pCL->fCFOMFast     * pCL->fFOMFastDecMaxR       * fTempCorr_CAOM2 * corr.Feucht;
+    fCBOM1DecayR    = pCL->fCMicBiomSlow * pCL->fMicBiomSlowDecMaxR   * fTempCorr_CBOM1 * corr.Feucht * corr.Lehm;
+    fCBOM2DecayR    = pCL->fCMicBiomFast * pCL->fMicBiomFastDecMaxR   * fTempCorr_CBOM2 * corr.Feucht;
+    fCSOM1DecayR    = pCL->fCHumusSlow   * pCL->fHumusSlowMaxDecMaxR  * fTempCorr_CSOM1 * corr.Feucht * corr.Lehm;
+    fCSOM2DecayR    = pCL->fCHumusFast   * pCL->fHumusFastMaxDecMaxR  * fTempCorr_CSOM2 * corr.Feucht * corr.Lehm;
+
+    fBOM1_DeathC    = pCL->fCMicBiomSlow * BOM1death                  * fTempCorr_DBOM1 * corr.Feucht * corr.Lehm;
+	fBOM2_DeathC    = pCL->fCMicBiomFast * BOM2death                  * fTempCorr_DBOM1 * corr.Feucht;
+    fBOM1_MainC     = pCL->fCMicBiomSlow * BOM1maintenance            * fTempCorr_MBOM1 * corr.Feucht * corr.Lehm;
+    fBOM2_MainC     = pCL->fCMicBiomFast * BOM2maintenance            * fTempCorr_MBOM2 * corr.Feucht;
+	}
 	}
     //End of Hong
 
@@ -466,39 +498,6 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
      fImmR = help8 * (double)-1;
 	}	
 	
-	//Test of Hong
-/*	if(fImmR)
-	{
-	 if((pCL->fNH4N<0.51)&&(pCL->fNO3N)<0.51)
-		 //if (pCL->fNO3N + pCL->fNH4N < 0.000000000001)
-          fImmR =0.0;
-		 
-	 else
-	 {
-		
-     /*Maximale Immobilisierungsraten*/
-//   	 fNH4ImmN = fNH4ImmMaxR * pCL->fNH4N;
-//     fNO3ImmN = fNO3ImmMaxR * pCL->fNO3N;
-	 
-     /*Berechnung des Reduktionsfaktors*/  	
-/*     fRed = (double)1.0;                      // Reduktionsfaktor =1 => keine Reduktion 
-
-	 if (fImmR  > (fNH4ImmN + fNO3ImmN))
-          fRed = (fNH4ImmN + fNO3ImmN) / fImmR;
-	    
-     help1 = fRed * help1;
-     help2 = fRed * help2;
-	 fCAOM1DecayR  = fRed * fCAOM1DecayR;
-	 fCAOM2DecayR  = fRed * fCAOM2DecayR;
-
-	 help8 = help1 + help2 + help3 + help4 + help5 + help6 + help7;
-     fImmR = help8 * (double)-1;	 
-	
-		 
-		 }
-	}
-//End of Test	
-*/	
 	/*Übertragung auf globale Variablen*/
  	pCL->fLitterMinerR  = fCAOM1DecayR/fCN_FOMSlow;
 	pCL->fManureMinerR  = fCAOM2DecayR/fCN_FOMFast;
@@ -661,11 +660,6 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 //	 fNO3NR = 1.0;     
       pCL->fNH4N -= fNH4NR * DeltaT;  
 	  pCL->fNO3N -= fNO3NR * DeltaT;
-
-      //added by Hong on 20180124: 
-      CHECK_N_VALID(pCL->fNO3N);
-      CHECK_N_VALID(pCL->fNH4N);
-      //End of Hong
 
 	 }
 
