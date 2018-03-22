@@ -37,6 +37,8 @@ project_list_std = [
                "xpn/modul/libceres/src",               
                "xpn/modul/libpollen/src",
                "xpn/modul/libgecros/src",
+               "xpn/modul/libdaisy_miner/src",
+               "xpn/modul/libschaaf_manag/src",
                "xpn/modul/libmpmas_coupling/src"               
                ]
 
