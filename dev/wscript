@@ -7,7 +7,6 @@
 from waflib import Configure, Logs, Tools
 from os.path import expanduser
 import os
-import sys
 
 import subprocess
 
@@ -19,6 +18,7 @@ project_list_std = [
                "xpn/libexpertn_class/src",
                "xpn/expertn_bin/src",
                "xpn/modul/libexpertn_database/src",
+               "xpn/modul/libagroforestry/src",
                "xpn/modul/libbalance/src",
                "xpn/modul/libcentury_n/src",
                "xpn/modul/libdaisy/src",
@@ -29,51 +29,49 @@ project_list_std = [
                "xpn/modul/libhydrus/src",
                "xpn/modul/libinterception/src",
                "xpn/modul/libleachn/src",
-               "xpn/modul/libpedotransfer/src",               
+               "xpn/modul/libpedotransfer/src",
+               "xpn/modul/libread_wrf_weather/src",
                "xpn/modul/libschaaf/src",
                "xpn/modul/libspass/src",
-               "xpn/modul/libtreemix/src",                              
+               "xpn/modul/libtreemix/src",
+               "xpn/modul/libwrf_coupling/src",
+               "xpn/modul/libxnoah/src",
                "xpn/modul/libxpn_output/src",
-               "xpn/modul/libceres/src",               
+               "xpn/modul/libceres/src",
+               "xpn/modul/libwrfchem_coupling/src",
                "xpn/modul/libpollen/src",
+               "xpn/modul/libdaisy_miner/src",
+               "xpn/modul/libschaaf_manag/src",
                "xpn/modul/libgecros/src",
-               "xpn/modul/libmpmas_coupling/src"               
+               "xpn/modul/libmpmas_coupling/src",
+               "xpn/modul/libxylemwaterflow/src"
                ]
 
 # Magic Waf variables here.
 top = '.'
 out = 'build'
 
-#home = expanduser("~")
-default_prefix = os.path.dirname(sys.argv[0]) + "/../built"
+home = expanduser("~")
+default_prefix = home+'/expertn50/built'
 
 def conf_get_svn_rev():
     try:
 
         #p = subprocess.Popen(['svn', 'info', '--non-interactive'], stdout=subprocess.PIPE, \
         #        stderr=subprocess.STDOUT, close_fds=False, env={'LANG' : 'C'})
-        #p = subprocess.Popen(['svn', 'info', '--non-interactive'], stdout=subprocess.PIPE, \
-        #        stderr=subprocess.STDOUT, close_fds=False)
-        #stdout = p.communicate()[0]
-
-        #if p.returncode == 0:
-        #    lines = stdout.splitlines(True)
-        #    for line in lines:
-        #        if line.startswith('Last Changed Rev'):
-        #            key, value = line.split(': ', 1)
-        #            return '5.0 Rev ' + value.strip()
-        #return '5.0 Rev 0'
-        p = subprocess.Popen(['git', 'describe','--always'], stdout=subprocess.PIPE, \
-                stderr=subprocess.STDOUT, close_fds=False)        
+        p = subprocess.Popen(['svn', 'info', '--non-interactive'], stdout=subprocess.PIPE, \
+                stderr=subprocess.STDOUT, close_fds=False)
         stdout = p.communicate()[0]
+
         if p.returncode == 0:
             lines = stdout.splitlines(True)
             for line in lines:
-                return '5.1 Rev ' + line.split("\n")[0]
-        else:
-            return '5.1 Rev 0'        
+                if line.startswith('Last Changed Rev'):
+                    key, value = line.split(': ', 1)
+                    return '5.0 Rev ' + value.strip()
+        return '5.0 Rev 0'
     except:
-        return '5.1 Rev 0'
+        return '5.0 Rev 0'
 
 
 def check_libgda(conf):
@@ -152,7 +150,7 @@ def options(opt):
 
     opt.add_option('--prefix', action='store', default=default_prefix,help='installation prefix [default='+default_prefix+']')
     opt.add_option('--debug', action='store_true', default=False, help='enable debugging')
-    opt.add_option('--with_database', action='store_true', default=False, help='Compiling without libgda! Expert-N has no Database!')
+    opt.add_option('--without_database', action='store_true', default=False, help='Compiling without libgda! Expert-N has no Database!')
     opt.add_option('--max_optimize', action='store_true', default=False, help='maximal optimization (speed)')
     opt.add_option('--USE_OPENMP', action='store_true', default=False,help='Compile Expert-N with OPENMP')
     opt.add_option('--USE_MPI', action='store_true', default=False,help='Compile Expert-N with Open MPI')
@@ -182,12 +180,11 @@ def configure(conf):
                     args='--cflags --libs')
     #check_libgda(conf)
 
-    if conf.options.with_database:
+    if conf.options.without_database:
+        conf.define('XPN_WITHOUT_DATABASE',1)
+    else:
         conf.check_cfg (package='libgda-4.0', uselib_store='LIBGDA', atleast_version='4.0.9',
                     args='--cflags --libs')
-    else:
-        conf.define('XPN_WITHOUT_DATABASE',1)    
-
 
 
 
