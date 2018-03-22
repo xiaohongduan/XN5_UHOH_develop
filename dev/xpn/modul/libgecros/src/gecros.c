@@ -118,7 +118,22 @@ static void gecros_init(gecros *self)
 {
  self->_init_done=0;
  self->_done_done=0;
+ 
 }
+
+//Added by Hong on 20180321
+
+void load_model_cfg_gecros(gecros *self)
+{
+	expertn_modul_base *xpn = &(self->parent);
+	char *S;
+	//xpn_register_var_set_pointer(xpn->pXSys->var_list, "Config.plant.biomass growth", "GECROS BiomassGrowth test"); //hat keinen Einfluss auf Simualtion
+	S= xpn_register_var_get_pointer(xpn->pXSys->var_list, "Config.plant.biomass growth");
+	
+	//PRINT_MESSAGE(xpn,1,S);
+}
+
+//End of Hong
 
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -130,6 +145,7 @@ int gecros_Init_and_AllocMemory(gecros *self)
 	if (self->_init_done!=0) return RET_SUCCESS;
 	self->_init_done++;
 
+    load_model_cfg_gecros(self);//Added by Hong
 	gecros_alloc_allocateGECROSVariables(self);	
 	gecros_Init_Vars(self); //Hong: only read once  
 	
@@ -174,8 +190,7 @@ if (NewDay(pTi)){
       {
 		  gecros_alloc_allocateGECROSVariables(self);
 		  gecros_load_ini_file(self);
-		  
-		  
+		
 	  }
 }
       expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(xpn);
@@ -433,23 +448,6 @@ int gecros_NitrogenUptake(gecros *self)
             //Nitrogen in layer L: SNO3,SNH4 (kg N/ha)
 			pSLN->fNO3N=pSLN->fNO3N-pLR->fActLayNO3NUpt*DELT;
 			pSLN->fNH4N=pSLN->fNH4N-pLR->fActLayNH4NUpt*DELT;		
-            //added by Hong on 20180124: 
-            CHECK_N_VALID(pSLN->fNO3N);
-            CHECK_N_VALID(pSLN->fNH4N);
-		    //End of Hong
-	
-        /* //Test of Hong   
-		 if((pSLN->fNO3N-pLR->fActLayNO3NUpt*DELT)>0.1)
-            {pSLN->fNO3N -= pLR->fActLayNO3NUpt*DELT;}			
-			  else 
-				pLR->fActLayNO3NUpt=0;
-           			
-			if((pSLN->fNH4N-pLR->fActLayNH4NUpt*DELT)>0.1)
-            {pSLN->fNH4N -= pLR->fActLayNH4NUpt*DELT;}			
-		    	else 
-				  pLR->fActLayNH4NUpt=0;				
-			//End of test
-			*/
 			
 			//pSLN->fNO3N=pSLN->fNO3N-min(pSLN->fNO3N,pLR->fActLayNO3NUpt)*pTi->pTimeStep->fAct;
 			//pSLN->fNH4N=pSLN->fNH4N-min(pSLN->fNH4N,pLR->fActLayNH4NUpt)*pTi->pTimeStep->fAct;
@@ -804,9 +802,16 @@ int gecros_load_ini_file(gecros *self)
 			PRINT_MESSAGE(xpn,3, S);
 			g_free(S);
 		}	
+		
 //End of Hong	
-	
-
+/*	
+     if(strstr(xpn->pXSys->xpn_classes, "gecros") == NULL)
+	 {
+		 print ("OK");
+		 print ("OK");
+		 
+		 }
+*/	 
 	/* Create a new GKeyFile object and a bitwise list of flags. */
 	keyfile = g_key_file_new ();
 
@@ -3307,8 +3312,7 @@ if ((xpn_time_compare_date(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->mon,xpn
       CSO    = max(0., CSO   + RCSO*DELT);
 	  pGPltC->fCStorage =(double)CSO;
 
-      CSRT   = max(0., CSRT  + RCSRT*DELT); 	  
-	  
+      CSRT   = max(0., CSRT  + RCSRT*DELT); 	  	  
 	  pGPltC->fCStrctRoot =(double)CSRT;
 
       CRTD   = max(0., CRTD  + LCRT*DELT);
@@ -3323,9 +3327,7 @@ if ((xpn_time_compare_date(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->mon,xpn
 	  pPltN->fStovCont  = (double)(NSH*10.0); //[g/m2] --> [kg/ha]
       pPltN->fGrainCont = (double)(NSO*10.0); //[g/m2] --> [kg/ha]
 
-        
-
-						
+        						
       NST = (double)pPltN->fStemCont;
 	  NST    = max(0,NST+RNST*DELT);
       pPltN->fStemCont = (double)NST;
@@ -5819,7 +5821,13 @@ int gecros_Germination(gecros *self)
 			fP9=(double)40.0+((double)10.2)*pMa->pSowInfo->fSowDepth;
 			fTbase_Emerg = 2;
 		}
-
+//Added by Hong on 20180205 for AP		
+		else if (strcmp(pPl->pGenotype->acCropCode,"SB")==0)	
+		{
+			fP9 = (double)127.0; //Pascal Kremer
+			fTbase_Emerg = 3;
+		}
+//End of Hong
 		else
 		{
 			fP9 = (double)100.0;
