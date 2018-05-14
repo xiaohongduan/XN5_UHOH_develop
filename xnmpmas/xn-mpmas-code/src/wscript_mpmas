@@ -1,0 +1,383 @@
+#! /usr/bin/env python
+# encoding: utf-8
+# Christian Klein, 2012 / Christian Troost 2015-2016
+
+# the following two variables are used by the target "waf dist"
+
+from waflib import Configure, Logs, Tools
+from os.path import expanduser
+import os
+
+import subprocess
+
+
+APPNAME='expertn_mpmas'
+SOURCE_FILES=['MpMasUserMainXN.cpp','xpn_main.c', 'xn_mpmas_translator.cpp', 'xn_mpmas_options.cpp', 'xn_mpmas_adaptation.cpp']
+#SOURCE_FILES=['MpMasUserMainXN.cpp']
+
+
+# Magic Waf variables here.
+top = '.'
+out = 'build'
+
+home = expanduser("~")
+default_prefix = '../../'
+
+def conf_get_svn_rev():
+    try:
+
+        #p = subprocess.Popen(['svn', 'info', '--non-interactive'], stdout=subprocess.PIPE, \
+        #        stderr=subprocess.STDOUT, close_fds=False, env={'LANG' : 'C'})
+        p = subprocess.Popen(['svn', 'info', '--non-interactive'], stdout=subprocess.PIPE, \
+                stderr=subprocess.STDOUT, close_fds=False)
+        stdout = p.communicate()[0]
+
+        if p.returncode == 0:
+            lines = stdout.splitlines(True)
+            for line in lines:
+                if line.startswith('Last Changed Rev'):
+                    key, value = line.split(': ', 1)
+                    return '5.0 Rev ' + value.strip()
+        return '5.0 Rev 0'
+    except:
+        return '5.0 Rev 0'
+
+
+
+def check_MPmas(conf,add_includes,add_flags):
+     Mpmas_msg="Checking for Mpmas "
+
+
+     linkflag=['-L'+os.getcwd().replace("\\","/")+'/../lib64','-L'+os.getcwd().replace("\\","/")+'/../lib64/coinor/lib','-L/usr/lib/x86_64-linux-gnu']+add_flags
+     cflag=''
+     includes=add_includes
+     if conf.options.USE_MPI:
+        Mpmas_fragment=''' 
+			#include "MpmasMaster.h"
+			#include "mpi.h"
+                        int main(int argc, char **argv){
+                        return 0;
+                        }
+                       '''
+
+        conf.check_cxx(msg=Mpmas_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib=["MpmasMP_MPI","Cbc","OsiSym","Sym","OsiClp","Clp","Cgl","Osi","CoinUtils","CbcSolver"], fragment=Mpmas_fragment,uselib='M OPEN_MPI', uselib_store='MPMAS')
+
+     else:
+        Mpmas_fragment=''' 
+			#include "MpmasMaster.h"
+                        int main(int argc, char **argv){
+                        return 0;
+                        }
+                        '''
+        conf.check_cxx(msg=Mpmas_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib=["MpmasMP","Cbc","OsiSym","Sym","OsiClp","Clp","Cgl","Osi","CoinUtils","CbcSolver"], fragment=Mpmas_fragment,uselib='M', uselib_store='MPMAS')
+
+def check_MPmas32(conf,add_includes,add_flags):
+     Mpmas_msg="Checking for Mpmas32 "
+     #Mpmas_fragment='''#include "MpmasMaster.h"
+                        #namespace mpmasScope
+                        #{   // just for now, so that this simple exit function can still be used
+                        #mpmas* mpmasPointer;
+                        #void exitfun();
+                        #};
+                        #int main(int argc, char **argv){
+                        #mpmas mpmas(argc, argv);
+                        #return 0;
+                        #};
+                        #void mpmasScope::exitfun(){exit(1);};
+                        #'''
+     Mpmas_fragment=''' 
+                        int main(int argc, char **argv){
+                        return 0;
+                        }
+                        '''
+     linkflag=['-L'+os.getcwd().replace("\\","/")+'/../lib32','-L'+os.getcwd().replace("\\","/")+'/../lib32/coinor','-L/usr/lib/i386-linux-gnu']+add_flags
+     cflag=''
+     includes=add_includes
+     if conf.options.USE_MPI:
+        conf.check_cxx(msg=Mpmas_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib=["MpmasMPI","Cbc","OsiSym","Sym","OsiClp","Clp","Cgl","Osi","CoinUtils","CbcSolver"], fragment=Mpmas_fragment,uselib='OPEN_MPI M', uselib_store='MPMAS')
+     else:
+        conf.check_cxx(msg=Mpmas_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib=["MpmasMP32","Cbc","OsiSym","Sym","OsiClp","Clp","Cgl","Osi","CoinUtils","CbcSolver"], fragment=Mpmas_fragment,uselib='M', uselib_store='MPMAS')
+
+
+def check_expertn_modul_base(conf):
+     expertn_modul_base_msg="Checking for expertn_modul_base "
+     expertn_modul_base_fragment='''#include "expertn_modul_base.h"
+                                   expertn_modul_base* base;
+                        int main(int argc, char **argv){
+                        base = expertn_modul_base_new();
+                        return 0;
+                        };'''
+     linkflag='-L'+os.environ['XPN_PATH'].replace("\\","/")+'/built/bin'
+     cflag=''
+     includes=[os.environ['XPN_PATH'].replace("\\","/")+'/dev/xpn/libexpertn_modul_base/include']
+     conf.check_cc(msg=expertn_modul_base_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib="expertn_modul_base", fragment=expertn_modul_base_fragment,uselib='GLIB GOBJECT GMODULE LIBXML2 LIBGDA M', uselib_store='expertn_modul_base')
+
+def check_expertn_class(conf):
+     expertn_modul_base_msg="Checking for expertn_class "
+     expertn_modul_base_fragment='''#include "expertnclass.h"
+                        int main(int argc, char **argv){
+                        expertnclass_get_type();
+                        return 0;
+                        };'''
+     linkflag='-L'+os.environ['XPN_PATH'].replace("\\","/")+'/built/bin'
+     cflag=''
+     includes=[os.environ['XPN_PATH'].replace("\\","/")+'/dev/xpn/libexpertn_class/include']
+     conf.check_cc(msg=expertn_modul_base_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib="expertn_class", fragment=expertn_modul_base_fragment,uselib='GLIB GOBJECT GMODULE LIBXML2 LIBGDA LIBNETCDF expertn_modul_base M', uselib_store='expertn_class')
+     
+def check_pnetcdf(conf):
+     pnetcdf_msg="Checking for pnetcdf "
+     pnetcdf_fragment='''#include <mpi.h>
+                         #include <pnetcdf.h>
+                        int main(int argc, char **argv){
+                        int ncfile;
+                        return ncmpi_create(MPI_COMM_WORLD, argv[1],NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncfile);
+                        };'''
+     linkflag='-L'+os.getcwd().replace("\\","/")+'/../lib64'
+     cflag=''
+     includes=[os.getcwd().replace("\\","/")+'/../include/pnetcdf']
+     conf.check_cc(msg=pnetcdf_msg,cflags=cflag,linkflags=linkflag,lib="pnetcdf",includes=includes, fragment=pnetcdf_fragment,uselib='OPEN_MPI', uselib_store='LIBNETCDF')
+
+
+def list(targets):
+    print "list"
+    return
+
+
+def options(opt):
+    opt.load('compiler_cxx')
+    opt.load('compiler_c')
+    opt.load('gnu_dirs')
+
+    opt.load('msvs')
+    opt.load('eclipse')
+    opt.load('codelite')
+    #opt.load('xcode')
+
+    opt.add_option('--prefix', action='store', default=default_prefix,help='installation prefix [default='+default_prefix+']')
+    opt.add_option('--debug', action='store_true', default=False, help='enable debugging')
+    opt.add_option('--without_database', action='store_true', default=False, help='Compiling without libgda! Expert-N has no Database!')
+    opt.add_option('--max_optimize', action='store_true', default=False, help='maximal optimization (speed)')
+    opt.add_option('--USE_OPENMP', action='store_true', default=False,help='Compile Expert-N with OPENMP')
+    opt.add_option('--USE_MPI', action='store_true', default=False,help='Compile Expert-N with Open MPI')
+    opt.add_option('--mas32', action='store_true', default=False,help='Compile Expert-N with Mpmas 32bit library')
+    
+
+def configure(conf):
+    # Compiler Flags:
+    conf.load('compiler_cxx')
+    conf.load('compiler_cc')
+    
+
+    conf.env['APPNAME'] = APPNAME
+
+    # Libraries Check for XPN:
+    conf.check_cfg (package='glib-2.0', uselib_store='GLIB', atleast_version='2.22.5',
+                    args='--cflags --libs')
+    conf.check_cfg (package='gobject-2.0', uselib_store='GOBJECT', atleast_version='2.22.5',
+                    args='--cflags --libs')
+    conf.check_cfg (package='gmodule-2.0', uselib_store='GMODULE',
+                    args='--cflags --libs')
+    conf.check_cfg (package='gmodule-2.0', uselib_store='GMODULE',
+                    args='--cflags --libs')
+    conf.check_cfg (package='libxml-2.0', uselib_store='LIBXML2',
+                    args='--cflags --libs')
+    #check_libgda(conf)
+    if conf.options.without_database:
+        conf.define('XPN_WITHOUT_DATABASE',1)
+    else:
+        conf.check_cfg (package='libgda-4.0', uselib_store='LIBGDA', atleast_version='4.0.9',
+                    args='--cflags --libs')
+
+    #Libraries Check for Coupling
+    conf.check_cfg (package='yaml-cpp', uselib_store='YAML',
+                    args='--cflags --libs')
+
+    conf.check_cc(lib='m', cflags='-Wall', uselib_store='M', mandatory=False)
+
+    conf.start_msg('Checking for MS Windows')
+    if os.name == 'nt':
+        conf.define('WIN32',1)
+        conf.end_msg("True")
+    else:
+        conf.end_msg("False")
+
+    # Versions Check:
+    conf.start_msg('Checking Expert-N Version')
+    xpn_version =  conf_get_svn_rev()
+    conf.end_msg(xpn_version)
+    conf.define('XPN_VERSION',xpn_version)
+
+    # Set general Flags:
+    conf.env.append_value('CFLAGS','-Wall')
+    conf.env.append_value('CXXFLAGS','-Wall')
+    conf.env.append_value('CFLAGS','-fPIC')
+    conf.env.append_value('CXXFLAGS','-fPIC')
+    conf.env.append_value('CXXFLAGS','-Wno-unknown-pragmas')
+
+
+    # Compile Expert-N in debug or optimize mode
+    if conf.options.debug:
+        conf.define('XPN_DEBUG',1)
+    conf.start_msg('Flag debug:')
+    conf.end_msg(str(conf.options.debug))
+    
+
+    if conf.options.debug:
+        conf.env.append_value('CFLAGS','-g')
+        conf.env.append_value('CFLAGS','-O0')
+        conf.env.append_value('CXXFLAGS','-g')
+        conf.env.append_value('CXXFLAGS','-O0')
+        conf.options.max_optimize=False
+    else:
+        if conf.options.max_optimize:
+            conf.env.append_value('CFLAGS','-O3')
+            conf.env.append_value('CXXFLAGS','-O3')
+        else:
+            conf.env.append_value('CFLAGS','-O2')
+            conf.env.append_value('CXXFLAGS','-O2')
+    if conf.options.max_optimize:
+        conf.define('XPN_MAX_OPTIMIZE', 1)
+    conf.start_msg('Flag max_optimize')
+    conf.end_msg(str(conf.options.max_optimize))
+    
+    conf.env['USE_CLASS']=''
+    
+    conf.env['LINK_FLAGS']=['-MMD','-MP']        
+    
+    conf.env['INCLUDES_STD'] = [os.getcwd().replace("\\","/")+'/../include',os.getcwd().replace("\\","/")+'/../include/coinor',os.getcwd().replace("\\","/")+'/../include/yaml-cpp','-L/usr/include/boost148',os.environ['XPN_PATH'].replace("\\","/")+'/dev/xpn/libexpertn_modul_base/include','.']
+
+    # Link OpenMP library if necessary:
+    conf.start_msg('Flag USE_OPENMP')
+    conf.end_msg(str(conf.options.USE_OPENMP))
+    if conf.options.USE_OPENMP:
+        conf.define('USE_OPENMP',1)
+        conf.env.append_value('USELIB_STD','OPEN_MP')
+        conf.env.append_value('USELIB_STD','OPEN_MP_CPP')
+        conf.options.USE_MPI=False
+        openmp_msg="Checking for openmp flag "
+        openmp_fragment='''#include <omp.h>
+                        int main(int argc, char **argv){
+                        int i;
+                        #pragma omp parallel for
+                        for (i=0;i<5;i++)
+                        {}
+                        return omp_get_thread_num();};'''
+        found_openmp=False
+        openmp_flags=['-fopenmp','-openmp','-mp','-xopenmp','-omp','-qsmp=omp']
+        for flag in openmp_flags:
+            try:
+                conf.check_cxx(msg=openmp_msg+flag+" C++", fragment=openmp_fragment, cflags=flag,cxxflags=flag,linkflags=flag, uselib_store='OPEN_MP_CPP')
+                conf.check_cc(msg=openmp_msg+flag+" C", fragment=openmp_fragment, cflags=flag,cxxflags=flag,linkflags=flag, uselib_store='OPEN_MP')
+                conf.env.append_value('USELIB_STD','OPEN_MP')
+                conf.env.append_value('USELIB_STD','OPEN_MP_CPP')
+            except conf.errors.ConfigurationError:
+                continue
+            else:
+                found_openmp=True
+                break
+        if not found_openmp:
+            conf.fatal('Could not find OpenMP')
+
+
+
+	
+    # Open MPI use?
+    conf.start_msg('Flag USE_MPI')
+    conf.end_msg(str(conf.options.USE_MPI))
+    if conf.options.USE_MPI:
+        #conf.check_cfg(path='mpicc', args=['--showme:compile','--showme:link'],package='', uselib_store='OPEN_MPI', mandatory=False)
+        conf.check_cfg(path='mpic++', args='--showme',package='', uselib_store='OPEN_MPI', mandatory=False)
+        #conf.check_cfg(path='mpicc', args='--showme',package='', uselib_store='OPEN_MPI2', mandatory=False)
+        #conf.env.append_value('USELIB_STD','OPEN_MPI')
+        #conf.env.append_value('USELIB_STD','OPEN_MPI2')
+        conf.env['INCLUDES_STD']
+        conf.define('USE_MPI',1)
+        conf.define('PAR2',1)
+        conf.env['APPNAME'] = 'expertn_mpmas_mpi'
+
+    if conf.options.USE_MPI:
+        check_pnetcdf(conf)
+    else:
+        conf.check_cfg (package='netcdf', uselib_store='LIBNETCDF',
+                    args='--cflags --libs')
+
+    conf.start_msg('Installation Prefix')
+    conf.end_msg(conf.options.prefix)
+    
+    conf.env.append_value('USELIB_STD','GLIB')
+    conf.env.append_value('USELIB_STD','GOBJECT')
+    conf.env.append_value('USELIB_STD','GMODULE')
+    conf.env.append_value('USELIB_STD','LIBGDA')
+    conf.env.append_value('USELIB_STD','LIBNETCDF')    
+
+    conf.env.append_value('USELIB_STD','M')
+    
+    conf.define('AIX',1)
+    conf.define('XN',1)
+    conf.define('MULTIPERIOD',1)
+
+
+
+    
+
+    
+    if conf.options.mas32:
+	    check_MPmas32(conf,conf.env['INCLUDES_STD'],conf.env['LINK_FLAGS'])
+    else:
+        check_MPmas(conf,conf.env['INCLUDES_STD'],conf.env['LINK_FLAGS'])
+    
+    conf.env.append_value('USELIB_STD','MPMAS')
+    
+    conf.env.append_value('USELIB_STD','YAML')
+    
+    check_expertn_modul_base(conf)
+    conf.env.append_value('USELIB_STD','expertn_modul_base')
+    check_expertn_class(conf)    
+    conf.env.append_value('USELIB_STD','expertn_class')
+    
+    if conf.options.USE_MPI:
+        conf.env.append_value('USELIB_STD','OPEN_MPI')
+
+
+    conf.env['PREFIX'] = conf.options.prefix
+    conf.env['INSTALL_BIN']=conf.options.prefix
+    conf.env['INSTALL_MODELS']=os.environ['XPN_PATH'].replace("\\","/")+'/built/models'
+    conf.env['INSTALL_CFG']=os.environ['XPN_PATH'].replace("\\","/")+'/built/cfg'
+    conf.env['INSTALL_CFG_TEMPLATE']=os.environ['XPN_PATH'].replace("\\","/")+'/built/cfg_template'
+    conf.env['INSTALL_CFG_SYSTEM']=os.environ['XPN_PATH'].replace("\\","/")+'/built/cfg_system'
+    conf.env['INSTALL_DOC']=os.environ['XPN_PATH'].replace("\\","/")+'/built/doc'
+
+
+    #if
+    #conf.env.append_value('INCLUDES','C:/MinGW/include')
+
+
+    # correct lib pattern to 'lib%s.dll' or 'lib%s.so'
+    if conf.env.cshlib_PATTERN.startswith('lib')==False:
+        conf.env.cshlib_PATTERN='lib' + conf.env.cshlib_PATTERN
+
+    if conf.env.cxxshlib_PATTERN.startswith('lib')==False:
+        conf.env.cxxshlib_PATTERN='lib' + conf.env.cxxshlib_PATTERN
+        
+    
+
+
+
+def build(bld):
+    bld.codelite_solution_name = 'xpn_mpmas.workspace'
+    bld.solution_name = 'xpn_mpmas.sln'    
+    
+    exe = bld(
+        features        = 'cxx cxxprogram',
+        source          = SOURCE_FILES,
+        uselib          = bld.env.USELIB_STD,
+        use             = bld.env.USE_CLASS,
+        ccflags         = bld.env.LINK_FLAGS,
+        target          = bld.env.APPNAME,
+        includes        = bld.env.INCLUDES_STD,
+        install_path    = bld.env.INSTALL_BIN
+        )
+    
+
+
+

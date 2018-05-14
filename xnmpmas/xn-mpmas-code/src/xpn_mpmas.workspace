@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CodeLite_Workspace Name="xpn_mpmas" Database="./xpn_mpmas.tags">
+  <Project Name = "expertn_mpmas_mpi" Path = "/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/expertn_mpmas_mpi.project" Active="No"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Project Name="expertn_mpmas_mpi" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>

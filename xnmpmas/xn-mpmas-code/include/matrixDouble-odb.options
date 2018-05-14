@@ -1,0 +1,6 @@
+# Options file for the MatrixDouble container.
+#
+
+--odb-epilogue '#include "MatrixDouble-traits.hxx"'
+
+--hxx-prologue '#include "MatrixDouble-traits.hxx"'

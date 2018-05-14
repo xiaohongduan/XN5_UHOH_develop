@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeLite_Project Name="expertn_mpmas" InternalType="Library">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00010001N0005Release000000000000]]>
+    </Plugin>
+  </Plugins>
+  <Description/>
+  <Dependencies/>
+  <VirtualDirectory Name="src">
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/MpMasUserMainXN.cpp"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xn_mpmas_adaptation.cpp"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xn_mpmas_options.cpp"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xn_mpmas_translator.cpp"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xpn_main.c"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="include">
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xn_mpmas_adaptation.h"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xn_mpmas_interface_v10.h"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xn_mpmas_interface_v16.h"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xn_mpmas_interface_v27.h"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xn_mpmas_options.h"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xn_mpmas_translator.h"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xpn_main (copy).h"/>
+  <File Name="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/xpn_main.h"/>
+  </VirtualDirectory>
+  <Settings Type="Dynamic Library">
+    <GlobalSettings>
+      <Compiler Options="" C_Options="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="">
+        <LibraryPath Value="."/>
+      </Linker>
+      <ResourceCompiler Options=""/>
+    </GlobalSettings>
+    <Configuration Name="Release" CompilerType="gnu gcc" ReleasegerType="GNU gdb Releaseger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="" C_Options="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+        <IncludePath Value="."/>
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="" Required="yes">
+        <LibraryPath Value=""/>
+      </Linker>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/build/expertn_mpmas" IntermediateDirectory="" Command="" CommandArguments="" PauseExecWhenProcTerminates="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Releaseger IsRemote="no" RemoteHostName="" RemoteHostPort="" ReleasegerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Releaseger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="yes">
+        $b = project.build_properties[0]}
+        <RebuildCommand>/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/waf clean build  --targets=expertn_mpmas</RebuildCommand>
+        <CleanCommand>/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/waf clean  --targets=expertn_mpmas</CleanCommand>
+        <BuildCommand>/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/waf build  --targets=expertn_mpmas</BuildCommand>
+        <Target Name="Install">/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/waf install  --targets=expertn_mpmas</Target>
+        <Target Name="Build and Install">/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/waf build install  --targets=expertn_mpmas</Target>
+        <Target Name="Build All">/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/waf build</Target>
+        <Target Name="Rebuild All">/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/waf clean build</Target>
+        <Target Name="Clean All">/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/waf clean</Target>
+        <Target Name="Build and Install All">/home/xn-mpmas/xn-mpmas/xn-mpmas-code/src/waf build install</Target>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory/>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+    <Configuration Name="Release" CompilerType="gnu gcc" ReleasegerType="GNU gdb Releaseger" Type="" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="" C_Options="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="" IntermediateDirectory="./Release" Command="" CommandArguments="" UseSeparateReleaseArgs="no" ReleaseArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[
+      ]]>
+      </Environment>
+      <Releaseger IsRemote="no" RemoteHostName="" RemoteHostPort="" ReleasegerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Releaseger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="no">
+        <RebuildCommand/>
+        <CleanCommand/>
+        <BuildCommand/>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName/>
+        <WorkingDirectory/>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+  </Settings>
+</CodeLite_Project>
