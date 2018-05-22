@@ -606,7 +606,9 @@ void expertnclass_load_INI(expertnclass *self)
     /* Load the GKeyFile from keyfile.conf or return. */
     if (!g_key_file_load_from_file (keyfile, self->ini_file_name, flags, &error))
         {
-            PRINT_ERROR_ID(self,error->message);
+         //   PRINT_ERROR_ID(self,error->message);
+	fprintf(stderr,"ERROR  %s\t%d\t%s\n",__FILE__,__LINE__,error->message);fflush(stderr);
+
             exit(1);
         }
         

@@ -505,30 +505,27 @@ int main(int ac, char **av)
 							break;
 						case xnmpmasCouplingVirtualSlots:
 							translator.calcYieldsToArray(xpn->grid_xn_to_mpmas, cropYieldX, stoverYieldX, !configuration.isCleanSeason());
-							
-							if(mpmasGlobal::TestFun(19) && my_rank == 0)
-							{
-								char fnDbg [250];
-								sprintf(fnDbg,"YieldArrayDebugging%02d.txt", year);
-								printf("...writing YieldArrayDebugging file\n");			
-								FILE* dbgFH = fopen(fnDbg,"w");
-								if (dbgFH != NULL)
-								{
-									for(int i = 0; i < mpmasGridSize; i++)
-									{
-										fprintf(dbgFH, "%d\t%.2f\t%.2f\t%.2f\n",cropActIDX[i], cropAreaX[i], cropYieldX[i],stoverYieldX[i]);
-									}
-								}
-								fclose(dbgFH);
-							}
-							
 							break;
 						default:
 							sprintf(fehlertxt, "Error: Unknown coupling type! (Processor %d)\n", my_rank);
 							fehlerabbruch();
 					}
 					
-					
+					if(mpmasGlobal::TestFun(19) && my_rank == 0)
+					{
+						char fnDbg [250];
+						sprintf(fnDbg,"YieldArrayDebugging%02d.txt", year);
+						printf("...writing YieldArrayDebugging file\n");			
+						FILE* dbgFH = fopen(fnDbg,"w");
+						if (dbgFH != NULL)
+						{
+							for(int i = 0; i < mpmasGridSize; i++)
+							{
+								fprintf(dbgFH, "%d\t%.2f\t%.2f\t%.2f\n",cropActIDX[i], cropAreaX[i], cropYieldX[i],stoverYieldX[i]);
+							}
+						}
+						fclose(dbgFH);
+					}
 				
 				}
 				//process yields (communicate to MPMAS or write out
@@ -539,8 +536,8 @@ int main(int ac, char **av)
 						{ printf("...write yields to Maps\n");	
 							if (yield1Map != NULL)
 							{	stringstream fnYields1,fnYields2;
-								fnYields1 << configuration.getScenarioName() << "_yields1_"  <<  (firstyear + year) << ".txt";
-								fnYields2 << configuration.getScenarioName() << "_yields2_"  <<  (firstyear + year) << ".txt";
+								fnYields1 << configuration.getScenarioName() << "yields1_"  <<  (firstyear + year) << ".txt";
+								fnYields2 << configuration.getScenarioName() << "yields2_"  <<  (firstyear + year) << ".txt";
 								yield1Map->writeToFile(fnYields1.str());
 								yield2Map->writeToFile(fnYields2.str());							
 							}

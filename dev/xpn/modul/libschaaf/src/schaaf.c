@@ -52,7 +52,10 @@ int schaaf_fertilizer(schaaf* self)
     PNFERTILIZER pNF = xpn->pMa->pNFertilizer;
 	
     if ((pNF != NULL) && (pNF->Day > 0)) {
+		//Annotated by Hong on 20180515
+		//1. first action of fertilization:
 		if (self->first_fertil_done == 0){
+			//1.1 for regular XN:
 			if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
 									xpn->pTi->pSimTime->mon,
 									xpn->pTi->pSimTime->mday,
@@ -64,9 +67,29 @@ int schaaf_fertilizer(schaaf* self)
 					schaaf_mineral_fertilization(self);
 				if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
 					schaaf_organic_fertilization(self);
+					
+			}
+			
+			//1.2 for XN-MPMAS
+			if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
+									xpn->pTi->pSimTime->mon,
+									xpn->pTi->pSimTime->mday,
+									pNF->pNext->Year,
+									pNF->pNext->Month,
+									pNF->pNext->Day) == 0)){
+										
+				xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext; 						
+				self->first_fertil_done += 1;
+				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
+					schaaf_mineral_fertilization(self);
+				if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+					schaaf_organic_fertilization(self);
+					
 			}
 		}
+		//2. next actions of fertilization (self->first_fertil_done!=0):
 		else{
+			    //valid for both regular XN and transfered fertilization data from XN-MPMAS (saved in pNF->pNext) 
 				if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
 									xpn->pTi->pSimTime->mon,
 									xpn->pTi->pSimTime->mday,
@@ -79,6 +102,7 @@ int schaaf_fertilizer(schaaf* self)
 						schaaf_mineral_fertilization(self);
 					if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
 						schaaf_organic_fertilization(self);
+						
 				}
 		}
 		

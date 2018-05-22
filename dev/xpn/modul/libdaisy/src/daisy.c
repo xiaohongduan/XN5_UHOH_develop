@@ -13,7 +13,7 @@
 
 G_DEFINE_TYPE(daisy, daisy, EXPERTN_MODUL_BASE_TYPE);
 
-#define check_soil_temp(temp) if (temp>40.0) \
+#define check_soil_temp(temp) if (temp>60.0) \
 										{\
 											PRINT_WARNING_ID(xpn,"Soil Temp too high");\
 											self->too_high_or_low_temp=1;\

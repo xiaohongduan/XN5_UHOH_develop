@@ -73,6 +73,7 @@ int mpmas_coupling_Load(mpmas_coupling *self)
     //self->WRITE_mpmas_xn =(STRUCT_WRITE_mpmas_xn*)xpn_register_var_get_pointer(xpn->pXSys->var_list,"pWRITE_mpmas_xn");
 	
 	self->new_plant = 0;	
+	self->new_management=0; //Added by Hong on 20180518
     self->simulation_days = 0;
     self->count = 0;
     self->restart = 1;
@@ -352,10 +353,15 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
           } //End of harvest_done==1
          }// End of ownGrid == previousGrid but !=currentGrid  	 
 
-	 
-
-		// 2.3 In case of no switching
-        else // ownGrid == previousGrid and ==currentGrid or ownGrid != previousGrid and !=currentGrid, stay unchanged
+        // 2.3 In case of ownGrid == previousGrid and ==currentGrid, added by Hong on 20180518
+	    else if ((self->mpmas_to_xn->own_grid_number==self->previousGrid)&&(self->mpmas_to_xn->own_grid_number==self->mpmas_to_xn->currentGrid)) 
+		{
+		   self->new_management=0;
+		   self->mpmas_to_xn->updateManagement=0;
+           self->previousGrid=self->mpmas_to_xn->currentGrid;	
+          }
+		// 2.4 In case of ownGrid != previousGrid and !=currentGrid, 
+        else 
          {
 		  	 
            self->mpmas_to_xn->updateManagement=0;
@@ -579,9 +585,10 @@ if (NewDay(pTi))
             fertil = g_malloc0_n(1,sizeof(STNFERTILIZER));
             fertil_first = g_malloc0_n(1,sizeof(STNFERTILIZER));
             fertil->acName = g_strdup_printf("Mineral fertilizer");
-            fertil->Day = pTi->pSimTime->mday;
+            fertil->Day = pTi->pSimTime->mday;//Out-noted by hong on 20180515
             fertil->Month = pTi->pSimTime->mon;
             fertil->Year = pTi->pSimTime->iyear;
+			xpn_time_date_add_dt(&fertil->Year,&fertil->Month, &fertil->Day, 1);//added by Hong on 20180516
             fertil->fNO3N = self->mineralFertilization[self->nextMinFertAction].no3n;
             fertil->fNH4N = self->mineralFertilization[self->nextMinFertAction].nh4n;
             fertil->fUreaN = self->mineralFertilization[self->nextMinFertAction].urea;
@@ -589,8 +596,10 @@ if (NewDay(pTi))
             fertil->acCode =  self->mineralFertilization[self->nextMinFertAction].code;
             fertil->pNext = fertil_first;
             fertil_first->pBack = fertil;                                           
-            pMa->pNFertilizer = NULL;
-            pMa->pNFertilizer = fertil;
+            //pMa->pNFertilizer = NULL;//Out-noted by hong on 20180515
+            //pMa->pNFertilizer = fertil;
+			pMa->pNFertilizer->pNext = NULL;
+			pMa->pNFertilizer->pNext = fertil;//Added by Hong on 20180515
             
             //Begin of Hong: actualMinFertDate
             self->xn_to_mpmas->actualMinFertDate[self->nextMinFertAction].day=pTi->pSimTime->mday;
@@ -607,9 +616,10 @@ if (NewDay(pTi))
             fertil = g_malloc0_n(1,sizeof(STNFERTILIZER));
             fertil_first = g_malloc0_n(1,sizeof(STNFERTILIZER));
             fertil->acName = g_strdup_printf("Organic fertilizer");
-            fertil->Day = pTi->pSimTime->mday;
+            fertil->Day = pTi->pSimTime->mday;//Out-noted by hong on 20180515
             fertil->Month = pTi->pSimTime->mon;
             fertil->Year = pTi->pSimTime->iyear;
+			xpn_time_date_add_dt(&fertil->Year,&fertil->Month, &fertil->Day, 1);//added by Hong on 20180516
             fertil->fDryMatter = self->organicFertilization[self->nextOrgFertAction].drymatter;
             fertil->fNH4N = self->organicFertilization[self->nextOrgFertAction].nh4n;
             fertil->fNorgManure = self->organicFertilization[self->nextOrgFertAction].org_subst;
@@ -617,8 +627,10 @@ if (NewDay(pTi))
             fertil->acCode =  self->organicFertilization[self->nextOrgFertAction].code;
             fertil->pNext = fertil_first;
             fertil_first->pBack = fertil;                                           
-            pMa->pNFertilizer = NULL;
-            pMa->pNFertilizer = fertil;
+            //pMa->pNFertilizer = NULL; //Out-noted by hong on 20180515
+            //pMa->pNFertilizer = fertil;
+			pMa->pNFertilizer->pNext = NULL;
+            pMa->pNFertilizer->pNext = fertil;//Added by Hong on 20180515
             self->nextOrgFertAction++;
         }
 
@@ -707,9 +719,10 @@ if (NewDay(pTi))
             irr = g_malloc0_n(1,sizeof(STIRRIGATION));
             irr_first = g_malloc0_n(1,sizeof(STIRRIGATION));
 			till->acName = g_strdup_printf("irrigation");
-			irr->Day = pTi->pSimTime->mday+1;
+			irr->Day = pTi->pSimTime->mday;
 			irr->Month = pTi->pSimTime->mon;
             irr->Year = pTi->pSimTime->iyear;
+			xpn_time_date_add_dt(&irr->Year,&irr->Month, &irr->Day, 1);//added by Hong on 20180516
             irr->fAmount = self->irrigation[self->nextIrrigation].quantity;
          
 
@@ -728,9 +741,10 @@ if (NewDay(pTi))
             till = g_malloc0_n(1,sizeof(STTILLAGE));
             till_first = g_malloc0_n(1,sizeof(STTILLAGE));
             till->acName = g_strdup_printf("tillage");
-            till->Day = pTi->pSimTime->mday+1;
+            till->Day = pTi->pSimTime->mday;
             till->Month = pTi->pSimTime->mon;
             till->Year = pTi->pSimTime->iyear;
+			xpn_time_date_add_dt(&till->Year,&till->Month, &till->Day, 1);//added by Hong on 20180516
             till->fDepth = self->tillage[self->nextTillage].fDepth;
 			//till->fEffMix = self->tillage[self->nextTillage].fEffMix;
 			//till->fEffLoose = self->tillage[self->nextTillage].fEffLoose;
@@ -902,9 +916,7 @@ int checkIfTillage(mpmas_coupling *self)
 	//1. if timing of tillage is fixed, check whether indicated date has been reached
     if (self->tillage[self->nextTillage].typeAdaptiveTillage==adaptiveTillageNotAdaptive) 
 	{
-
-	//one day before the indicated day (else too late for calling teh function)
-      if (xpn_time_compare_date(self->tillage[self->nextTillage].tillDate.year,self->tillage[self->nextTillage].tillDate.month,self->tillage[self->nextTillage].tillDate.day,currentYear,currentMonth,currentDay+1)==0)
+      if (xpn_time_compare_date(self->tillage[self->nextTillage].tillDate.year,self->tillage[self->nextTillage].tillDate.month,self->tillage[self->nextTillage].tillDate.day,currentYear,currentMonth,currentDay)==0)
 	   {
 		// PRINT_MESSAGE(xpn,1,"tomorrow is default TILLAGE date");  //for debug
 		 return 1;
