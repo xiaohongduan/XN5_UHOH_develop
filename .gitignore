@@ -1,0 +1,9 @@
+
+built/bin/expertn_bin
+built/bin/libexpertn_class.so
+built/bin/libexpertn_modul_base.so
+built/models/**
+dev/.lock*
+dev/.waf-*
+dev/build/**
+xnmpmas/expertn_mpmas_mpi
