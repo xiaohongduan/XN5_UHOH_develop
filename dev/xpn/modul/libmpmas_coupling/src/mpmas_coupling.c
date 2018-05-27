@@ -59,14 +59,7 @@ int mpmas_coupling_Load(mpmas_coupling *self)
         {
             self->XPN_Moduls_full[p]=g_malloc0(sizeof(struct_module));
             memcpy(self->XPN_Moduls_full[p],xpn_class[id]->XPN_Moduls[p],sizeof(struct_module));
- /*       
-		if ((strcmp(xpn_class[id]->XPN_Moduls[p]->SubModul,"gecros_BiomassGrowth")==0)) //added by Hong on 20180319
-				{
-				self->cropModel="gecros";
-				//self->cropModel_done=1;
-				PRINT_MESSAGE(xpn,1,"gecros used");
-				}
-*/		
+
 		}
 //End of Hong   
      
@@ -74,29 +67,54 @@ int mpmas_coupling_Load(mpmas_coupling *self)
 	
 	self->new_plant = 0;	
 	self->new_management=0; //Added by Hong on 20180518
+	self->harvest_done=0;
+	self->mainCrop_done=0; //Added by Hong on 20180524
+	self->lastAction_done=1; //Changed Troost 20180524 (for first year, so that new plant config can be read correctly within the grid dependent and the lastAction_done condition switches)
+	self->checkSwitchDate_done=0;	
+	self->harvestAdaptive=0; //Added by Hong on 20180525
+	self->coverCrop_harvested = 0;//added Troost 180527
+	
     self->simulation_days = 0;
     self->count = 0;
     self->restart = 1;
+
+// added Troost 180527
+	self->lastActionDate.day= 0;
+	self->lastActionDate.month= 0;
+	self->lastActionDate.year=  0;
+
+
+/*  removed Troost 180527	
+	//Begin of Hong: to record the date of last action of each management; if there is no action, date remains 0 
+	self->lastMinFertilDate.day= 0; //added by Hong on 20180524
+	self->lastMinFertilDate.month= 0;
+	self->lastMinFertilDate.year= 0;
 	
-	//Begin of Hong: to determine the date of data transfer (after harvest and tillage of )
-	self->dataTransferDate.day= 0;
-	self->dataTransferDate.month= 0;
-	self->dataTransferDate.year= 0;
+	self->lastOrgFertilDate.day= 0; 
+	self->lastOrgFertilDate.month= 0;
+	self->lastOrgFertilDate.year= 0;
 	
-	self->harvest_done=0;
-	self->tillageAfterHarvest_done=0;
-	self->checkSwitchDate_done=0;
+	self->lastIrrigationDate.day= 0; 
+	self->lastIrrigationDate.month= 0;
+	self->lastIrrigationDate.year= 0;
+	
+	self->lastTillageDate.day= 0;
+	self->lastTillageDate.month= 0;
+	self->lastTillageDate.year= 0;	
+	*/
+	self->stopDate.year= 0;
+	self->stopDate.month=0;
+	self->stopDate.day=0;
 		
     if ((self->mpmas_to_xn==NULL) || (self->xn_to_mpmas==NULL))
         {
-            PRINT_ERROR("No pmpmas_to_xn");
+            PRINT_ERROR("No p_mpmas_to_xn");
         }   
     return RET_SUCCESS;
 }
 int mpmas_coupling_Austausch(mpmas_coupling *self)
 {
     expertn_modul_base *xpn = &(self->parent);
-	
     //Begin of Hong: turn-off module of not-currentGrid
     expertnclass** xpn_class=(expertnclass **)xpn->pXSys->xpn_classes;
     int p, id, Module_len;
@@ -162,14 +180,14 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
     get_daily_air_and_soil_temperatures(self);
     
 // Begin of Hong: ######################## turn-on / turn-off modules and data transfer ######################################### 
-    //added by Hong on 20180319: 
+    //added by Hong on 20180319: (since GECROS and CERES/SPASS use different crop.ini) 
 	self->cropModel = xpn_register_var_get_pointer(xpn->pXSys->var_list, "Config.plant.biomass growth");
      		
 	//memset(stopDate, 0, sizeof (xnmpmasDate));
-	if ((self->mpmas_to_xn->updateManagement==1))
+	if ((self->mpmas_to_xn->updateManagement==1))//Hong: only if on stopDate 
     {
-	
-	  //1. For the first year, let the not-currentGrid turn-off	
+
+	  //1. For the first year: turn-off the irrelevant modules of not-currentGrid 	
       if (pTi->pSimTime->bFirstRound==1) // only for the first year
 	  {
 		  if ((self->mpmas_to_xn->own_grid_number!=self->mpmas_to_xn->currentGrid)) // search for not-currentGrid
@@ -185,7 +203,7 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
                           
                         }
                     }
-				PRINT_MESSAGE(xpn,1,"irrelevant module turned off\n");// for debug	
+				PRINT_MESSAGE(xpn,1,"irrelevant modules turned off\n");// for debug	
 				
 				// skip reading of new plant and management:
 				self->new_plant = 1;
@@ -204,8 +222,8 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
          {
 		  // because of skipping the plant growth last year, self->new_plant won't be reset to 0 at harvest:
 		  self->new_plant = 0;
-		   self->new_management = 0;
-		  
+		  self->new_management = 0;
+		  self->lastAction_done=0;
 		  //2.1.(1)turn-on module by copy of XPN_Moduls_full
           for (p=0;p<Module_len;p++)
                 {                              
@@ -225,8 +243,7 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
        else if ((self->mpmas_to_xn->own_grid_number==self->previousGrid)&&(self->mpmas_to_xn->own_grid_number!=self->mpmas_to_xn->currentGrid)) // ownGrid == previousGrid but !=currentGrid
          {  
 			 
-		  if ((self->tillageAfterHarvest_done ==1)&&(xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->stopDate.year,self->stopDate.month,self->stopDate.day)>=1))
-		  
+		  if ((self->checkSwitchDate_done ==1)&&(xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->stopDate.year,self->stopDate.month,self->stopDate.day)>=1))
 			  {
 		    
 		  //2.2.(1) Begin of data transfer, pass data from previousGrid to updated currentGrid            
@@ -343,6 +360,8 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
           self->mpmas_to_xn->updateManagement=0;
           self->previousGrid=self->mpmas_to_xn->currentGrid;
 		  
+		  self->checkSwitchDate_done=0;	//Added by Hong on 20180524
+		 
 		  self->new_plant = 1;
 		  self->new_management = 1;
 		  self->harvest_done=0;
@@ -350,24 +369,43 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
 		  pPl->pModelParam->HarvestMonth=0;
 		  pPl->pModelParam->HarvestYear=0;
 		  		  			 
-          } //End of harvest_done==1
+          } //End of checkSwitchDate_done==1
          }// End of ownGrid == previousGrid but !=currentGrid  	 
 
-        // 2.3 In case of ownGrid == previousGrid and ==currentGrid, added by Hong on 20180518
-	    else if ((self->mpmas_to_xn->own_grid_number==self->previousGrid)&&(self->mpmas_to_xn->own_grid_number==self->mpmas_to_xn->currentGrid)) 
+        // 2.3 In case of ownGrid == previousGrid and ==currentGrid, added by Hong on 20180518 , adapted by Troost 180527
+	    else if ((self->mpmas_to_xn->own_grid_number==self->previousGrid)
+					&&(self->mpmas_to_xn->own_grid_number==self->mpmas_to_xn->currentGrid)) 
 		{
-		   self->new_management=0;
-		   self->mpmas_to_xn->updateManagement=0;
-           self->previousGrid=self->mpmas_to_xn->currentGrid;	
+		   if ( self->lastAction_done==1) {
+			   self->new_plant = 0;//Hong added on 20180523: to read new crop  
+			   self->new_management=0;
+			   self->mainCrop_done=0;
+			   self->lastAction_done=0;
+			   self->checkSwitchDate_done=0;
+			   self->coverCrop_harvested=0;
+			   self->mpmas_to_xn->updateManagement=0;
+			   PRINT_MESSAGE(xpn,1,"Recognize new management data");// for debug
+
+			   self->previousGrid=self->mpmas_to_xn->currentGrid;	
+		   }
+
           }
 		// 2.4 In case of ownGrid != previousGrid and !=currentGrid, 
-        else 
+        else if ((self->mpmas_to_xn->own_grid_number!=self->previousGrid)
+					&&(self->mpmas_to_xn->own_grid_number!=self->mpmas_to_xn->currentGrid)) //added Troost 180527 (better explicit check here ! to avoid else catching unintended cases)
          {
-		  	 
+		  	//in this case, self->new_plant and self->new_management should remain the value of 1 
            self->mpmas_to_xn->updateManagement=0;
            self->previousGrid=self->mpmas_to_xn->currentGrid;
          }
-	    				
+         // start added Troost 180527
+         else 
+         { // explicit logical error catch, should never be reached, unless someone introduced an additional case in the ifs that is not covered by the other else ifs
+				S  = g_strdup_printf("ERROR in mpmas_coupling.c: Unforeseen grid switch case reached!" ); 
+				PRINT_ERROR(S);
+				g_free(S);
+		 }				
+		 //end added Troost 180527
       } //End of self->mpmas_to_xn->updateManagement=1      
            
 // End of Hong ############################ turn-on or turn-off module & data transfer ##########################################
@@ -375,25 +413,82 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
 //Begin of Hong: cover crop, tillage ##############################################################
 if (NewDay(pTi))
 	{	
+		 //test Troost 20180527
+		
+		S = g_strdup_printf("Mpmas coupling state: UM %d, nP %d, nM %d, cCh %d, mCd %d, hd %d, lAd %d\n"		,self->mpmas_to_xn->updateManagement,self->new_plant,self->new_management,self->coverCrop_harvested ,self->mainCrop_done,self->harvest_done,self->lastAction_done);
+	    PRINT_MESSAGE(xpn,4,S);// for debug
+		g_free(S);
+		
 	   //1. read plant info:	
 	   if ((self->new_plant == 0)&&(self->mpmas_to_xn->own_grid_number==self->mpmas_to_xn->currentGrid))
         {
 			// memset(self->xn_to_mpmas, 0, sizeof (STRUCT_xn_to_mpmas)); // not the right place here
-			        self->harvestAdaptive=0;// Hong: default no adaptive!
-			
+				self->harvestAdaptive=0;// Hong: default no adaptive!
+				self->harvest_done=0;
+				
+				//start added Troost 180527
+				//consistency checks sowing date and cover crop sowing date
+
+				//start added Troost 180527
+				//consistency checks sowing date and cover crop sowing date
+				if ( (self->mpmas_to_xn->coverCropCode[0] != '\0') && (self->coverCrop_harvested==0) &&
+						(xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
+						self->mpmas_to_xn->coverCropSowDate.year,self->mpmas_to_xn->coverCropSowDate.month,
+						self->mpmas_to_xn->coverCropSowDate.day )> 0) )
+				{
+						S  = g_strdup_printf("ERROR: sowing of new cover crop should have "
+											 "been done already %04d-%02d-%02d,\nbut switching to new plant only now: %04d-%02d-%02d.\n",
+											  self->mpmas_to_xn->coverCropSowDate.year,
+											  self->mpmas_to_xn->coverCropSowDate.month, 
+											  self->mpmas_to_xn->coverCropSowDate.day,
+											  pTi->pSimTime->iyear,
+											  pTi->pSimTime->mon,
+											  pTi->pSimTime->mday);
+						PRINT_ERROR(S);
+						g_free(S);		
+						
+						self->new_plant = 0;
+						self->coverCrop_harvested=1;
+						
+				}	   
+				if ( 	xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
+						self->mpmas_to_xn->sowDate.year,self->mpmas_to_xn->sowDate.month,self->mpmas_to_xn->sowDate.day)
+						> 0) 
+				{
+						S  = g_strdup_printf("ERROR: sowing of new crop should have "
+											 "been done already %04d-%02d-%02d,\nbut switching to new plant only now: %04d-%02d-%02d.\n",
+											  self->mpmas_to_xn->sowDate.year,
+											  self->mpmas_to_xn->sowDate.month, 
+											  self->mpmas_to_xn->sowDate.day,
+											  pTi->pSimTime->iyear,
+											  pTi->pSimTime->mon,
+											  pTi->pSimTime->mday);
+						PRINT_ERROR(S);
+						g_free(S);		
+						
+						self->new_plant = 1; //set variables so that simulation can continue empty until fixed harvest date
+						self->harvest_done=0;
+						self->mainCrop_done=1;		
+						pPl->pModelParam->HarvestDay = self->mpmas_to_xn->harvestDate.day;
+						pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->harvestDate.month;
+						pPl->pModelParam->HarvestYear = self->mpmas_to_xn->harvestDate.year;
+						self->harvestAdaptive = 0;
+				}	   
+			    //end added Troost 180527
+
+			        
+			    if (self->mpmas_to_xn->coverCropCode[0] == '\0') {
+					 self->coverCrop_harvested= 1;
+			    }    
 			      //1.1 read cover crop info if any
-					if ((self->mpmas_to_xn->coverCropCode[0] != '\0')&&(xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->mpmas_to_xn->coverCropSowDate.year,self->mpmas_to_xn->coverCropSowDate.month,self->mpmas_to_xn->coverCropSowDate.day)<=0))         
-					{
+				if ((self->mpmas_to_xn->coverCropCode[0] != '\0') && self->coverCrop_harvested==0 &&(xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->mpmas_to_xn->coverCropSowDate.year,self->mpmas_to_xn->coverCropSowDate.month,self->mpmas_to_xn->coverCropSowDate.day)<=0))         
+				{
                     PRINT_MESSAGE(xpn,1,"read new cover crop info");
 					
 					self->new_plant = 1;
 					self->daysSinceBBCH1 = 0;
 					self->daysSinceBBCH2 = 0;
-					
-					self->harvest_done=0;//Hong
-					self->tillageAfterHarvest_done=0;
-					self->checkSwitchDate_done=0;
-					
+										
 					pPl->pGenotype->acCropCode = self->mpmas_to_xn->coverCropCode;
                     pPl->pGenotype->acCropName = self->mpmas_to_xn->coverCropName;
                     pSI->Day = self->mpmas_to_xn->coverCropSowDate.day;
@@ -407,11 +502,6 @@ if (NewDay(pTi))
                     pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->coverCropPloughUnderDate.month;
                     pPl->pModelParam->HarvestYear = self->mpmas_to_xn->coverCropPloughUnderDate.year;
 										
-					//self->harvestAdaptive = self->mpmas_to_xn->harvestAdaptive;
-					//self->harvestBBCH1 = self->mpmas_to_xn->harvestBBCH1;	
-					//self->harvestBBCH1ExtraDays = self->mpmas_to_xn->harvestBBCH1ExtraDays;
-					//self->harvestBBCH2 = self->mpmas_to_xn->harvestBBCH2;
-					//self->harvestBBCH2ExtraDays = self->mpmas_to_xn->harvestBBCH2ExtraDays;
 					
 					pPl->pModelParam->cResidueCarryOff = 0; //residuals of coverCrop liegen lassen
 
@@ -420,58 +510,57 @@ if (NewDay(pTi))
 				 
 					 //1.1.2 in case of using crop model CERES/SPASS, crop ini file has to be reloaded. 	
 				
-				if(strcmp(self->cropModel,"GECROS BiomassGrowth")!=0) //added by Hong on 20180319
-				{ 
-	                S  = g_strdup_printf("Config.ceres.%s", pPl->pGenotype->acCropName);
-                    read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
-                    g_free(S);
-                    if (read_filename==NULL)
-                        {
-                            S  = g_strdup_printf("Global_Config.options.%s", pPl->pGenotype->acCropName);
-                            read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
-                            g_free(S);
-                            if (read_filename==NULL)
-                                {
-                                    S  = g_strdup_printf("Entry 'ceres.%s' or 'global.%s' is missing in your options!",pPl->pGenotype->acCropName,pPl->pGenotype->acCropName);
-                                    PRINT_ERROR(S);
-                                    g_free(S);
-                                }
-                        }
-                    if (read_filename!=NULL)
-                        {
-                            //Read plant parameters
-                            S2 = expertn_modul_base_replace_std_templates(xpn,read_filename);
-                            if (S2!=NULL)
-                                {
-                                    read_filename = get_fullpath_from_relative(xpn->pXSys->base_path, S2);
-                                    if (expertn_modul_base_GenotypeRead(xpn,pPl,read_filename)!=0)
-                                        {
-                                            S  = g_strdup_printf("Error Read '%s.ini'-file, check 'crop_rotation.ini' and your model options", pPl->pGenotype->acCropName);
-                                            PRINT_ERROR(S);
-                                            g_free(S);
-                                        }
-                                    read_filename2 = g_strdup_printf("%s",read_filename);
-                                    free(read_filename);
-                                    g_free(S2);
-                                }
-                        }
+					if(strcmp(self->cropModel,"GECROS BiomassGrowth")!=0) //added by Hong on 20180319
+					{ 
+						S  = g_strdup_printf("Config.ceres.%s", pPl->pGenotype->acCropName);
+						read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
+						g_free(S);
+						if (read_filename==NULL)
+							{
+								S  = g_strdup_printf("Global_Config.options.%s", pPl->pGenotype->acCropName);
+								read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
+								g_free(S);
+								if (read_filename==NULL)
+									{
+										S  = g_strdup_printf("Entry 'ceres.%s' or 'global.%s' is missing in your options!",pPl->pGenotype->acCropName,pPl->pGenotype->acCropName);
+										PRINT_ERROR(S);
+										g_free(S);
+									}
+							}
+						if (read_filename!=NULL)
+							{
+								//Read plant parameters
+								S2 = expertn_modul_base_replace_std_templates(xpn,read_filename);
+								if (S2!=NULL)
+									{
+										read_filename = get_fullpath_from_relative(xpn->pXSys->base_path, S2);
+										if (expertn_modul_base_GenotypeRead(xpn,pPl,read_filename)!=0)
+											{
+												S  = g_strdup_printf("Error Read '%s.ini'-file, check 'crop_rotation.ini' and your model options", pPl->pGenotype->acCropName);
+												PRINT_ERROR(S);
+												g_free(S);
+											}
+										read_filename2 = g_strdup_printf("%s",read_filename);
+										free(read_filename);
+										g_free(S2);
+									}
+							}
 
-				    expertn_modul_base_PlantVariableInitiation(pPl, pSo, pSI);
-				}					
-				   } //end new configuration necessary for coverCrop
+						expertn_modul_base_PlantVariableInitiation(pPl, pSo, pSI);
+					}					
+			   } //end new configuration necessary for coverCrop
 			
 			// 1.2 read crop info (sometimes after tillage of cover crop residues)
-              else if (xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->mpmas_to_xn->sowDate.year,self->mpmas_to_xn->sowDate.month,self->mpmas_to_xn->sowDate.day)<=0)
+              else if (xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
+						self->mpmas_to_xn->sowDate.year,self->mpmas_to_xn->sowDate.month,self->mpmas_to_xn->sowDate.day)<=0)
                 {			
 					PRINT_MESSAGE(xpn,1,"read crop management");
 					
 					self->new_plant = 1;
+					self->harvest_done=0;
+					self->mainCrop_done=1;//Added by Hong on 20180524
 					self->daysSinceBBCH1 = 0;
-					self->daysSinceBBCH2 = 0;
-					
-					self->harvest_done=0;//Hong
-					self->tillageAfterHarvest_done=0;
-					self->checkSwitchDate_done=0;
+					self->daysSinceBBCH2 = 0;										
 		
 					pPl->pGenotype->acCropCode = self->mpmas_to_xn->CropCode;
                     pPl->pGenotype->acCropName = self->mpmas_to_xn->CropName;
@@ -499,52 +588,53 @@ if (NewDay(pTi))
 				 
 					 //1.1.2 in case of using crop model CERES/SPASS, crop ini file has to be reloaded. 	      
 					if(strcmp(self->cropModel,"GECROS BiomassGrowth")!=0) //added by Hong on 20180319
-				{ 
-	                S  = g_strdup_printf("Config.ceres.%s", pPl->pGenotype->acCropName);
-                    read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
-                    g_free(S);
-                    if (read_filename==NULL)
-                        {
-                            S  = g_strdup_printf("Global_Config.options.%s", pPl->pGenotype->acCropName);
-                            read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
-                            g_free(S);
-                            if (read_filename==NULL)
-                                {
-                                    S  = g_strdup_printf("Entry 'ceres.%s' or 'global.%s' is missing in your options!",pPl->pGenotype->acCropName,pPl->pGenotype->acCropName);
-                                    PRINT_ERROR(S);
-                                    g_free(S);
-                                }
-                        }
-                    if (read_filename!=NULL)
-                        {
-                            //Read plant parameters
-                            S2 = expertn_modul_base_replace_std_templates(xpn,read_filename);
-                            if (S2!=NULL)
-                                {
-                                    read_filename = get_fullpath_from_relative(xpn->pXSys->base_path, S2);
-                                    if (expertn_modul_base_GenotypeRead(xpn,pPl,read_filename)!=0)
-                                        {
-                                            S  = g_strdup_printf("Error Read '%s.ini'-file, check 'crop_rotation.ini' and your model options", pPl->pGenotype->acCropName);
-                                            PRINT_ERROR(S);
-                                            g_free(S);
-                                        }
-                                    read_filename2 = g_strdup_printf("%s",read_filename);
-                                    free(read_filename);
-                                    g_free(S2);
-                                }
-                        }
-		
-					expertn_modul_base_PlantVariableInitiation(pPl, pSo, pSI);
-				}					
-				}//end new configuration necessary of crop	
+					{ 
+						S  = g_strdup_printf("Config.ceres.%s", pPl->pGenotype->acCropName);
+						read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
+						g_free(S);
+						if (read_filename==NULL)
+							{
+								S  = g_strdup_printf("Global_Config.options.%s", pPl->pGenotype->acCropName);
+								read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
+								g_free(S);
+								if (read_filename==NULL)
+									{
+										S  = g_strdup_printf("Entry 'ceres.%s' or 'global.%s' is missing in your options!",pPl->pGenotype->acCropName,pPl->pGenotype->acCropName);
+										PRINT_ERROR(S);
+										g_free(S);
+									}
+							}
+						if (read_filename!=NULL)
+							{
+								//Read plant parameters
+								S2 = expertn_modul_base_replace_std_templates(xpn,read_filename);
+								if (S2!=NULL)
+									{
+										read_filename = get_fullpath_from_relative(xpn->pXSys->base_path, S2);
+										if (expertn_modul_base_GenotypeRead(xpn,pPl,read_filename)!=0)
+											{
+												S  = g_strdup_printf("Error Read '%s.ini'-file, check 'crop_rotation.ini' and your model options", pPl->pGenotype->acCropName);
+												PRINT_ERROR(S);
+												g_free(S);
+											}
+										read_filename2 = g_strdup_printf("%s",read_filename);
+										free(read_filename);
+										g_free(S2);
+									}
+							}
+			
+						expertn_modul_base_PlantVariableInitiation(pPl, pSo, pSI);
+					}					
+			}//end new configuration necessary of crop	
 																			
 		} //end self->new_plant = 0;
 			
 		// 2. read management info:
-	  if (self->new_management==0)
+	  if ((self->new_management==0)&&(self->mpmas_to_xn->own_grid_number==self->mpmas_to_xn->currentGrid))
 		{
 			        self->new_management=1;
-					
+				   PRINT_MESSAGE(xpn,1,"reached new_management==0");// for debug
+
 					self->nextMinFertAction = 0;
 					self->nextOrgFertAction = 0;
 					self->nextIrrigation = 0; 
@@ -568,7 +658,194 @@ if (NewDay(pTi))
 						
 					for ( i = 0; i < self->mpmas_to_xn->numTill; ++i)
 						self->tillage[i] = self->mpmas_to_xn->tillage[i];	
-															
+						
+		// added Troost 180527
+		//consistency check: warn if at reading of management action should already have been done	
+					if (self->numMinFert > 0 && self->mineralFertilization[0].adaptive == 0						
+							&& xpn_time_compare_date(
+												  self->mineralFertilization[self->numMinFert-1].fertDate.year,
+												  self->mineralFertilization[self->numMinFert-1].fertDate.month, 
+												  self->mineralFertilization[self->numMinFert-1].fertDate.day,
+												  pTi->pSimTime->iyear,
+												  pTi->pSimTime->mon,
+												  pTi->pSimTime->mday 						  
+								  ) < 0 )
+					{
+							S  = g_strdup_printf("ERROR: first scheduled mineral fertilization action of new crop should have "
+												 "been done already %04d-%02d-%02d,\nbut switching to new management only now: %04d-%02d-%02d.\n",
+												 self->mineralFertilization[self->numMinFert-1].fertDate.year,
+												  self->mineralFertilization[self->numMinFert-1].fertDate.month, 
+												  self->mineralFertilization[self->numMinFert-1].fertDate.day,
+												  pTi->pSimTime->iyear,
+												  pTi->pSimTime->mon,
+												  pTi->pSimTime->mday);
+							PRINT_ERROR(S);
+							g_free(S);	
+									
+					}		
+					if (self->numOrgFert > 0 && self->organicFertilization[0].adaptive == 0						
+							&& xpn_time_compare_date(
+												  self->organicFertilization[self->numOrgFert-1].orgfertDate.year,
+												  self->organicFertilization[self->numOrgFert-1].orgfertDate.month, 
+												  self->organicFertilization[self->numOrgFert-1].orgfertDate.day,
+												  pTi->pSimTime->iyear,
+												  pTi->pSimTime->mon,
+												  pTi->pSimTime->mday 						  
+								  ) < 0 )
+					{
+							S  = g_strdup_printf("ERROR: first scheduled organic fertilization action of new crop should have "
+												 "been done already %04d-%02d-%02d,\nbut switching to new management only now: %04d-%02d-%02d.\n",
+												 self->organicFertilization[self->numOrgFert-1].orgfertDate.year,
+												  self->organicFertilization[self->numOrgFert-1].orgfertDate.month, 
+												  self->organicFertilization[self->numOrgFert-1].orgfertDate.day,
+												  pTi->pSimTime->iyear,
+												  pTi->pSimTime->mon,
+												  pTi->pSimTime->mday);
+							PRINT_ERROR(S);
+							g_free(S);	
+									
+					}	
+					if (self->numIrrig > 0 					
+							&& xpn_time_compare_date(
+												  self->irrigation[self->numIrrig-1].irrDate.year,
+												  self->irrigation[self->numIrrig-1].irrDate.month, 
+												  self->irrigation[self->numIrrig-1].irrDate.day,
+												  pTi->pSimTime->iyear,
+												  pTi->pSimTime->mon,
+												  pTi->pSimTime->mday 						  
+								  ) < 0 )
+					{
+							S  = g_strdup_printf("ERROR: first scheduled irrigation action of new crop should have "
+												 "been done already %04d-%02d-%02d,\nbut switching to new management only now: %04d-%02d-%02d.\n",
+												 self->irrigation[self->numOrgFert-1].irrDate.year,
+												  self->irrigation[self->numOrgFert-1].irrDate.month, 
+												  self->irrigation[self->numOrgFert-1].irrDate.day,
+												  pTi->pSimTime->iyear,
+												  pTi->pSimTime->mon,
+												  pTi->pSimTime->mday);
+							PRINT_ERROR(S);
+							g_free(S);	
+									
+					}	
+					if (self->numTill > 0 ) 
+					{ 
+						if( self->tillage[0].typeAdaptiveTillage==adaptiveTillageNotAdaptive 
+								&& xpn_time_compare_date(
+													  self->tillage[self->numTill-1].tillDate.year,
+													  self->tillage[self->numTill-1].tillDate.month, 
+													  self->tillage[self->numTill-1].tillDate.day,
+													  pTi->pSimTime->iyear,
+													  pTi->pSimTime->mon,
+													  pTi->pSimTime->mday 						  
+									  ) < 0 )
+						{
+								S  = g_strdup_printf("ERROR: first scheduled tillage action of new crop should have "
+													 "been done already %04d-%02d-%02d,\nbut switching to new management only now: %04d-%02d-%02d.\n",
+													 self->tillage[self->numTill-1].tillDate.year,
+													  self->tillage[self->numTill-1].tillDate.month, 
+													  self->tillage[self->numTill-1].tillDate.day,
+													  pTi->pSimTime->iyear,
+													  pTi->pSimTime->mon,
+													  pTi->pSimTime->mday);
+								PRINT_ERROR(S);
+								g_free(S);	
+										
+						}	
+						else if (self->tillage[0].typeAdaptiveTillage==adaptiveTillageBeforeSowing)
+						{
+							int daysBeforeAfter;
+							int currentDay, currentMonth, currentYear;
+							xnmpmasDate adaptiveTillageDate;
+								
+							daysBeforeAfter = self->tillage[0].daysBeforeAfter;		
+							adaptiveTillageDate.year = self->mpmas_to_xn->sowDate.year;
+							adaptiveTillageDate.month = self->mpmas_to_xn->sowDate.month;
+							adaptiveTillageDate.day = self->mpmas_to_xn->sowDate.day;
+							xpn_time_date_add_dt(&adaptiveTillageDate.year,&adaptiveTillageDate.month, &adaptiveTillageDate.day, -daysBeforeAfter);
+							
+							if ( xpn_time_compare_date(
+													  adaptiveTillageDate.year,
+													  adaptiveTillageDate.month, 
+													  adaptiveTillageDate.day,
+													  pTi->pSimTime->iyear,
+													  pTi->pSimTime->mon,
+													  pTi->pSimTime->mday 						  
+									  ) < 0 )
+							{
+									S  = g_strdup_printf("ERROR: first scheduled tillage action of new crop should have "
+														 "been done already %04d-%02d-%02d,\nbut switching to new management only now: %04d-%02d-%02d.\n",
+														  adaptiveTillageDate.year,
+														  adaptiveTillageDate.month, 
+														  adaptiveTillageDate.day,
+														  pTi->pSimTime->iyear,
+														  pTi->pSimTime->mon,
+														  pTi->pSimTime->mday);
+									PRINT_ERROR(S);
+									g_free(S);	
+											
+							}	
+							
+							
+							
+						}
+						else if (self->tillage[0].typeAdaptiveTillage==adaptiveTillageBeforeCoverCrop)
+						{
+							int daysBeforeAfter;
+							int currentDay, currentMonth, currentYear;
+							xnmpmasDate adaptiveTillageDate;
+							
+							daysBeforeAfter = self->tillage[0].daysBeforeAfter;		
+							adaptiveTillageDate.year = self->mpmas_to_xn->coverCropSowDate.year;
+							adaptiveTillageDate.month = self->mpmas_to_xn->coverCropSowDate.month;
+							adaptiveTillageDate.day = self->mpmas_to_xn->coverCropSowDate.day;
+							xpn_time_date_add_dt(&adaptiveTillageDate.year,&adaptiveTillageDate.month, &adaptiveTillageDate.day, -daysBeforeAfter);
+							
+							if ( xpn_time_compare_date(
+													  adaptiveTillageDate.year,
+													  adaptiveTillageDate.month, 
+													  adaptiveTillageDate.day,
+													  pTi->pSimTime->iyear,
+													  pTi->pSimTime->mon,
+													  pTi->pSimTime->mday						  
+									  ) < 0 )
+							{
+									S  = g_strdup_printf("ERROR: first scheduled tillage action of new crop should have "
+														 "been done already %04d-%02d-%02d,\nbut switching to new management only now: %04d-%02d-%02d.\n",
+														  adaptiveTillageDate.year,
+														  adaptiveTillageDate.month, 
+														  adaptiveTillageDate.day,
+														  pTi->pSimTime->iyear,
+														  pTi->pSimTime->mon,
+														  pTi->pSimTime->mday);
+									PRINT_ERROR(S);
+									g_free(S);				
+							}	
+
+						}					
+					}
+					//end added Troost 180527
+					
+					
+							
+		/* removed Troost 180527			
+                    //Added by Hong on 20180524: to  make sure that searching for last action works even if the last action date is after harvest
+					if (self->numMinFert>0)
+					   {						
+						self->lastMinFertilDate.year= 9999; 
+						}	
+					if (self->numOrgFert>0)
+					   {
+						self->lastOrgFertilDate.year= 9999; 
+						}	
+                     if (self->numOrgFert>0)
+					   {
+						self->lastOrgFertilDate.year= 9999; 
+						}						
+					if (self->numTill>0)
+					   {
+						self->lastTillageDate.year= 9999; 
+						}
+		*/													
 		  }	//End of new_mamagement==0	
              
 } // end NewDay		
@@ -607,6 +884,14 @@ if (NewDay(pTi))
             self->xn_to_mpmas->actualMinFertDate[self->nextMinFertAction].year=pTi->pSimTime->iyear;
             //End of Hong
             
+			//Added by Hong on 20180524
+  /*          if (self->nextMinFertAction==(self->numMinFert-1))
+			   {
+				   self->lastMinFertilDate.year= fertil->Year;
+				   self->lastMinFertilDate.month= fertil->Month;
+				   self->lastMinFertilDate.day= fertil->Day;	
+			   }
+			   */
             self->nextMinFertAction++;
                         
         }
@@ -616,7 +901,7 @@ if (NewDay(pTi))
             fertil = g_malloc0_n(1,sizeof(STNFERTILIZER));
             fertil_first = g_malloc0_n(1,sizeof(STNFERTILIZER));
             fertil->acName = g_strdup_printf("Organic fertilizer");
-            fertil->Day = pTi->pSimTime->mday;//Out-noted by hong on 20180515
+            fertil->Day = pTi->pSimTime->mday;
             fertil->Month = pTi->pSimTime->mon;
             fertil->Year = pTi->pSimTime->iyear;
 			xpn_time_date_add_dt(&fertil->Year,&fertil->Month, &fertil->Day, 1);//added by Hong on 20180516
@@ -631,11 +916,29 @@ if (NewDay(pTi))
             //pMa->pNFertilizer = fertil;
 			pMa->pNFertilizer->pNext = NULL;
             pMa->pNFertilizer->pNext = fertil;//Added by Hong on 20180515
+			
+/*			//Added by Hong on 20180524
+            if (self->nextOrgFertAction==(self->numOrgFert-1))
+			   {
+				   self->lastOrgFertilDate.year= fertil->Year;
+				   self->lastOrgFertilDate.month= fertil->Month;
+				   self->lastOrgFertilDate.day= fertil->Day;	
+			   }
+			   */ //removed Troost 180527
             self->nextOrgFertAction++;
         }
 
-
-        if ((1 == checkIfHarvest(self)) && (1 == self->new_plant))
+		//start added Troost 180527
+		//check for harvest of cover crop
+		if ( (1 == self->new_plant)  && (self->coverCrop_harvested == 0)  && (self->mainCrop_done == 0)  && (self->harvest_done == 0) && (1 == checkIfHarvest(self)) )
+        {
+			self->new_plant= 0;
+			self->coverCrop_harvested = 1;
+			PRINT_MESSAGE(xpn,1,"cover crop harvest");// for debug
+		}
+		//end added Troost 180527
+		//check for harvest of main crop
+        else if ( (1 == self->new_plant) && (self->coverCrop_harvested == 1) && (self->mainCrop_done == 1)  && (self->harvest_done == 0) && (1 == checkIfHarvest(self)) ) //adapted Troost 180527
             {
 				
                 PSPROFILE   pSo = xpn->pSo;
@@ -684,17 +987,23 @@ if (NewDay(pTi))
                     break;
                 }
 
+            //test of Hong 20180525
+			//printf("self->harvestAdaptive %d\n",self->harvestAdaptive);
+			//printf("set harvestDate %d-%d-%d\n",pPl->pModelParam->HarvestYear,pPl->pModelParam->HarvestMonth,pPl->pModelParam->HarvestDay);			
+			//printf("lastTillageDate %d-%d-%d\n",self->lastTillageDate.year,self->lastTillageDate.month,self->lastTillageDate.day);									
+			//end of test
+
+
             self->xn_to_mpmas->Nmin0_30 = nmin0_30 / (depth0_30+EPSILON);
             self->xn_to_mpmas->Nmin30_60 = nmin30_60 / (depth30_60+EPSILON);
             self->xn_to_mpmas->Nmin60_90 = nmin60_90 / (depth60_90+EPSILON);
                 
-            self->new_plant = 0;
             self->xn_to_mpmas->fruitDryWeight = pPl->pBiomass->fFruitWeight;
             self->xn_to_mpmas->stemLeafDryWeight = pPl->pBiomass->fLeafWeight + pPl->pBiomass->fStemWeight;
             //self->xn_to_mpmas->Nmin = pCh->pCBalance->fNO3NProfile;
-            pPl->pModelParam->HarvestDay=pTi->pSimTime->mday;
-            pPl->pModelParam->HarvestMonth=pTi->pSimTime->mon;
-            pPl->pModelParam->HarvestYear=pTi->pSimTime->iyear;
+            //pPl->pModelParam->HarvestDay=pTi->pSimTime->mday;
+            //pPl->pModelParam->HarvestMonth=pTi->pSimTime->mon;
+            //pPl->pModelParam->HarvestYear=pTi->pSimTime->iyear;
             
             //Begin of Hong: actualHarvestDate
             self->xn_to_mpmas->actualHarvestDate.day=pTi->pSimTime->mday;
@@ -702,10 +1011,105 @@ if (NewDay(pTi))
             self->xn_to_mpmas->actualHarvestDate.year=pTi->pSimTime->iyear;
 			
 			pPl->pModelParam->HarvestDay=pTi->pSimTime->mday; // to forbid the plant growth at not-currentGrid
-            pPl->pModelParam->HarvestMonth=pTi->pSimTime->mon;
+            pPl->pModelParam->HarvestMonth=pTi->pSimTime->mon; // and for tillage adaptive after harvest
             pPl->pModelParam->HarvestYear=pTi->pSimTime->iyear;
 						
+			//test of Hong 20180525
+			//printf("actual harvestDate %d-%d-%d\n",pPl->pModelParam->HarvestYear,pPl->pModelParam->HarvestMonth,pPl->pModelParam->HarvestDay);										
+			//end of test			
+		
+		//added Troost 180527
+			//at this point we know when the last action will take place
+			// the last action is either: the harvest = today
+			// a fertilization or irrigation with a fixed date
+			// or a tillage action marked with adaptive after harvest. Since harvest is done know, we can now calculate the actual date of that action
+			// we just have to look at each to determine which is the one
+			
+			self->lastActionDate.day=pTi->pSimTime->mday; //base = harvest = today
+			self->lastActionDate.month=pTi->pSimTime->mon; 
+			self->lastActionDate.year=pTi->pSimTime->iyear;
+			
+			
+			//update with last tillage date if later  (check tillage first because it is likely to be the latest)
+			if  ( self->numTill > 0 ) 
+			{ 
+				if (self->tillage[self->numTill -1 ].typeAdaptiveTillage==adaptiveTillageAfterHarvest)
+				{	//NOTE: careful assumes that lastActionDate stands at today still and was not updated before by any other post-harvest action!
+					//add required days to last harvest
+					int daysBeforeAfter = self->tillage[self->numTill -1].daysBeforeAfter;
+					xpn_time_date_add_dt(&self->lastActionDate.year,&self->lastActionDate.month, &self->lastActionDate.day, daysBeforeAfter);
+				}
+				else if (self->tillage[self->numTill -1 ].typeAdaptiveTillage==adaptiveTillageNotAdaptive
+							&& xpn_time_compare_date(
+									  self->tillage[self->numTill-1].tillDate.year,
+									  self->tillage[self->numTill-1].tillDate.month, 
+									  self->tillage[self->numTill-1].tillDate.day,
+									  self->lastActionDate.year,
+									  self->lastActionDate.month,
+									  self->lastActionDate.day 						  
+									  )> 0 
+						)
+				{
+					self->lastActionDate.day=self->tillage[self->numTill-1].tillDate.day; 
+					self->lastActionDate.month=self->tillage[self->numTill-1].tillDate.month; 
+					self->lastActionDate.year=self->tillage[self->numTill-1].tillDate.year;
+				}
+				//else no action needed as beforeSowing and before CroverCrop have already been done by definition
+			}
+			
+			
+			
+			//update with last mineral fertilization date if later
+			if  (  self->numMinFert > 0 && self->mineralFertilization[self->numMinFert-1].adaptive == 0 //no need to check adaptive since adaptive is only bbch dependent and thre is no bbch after harvest
+				   && xpn_time_compare_date(
+									  self->mineralFertilization[self->numMinFert-1].fertDate.year,
+									  self->mineralFertilization[self->numMinFert-1].fertDate.month, 
+									  self->mineralFertilization[self->numMinFert-1].fertDate.day,
+									  self->lastActionDate.year,
+									  self->lastActionDate.month,
+									  self->lastActionDate.day 						  
+									  )> 0 )
+			{			
+				self->lastActionDate.day=self->mineralFertilization[self->numMinFert-1].fertDate.day; 
+				self->lastActionDate.month=self->mineralFertilization[self->numMinFert-1].fertDate.month; 
+				self->lastActionDate.year=self->mineralFertilization[self->numMinFert-1].fertDate.year;
+			}			
+			//update with last organic fertilization date if later
+			if  ( self->numOrgFert > 0 && self->organicFertilization[self->numOrgFert-1].adaptive == 0 //no need to check adaptive since adaptive is only bbch dependent and thre is no bbch after harvest
+				   && xpn_time_compare_date(
+									  self->organicFertilization[self->numOrgFert-1].orgfertDate.year,
+									  self->organicFertilization[self->numOrgFert-1].orgfertDate.month, 
+									  self->organicFertilization[self->numOrgFert-1].orgfertDate.day,
+									  self->lastActionDate.year,
+									  self->lastActionDate.month,
+									  self->lastActionDate.day 						  
+									  )> 0 )
+			{			
+				self->lastActionDate.day=self->organicFertilization[self->numOrgFert-1].orgfertDate.day; 
+				self->lastActionDate.month=self->organicFertilization[self->numOrgFert-1].orgfertDate.month; 
+				self->lastActionDate.year=self->organicFertilization[self->numOrgFert-1].orgfertDate.year;
+			}			
+				
+			//update with last irrigation date if later
+			if  ( self->numIrrig > 0 
+				   && xpn_time_compare_date(
+									  self->irrigation[self->numIrrig-1].irrDate.year,
+									  self->irrigation[self->numIrrig-1].irrDate.month, 
+									  self->irrigation[self->numIrrig-1].irrDate.day,
+									  self->lastActionDate.year,
+									  self->lastActionDate.month,
+									  self->lastActionDate.day						  
+									  )> 0 )
+			{			
+				self->lastActionDate.day=self->irrigation[self->numIrrig-1].irrDate.day; 
+				self->lastActionDate.month=self->irrigation[self->numIrrig-1].irrDate.month; 
+				self->lastActionDate.year=self->irrigation[self->numIrrig-1].irrDate.year;
+			}	
+
+
+		//end added Troost 180527	
 			self->harvest_done=1;
+		//	self->new_plant = 0; //ready for next crop //removed Troost 180527, not yet ready for new crop, only after last action date has been reached
 			PRINT_MESSAGE(xpn,1,"harvest");// for debug
             //End of Hong
             
@@ -730,7 +1134,15 @@ if (NewDay(pTi))
             irr_first->pBack = irr;                                           
             pMa->pIrrigation = NULL;
             pMa->pIrrigation = irr;
-
+/*
+            //Added by Hong on 20180524
+            if (self->nextIrrigation==(self->numIrrig-1))
+			   {
+				   self->lastIrrigationDate.year= irr->Year;
+				   self->lastIrrigationDate.month= irr->Month;
+				   self->lastIrrigationDate.day= irr->Day;	
+			   }
+			   */ //removed Troost 180527
             self->nextIrrigation++;
 
 
@@ -756,17 +1168,64 @@ if (NewDay(pTi))
             till_first->pBack = till;                                           
             pMa->pTillage = NULL;
             pMa->pTillage = till;
-					
-            self->nextTillage++;
-				
-        } // End of checkIfTillage
-		
 			
-		if(checkIfGridSwitch(self) == 1)
-		{ 	  	 
-		 self->tillageAfterHarvest_done =1;		 
-	     //PRINT_MESSAGE(xpn,1,"time for switch");  //for debug	 		 
-		}
+   /*         //Added by Hong on 20180524
+            if (self->nextTillage==(self->numTill-1))
+			   {
+				   self->lastTillageDate.year= till->Year;
+				   self->lastTillageDate.month= till->Month;
+				   self->lastTillageDate.day= till->Day;	
+			   }
+			    */ //removed Troost 180527
+            self->nextTillage++;
+			
+        } // End of checkIfTillage
+
+//start added 180527 Troost		
+		
+	if( self->mainCrop_done==1 && self->harvest_done == 1 &&
+		xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
+							self->lastActionDate.year,self->lastActionDate.month,self->lastActionDate.day) > 0
+		) //check if the date of last action has passed (one day after that, so that action could take place
+    {	
+	    self->lastAction_done = 1;
+		self->checkSwitchDate_done=1;
+		PRINT_MESSAGE(xpn, 3, "last action for old plant done\n");	
+	}	
+/* //start removed 180527 Troost		
+       if ((self->harvest_done==1)&&(self->mainCrop_done==1)) //Added by Hong on 20180524: Check if last action
+	      {
+		  if((xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->lastMinFertilDate.year,self->lastMinFertilDate.month,self->lastMinFertilDate.day)>=0)
+	         && (xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->lastOrgFertilDate.year,self->lastOrgFertilDate.month,self->lastOrgFertilDate.day)>=0)
+		     && (xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->lastIrrigationDate.year,self->lastIrrigationDate.month,self->lastIrrigationDate.day)>=0)
+			 && (xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->lastTillageDate.year,self->lastTillageDate.month,self->lastTillageDate.day)>=0))
+			 {	 
+				 //PRINT_MESSAGE(xpn,1,"All crop management actions of this vegetation period are finish.");  //for debug
+				self->lastAction_done =1;	
+				
+				//test of Hong 20180525
+			printf("self->lastAction_done=1\n");	
+			printf("lastTillageDate %d-%d-%d\n",self->lastTillageDate.year,self->lastTillageDate.month,self->lastTillageDate.day);									
+			printf("lastIrrigationDate %d-%d-%d\n",self->lastIrrigationDate.year,self->lastIrrigationDate.month,self->lastIrrigationDate.day);
+            printf("lastOrgFertilDate %d-%d-%d\n",self->lastOrgFertilDate.year,self->lastOrgFertilDate.month,self->lastOrgFertilDate.day);										
+			printf("lastMinFertilDate %d-%d-%d\n",self->lastMinFertilDate.year,self->lastMinFertilDate.month,self->lastMinFertilDate.day);								
+			//end of test
+				
+				
+				 }
+		 
+		  }  			
+	
+		if(self->lastAction_done==1)
+	       {
+		    //only for currentGrid -> not currentGrid:
+	        if ((self->checkSwitchDate_done==0)&&(self->mpmas_to_xn->own_grid_number==self->previousGrid)&&(self->mpmas_to_xn->own_grid_number!=self->mpmas_to_xn->currentGrid))	 	   
+	            {		
+		          self->checkSwitchDate_done=1;
+	            }
+	       }
+	*/ //end removed 180527 Troost				
+						
 							  
     } //End of Newday
 		
@@ -829,20 +1288,21 @@ int checkIfHarvest(mpmas_coupling *self)
         && currentYear == pPl->pModelParam->HarvestYear ) 
             {
 				//Hong for debug:
-				//printf("defined harvest date reached\n");
+				PRINT_MESSAGE(xpn, 3, "fixed harvest date reached\n");
             return 1;
             }
-        return 0;
+
     }
     //If the decision is adaptive ...
     else {
         //check whether maturity (BBCH1) has been reached
         if (currentBBCH >= self->harvestBBCH1 ) {
+			//Hong for debug:
+			PRINT_MESSAGE(xpn, 3, "BBCH1 for harvest reached\n");
             if (self->daysSinceBBCH1 >= self->harvestBBCH1ExtraDays) {
 				
 				//Hong for debug:
-				//printf("defined harvest BBCH1= %d reached\n",self->harvestBBCH1);
-				//printf("defined harvestBBCH1ExtraDays= %d reached\n",self->daysSinceBBCH1);
+				PRINT_MESSAGE(xpn, 3, "adaptive harvest (BBCH1 + extra days reached)\n");
                 return 1;
             }
             //if we are > BBCH1, but not over the limit, increase the counter of days
@@ -855,12 +1315,13 @@ int checkIfHarvest(mpmas_coupling *self)
         // and harvest in case we are over the limit given for that stage 
         //(this is because in some cases the actual maturity will not be reached at all)
         else if (currentBBCH >= self->harvestBBCH2 ) {
+			PRINT_MESSAGE(xpn, 3, "BBCH2 for harvest reached\n");
             if (self->daysSinceBBCH2 >= self->harvestBBCH2ExtraDays) {
 				
 				//Hong for debug:
 				//printf("defined harvest BBCH2= %d reached\n",self->harvestBBCH2);
 				//printf("defined harvestBBCH2ExtraDays= %d reached\n",self->daysSinceBBCH2);
-				
+				PRINT_MESSAGE(xpn, 3, "adaptive harvest (BBCH2 + extra days reached)\n");
                 return 1;
             }
             //if we are > BBCH2, but not over the limit, increase the counter of days
@@ -874,11 +1335,11 @@ int checkIfHarvest(mpmas_coupling *self)
         && currentYear == pPl->pModelParam->HarvestYear ) 
             {
 				//Hong for debug:
-				printf("defined harvest date do have reached\n");
+				printf("maximum harvest date reached, harvesting despite BBCH not being reached\n");
 				
             return 1;
             }
-    }
+      }//End of the decision is adaptive
 	
 	} //End of ownGrid==previousGrid
 		
@@ -914,20 +1375,22 @@ int checkIfTillage(mpmas_coupling *self)
 	
 	
 	//1. if timing of tillage is fixed, check whether indicated date has been reached
-    if (self->tillage[self->nextTillage].typeAdaptiveTillage==adaptiveTillageNotAdaptive) 
+    else if (self->tillage[self->nextTillage].typeAdaptiveTillage==adaptiveTillageNotAdaptive) 
 	{
       if (xpn_time_compare_date(self->tillage[self->nextTillage].tillDate.year,self->tillage[self->nextTillage].tillDate.month,self->tillage[self->nextTillage].tillDate.day,currentYear,currentMonth,currentDay)==0)
 	   {
 		// PRINT_MESSAGE(xpn,1,"tomorrow is default TILLAGE date");  //for debug
-		 return 1;
-		}	
+		  return 1;
+		}
+      else
+ 	      return 0;
 	}	
 
 
 	//2. if timing of tillage is adaptive
 	//2.1 tillage before sowing of crop
 
-	if (self->tillage[self->nextTillage].typeAdaptiveTillage==adaptiveTillageBeforeSowing)
+	else if (self->tillage[self->nextTillage].typeAdaptiveTillage==adaptiveTillageBeforeSowing)
 	  {
 			    
 		daysBeforeAfter = self->tillage[self->nextTillage].daysBeforeAfter;		
@@ -941,18 +1404,18 @@ int checkIfTillage(mpmas_coupling *self)
 		//printf("%d-%d-%d \n", adaptiveTillageDate.year,adaptiveTillageDate.month,adaptiveTillageDate.day );
             
 		
-		if (xpn_time_compare_date(currentYear,currentMonth,currentDay+1,adaptiveTillageDate.year,adaptiveTillageDate.month,adaptiveTillageDate.day)==0)
-	  {
+		if (xpn_time_compare_date(currentYear,currentMonth,currentDay,adaptiveTillageDate.year,adaptiveTillageDate.month,adaptiveTillageDate.day)==0)
+	     {
 		//PRINT_MESSAGE(xpn,1,"tillage");   
 		//printf("on %d days before sowing\n", daysBeforeAfter); //for debug
-		return 1;
-	  }
+		  return 1;
 		}
-	
-
+	    else
+ 	      return 0;
+		}	
 	
 	// 2.2 tillage before sowing of cover crop
-	if (self->tillage[self->nextTillage].typeAdaptiveTillage==adaptiveTillageBeforeCoverCrop)
+	else if (self->tillage[self->nextTillage].typeAdaptiveTillage==adaptiveTillageBeforeCoverCrop)
 	  {
 		
 		daysBeforeAfter = self->tillage[self->nextTillage].daysBeforeAfter;
@@ -962,46 +1425,44 @@ int checkIfTillage(mpmas_coupling *self)
 		xpn_time_date_add_dt(&adaptiveTillageDate.year,&adaptiveTillageDate.month, &adaptiveTillageDate.day, -daysBeforeAfter);
 		
 	
-		if (xpn_time_compare_date(currentYear,currentMonth,currentDay+1,adaptiveTillageDate.year,adaptiveTillageDate.month,adaptiveTillageDate.day)==0)
-	  {
+		if (xpn_time_compare_date(currentYear,currentMonth,currentDay,adaptiveTillageDate.year,adaptiveTillageDate.month,adaptiveTillageDate.day)==0)
+	     {
 		//PRINT_MESSAGE(xpn,1,"tillage");   //for debug
 		//printf("on %d days before sowing of cover crop\n", daysBeforeAfter); //for debug
-		return 1;
-	  }
+		
+		  return 1;
 		}
-		
-	
-	 //2.3 tillage after harvest
-	if (self->harvest_done==1)
-	{
-	 
-	if (self->tillage[self->nextTillage].typeAdaptiveTillage==adaptiveTillageAfterHarvest)
+	    else
+ 	      return 0;
+		}
+			
+	 //2.3 tillage after harvest 
+	else if (self->tillage[self->nextTillage].typeAdaptiveTillage==adaptiveTillageAfterHarvest)
 	  {
-		
-		daysBeforeAfter = self->tillage[self->nextTillage].daysBeforeAfter;
+		//Test of Hong 20180525
+		//self->lastTillageDate.day= pPl->pModelParam->HarvestDay;
+		//self->lastTillageDate.month= pPl->pModelParam->HarvestMonth;
+	    //self->lastTillageDate.year= pPl->pModelParam->HarvestYear;  
+		  
+		if (self->harvest_done==1)
+		{
+		    daysBeforeAfter = self->tillage[self->nextTillage].daysBeforeAfter;
 				
-		//PRINT_MESSAGE(xpn,1,"time for tillage after harvest on:"); //for debug	
-		adaptiveTillageDate.year = pPl->pModelParam->HarvestYear;
-		adaptiveTillageDate.month = pPl->pModelParam->HarvestMonth;
-		adaptiveTillageDate.day = pPl->pModelParam->HarvestDay;
-		xpn_time_date_add_dt(&adaptiveTillageDate.year,&adaptiveTillageDate.month, &adaptiveTillageDate.day, daysBeforeAfter);
+		    //PRINT_MESSAGE(xpn,1,"time for tillage after harvest on:"); //for debug	
+		    adaptiveTillageDate.year = pPl->pModelParam->HarvestYear;
+		    adaptiveTillageDate.month = pPl->pModelParam->HarvestMonth;
+		    adaptiveTillageDate.day = pPl->pModelParam->HarvestDay;
+		    xpn_time_date_add_dt(&adaptiveTillageDate.year,&adaptiveTillageDate.month, &adaptiveTillageDate.day, daysBeforeAfter);
 				
-	  if (xpn_time_compare_date(currentYear,currentMonth,currentDay+1,adaptiveTillageDate.year,adaptiveTillageDate.month,adaptiveTillageDate.day)==0)
-	  {
-		//self->tillageAfterHarvest_done=1;  
-		self->dataTransferDate.year= adaptiveTillageDate.year;
-        self->dataTransferDate.month= adaptiveTillageDate.month;
-		self->dataTransferDate.day= adaptiveTillageDate.day;
-		xpn_time_date_add_dt(&self->dataTransferDate.year,&self->dataTransferDate.month, &self->dataTransferDate.day, 1);
-		self->checkSwitchDate_done=1;
-
-		return 1;
+	        if (xpn_time_compare_date(currentYear,currentMonth,currentDay,adaptiveTillageDate.year,adaptiveTillageDate.month,adaptiveTillageDate.day)==0)
+	          {
+		     
+		         return 1;
+		       }			
 	  }
-	  
+	    
 	  }
 	   
-	  }
-
 		 
     return 0; //actually never reached
 }
@@ -1036,7 +1497,7 @@ int checkIfMineralFertilization(mpmas_coupling *self)
         return 0;
     }
     //if timing of fertilization is adaptive, check whether indicated BBCH stage has been reached
-    if ( self->mineralFertilization[self->nextMinFertAction].adaptive ) {   
+    else if ( self->mineralFertilization[self->nextMinFertAction].adaptive ) {   
         if (currentBBCH >= self->mineralFertilization[self->nextMinFertAction].bbch)
             return 1;
         else
@@ -1049,8 +1510,8 @@ int checkIfMineralFertilization(mpmas_coupling *self)
             && currentYear == self->mineralFertilization[self->nextMinFertAction].fertDate.year ) {
             return 1;
         }
-
-        return 0;
+        else
+            return 0;
     }
     return 0; //actually never reached
 }
@@ -1077,7 +1538,7 @@ int checkIfOrganicFertilization(mpmas_coupling *self)
         return 0;
     }
     //if timing of fertilization is adaptive, check whether indicated BBCH stage has been reached
-    if ( self->organicFertilization[self->nextOrgFertAction].adaptive ) {   
+    else if ( self->organicFertilization[self->nextOrgFertAction].adaptive ) {   
         if (currentBBCH >= self->organicFertilization[self->nextOrgFertAction].bbch)
             return 1;
         else
@@ -1090,8 +1551,8 @@ int checkIfOrganicFertilization(mpmas_coupling *self)
             && currentYear == self->organicFertilization[self->nextOrgFertAction].orgfertDate.year ) {
             return 1;
         }
-
-        return 0;
+        else
+            return 0;
     }
     return 0; //actually never reached
 }
@@ -1125,7 +1586,7 @@ int checkIfIrrigation(mpmas_coupling *self)
     }
 	
     //check whether indicated date has been reached
-	if (currentDay == self->irrigation[self->nextIrrigation].irrDate.day 
+	else if (currentDay == self->irrigation[self->nextIrrigation].irrDate.day 
             && currentMonth == self->irrigation[self->nextIrrigation].irrDate.month 
             && currentYear == self->irrigation[self->nextIrrigation].irrDate.year ) {
             return 1;
@@ -1134,34 +1595,6 @@ int checkIfIrrigation(mpmas_coupling *self)
     return 0; //actually never reached
 }
 
-
-int checkIfGridSwitch(mpmas_coupling *self) 
-{
-	 expertn_modul_base *xpn = &(self->parent);
-	 PPLANT pPl = xpn->pPl;
-	 PTIME pTi = xpn->pTi;
-	 
-	 if ((self->checkSwitchDate_done==0)&&(self->tillage[self->nextTillage].typeAdaptiveTillage==adaptiveTillageNotAdaptive))
-	  {
-		self->dataTransferDate.year= pPl->pModelParam->HarvestYear;
-        self->dataTransferDate.month= pPl->pModelParam->HarvestMonth;
-		self->dataTransferDate.day= pPl->pModelParam->HarvestDay;
-		xpn_time_date_add_dt(&self->dataTransferDate.year,&self->dataTransferDate.month, &self->dataTransferDate.day, 2);
-		self->checkSwitchDate_done=1;
-		
-		//PRINT_MESSAGE(xpn,1,"no tillage after harvest, switchDate on:");  //for debug
-		//printf("%d-%d-%d \n", self->dataTransferDate.year,self->dataTransferDate.month,self->dataTransferDate.day );
-      }
-	  
-	  if((self->tillageAfterHarvest_done==0)&&(xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->dataTransferDate.year,self->dataTransferDate.month,self->dataTransferDate.day)==0))
-      {
-       return 1;    
-	  }
-	  
-	  
-	
-	return 0;
-	}
 
 //End of Hong
 int get_daily_air_and_soil_temperatures(mpmas_coupling *self)

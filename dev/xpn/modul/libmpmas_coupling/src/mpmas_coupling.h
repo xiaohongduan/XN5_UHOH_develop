@@ -46,16 +46,23 @@ struct _mpmas_coupling
     /* add your public declarations here */
     double Plant_Mass;
     
-    int new_plant, count;
+    int new_plant, count;//whether a new plant info has been read
     //Begin of Hong: for turn-off module
     int previousGrid;
-    int harvest_done, tillageAfterHarvest_done, checkSwitchDate_done; //Hong
+    int harvest_done; //whether harvest has been done
+    int coverCrop_harvested;//added Troost 180527
+    int lastAction_done, checkSwitchDate_done, mainCrop_done;//Hong added on 20180524	
 	int irrigation_read;
-    int new_management;// to ensure only read management info once
+    int new_management;//whether a new management info has been read
     
     struct_module **XPN_Moduls_full; 
 	
-	xnmpmasDate dataTransferDate;
+	xnmpmasDate lastActionDate;//added Troost 180527
+	
+	/* Troost removed 180527
+	 * xnmpmasDate lastMinFertilDate, lastOrgFertilDate,lastIrrigationDate, lastTillageDate;//Hong added on 20180524
+	 */
+	//xnmpmasDate dataTransferDate;
 	
 	char *cropModel; //added on 20180319, to distinguish gecros and CERES/SPASS
     //End of Hong
@@ -126,7 +133,6 @@ int get_daily_air_and_soil_temperatures(mpmas_coupling *self);
 //Hong: for irrigation tillage 2017/01/12
 int checkIfIrrigation(mpmas_coupling *self);
 int checkIfTillage(mpmas_coupling *self);
-int checkIfGridSwitch(mpmas_coupling *self); // timing for data transfer 
 //End of Hong
 
 struct _mpmas_couplingClass
