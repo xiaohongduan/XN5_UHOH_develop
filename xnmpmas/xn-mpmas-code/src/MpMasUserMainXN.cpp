@@ -394,8 +394,14 @@ int main(int ac, char **av)
 				printf("\nProcessor %d: LAST HARVEST STOP:\n", my_rank);
 				xnmpmasDate curDate = nextStop; // copy before change
 				
+				// Synchornization of yield results from XN to all nodes
+				MPI_Barrier(MPI_COMM_WORLD);
+				xpn_main_mpi_share_results_on_all_nodes(xpn);
+				MPI_Barrier(MPI_COMM_WORLD);
+				
 				if(XNMPMASDBG) 
 				{//post-xpn-run debugging output
+					
 					if(my_rank == 0 )
 					{
 						
@@ -482,7 +488,7 @@ int main(int ac, char **av)
 									
 								}
 							}
-		//Begin of Hong
+		//Begin of Hong 
 						} //End of gridId-loop			  			  
 		// End of Hong!
 						fclose(dbgXnActualDates);
@@ -536,12 +542,24 @@ int main(int ac, char **av)
 						{ printf("...write yields to Maps\n");	
 							if (yield1Map != NULL)
 							{	stringstream fnYields1,fnYields2;
-								fnYields1 << configuration.getScenarioName() << "yields1_"  <<  (firstyear + year) << ".txt";
-								fnYields2 << configuration.getScenarioName() << "yields2_"  <<  (firstyear + year) << ".txt";
+								fnYields1 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields1_"  <<  (firstyear + year) << ".txt";
+								fnYields2 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields2_"  <<  (firstyear + year) << ".txt";
 								yield1Map->writeToFile(fnYields1.str());
 								yield2Map->writeToFile(fnYields2.str());							
 							}
 						}
+#if XNMPMASDBG
+						else  
+						{ 
+							if (yield1Map != NULL)
+							{	stringstream fnYields1,fnYields2;
+								fnYields1 << mpmasInstance->getOutputDirectory() <<"/out/" <<configuration.getScenarioName() << "_yields1_"  <<  (firstyear + year) << "_proc_" << my_rank << ".txt";
+								fnYields2 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields2_"  <<  (firstyear + year)  << "_proc_" << my_rank << ".txt";
+								yield1Map->writeToFile(fnYields1.str());
+								yield2Map->writeToFile(fnYields2.str());							
+							}
+						}
+#endif //XNMPMASDBG						
 						break;
 					case xnmpmasCouplingVirtualSlots:
 						 //TODO: currently done also in first year though though arrays are empty
@@ -586,7 +604,7 @@ int main(int ac, char **av)
 				}
 				
 			
-				cout << "\nProcessor "<< my_rank << "Run XPN  until SOWING DECISION STOP: "  << nextStop.day << "-" << nextStop.month << "-" << nextStop.year << endl	;			
+				cout << "\nProcessor "<< my_rank << ": Run XPN  until SOWING DECISION STOP: "  << nextStop.day << "-" << nextStop.month << "-" << nextStop.year << endl	;			
 				xpn_main_run(xpn); //Run until SOWING DECISION STOP, before first sowing date of next season.
 				printf("\nProcessor %d: SOWING DECISION STOP:\n", my_rank);
 				curDate = nextStop; // copy before changed
