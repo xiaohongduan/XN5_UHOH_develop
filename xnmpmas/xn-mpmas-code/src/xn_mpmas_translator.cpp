@@ -1220,7 +1220,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 							"%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d"
 							"%01.2f\t%01.2f\t%01.2f"
 							"\n",
-							col, row, gridId, lua, managIt->second.cropCode, managIt->second.variety,
+							col, row, gridId, lua, managIt->second.CropCode, managIt->second.variety,
 							
 							mpmasYield,
 							grid_xn_to_mpmas[gridId * xnGridSize + ci].fruitDryWeight,
