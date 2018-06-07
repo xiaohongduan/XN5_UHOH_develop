@@ -1215,10 +1215,10 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 			yieldMap2->setValue(row, col, 0.0 );
 
 
-			fprintf(dbgXnActualDates, "%d\t%d\t%d\t%d\t%s\t%s\t"
-							"%01.2f\t%01.2f\t%01.2f"
-							"%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d"
-							"%01.2f\t%01.2f\t%01.2f"
+			fprintf(dbgXnActualDates, "%d\t%d\t%d\t%d\t%s\t%s"
+							"\t%01.2f\t%01.2f\t%01.2f"
+							"%\t02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d"
+							"\t%01.2f\t%01.2f\t%01.2f"
 							"\n",
 							col, row, gridId, lua, managIt->second.CropCode, managIt->second.variety,
 							
