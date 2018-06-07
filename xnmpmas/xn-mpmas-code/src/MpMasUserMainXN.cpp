@@ -394,11 +394,12 @@ int main(int ac, char **av)
 				printf("\nProcessor %d: LAST HARVEST STOP:\n", my_rank);
 				xnmpmasDate curDate = nextStop; // copy before change
 				
-				// Synchornization of yield results from XN to all nodes
+				// Synchronization of yield results from XN to all nodes
 				MPI_Barrier(MPI_COMM_WORLD);
 				xpn_main_mpi_share_results_on_all_nodes(xpn);
 				MPI_Barrier(MPI_COMM_WORLD);
 				
+
 				//post-xpn-run output
 #if XNMPMASDBG
 				if(my_rank == 0 )
@@ -466,7 +467,6 @@ int main(int ac, char **av)
 	// End of Hong!
 				}//endif my_rank == 0
 #endif //XNMPMASDBG
-
 				
 			
 															
@@ -484,7 +484,7 @@ int main(int ac, char **av)
 							stringstream fnXnOuputSummary;
 							fnXnOuputSummary << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName()  << "XN_results_" << setw(2) << setfill('0') << year << ".txt";
 							
-							translator.calcYieldsToMaps(xpn->grid_xn_to_mpmas, xpn->grid_xn_to_mpmas2, yield1Map, yield2Map, !configuration.isCleanSeason(), fnXnOuputSummary.str());
+							translator.calcYieldsToMaps(xpn->grid_xn_to_mpmas, yield1Map, yield2Map, !configuration.isCleanSeason(), fnXnOuputSummary.str());
 						}
 							break;
 						case xnmpmasCouplingVirtualSlots:

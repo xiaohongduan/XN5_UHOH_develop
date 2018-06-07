@@ -124,7 +124,11 @@ struct xpn_main_
   
   int *XPNforThisRank;
   
-  int loop_min_grid, loop_max_grid;
+  int loop_min_grid, loop_max_grid; //Note (Troost): these are temporarily used in initialization ? and change relative to the grid currently being treated?
+  
+  int loop_min_xn_to_mpmas_grid; //These are the bounds of the actual coordinates in the single grid (not considering the grid layer/grid_id)
+  int loop_max_xn_to_mpmas_grid;
+  
   
   //End of Hong MPI
 };
@@ -155,6 +159,9 @@ int     xpn_main_save_current_state_of_registry(xpn_main *self);
 int     xpn_main_run(xpn_main *self);
 
 void    xpn_main_write_vars_to_matrices(xpn_main *self);
+
+void 	xpn_main_mpi_share_results_on_all_nodes (xpn_main *self);
+
 
 xpn_main *xpn_main_done(xpn_main *self);
 
