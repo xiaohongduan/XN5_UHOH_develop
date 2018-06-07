@@ -1186,7 +1186,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 	
 	
 	FILE* dbgXnActualDates = fopen(fnAggXnOutput.c_str(), "w" );
-	fprintf(dbgXnActualDates, "x\ty\grid\tLUA\tCropCode\tVariety\tYieldMPMAS\t"
+	fprintf(dbgXnActualDates, "x\ty\tgrid\tLUA\tCropCode\tVariety\tYieldMPMAS\t"
 							  "FruitDM\tStem+LeaveDM\tharvest_date\t"
 							  "minfert_date0\tminfert_date1\tminfert_date2\tminfert_date3\tNmin0_30\tNmin30_90\tNmin60_90\t"
 							  "\n"
@@ -1201,7 +1201,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 			int lua = (*relevantXnGrid)[ci];				
 			int gridId = LuaXnParameters[lua].currentGrid;
 			
-			map<int,luaInfo>::iterator it2 = LuaCouplingParameters.find(lua)
+			map<int,luaInfo>::iterator it2 = LuaCouplingParameters.find(lua);
 			
 			
 			map<int, STRUCT_mpmas_to_xn>::iterator managIt = LuaXnParameters.find(lua); //Note: LuaXnParameters must contain something for empty cells under lua -1
@@ -1211,7 +1211,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 							+ grid_xn_to_mpmas[gridId * xnGridSize + ci].stemLeafDryWeight * it2->second.stoverYieldFactor ;
 
 			yieldMap1->setValue(row, col, mpmasYield);
-			);
+			
 			yieldMap2->setValue(row, col, 0.0 );
 
 
@@ -1220,32 +1220,32 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 							"%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d"
 							"%01.2f\t%01.2f\t%01.2f"
 							"\n",
-							i2, i, gridId, lua, managIt->second.cropCode, managIt->second.variety,
+							col, row, gridId, lua, managIt->second.cropCode, managIt->second.variety,
 							
 							mpmasYield,
-							grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].fruitDryWeight,
-							grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].stemLeafDryWeight,
+							grid_xn_to_mpmas[gridId * xnGridSize + ci].fruitDryWeight,
+							grid_xn_to_mpmas[gridId * xnGridSize + ci].stemLeafDryWeight,
 							
-							grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualHarvestDate.day,
-							grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualHarvestDate.month,
-							grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualHarvestDate.year,
+							grid_xn_to_mpmas[gridId * xnGridSize +ci].actualHarvestDate.day,
+							grid_xn_to_mpmas[gridId * xnGridSize +ci].actualHarvestDate.month,
+							grid_xn_to_mpmas[gridId * xnGridSize +ci].actualHarvestDate.year,
 							
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[0].day,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[0].month,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[0].year,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[1].day,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[1].month,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[1].year,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[2].day,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[2].month,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[2].year,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[3].day,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[3].month,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[3].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[0].day,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[0].month,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[0].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[1].day,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[1].month,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[1].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[2].day,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[2].month,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[2].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[3].day,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[3].month,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[3].year,
 								
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin0_30,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin30_60,
-								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin60_90
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin0_30,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin30_60,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin60_90
 								
 						);
 
