@@ -394,100 +394,79 @@ int main(int ac, char **av)
 				printf("\nProcessor %d: LAST HARVEST STOP:\n", my_rank);
 				xnmpmasDate curDate = nextStop; // copy before change
 				
-				if(XNMPMASDBG) 
-				{//post-xpn-run debugging output
-					if(my_rank == 0 )
-					{
-						
-						stringstream fnDbgXnActualDates;
-						fnDbgXnActualDates << "dbg_XnCommunicatedActualDates_" << setw(2) << setfill('0') << year << "b.txt";
-						FILE* dbgXnActualDates = fopen(fnDbgXnActualDates.str().c_str(), "w" );
-					
-						
-						printf("\n...yields of fields:\n");	
+				// Synchornization of yield results from XN to all nodes
+				MPI_Barrier(MPI_COMM_WORLD);
+				xpn_main_mpi_share_results_on_all_nodes(xpn);
+				MPI_Barrier(MPI_COMM_WORLD);
+				
+				//post-xpn-run output
+#if XNMPMASDBG
+				if(my_rank == 0 )
+				{
+												
+			
+					printf("\n...yields of fields:\n");	
+
+					cout << "Stored yield previous season's crop:\n";
+					cout << "Cell\tFruitDM\tStem+LeaveDM\tNmin0_30\tNmin30_90\tNmin60_90\n";
 
 
+					for (int gridId=0; gridId<grid_layers; gridId++)     
+					{  
+						for (int i2=0;i2<matrix_size_x;i2++)
+						{	for (int i=0;i<matrix_size_y;i++)
+							{							
+								//printf("i: %d, j: %d, cropCode: %s\n",i,i2,xpn->grid_mpmas_to_xn[i2*matrix_size_y+i].CropCode);
+								if (configuration.isCleanSeason() || year != -numSpinUp) {
 
-						cout << "Stored yield previous season's crop:\n";
-						cout << "Cell\tFruitDM\tStem+LeaveDM\tNmin0_30\tNmin30_90\tNmin60_90\n";
-		//Begin of Hong:for gridId-loop					
-						for (int gridId=0; gridId<grid_layers; gridId++)     
-						{  
-		//End of Hong
-							for (int i2=0;i2<matrix_size_x;i2++)
-							{	for (int i=0;i<matrix_size_y;i++)
-								{							
-									//printf("i: %d, j: %d, cropCode: %s\n",i,i2,xpn->grid_mpmas_to_xn[i2*matrix_size_y+i].CropCode);
-									if (configuration.isCleanSeason() || year != -numSpinUp) {
+									cout << (i2) << ", " << (i) << "["<<gridId<<"]"<< "\t"; 
 
-										//Begin of Hong
-										//cout << (i / matrix_size_y) << ", " << (i % matrix_size_y) << "["<<gridId<<"]"<< "\t"; 
-										cout << (i2) << ", " << (i) << "["<<gridId<<"]"<< "\t"; 
-										//End of Hong
-										cout << xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].fruitDryWeight <<"\t";
-										cout << xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].stemLeafDryWeight <<"\t";
-										cout << xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin0_30 <<"\t";
-										cout << xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin30_60 <<"\t";
-										cout << xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin60_90 <<"\t";
-										//cout << ((gridId == xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].currentGrid) ? "X" : "-");
-										cout << "\n";
-									
+									cout << xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].fruitDryWeight <<"\t";
+									cout << xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].stemLeafDryWeight <<"\t";
+									cout << xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin0_30 <<"\t";
+									cout << xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin30_60 <<"\t";
+									cout << xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin60_90 <<"\t";
+									//cout << ((gridId == xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].currentGrid) ? "X" : "-");
+									cout << "\n";
+				
 
-										fprintf(dbgXnActualDates, "%d\t%d\t%d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\n",
-																		i2, i, gridId,
-																		xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualHarvestDate.day,
-																		xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualHarvestDate.month,
-																		xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualHarvestDate.year,
-																		
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[0].day,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[0].month,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[0].year,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[1].day,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[1].month,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[1].year,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[2].day,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[2].month,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[2].year,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[3].day,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[3].month,
-																			xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[3].year
-																	);
-										
-									/*
-									// Begin of Hong
-									printf("Id: %d, i: %d, j: %d, check_gridToChange: %f\n",gridId,i,i2,xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].check_gridToChange);
-									printf("Id: %d, i: %d, j: %d, check_currentGrid: %f\n",gridId,i,i2,xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].check_currentGrid);
-									printf("Id: %d, i: %d, j: %d, check_changed: %f\n",gridId,i,i2,xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].check_changed);
-									//End of Hong
-									 */
-									 
-									}
-								
-								/*	// Debugging output air and soil temperatures
-									printf("\n...writing dbg_XnCommunicatedWeather_ file a\n");					
-
-									stringstream fnDbgXnWeatherCom;
-									fnDbgXnWeatherCom << "dbg_XnCommunicatedWeather_" << setw(2) << setfill('0') << year << "a.txt";
-									FILE* dbgXnWeatherCom = fopen(fnDbgXnWeatherCom.str().c_str(), "w" );
-									
-									for(int i3=0;i3<XNMPMASDAYSOFYEAR;i3++)
-									{   int isSet = 0;
-										if (xpn->grid_xn_to_mpmas2[i2*matrix_size_y+i].startDay  <= i3 && xpn->grid_xn_to_mpmas2[i2*matrix_size_y+i].stopDay >= i3 )
-											isSet = 1;
-										fprintf(dbgXnWeatherCom, "i: %d, j: %d, SimulationDay: %d/%d, AirTemp: %f, SoilTemp: %f\n",i,i2,i3,isSet,xpn->grid_xn_to_mpmas2[i2*matrix_size_y+i].airTemp[i3],xpn->grid_xn_to_mpmas2[i2*matrix_size_y+i].topsoilTemp[i3]);	
-									}
-									fclose(dbgXnWeatherCom);*/
 									
 									
-									
+								/*
+								// Begin of Hong
+								printf("Id: %d, i: %d, j: %d, check_gridToChange: %f\n",gridId,i,i2,xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].check_gridToChange);
+								printf("Id: %d, i: %d, j: %d, check_currentGrid: %f\n",gridId,i,i2,xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].check_currentGrid);
+								printf("Id: %d, i: %d, j: %d, check_changed: %f\n",gridId,i,i2,xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].check_changed);
+								//End of Hong
+								 */
+								 
 								}
+							
+							/*	// Debugging output air and soil temperatures
+								printf("\n...writing dbg_XnCommunicatedWeather_ file a\n");					
+
+								stringstream fnDbgXnWeatherCom;
+								fnDbgXnWeatherCom << "dbg_XnCommunicatedWeather_" << setw(2) << setfill('0') << year << "a.txt";
+								FILE* dbgXnWeatherCom = fopen(fnDbgXnWeatherCom.str().c_str(), "w" );
+								
+								for(int i3=0;i3<XNMPMASDAYSOFYEAR;i3++)
+								{   int isSet = 0;
+									if (xpn->grid_xn_to_mpmas2[i2*matrix_size_y+i].startDay  <= i3 && xpn->grid_xn_to_mpmas2[i2*matrix_size_y+i].stopDay >= i3 )
+										isSet = 1;
+									fprintf(dbgXnWeatherCom, "i: %d, j: %d, SimulationDay: %d/%d, AirTemp: %f, SoilTemp: %f\n",i,i2,i3,isSet,xpn->grid_xn_to_mpmas2[i2*matrix_size_y+i].airTemp[i3],xpn->grid_xn_to_mpmas2[i2*matrix_size_y+i].topsoilTemp[i3]);	
+								}
+								fclose(dbgXnWeatherCom);*/
+								
+								
+								
 							}
-		//Begin of Hong
-						} //End of gridId-loop			  			  
-		// End of Hong!
-						fclose(dbgXnActualDates);
-					}//endif my_rank == 0
-				}//XNMPMASDBG
+						}
+	//Begin of Hong 
+					} //End of gridId-loop			  			  
+	// End of Hong!
+				}//endif my_rank == 0
+#endif //XNMPMASDBG
+
 				
 			
 															
@@ -497,11 +476,16 @@ int main(int ac, char **av)
 					{   //TODO: currently done also in first year though though arrays are empty
 						case xnmpmasCouplingFixedMaps:  //same as OneToOne
 						case xnmpmasCouplingOneToOne:
-							delete yield1Map;
+						{	delete yield1Map;
 							delete yield2Map;
 							yield1Map = new Raster2D(*luaMap);
 							yield2Map = new Raster2D(*luaMap);
-							translator.calcYieldsToMaps(xpn->grid_xn_to_mpmas, yield1Map, yield2Map, !configuration.isCleanSeason());
+							
+							stringstream fnXnOuputSummary;
+							fnXnOuputSummary << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName()  << "XN_results_" << setw(2) << setfill('0') << year << ".txt";
+							
+							translator.calcYieldsToMaps(xpn->grid_xn_to_mpmas, xpn->grid_xn_to_mpmas2, yield1Map, yield2Map, !configuration.isCleanSeason(), fnXnOuputSummary.str());
+						}
 							break;
 						case xnmpmasCouplingVirtualSlots:
 							translator.calcYieldsToArray(xpn->grid_xn_to_mpmas, cropYieldX, stoverYieldX, !configuration.isCleanSeason());
@@ -533,15 +517,27 @@ int main(int ac, char **av)
 				switch(configuration.getCouplingType() )
 				{	case xnmpmasCouplingFixedMaps:
 						if (my_rank == 0)
-						{ printf("...write yields to Maps\n");	
+						{  printf("...write yields to Maps\n");	
 							if (yield1Map != NULL)
 							{	stringstream fnYields1,fnYields2;
-								fnYields1 << configuration.getScenarioName() << "yields1_"  <<  (firstyear + year) << ".txt";
-								fnYields2 << configuration.getScenarioName() << "yields2_"  <<  (firstyear + year) << ".txt";
+								fnYields1 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields1_"  <<  (firstyear + year) << ".txt";
+								fnYields2 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields2_"  <<  (firstyear + year) << ".txt";
+								yield1Map->writeToFile(fnYields1.str());
+								yield2Map->writeToFile(fnYields2.str());							
+							}											
+						}
+#if XNMPMASDBG
+						/*else  
+						{ 
+							if (yield1Map != NULL)
+							{	stringstream fnYields1,fnYields2;
+								fnYields1 << mpmasInstance->getOutputDirectory() <<"/out/" <<configuration.getScenarioName() << "_yields1_"  <<  (firstyear + year) << "_proc_" << my_rank << ".txt";
+								fnYields2 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields2_"  <<  (firstyear + year)  << "_proc_" << my_rank << ".txt";
 								yield1Map->writeToFile(fnYields1.str());
 								yield2Map->writeToFile(fnYields2.str());							
 							}
-						}
+						}*/
+#endif //XNMPMASDBG						
 						break;
 					case xnmpmasCouplingVirtualSlots:
 						 //TODO: currently done also in first year though though arrays are empty
@@ -586,7 +582,7 @@ int main(int ac, char **av)
 				}
 				
 			
-				cout << "\nProcessor "<< my_rank << "Run XPN  until SOWING DECISION STOP: "  << nextStop.day << "-" << nextStop.month << "-" << nextStop.year << endl	;			
+				cout << "\nProcessor "<< my_rank << ": Run XPN  until SOWING DECISION STOP: "  << nextStop.day << "-" << nextStop.month << "-" << nextStop.year << endl	;			
 				xpn_main_run(xpn); //Run until SOWING DECISION STOP, before first sowing date of next season.
 				printf("\nProcessor %d: SOWING DECISION STOP:\n", my_rank);
 				curDate = nextStop; // copy before changed

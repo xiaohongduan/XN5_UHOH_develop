@@ -89,7 +89,7 @@ public:
 
 	STRUCT_mpmas_to_xn getManagementForCell(int cell, int mpmasYear);
 	
-	void calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas, Raster2D* yieldMap1, Raster2D* yieldMap2,  int overlapping);
+	void calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas, Raster2D* yieldMap1, Raster2D* yieldMap2,  int overlapping, string fnAggXnOutput);
 	void calcYieldsToArray(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas,  double* yieldArray, double* stoverYieldArray, const int overlapping);
 	void updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_xn_to_mpmas2,  int currentyear,  xnmpmasDate curDate);
 	void clearArrayRefs();

@@ -1175,7 +1175,7 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 	//management.stopDate = 
 	return management;
 }
-void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas, Raster2D* yieldMap1, Raster2D* yieldMap2, int overlapping)
+void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas, Raster2D* yieldMap1, Raster2D* yieldMap2, int overlapping, string fnAggXnOutput)
 {
 	yieldMap1->setAllValues(-1.0);
 	yieldMap2->setAllValues(-1.0);
@@ -1185,18 +1185,74 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 		relevantXnGrid = &previousXnCropGrid;
 	
 	
+	FILE* dbgXnActualDates = fopen(fnAggXnOutput.c_str(), "w" );
+	fprintf(dbgXnActualDates, "x\ty\grid\tLUA\tCropCode\tVariety\tYieldMPMAS\t"
+							  "FruitDM\tStem+LeaveDM\tharvest_date\t"
+							  "minfert_date0\tminfert_date1\tminfert_date2\tminfert_date3\tNmin0_30\tNmin30_90\tNmin60_90\t"
+							  "\n"
+	);
+	
+	
+	
 	for (int row = 0; row < xnGridYdim; ++row)
 	{ 	for (int col = 0; col < xnGridXdim; ++col)
 		{
 			int ci = xnGridYdim * col + row;
 			int lua = (*relevantXnGrid)[ci];				
 			int gridId = LuaXnParameters[lua].currentGrid;
+			
+			map<int,luaInfo>::iterator it2 = LuaCouplingParameters.find(lua)
+			
+			
+			map<int, STRUCT_mpmas_to_xn>::iterator managIt = LuaXnParameters.find(lua); //Note: LuaXnParameters must contain something for empty cells under lua -1
+			
 
-			yieldMap1->setValue(row, col, grid_xn_to_mpmas[gridId * xnGridSize + ci].fruitDryWeight);
-			yieldMap2->setValue(row, col, grid_xn_to_mpmas[gridId * xnGridSize + ci].stemLeafDryWeight);
+			double mpmasYield = grid_xn_to_mpmas[gridId * xnGridSize + ci].fruitDryWeight * it2->second.yieldFactor
+							+ grid_xn_to_mpmas[gridId * xnGridSize + ci].stemLeafDryWeight * it2->second.stoverYieldFactor ;
+
+			yieldMap1->setValue(row, col, mpmasYield);
+			);
+			yieldMap2->setValue(row, col, 0.0 );
+
+
+			fprintf(dbgXnActualDates, "%d\t%d\t%d\t%d\t%s\t%s\t"
+							"%01.2f\t%01.2f\t%01.2f"
+							"%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d"
+							"%01.2f\t%01.2f\t%01.2f"
+							"\n",
+							i2, i, gridId, lua, managIt->second.cropCode, managIt->second.variety,
+							
+							mpmasYield,
+							grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].fruitDryWeight,
+							grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].stemLeafDryWeight,
+							
+							grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualHarvestDate.day,
+							grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualHarvestDate.month,
+							grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualHarvestDate.year,
+							
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[0].day,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[0].month,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[0].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[1].day,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[1].month,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[1].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[2].day,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[2].month,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[2].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[3].day,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[3].month,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].actualMinFertDate[3].year,
+								
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin0_30,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin30_60,
+								grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].Nmin60_90
+								
+						);
+
 
 		}
 	}
+	
 }
 
 void xn_mpmas_translator::calcYieldsToArray(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas,  double* yieldArray, double* stoverYieldArray, int overlapping)
@@ -1240,8 +1296,8 @@ void xn_mpmas_translator::calcYieldsToArray(const STRUCT_xn_to_mpmas* grid_xn_to
 			}
 			if (count > 0)
 			{	map<int,luaInfo>::iterator it2 = LuaCouplingParameters.find(lua);
-				yieldArray[l] = (harvest / count) * it2->second.yieldFactor; 
-				stoverYieldArray[l] = (stoverHarvest / count) * it2->second.stoverYieldFactor;
+				yieldArray[l] = (harvest / count) * it2->second.yieldFactor +  (stoverHarvest / count) * it2->second.stoverYieldFactor; 
+				stoverYieldArray[l] = 0.0;
 			}
 			else 
 			{
