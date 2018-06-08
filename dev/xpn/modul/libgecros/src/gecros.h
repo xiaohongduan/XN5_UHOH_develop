@@ -370,6 +370,9 @@ struct _gecros
 	double EAJMAX,XVN,XJN,THETA;
 	//[genotype] 
 	double SEEDW,SEEDNC,BLD,HTMX,MTDV,MTDR; 
+    
+    //SG20180410. additional paramterfor sugarbeet
+    double SINKBEET, EFF, CFS;
 
     //%** Soil parameters
     //double PNLS=1.
@@ -450,9 +453,7 @@ G_MODULE_EXPORT int gecros_NitrogenUptake(gecros *self);
 G_MODULE_EXPORT int gecros_ActualTranspiration(gecros *self);
 G_MODULE_EXPORT int gecros_Done_and_FreeMemory(gecros *self);
 
-//added by Hong on 20180321
-G_MODULE_EXPORT void load_model_cfg_gecros(gecros *self);
-//End of Hong
+
 struct _gecrosClass
 {
 	expertn_modul_baseClass parent_class;

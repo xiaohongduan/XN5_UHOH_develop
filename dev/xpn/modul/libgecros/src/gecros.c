@@ -190,7 +190,8 @@ if (NewDay(pTi)){
       {
 		  gecros_alloc_allocateGECROSVariables(self);
 		  gecros_load_ini_file(self);
-		
+		  
+		  
 	  }
 }
       expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(xpn);
@@ -582,7 +583,8 @@ int gecros_Init_Vars(gecros *self)
 	char *ini_filename;	
 	char *S;	
 //End of Hong
-		
+
+	
 //######## initiatlisierung der Variablen, nur einmal #############################
 	//for Astronmy
 	self->SC=0.0;
@@ -665,6 +667,12 @@ self->MTDV =34.76;//Minimum thermal days for vegetative phase   (d)
 self->MTDR =23.09;//Minimum thermal days for reproductive phase (d) 
 self->PSEN = -0.0;//Photoperiod sensitivity (+ for SD, - for LD) (h-1)
 
+//SG 20180410: additional parameters for sugarbeet
+self->SINKBEET = 1000;
+self->EFF = 27;
+self->CFS = 0.52;
+
+
 //%** Soil parameters
 //double PNLS=1.
 //double CLAY=23.4; WCMIN=0.05; WCFC=0.25; WCMAX=0.35
@@ -741,6 +749,11 @@ int gecros_load_ini_file(gecros *self)
 	PPLANT			pPl = xpn->pPl;
 	PGENOTYPE		pGe = pPl->pGenotype;
 	//End of Hong
+    
+    //SG20180530
+    char spec[30];
+   strcpy(spec,pPl->pGenotype->acCropCode);
+    //end SG
 
 //Begin of Hong:changed for C. Troost in Oct. 2016 
 
@@ -802,16 +815,9 @@ int gecros_load_ini_file(gecros *self)
 			PRINT_MESSAGE(xpn,3, S);
 			g_free(S);
 		}	
-		
 //End of Hong	
-/*	
-     if(strstr(xpn->pXSys->xpn_classes, "gecros") == NULL)
-	 {
-		 print ("OK");
-		 print ("OK");
-		 
-		 }
-*/	 
+	
+
 	/* Create a new GKeyFile object and a bitwise list of flags. */
 	keyfile = g_key_file_new ();
 
@@ -925,7 +931,16 @@ int gecros_load_ini_file(gecros *self)
 	GET_INI_DOUBLE(self->EPSP,"photoperiod","EPSP");
 	GET_INI_DOUBLE(self->INSP,"photoperiod","INSP");
 	GET_INI_DOUBLE(self->PSEN,"photoperiod","PSEN");
-	
+    
+     //SG 20180409: sugarbeet model J. Rabe
+     //sugarbeet specific
+     if(!strcmp(spec,"SB")||!strcmp(spec,"OR"))
+      {
+             GET_INI_DOUBLE_OPTIONAL(self->SINKBEET,"sugarbeet specific","SINKBEET",1000);
+	         GET_INI_DOUBLE_OPTIONAL(self->EFF,"sugarbeet specific","EFF",27);
+	         GET_INI_DOUBLE_OPTIONAL(self->CFS,"sugarbeet specific","CFS",0.5);
+      }
+
     //residue partition
     GET_INI_STRING_ARRAY_OPTIONAL(varietynames,varietynum,1,"missing","residue partition","VarietyName");	
 	for(i=0; i<varietynum; i++)
@@ -1254,8 +1269,12 @@ double 		CUMDEP,fThickness;
 	//==========================================================================
 	if ((strcmp(pCropCode,"SB")==0)||(strcmp(pPl->pGenotype->acCropCode,"BS")==0)) // um Fehler von "BS" zu vermeiden
 		{
-			if (pSI->fPlantDens<(double)50)
-				pSI->fPlantDens=(double)90;
+			//SG20180424
+            //if (pSI->fPlantDens<(double)50)
+			//	pSI->fPlantDens=(double)90;
+            if (pSI->fPlantDens<(float)5) //SG20160510
+	   		pSI->fPlantDens=(float)8;
+
 			//Biomass
 			pCan->fPlantLA					=(double)0.16    *pSI->fPlantDens;
 			pGrw->fLeafWeight				=(double)0.00136	*(double)10.0*pSI->fPlantDens;
@@ -1367,7 +1386,11 @@ double 		CUMDEP,fThickness;
 	  self->NPL = (double)xpn->pMa->pSowInfo->fPlantDens;
 
       self->FPRO   = (double)6.25*self->SEEDNC;
-      self->FCAR   = (double)1.-self->FPRO-self->FFAT-self->FLIG-self->FOAC-self->FMIN;
+	  //SG 20180409: sugarbeet model J. Rabe - 'stem' is 'storage organ'
+	  if((strcmp(pCropCode,"SB")==0)||(strcmp(pCropCode,"OR")==0))
+		  self->FPRO   = (double)6.25*self->STEMNC; //sugar beet
+
+	  self->FCAR   = (double)1.-self->FPRO-self->FFAT-self->FLIG-self->FOAC-self->FMIN;
       self->CFO    = (double)0.444*self->FCAR + (double)0.531*self->FPRO + (double)0.774*self->FFAT
                     +(double)0.667*self->FLIG +(double)0.368*self->FOAC;
       self->YGO    = self->CFO/((double)1.275*self->FCAR + (double)1.887*self->FPRO 
@@ -1384,6 +1407,17 @@ double 		CUMDEP,fThickness;
 //AP20160616
 	  self->NLVI   = min(self->FNRSH * self->NPL * self->SEEDW * self->EG * self->SEEDNC, self->LNCI * self->CLVI/self->CFV);
 	  self->NRTI   = self->NPL * self->SEEDW * self->EG * self->SEEDNC - self->NLVI;
+
+	  //SG 20180409: sugarbeet model J. Rabe - accounting for small seed number and low seed weights
+	  if((strcmp(pCropCode,"SB")==0)||(strcmp(pCropCode,"OR")==0))
+	  {
+		self->CLVI   = self->NPL * self->SEEDW * self->EFF * self->CFS * self->EG * self->FCRSH;
+		self->CRTI   = self->NPL * self->SEEDW * self->EFF * self->CFS * self->EG * (1.-self->FCRSH);
+
+		self->NLVI   = self->LNCI* self->CLVI/self->CFV;
+		self->NRTI   = self->NPL * self->SEEDW * self->EFF * self->EG * self->LNCI * self->FCRSH/self->FNRSH - self->NLVI;
+	  }
+
 //End of Hong      
 	  
       self->LNCMIN = self->SLA0*self->SLNMIN;
@@ -2566,8 +2600,13 @@ int   BiomassGrowth_GECROS(gecros *self)
       PGECROSPARAMETER  pGPar  = self->pGecrosPlant->pGecrosParameter;
 	  PGECROSSOIL       pGS    = self->pGecrosPlant->pGecrosSoil;
       //double            fTemp;
-      
-	  double CFO,YGO,LNCMIN;
+
+	  //SG 20180410: für Crop?-Abfrage
+	  char spec[30], var[30];
+	  strcpy(spec,pPl->pGenotype->acCropCode);
+	  strcpy(var,pPl->pGenotype->acVarietyName);
+
+      double CFO,YGO,LNCMIN;
       /*
       double FPRO,FCAR;
       double CLVI,CRTI,NPL,NLVI,NRTI;
@@ -2679,6 +2718,8 @@ int   BiomassGrowth_GECROS(gecros *self)
 	  double WRB = self->WRB;//critical root weight density (g m-2 cm-1 depth) const table1,p45
 	  double YGV = self->YGV;//growth efficiency of veg. organs (g C g-1 C) crop table2,p46
                              //pGPar->fGrwEffVegOrg;
+    //SG20180410
+    double SINKBEET = self->SINKBEET;//sink strength of beet in sugarbeet model by J. Rabe
       //double DELT = (double)1;
 	  DELT = (double)xpn->pTi->pTimeStep->fAct;
 	  
@@ -2803,8 +2844,12 @@ int   BiomassGrowth_GECROS(gecros *self)
       
       //%** Biomass formation
       WLV    = CLV  / CFV;
-      WST    = CSST / CFV + CRVS/0.444;
-      WSO    = CSO  / CFO;
+	  WST    = CSST / CFV + CRVS/0.444; //other crops
+	  //SG 20180409: sugarbeet model J. Rabe - 'stem' is storage organ
+	  if(!strcmp(spec,"SB")||!strcmp(spec,"OR"))
+		  WST    = CSST / CFO + CRVS/0.444; //sugar beet
+
+	  WSO    = CSO  / CFO;
       WSH    = WLV  + WST + WSO;
       WRT    = CSRT / CFV + CRVR/0.444;
       WTOT   = WSH  + WRT;
@@ -2837,8 +2882,9 @@ int   BiomassGrowth_GECROS(gecros *self)
 	  pPltB->fDeadLeafWeight  = (double)(WLVD*10);//[g m-2] --> [kg ha-1]
 	  pPltB->fDeadRootWeight  = (double)(WRTD*10);//[g m-2] --> [kg ha-1]
 
-      pPltB->fTotalBiomass   += (pPltB->fDeadLeafWeight+pPltB->fDeadRootWeight);
-	  pPltB->fStovWeight     += pPltB->fDeadLeafWeight;
+     //SG 2017...: für AgMIP - Biomasse inkl. abgestorbene Organe
+     // pPltB->fTotalBiomass   += (pPltB->fDeadLeafWeight+pPltB->fDeadRootWeight);
+	 // pPltB->fStovWeight     += pPltB->fDeadLeafWeight;
 
       pGPltC->fCShoot        = (double)CSH;
       pGPltC->fCRoot         = (double)CRT;
@@ -3113,7 +3159,12 @@ int   BiomassGrowth_GECROS(gecros *self)
       pGPltC->fCDlySupplyRoot   = (double)DCSR;
 
       FDS = betaf(DVR,1.,PMES*1.,LIMIT(1.,2.,DS)-1.);
-      sinkg(DS,1.,TSN*SEEDW*CFO,YGO,FDS,DCDSR,DCSS,DELT,&DCDSC,&DCDS,&FLWCS);
+
+	  //SG 20180409: sugarbeet model J. Rabe - sink strength of storage organs from parameter 'SINKBEET'
+	  if(!strcmp(spec,"SB")||!strcmp(spec,"OR"))
+		  sinkg(DS,1.,SINKBEET*CFO,YGO,FDS,DCDSR,DCSS,DELT,&DCDSC,&DCDS,&FLWCS); //sugar beet
+	  else
+		  sinkg(DS,1.,TSN*SEEDW*CFO,YGO,FDS,DCDSR,DCSS,DELT,&DCDSC,&DCDS,&FLWCS); //other crops
 
       CRVS   = (double)pGPltC->fCStemReserve;//Input
       CRVR   = (double)pGPltC->fCRootReserve;//Input
@@ -3146,7 +3197,12 @@ int   BiomassGrowth_GECROS(gecros *self)
       DCST   = DCSS - FLWCS;
 	  IFSH   = LIMIT(0.,1.,DCST/NOTNUL(DCDTP));
       FDH = betaf(DVR,(1.+ESD)/2.,PMEH*(1.+ESD)/2.,min((1.+ESD)/2.,DS));      
-      sinkg(DS,0.,CDMHT*HTMX*CFV,YGV,FDH*IFSH,DCDTR,DCST,DELT,&DCDTC,&DCDT,&FLWCT);
+
+	  //SG 20180409: sugarbeet model J. Rabe - 'stem' is 'storage organ'
+	  if(!strcmp(spec,"SB")||!strcmp(spec,"OR"))
+		  sinkg(DS,0.,CDMHT*HTMX*CFO,YGO,FDH*IFSH,DCDTR,DCST,DELT,&DCDTC,&DCDT,&FLWCT); //sugar beet
+	  else
+		  sinkg(DS,0.,CDMHT*HTMX*CFV,YGV,FDH*IFSH,DCDTR,DCST,DELT,&DCDTC,&DCDT,&FLWCT); //other crops
 
 	  RDCDTP = (DCDTC-DCDTP)/DELT;//rate
 
@@ -3161,7 +3217,11 @@ int   BiomassGrowth_GECROS(gecros *self)
       //FCSST  = INSW(DS-(ESD+0.2), FLWCT/NOTNUL(DCSS), 0.);
 	  //--> Fraction of available assimilates used for stem growth (vorher)
      //SG20130304: verhindern, dass alles in Stängel und nichts in Blätter geht:
-	  FCSST  = min(0.5,INSW(DS-(ESD+0.2), FLWCT/NOTNUL(DCSS), 0.));
+	  //SG 20180409: sugarbeet model J. Rabe - 'stem' is 'storage organ'
+	  if(!strcmp(spec,"SB")||!strcmp(spec,"OR"))
+		   FCSST  = min(0.4,INSW(DS-(ESD+0.2), FLWCT/NOTNUL(DCSS), 0.)); //sugar beet
+    else
+            FCSST  = min(0.5,INSW(DS-(ESD+0.2), FLWCT/NOTNUL(DCSS), 0.));//other crops
 	  //--> Fraction of available assimilates used for stem growth, limitiert auf höchstens 50%
       FCSO   = FLWCS/NOTNUL(DCSS);
 	  //--> Fraction of available assimilates used for grain filling (in der vegetativen Phase = 0)
@@ -3201,17 +3261,27 @@ int   BiomassGrowth_GECROS(gecros *self)
 
       RCLV   = 12./44.*ASSA*    FCSH *    FCLV  *YGV - LCLV;//rate
       RCSST  = 12./44.*ASSA*    FCSH *    FCSST *YGV;//rate
-      RCSO   = 12./44.*ASSA*FCSH*FCSO*YGO + 0.94*(CREMS+CREMR)*YGO;//rate
+	  //SG 20180409: sugarbeet model J. Rabe - 'stem' is 'storage organ'
+	  if(!strcmp(spec,"SB")||!strcmp(spec,"OR"))
+		  RCSST  = 12./44.*ASSA*    FCSH *    FCSST *YGO;//sugar beet rate
+
+	  RCSO   = 12./44.*ASSA*FCSH*FCSO*YGO + 0.94*(CREMS+CREMR)*YGO;//rate
       RCSRT  = 12./44.*ASSA*(1.-FCSH)*(1.-FCRVR)*YGV - LCRT;//rate
       RCRVS  = FCRVS*DCSS - CREMS;//rate
       RCRVR  = FCRVR*DCSR - CREMR;//rate
       RDCDSR = max(0.,(DCDSC-RCSO/YGO))-(FLWCS-min(DCDSC,DCSS));//rate
       RDCDTR = max(0.,(DCDTC-RCSST/YGV))-(FLWCT-min(DCDTC,DCST));//rate
-
+	  //SG 20180409: sugarbeet model J. Rabe - 'stem' is 'storage organ'
+	  if(!strcmp(spec,"SB")||!strcmp(spec,"OR"))
+	      RDCDTR = max(0.,(DCDTC-RCSST/YGO))-(FLWCT-min(DCDTC,DCST));//sugar beet rate
 
       RWLV   = RCLV / CFV;
       RWST   = RCSST/ CFV + RCRVS/0.444;
-      RWSO   = RCSO / CFO;
+	  //SG 20180409: sugarbeet model J. Rabe - 'stem' is 'storage organ'
+	  if(!strcmp(spec,"SB")||!strcmp(spec,"OR"))
+		  RWST   = RCSST/ CFO + RCRVS/0.444;//sugar beet
+
+	  RWSO   = RCSO / CFO;
       RWRT   = RCSRT/ CFV + RCRVR/0.444;
 if ((xpn_time_compare_date(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,
 		    2010,7,7) ==0 ))
@@ -3312,7 +3382,8 @@ if ((xpn_time_compare_date(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->mon,xpn
       CSO    = max(0., CSO   + RCSO*DELT);
 	  pGPltC->fCStorage =(double)CSO;
 
-      CSRT   = max(0., CSRT  + RCSRT*DELT); 	  	  
+      CSRT   = max(0., CSRT  + RCSRT*DELT); 	  
+	  
 	  pGPltC->fCStrctRoot =(double)CSRT;
 
       CRTD   = max(0., CRTD  + LCRT*DELT);
@@ -3327,7 +3398,9 @@ if ((xpn_time_compare_date(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->mon,xpn
 	  pPltN->fStovCont  = (double)(NSH*10.0); //[g/m2] --> [kg/ha]
       pPltN->fGrainCont = (double)(NSO*10.0); //[g/m2] --> [kg/ha]
 
-        						
+        
+
+						
       NST = (double)pPltN->fStemCont;
 	  NST    = max(0,NST+RNST*DELT);
       pPltN->fStemCont = (double)NST;
