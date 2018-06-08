@@ -1215,13 +1215,13 @@ if (NewDay(pTi))
 		for (i = 0; i < XNMPMASMINFERTSLOTS; ++i) { 
 			if (i < self->numMinFert) {
 				self->xn_to_mpmas->actualMinFertDate[i].day = self->internal_actualMinFertDate[i].day;
-				self->xn_to_mpmas->actualMinFertDate[i].day = self->internal_actualMinFertDate[i].month;
-				self->xn_to_mpmas->actualMinFertDate[i].day = self->internal_actualMinFertDate[i].year;
+				self->xn_to_mpmas->actualMinFertDate[i].month = self->internal_actualMinFertDate[i].month;
+				self->xn_to_mpmas->actualMinFertDate[i].year = self->internal_actualMinFertDate[i].year;
 			}
 			else {
 				self->xn_to_mpmas->actualMinFertDate[i].day = 0;
-				self->xn_to_mpmas->actualMinFertDate[i].day = 0;
-				self->xn_to_mpmas->actualMinFertDate[i].day = 0;
+				self->xn_to_mpmas->actualMinFertDate[i].month = 0;
+				self->xn_to_mpmas->actualMinFertDate[i].year = 0;
 			}
 		}
 	    self->lastAction_done = 1;
