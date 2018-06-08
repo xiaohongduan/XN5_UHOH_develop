@@ -13,6 +13,10 @@
 
 //End of Hong
 
+#define NMIN_DAY  6
+#define NMIN_MONTH  3
+
+
 G_DEFINE_TYPE(mpmas_coupling, mpmas_coupling, EXPERTN_MODUL_BASE_TYPE);
 static void mpmas_coupling_class_init(mpmas_couplingClass *klass) {}
 static void mpmas_coupling_init(mpmas_coupling *self)
@@ -36,7 +40,7 @@ int mpmas_coupling_Load(mpmas_coupling *self)
 	
 //Begin of Hong: for turn-off module of not-currentGrid  
     expertnclass** xpn_class=(expertnclass **)xpn->pXSys->xpn_classes;  	
-	int p, id, Module_len;
+	int p, id, Module_len,i;
     id = xpn->pXSys->id;
     Module_len= (int)xpn_class[id]->XPN_Moduls_len;
 //End of Hong
@@ -83,6 +87,13 @@ int mpmas_coupling_Load(mpmas_coupling *self)
 	self->lastActionDate.month= 0;
 	self->lastActionDate.year=  0;
 
+// added Troost 180608
+	for (i = 0; i < XNMPMASMINFERTSLOTS; ++i) {
+		internal_actualMinFertDate[i].day = 0;
+		internal_actualMinFertDate[i].month = 0;
+		internal_actualMinFertDate[i].year = 0;
+	}
+	
 
 /*  removed Troost 180527	
 	//Begin of Hong: to record the date of last action of each management; if there is no action, date remains 0 
@@ -857,6 +868,62 @@ if (NewDay(pTi))
     
     if (NewDay(pTi))
     {
+		
+		//Troost 180608 : moved here. Nmin should not be done after harvest, but in spring
+		if ( (xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
+						 pTi->pSimTime->iyear, NMIN_MONTH, NMIN_DAY) ==  0) )					) {
+			PSPROFILE   pSo = xpn->pSo;
+			PSLAYER     pSL;
+			PCLAYER     pCL;
+
+			double nmin0_30, nmin30_60, nmin60_90;
+			double depth0_30, depth30_60, depth60_90;
+			double actdepth;
+			double EPSILON;
+
+			EPSILON = 1e-9;
+
+			nmin0_30 = 0.0;
+			nmin30_60 = 0.0;
+			nmin60_90 = 0.0;
+
+			actdepth = 0.0;
+
+			depth0_30 = 0.0;
+			depth30_60 = 0.0;
+			depth60_90 = 0.0;
+			
+					
+			for (pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext;  //start
+							pSL->pNext != NULL;                     //end
+								pSL = pSL->pNext,pCL=pCL->pNext)          //step
+			{
+					actdepth += pSL->fThickness; //mm
+					if (actdepth <= 300.0)
+						{
+						depth0_30 += pSL->fThickness;
+						nmin0_30 += (pCL->fNO3N + pCL->fNH4N) * pSL->fThickness;
+						}
+					if ((actdepth > 300.0) && (actdepth <= 600.0))
+						{
+						depth30_60 += pSL->fThickness;
+						nmin30_60 += (pCL->fNO3N + pCL->fNH4N) * pSL->fThickness;
+						}
+					if ((actdepth > 600.0) && (actdepth <= 900.0))
+						{
+						depth60_90 += pSL->fThickness;
+						nmin60_90 += (pCL->fNO3N + pCL->fNH4N) * pSL->fThickness;
+						}
+					if (actdepth > 900.0)
+						break;
+			}
+
+
+
+            self->xn_to_mpmas->Nmin0_30 = nmin0_30 / (depth0_30+EPSILON);
+            self->xn_to_mpmas->Nmin30_60 = nmin30_60 / (depth30_60+EPSILON);
+            self->xn_to_mpmas->Nmin60_90 = nmin60_90 / (depth60_90+EPSILON);
+		}
         if (checkIfMineralFertilization(self) == 1) 
         {
             fertil = g_malloc0_n(1,sizeof(STNFERTILIZER));
@@ -878,10 +945,12 @@ if (NewDay(pTi))
 			pMa->pNFertilizer->pNext = NULL;
 			pMa->pNFertilizer->pNext = fertil;//Added by Hong on 20180515
             
-            //Begin of Hong: actualMinFertDate
-            self->xn_to_mpmas->actualMinFertDate[self->nextMinFertAction].day=pTi->pSimTime->mday;
-            self->xn_to_mpmas->actualMinFertDate[self->nextMinFertAction].month=pTi->pSimTime->mon;
-            self->xn_to_mpmas->actualMinFertDate[self->nextMinFertAction].year=pTi->pSimTime->iyear;
+            //Begin of Hong: actualMinFertDate //Troost changed: internal save to avoid overriding by early fertilization after switch
+            internal_actualMinFertDate[self->nextMinFertAction].day=pTi->pSimTime->mday;
+            internal_actualMinFertDate[self->nextMinFertAction].month=pTi->pSimTime->mon;
+            internal_actualMinFertDate[self->nextMinFertAction].year=pTi->pSimTime->iyear;
+            
+            
             //End of Hong
             
 			//Added by Hong on 20180524
@@ -941,62 +1010,7 @@ if (NewDay(pTi))
         else if ( (1 == self->new_plant) && (self->coverCrop_harvested == 1) && (self->mainCrop_done == 1)  && (self->harvest_done == 0) && (1 == checkIfHarvest(self)) ) //adapted Troost 180527
             {
 				
-                PSPROFILE   pSo = xpn->pSo;
-                PSLAYER     pSL;
-                PCLAYER     pCL;
-
-                double nmin0_30, nmin30_60, nmin60_90;
-                double depth0_30, depth30_60, depth60_90;
-                double actdepth;
-                double EPSILON;
-
-                EPSILON = 1e-9;
-
-                nmin0_30 = 0.0;
-                nmin30_60 = 0.0;
-                nmin60_90 = 0.0;
-
-                actdepth = 0.0;
-
-                depth0_30 = 0.0;
-                depth30_60 = 0.0;
-                depth60_90 = 0.0;
-                
-						
-                for (pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext;  //start
-                (pSL->pNext != NULL);                     //end
-                pSL = pSL->pNext,pCL=pCL->pNext)          //step
-                {
-                actdepth += pSL->fThickness; //mm
-                if (actdepth <= 300.0)
-                    {
-                    depth0_30 += pSL->fThickness;
-                    nmin0_30 += (pCL->fNO3N + pCL->fNH4N) * pSL->fThickness;
-                    }
-                if ((actdepth > 300.0) && (actdepth <= 600.0))
-                    {
-                    depth30_60 += pSL->fThickness;
-                    nmin30_60 += (pCL->fNO3N + pCL->fNH4N) * pSL->fThickness;
-                    }
-                if ((actdepth > 600.0) && (actdepth <= 900.0))
-                    {
-                    depth60_90 += pSL->fThickness;
-                    nmin60_90 += (pCL->fNO3N + pCL->fNH4N) * pSL->fThickness;
-                    }
-                if (actdepth > 900.0)
-                    break;
-                }
-
-            //test of Hong 20180525
-			//printf("self->harvestAdaptive %d\n",self->harvestAdaptive);
-			//printf("set harvestDate %d-%d-%d\n",pPl->pModelParam->HarvestYear,pPl->pModelParam->HarvestMonth,pPl->pModelParam->HarvestDay);			
-			//printf("lastTillageDate %d-%d-%d\n",self->lastTillageDate.year,self->lastTillageDate.month,self->lastTillageDate.day);									
-			//end of test
-
-
-            self->xn_to_mpmas->Nmin0_30 = nmin0_30 / (depth0_30+EPSILON);
-            self->xn_to_mpmas->Nmin30_60 = nmin30_60 / (depth30_60+EPSILON);
-            self->xn_to_mpmas->Nmin60_90 = nmin60_90 / (depth60_90+EPSILON);
+  
                 
             self->xn_to_mpmas->fruitDryWeight = pPl->pBiomass->fFruitWeight;
             self->xn_to_mpmas->stemLeafDryWeight = pPl->pBiomass->fLeafWeight + pPl->pBiomass->fStemWeight;
@@ -1004,6 +1018,9 @@ if (NewDay(pTi))
             //pPl->pModelParam->HarvestDay=pTi->pSimTime->mday;
             //pPl->pModelParam->HarvestMonth=pTi->pSimTime->mon;
             //pPl->pModelParam->HarvestYear=pTi->pSimTime->iyear;
+
+
+			
             
             //Begin of Hong: actualHarvestDate
             self->xn_to_mpmas->actualHarvestDate.day=pTi->pSimTime->mday;
@@ -1106,8 +1123,12 @@ if (NewDay(pTi))
 				self->lastActionDate.year=self->irrigation[self->numIrrig-1].irrDate.year;
 			}	
 
-
 		//end added Troost 180527	
+		
+		
+		
+		
+		
 			self->harvest_done=1;
 		//	self->new_plant = 0; //ready for next crop //removed Troost 180527, not yet ready for new crop, only after last action date has been reached
 			PRINT_MESSAGE(xpn,1,"harvest");// for debug
@@ -1188,6 +1209,21 @@ if (NewDay(pTi))
 							self->lastActionDate.year,self->lastActionDate.month,self->lastActionDate.day) > 0
 		) //check if the date of last action has passed (one day after that, so that action could take place
     {	
+
+		//added Troost 180608
+		//copy actual fertilization dates from internal to struct
+		for (i = 0; i < XNMPMASMINFERTSLOTS; ++i) { 
+			if (i < self->numMinFert) {
+				self->xn_to_mpmas->actualMinFertDate[i].day = internal_actualMinFertDate[i].day;
+				self->xn_to_mpmas->actualMinFertDate[i].day = internal_actualMinFertDate[i].month;
+				self->xn_to_mpmas->actualMinFertDate[i].day = internal_actualMinFertDate[i].year;
+			}
+			else {
+				self->xn_to_mpmas->actualMinFertDate[i].day = 0;
+				self->xn_to_mpmas->actualMinFertDate[i].day = 0;
+				self->xn_to_mpmas->actualMinFertDate[i].day = 0;
+			}
+		}
 	    self->lastAction_done = 1;
 		self->checkSwitchDate_done=1;
 		PRINT_MESSAGE(xpn, 3, "last action for old plant done\n");	
