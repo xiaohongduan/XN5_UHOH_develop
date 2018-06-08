@@ -89,9 +89,9 @@ int mpmas_coupling_Load(mpmas_coupling *self)
 
 // added Troost 180608
 	for (i = 0; i < XNMPMASMINFERTSLOTS; ++i) {
-		internal_actualMinFertDate[i].day = 0;
-		internal_actualMinFertDate[i].month = 0;
-		internal_actualMinFertDate[i].year = 0;
+		self->internal_actualMinFertDate[i].day = 0;
+		self->internal_actualMinFertDate[i].month = 0;
+		self->internal_actualMinFertDate[i].year = 0;
 	}
 	
 
@@ -946,9 +946,9 @@ if (NewDay(pTi))
 			pMa->pNFertilizer->pNext = fertil;//Added by Hong on 20180515
             
             //Begin of Hong: actualMinFertDate //Troost changed: internal save to avoid overriding by early fertilization after switch
-            internal_actualMinFertDate[self->nextMinFertAction].day=pTi->pSimTime->mday;
-            internal_actualMinFertDate[self->nextMinFertAction].month=pTi->pSimTime->mon;
-            internal_actualMinFertDate[self->nextMinFertAction].year=pTi->pSimTime->iyear;
+            self->internal_actualMinFertDate[self->nextMinFertAction].day=pTi->pSimTime->mday;
+            self->internal_actualMinFertDate[self->nextMinFertAction].month=pTi->pSimTime->mon;
+            self->internal_actualMinFertDate[self->nextMinFertAction].year=pTi->pSimTime->iyear;
             
             
             //End of Hong
@@ -1214,9 +1214,9 @@ if (NewDay(pTi))
 		//copy actual fertilization dates from internal to struct
 		for (i = 0; i < XNMPMASMINFERTSLOTS; ++i) { 
 			if (i < self->numMinFert) {
-				self->xn_to_mpmas->actualMinFertDate[i].day = internal_actualMinFertDate[i].day;
-				self->xn_to_mpmas->actualMinFertDate[i].day = internal_actualMinFertDate[i].month;
-				self->xn_to_mpmas->actualMinFertDate[i].day = internal_actualMinFertDate[i].year;
+				self->xn_to_mpmas->actualMinFertDate[i].day = self->internal_actualMinFertDate[i].day;
+				self->xn_to_mpmas->actualMinFertDate[i].day = self->internal_actualMinFertDate[i].month;
+				self->xn_to_mpmas->actualMinFertDate[i].day = self->internal_actualMinFertDate[i].year;
 			}
 			else {
 				self->xn_to_mpmas->actualMinFertDate[i].day = 0;
