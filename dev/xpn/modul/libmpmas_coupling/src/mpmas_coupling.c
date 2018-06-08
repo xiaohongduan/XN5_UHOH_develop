@@ -870,8 +870,8 @@ if (NewDay(pTi))
     {
 		
 		//Troost 180608 : moved here. Nmin should not be done after harvest, but in spring
-		if ( (xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
-						 pTi->pSimTime->iyear, NMIN_MONTH, NMIN_DAY) ==  0) )					) {
+		if ( xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
+						 pTi->pSimTime->iyear, NMIN_MONTH, NMIN_DAY) ==  0 )					 {
 			PSPROFILE   pSo = xpn->pSo;
 			PSLAYER     pSL;
 			PCLAYER     pCL;
