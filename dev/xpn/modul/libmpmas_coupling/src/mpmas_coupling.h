@@ -106,6 +106,8 @@ struct _mpmas_coupling
 	
  
 	xnmpmasDate internal_actualMinFertDate[XNMPMASMINFERTSLOTS]; // added Troost 180608
+	double internal_actualTotalN[XNMPMASMINFERTSLOTS]		// added Troost 180608
+  
   
     //Count simulation days
     int simulation_days;

@@ -426,13 +426,35 @@ int xn_mpmas_translator::readLuaProps(const char* fnLuaProps )
 				if (luaProps[i]["mineral-fertilization"][j]["adaptive"])
 				{
 					temp.mineralFertilization[j].adaptive = 1;
-					temp.mineralFertilization[j].bbch = getValueFromYamlNode<int>(luaProps[i]["mineral-fertilization"][j]["adaptive"]["bbch"], fnLuaProps,"mineral-fertilization->?->adaptive->bbch of luaID ", luaID);
+					if ( luaProps[i]["mineral-fertilization"][j]["adaptive"]["bbch"]) 
+					{
+						temp.mineralFertilization[j].bbch = getValueFromYamlNode<int>(luaProps[i]["mineral-fertilization"][j]["adaptive"]["bbch"], fnLuaProps,"mineral-fertilization->?->adaptive->bbch of luaID ", luaID);
+					}
+					else 
+					{
+						temp.mineralFertilization[j].bbch = -1;
+					}
+					
+					if (luaProps[i]["mineral-fertilization"][j]["adaptive"]["nmin-factor"] )
+					{
+					
+						temp.mineralFertilization[j].nminAdapt_factor = getValueFromYamlNode<double>(luaProps[i]["mineral-fertilization"][j]["adaptive"]["nmin-factor"], fnLuaProps,"mineral-fertilization->?->adaptive->nmin-factor of luaID ", luaID);
+						temp.mineralFertilization[j].nminAdapt_ref = getValueFromYamlNode<double>(luaProps[i]["mineral-fertilization"][j]["adaptive"]["nmin-reference"], fnLuaProps,"mineral-fertilization->?->adaptive->nmin-base of luaID ", luaID);
+						temp.mineralFertilization[j].nminAdapt_depth = getValueFromYamlNode<int>(luaProps[i]["mineral-fertilization"][j]["adaptive"]["nmin-depth"], fnLuaProps,"mineral-fertilization->?->adaptive->nmin-depth of luaID ", luaID);					
+					}
+					else 
+					{
+						temp.mineralFertilization[j].nminAdapt_factor = -1.0;
+						temp.mineralFertilization[j].nminAdapt_ref = 0;
+						temp.mineralFertilization[j].nminAdapt_depth = 90;					
+					}
 				}
 				else
 				{
 					temp.mineralFertilization[j].adaptive = 0;
 					temp.mineralFertilization[j].bbch = -1;
 				}
+
 			}
 		} //endif mineral fertilization exists
 		else 
@@ -1188,7 +1210,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 	FILE* dbgXnActualDates = fopen(fnAggXnOutput.c_str(), "w" );
 	fprintf(dbgXnActualDates, "x\ty\tgrid\tLUA\tCropCode\tVariety\tYieldMPMAS\t"
 							  "FruitDM\tStem+LeaveDM\tharvest_date\t"
-							  "minfert_date0\tminfert_date1\tminfert_date2\tminfert_date3\tNmin0_30\tNmin30_90\tNmin60_90\t"
+							  "minfert_date0\tminfert_N0\tminfert_date1\tminfert_N1\tminfert_date2\tminfert_N2\tminfert_date3\tminfert_N3\tNmin0_30\tNmin30_90\tNmin60_90\t"
 							  "\n"
 	);
 	
@@ -1217,7 +1239,11 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 
 			fprintf(dbgXnActualDates, "%d\t%d\t%d\t%d\t%s\t%s"
 							"\t%01.2f\t%01.2f\t%01.2f"
-							"\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d\t%02d-%02d-%02d"
+							"\t%02d-%02d-%02d\t"
+							"%02d-%02d-%02d\t%01.2f\t"
+							"%02d-%02d-%02d\t%01.2f\t"
+							"%02d-%02d-%02d\t%01.2f\t"
+							"%02d-%02d-%02d\t%01.2f"
 							"\t%01.2f\t%01.2f\t%01.2f"
 							"\n",
 							col, row, gridId, lua, managIt->second.CropCode, managIt->second.variety,
@@ -1233,15 +1259,21 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[0].day,
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[0].month,
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[0].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[0],
+								
+								
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[1].day,
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[1].month,
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[1].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[1],
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[2].day,
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[2].month,
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[2].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[2],
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[3].day,
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[3].month,
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[3].year,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[3],
 								
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin0_30,
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin30_60,

@@ -37,6 +37,9 @@ typedef struct {
     double urea;//kg N
     int adaptive;
     int bbch;
+    double nminAdapt_factor;
+    double nminAdapt_ref;
+    int nminAdapt_depth;
 } xnmpmasMinFert;
 
 typedef struct {
@@ -144,6 +147,7 @@ typedef struct {
 	//Begin of Hong
 	xnmpmasDate actualHarvestDate; // to transfer the actual harvest date
 	xnmpmasDate actualMinFertDate[XNMPMASMINFERTSLOTS]; // to transfer the actual min-fertilisation date
+	double actualTotalFertN[XNMPMASMINFERTSLOTS];
 	
 	int cellID; // to check the cellID from mpmas_to_xn
 	//End of Hong

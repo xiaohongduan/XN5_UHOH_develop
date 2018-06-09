@@ -13,8 +13,8 @@
 
 //End of Hong
 
-#define NMIN_DAY  6
-#define NMIN_MONTH  3
+#define NMIN_DAY  15
+#define NMIN_MONTH  2
 
 
 G_DEFINE_TYPE(mpmas_coupling, mpmas_coupling, EXPERTN_MODUL_BASE_TYPE);
@@ -92,8 +92,9 @@ int mpmas_coupling_Load(mpmas_coupling *self)
 		self->internal_actualMinFertDate[i].day = 0;
 		self->internal_actualMinFertDate[i].month = 0;
 		self->internal_actualMinFertDate[i].year = 0;
+		self->internal_actualTotalN = 0.0;
 	}
-	
+
 
 /*  removed Troost 180527	
 	//Begin of Hong: to record the date of last action of each management; if there is no action, date remains 0 
@@ -876,7 +877,8 @@ if (NewDay(pTi))
 			PSLAYER     pSL;
 			PCLAYER     pCL;
 
-			double nmin0_30, nmin30_60, nmin60_90;
+			double nmin0_30, nmin30_60, nmin60_90; // added Troost 180608
+
 			double depth0_30, depth30_60, depth60_90;
 			double actdepth;
 			double EPSILON;
@@ -920,9 +922,9 @@ if (NewDay(pTi))
 
 
 
-            self->xn_to_mpmas->Nmin0_30 = nmin0_30 / (depth0_30+EPSILON);
-            self->xn_to_mpmas->Nmin30_60 = nmin30_60 / (depth30_60+EPSILON);
-            self->xn_to_mpmas->Nmin60_90 = nmin60_90 / (depth60_90+EPSILON);
+            self->xn_to_mpmas->Nmin0_30 = nmin0_30 ;// / (depth0_30+EPSILON);
+            self->xn_to_mpmas->Nmin30_60 = nmin30_60;// / (depth30_60+EPSILON);
+            self->xn_to_mpmas->Nmin60_90 = nmin60_90;// / (depth60_90+EPSILON);
 		}
         if (checkIfMineralFertilization(self) == 1) 
         {
@@ -938,6 +940,51 @@ if (NewDay(pTi))
             fertil->fUreaN = self->mineralFertilization[self->nextMinFertAction].urea;
             fertil->fTotalN = fertil->fNO3N + fertil->fNH4N + fertil->fUreaN;
             fertil->acCode =  self->mineralFertilization[self->nextMinFertAction].code;
+            
+            //added Troost 180608 -- adapt fertilization amount to Nmin
+            if (self->mineralFertilization[self->nextMinFertAction].nminAdapt_factor > 0.0) 
+            {
+            
+				if ( xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
+						 pTi->pSimTime->iyear, NMIN_MONTH, NMIN_DAY) >  0 )
+				{
+					double nmin_considered, nmin_bal, adaptCoef;
+					
+					//consider Nmin up to required depth
+					nmin_considered = self->self->xn_to_mpmas->Nmin0_30;
+					if (self->mineralFertilization[self->nextMinFertAction].nminAdapt_depth >= 60)
+						nmin_considered += self->self->xn_to_mpmas->Nmin30_60;
+					if (self->mineralFertilization[self->nextMinFertAction].nminAdapt_depth >= 90)
+						nmin_considered += self->self->xn_to_mpmas->Nmin60_90;
+					
+					//calculate whether Nmin considered in original fertilization plan is matched or what is the difference
+					nmin_bal = (self->mineralFertilization[self->nextMinFertAction].nminAdapt_ref - nmin_considered) * self->mineralFertilization[self->nextMinFertAction].nminAdapt_factor;
+					
+					//calculate coefficient to adapt all componetns of fertilizer
+					 adaptCoef = (fertil->fTotalN + nmin_bal ) / fertil->fTotalN;
+					
+					if (adaptCoef < 0.0)
+						adaptCoef = 0.0;
+					
+					fertil->fTotalN *= adaptCoef;
+					fertil->fNO3N *= adaptCoef;
+					fertil->fNH4N *= adaptCoef;
+					fertil->fUreaN *= adaptCoef;
+					
+				}
+				else 
+				{
+					S  = g_strdup_printf("ERROR: fertilization is supposed to adapt to Nmin, but Nmin not yet measured  "
+														 "on %04d-%02d-%02d\n",									 
+														  pTi->pSimTime->iyear,
+														  pTi->pSimTime->mon,
+														  pTi->pSimTime->mday);
+					PRINT_ERROR(S);
+					g_free(S);		
+				}
+            
+			}
+            //end added Troost 180608
             fertil->pNext = fertil_first;
             fertil_first->pBack = fertil;                                           
             //pMa->pNFertilizer = NULL;//Out-noted by hong on 20180515
@@ -949,7 +996,8 @@ if (NewDay(pTi))
             self->internal_actualMinFertDate[self->nextMinFertAction].day=pTi->pSimTime->mday;
             self->internal_actualMinFertDate[self->nextMinFertAction].month=pTi->pSimTime->mon;
             self->internal_actualMinFertDate[self->nextMinFertAction].year=pTi->pSimTime->iyear;
-            
+			self->internal_actualTotalN = fertil->fTotalN;
+
             
             //End of Hong
             
@@ -1217,11 +1265,13 @@ if (NewDay(pTi))
 				self->xn_to_mpmas->actualMinFertDate[i].day = self->internal_actualMinFertDate[i].day;
 				self->xn_to_mpmas->actualMinFertDate[i].month = self->internal_actualMinFertDate[i].month;
 				self->xn_to_mpmas->actualMinFertDate[i].year = self->internal_actualMinFertDate[i].year;
+				self->xn_to_mpmas->internal_actualTotalN[i] = self->internal_actualTotalN[i];
 			}
 			else {
 				self->xn_to_mpmas->actualMinFertDate[i].day = 0;
 				self->xn_to_mpmas->actualMinFertDate[i].month = 0;
 				self->xn_to_mpmas->actualMinFertDate[i].year = 0;
+				self->xn_to_mpmas->internal_actualTotalN[i] =0;
 			}
 		}
 	    self->lastAction_done = 1;
@@ -1533,7 +1583,7 @@ int checkIfMineralFertilization(mpmas_coupling *self)
         return 0;
     }
     //if timing of fertilization is adaptive, check whether indicated BBCH stage has been reached
-    else if ( self->mineralFertilization[self->nextMinFertAction].adaptive ) {   
+    else if ( self->mineralFertilization[self->nextMinFertAction].adaptive && self->mineralFertilization[self->nextMinFertAction].bbch > 0) {   
         if (currentBBCH >= self->mineralFertilization[self->nextMinFertAction].bbch)
             return 1;
         else
