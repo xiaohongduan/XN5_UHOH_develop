@@ -105,8 +105,8 @@ struct _mpmas_coupling
     xnmpmasIrrigation irrigation[XNMPMASIRRIGATIONSLOTS];
 	
  
-	xnmpmasDate internal_actualMinFertDate[XNMPMASMINFERTSLOTS]; // added Troost 180608
-	double internal_actualTotalN[XNMPMASMINFERTSLOTS]		// added Troost 180608
+    xnmpmasDate internal_actualMinFertDate[XNMPMASMINFERTSLOTS]; // added Troost 180608
+    double internal_actualTotalN[XNMPMASMINFERTSLOTS];		// added Troost 180608
   
   
     //Count simulation days

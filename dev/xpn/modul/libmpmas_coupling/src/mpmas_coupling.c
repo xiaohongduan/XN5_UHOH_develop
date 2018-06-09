@@ -92,7 +92,7 @@ int mpmas_coupling_Load(mpmas_coupling *self)
 		self->internal_actualMinFertDate[i].day = 0;
 		self->internal_actualMinFertDate[i].month = 0;
 		self->internal_actualMinFertDate[i].year = 0;
-		self->internal_actualTotalN = 0.0;
+		self->internal_actualTotalN[i] = 0.0;
 	}
 
 
@@ -922,9 +922,9 @@ if (NewDay(pTi))
 
 
 
-            self->xn_to_mpmas->Nmin0_30 = nmin0_30 ;// / (depth0_30+EPSILON);
-            self->xn_to_mpmas->Nmin30_60 = nmin30_60;// / (depth30_60+EPSILON);
-            self->xn_to_mpmas->Nmin60_90 = nmin60_90;// / (depth60_90+EPSILON);
+            self->xn_to_mpmas->Nmin0_30 = nmin0_30  / (depth0_30+EPSILON);
+            self->xn_to_mpmas->Nmin30_60 = nmin30_60 / (depth30_60+EPSILON);
+            self->xn_to_mpmas->Nmin60_90 = nmin60_90 / (depth60_90+EPSILON);
 		}
         if (checkIfMineralFertilization(self) == 1) 
         {
@@ -951,11 +951,11 @@ if (NewDay(pTi))
 					double nmin_considered, nmin_bal, adaptCoef;
 					
 					//consider Nmin up to required depth
-					nmin_considered = self->self->xn_to_mpmas->Nmin0_30;
+					nmin_considered = self->xn_to_mpmas->Nmin0_30;
 					if (self->mineralFertilization[self->nextMinFertAction].nminAdapt_depth >= 60)
-						nmin_considered += self->self->xn_to_mpmas->Nmin30_60;
+						nmin_considered += self->xn_to_mpmas->Nmin30_60;
 					if (self->mineralFertilization[self->nextMinFertAction].nminAdapt_depth >= 90)
-						nmin_considered += self->self->xn_to_mpmas->Nmin60_90;
+						nmin_considered += self->xn_to_mpmas->Nmin60_90;
 					
 					//calculate whether Nmin considered in original fertilization plan is matched or what is the difference
 					nmin_bal = (self->mineralFertilization[self->nextMinFertAction].nminAdapt_ref - nmin_considered) * self->mineralFertilization[self->nextMinFertAction].nminAdapt_factor;
@@ -996,7 +996,7 @@ if (NewDay(pTi))
             self->internal_actualMinFertDate[self->nextMinFertAction].day=pTi->pSimTime->mday;
             self->internal_actualMinFertDate[self->nextMinFertAction].month=pTi->pSimTime->mon;
             self->internal_actualMinFertDate[self->nextMinFertAction].year=pTi->pSimTime->iyear;
-			self->internal_actualTotalN = fertil->fTotalN;
+	    self->internal_actualTotalN[self->nextMinFertAction] = fertil->fTotalN;
 
             
             //End of Hong
@@ -1265,13 +1265,13 @@ if (NewDay(pTi))
 				self->xn_to_mpmas->actualMinFertDate[i].day = self->internal_actualMinFertDate[i].day;
 				self->xn_to_mpmas->actualMinFertDate[i].month = self->internal_actualMinFertDate[i].month;
 				self->xn_to_mpmas->actualMinFertDate[i].year = self->internal_actualMinFertDate[i].year;
-				self->xn_to_mpmas->internal_actualTotalN[i] = self->internal_actualTotalN[i];
+				self->xn_to_mpmas->actualTotalFertN[i] = self->internal_actualTotalN[i];
 			}
 			else {
 				self->xn_to_mpmas->actualMinFertDate[i].day = 0;
 				self->xn_to_mpmas->actualMinFertDate[i].month = 0;
 				self->xn_to_mpmas->actualMinFertDate[i].year = 0;
-				self->xn_to_mpmas->internal_actualTotalN[i] =0;
+				self->xn_to_mpmas->actualTotalFertN[i] = 0;
 			}
 		}
 	    self->lastAction_done = 1;
