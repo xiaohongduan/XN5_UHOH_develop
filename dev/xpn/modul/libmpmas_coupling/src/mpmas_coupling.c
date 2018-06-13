@@ -881,9 +881,9 @@ if (NewDay(pTi))
 
 			double depth0_30, depth30_60, depth60_90;
 			double actdepth;
-			double EPSILON;
+			//double EPSILON;
 
-			EPSILON = 1e-9;
+			//EPSILON = 1e-9;
 
 			nmin0_30 = 0.0;
 			nmin30_60 = 0.0;
@@ -891,9 +891,12 @@ if (NewDay(pTi))
 
 			actdepth = 0.0;
 
-			depth0_30 = 0.0;
+			/*depth0_30 = 0.0;
 			depth30_60 = 0.0;
-			depth60_90 = 0.0;
+			depth60_90 = 0.0;*/
+			
+			//double cumulNO3N_30 = 0.0;
+			//double cumulNH4N_30 = 0.0;
 			
 					
 			for (pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext;  //start
@@ -903,28 +906,33 @@ if (NewDay(pTi))
 					actdepth += pSL->fThickness; //mm
 					if (actdepth <= 300.0)
 						{
-						depth0_30 += pSL->fThickness;
-						nmin0_30 += (pCL->fNO3N + pCL->fNH4N) * pSL->fThickness;
+						//depth0_30 += pSL->fThickness;
+						nmin0_30 += (pCL->fNO3N + pCL->fNH4N) ;//* pSL->fThickness;
+						//cumulNO3N_30 += pCL->fNO3N;
+						//cumulNH4N_30 += pCL->fNH4N;
+						
 						}
 					if ((actdepth > 300.0) && (actdepth <= 600.0))
 						{
-						depth30_60 += pSL->fThickness;
-						nmin30_60 += (pCL->fNO3N + pCL->fNH4N) * pSL->fThickness;
+						//depth30_60 += pSL->fThickness;
+						nmin30_60 += (pCL->fNO3N + pCL->fNH4N) ;// * pSL->fThickness;
 						}
 					if ((actdepth > 600.0) && (actdepth <= 900.0))
 						{
-						depth60_90 += pSL->fThickness;
-						nmin60_90 += (pCL->fNO3N + pCL->fNH4N) * pSL->fThickness;
+						//depth60_90 += pSL->fThickness;
+						nmin60_90 += (pCL->fNO3N + pCL->fNH4N) ;//* pSL->fThickness;
 						}
 					if (actdepth > 900.0)
 						break;
 			}
 
+			/*S = g_strdup_printf("Nmin date, 0-30cm NH3N: %.2f, NH4N: %.2f", cumulNO3N_30, cumulNH4N_30);
+			PRINT_MESSAGE(xpn,3,S);// for debug
+			g_free(S);*/
 
-
-            self->xn_to_mpmas->Nmin0_30 = nmin0_30  / (depth0_30+EPSILON);
-            self->xn_to_mpmas->Nmin30_60 = nmin30_60 / (depth30_60+EPSILON);
-            self->xn_to_mpmas->Nmin60_90 = nmin60_90 / (depth60_90+EPSILON);
+            self->xn_to_mpmas->Nmin0_30 = nmin0_30  ;// / (depth0_30+EPSILON);
+            self->xn_to_mpmas->Nmin30_60 = nmin30_60; // / (depth30_60+EPSILON);
+            self->xn_to_mpmas->Nmin60_90 = nmin60_90 ; // / (depth60_90+EPSILON);
 		}
         if (checkIfMineralFertilization(self) == 1) 
         {
