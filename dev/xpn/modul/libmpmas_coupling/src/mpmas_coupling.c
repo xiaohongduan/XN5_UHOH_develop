@@ -77,6 +77,9 @@ int mpmas_coupling_Load(mpmas_coupling *self)
 	self->checkSwitchDate_done=0;	
 	self->harvestAdaptive=0; //Added by Hong on 20180525
 	self->coverCrop_harvested = 0;//added Troost 180527
+	self->coverCrop_sowDatecheck_done = 0;//added Troost 180615
+	self->sowDatecheck_done = 0;//added Troost 180615
+	
 	
     self->simulation_days = 0;
     self->count = 0;
@@ -94,8 +97,14 @@ int mpmas_coupling_Load(mpmas_coupling *self)
 		self->internal_actualMinFertDate[i].year = 0;
 		self->internal_actualTotalN[i] = 0.0;
 	}
-
-
+	self->internal_actualCoverCropSowDate[i].day = 0;
+	self->internal_actualCoverCropSowDate[i].month = 0;
+	self->internal_actualCoverCropSowDate[i].year = 0;
+	
+	self->internal_actualSowDate[i].day = 0;
+	self->internal_actualSowDate[i].month = 0;
+	self->internal_actualSowDate[i].year = 0;
+	
 /*  removed Troost 180527	
 	//Begin of Hong: to record the date of last action of each management; if there is no action, date remains 0 
 	self->lastMinFertilDate.day= 0; //added by Hong on 20180524
@@ -395,6 +404,8 @@ int mpmas_coupling_Austausch(mpmas_coupling *self)
 			   self->lastAction_done=0;
 			   self->checkSwitchDate_done=0;
 			   self->coverCrop_harvested=0;
+			   self->coverCrop_sowDatecheck_done = 0;//added Troost 180615
+			   self->sowDatecheck_done = 0;//added Troost 180615
 			   self->mpmas_to_xn->updateManagement=0;
 			   PRINT_MESSAGE(xpn,1,"Recognize new management data");// for debug
 
@@ -438,53 +449,129 @@ if (NewDay(pTi))
 				self->harvestAdaptive=0;// Hong: default no adaptive!
 				self->harvest_done=0;
 				
-				//start added Troost 180527
-				//consistency checks sowing date and cover crop sowing date
+
+
 
 				//start added Troost 180527
 				//consistency checks sowing date and cover crop sowing date
-				if ( (self->mpmas_to_xn->coverCropCode[0] != '\0') && (self->coverCrop_harvested==0) &&
-						(xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
+				if ( (self->mpmas_to_xn->coverCropCode[0] != '\0') && (self->coverCrop_harvested==0 ) && self->coverCrop_sowDatecheck_done == 0; ) 
+				{
+					//calculate earliest possible sowing date - start with now
+					xnmpmasDate earliestPossibleCoverCropSowDateFromNow;
+								earliestPossibleCoverCropSowDateFromNow.year = 	 pTi->pSimTime->iyear;
+								earliestPossibleCoverCropSowDateFromNow.month = 	 pTi->pSimTime->mon;
+								earliestPossibleCoverCropSowDateFromNow.day = 	 pTi->pSimTime->mday;
+
+					// add wating time after tillage that is scheduled before sowing
+						for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
+							if (self->mpmas_to_xn->tillage[i].typeAdaptiveTillage==adaptiveTillageBeforeCoverCrop);
+							{
+								xpn_time_date_add_dt(&earliestPossibleCoverCropSowDateFromNow->year, &earliestPossibleCoverCropSowDateFromNow->month, &earliestPossibleCoverCropSowDateFromNow->day, 
+								self->mpmas_to_xn->tillage[i].daysBeforeAfter);
+								break;
+							}
+						}
+					//check whether the earliest possible is later than the scheduled one
+					if (xpn_time_compare_date(earliestPossibleCoverCropSowDateFromNow.year,earliestPossibleCoverCropSowDateFromNow.month,
+						earliestPossibleCoverCropSowDateFromNow.day ,
 						self->mpmas_to_xn->coverCropSowDate.year,self->mpmas_to_xn->coverCropSowDate.month,
 						self->mpmas_to_xn->coverCropSowDate.day )> 0) )
-				{
-						S  = g_strdup_printf("ERROR: sowing of new cover crop should have "
-											 "been done already %04d-%02d-%02d,\nbut switching to new plant only now: %04d-%02d-%02d.\n",
-											  self->mpmas_to_xn->coverCropSowDate.year,
-											  self->mpmas_to_xn->coverCropSowDate.month, 
-											  self->mpmas_to_xn->coverCropSowDate.day,
-											  pTi->pSimTime->iyear,
-											  pTi->pSimTime->mon,
-											  pTi->pSimTime->mday);
-						PRINT_ERROR(S);
-						g_free(S);		
-						
-						self->new_plant = 0;
-						self->coverCrop_harvested=1;
-						
-				}	   
-				if ( 	xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
-						self->mpmas_to_xn->sowDate.year,self->mpmas_to_xn->sowDate.month,self->mpmas_to_xn->sowDate.day)
-						> 0) 
-				{
-						S  = g_strdup_printf("ERROR: sowing of new crop should have "
-											 "been done already %04d-%02d-%02d,\nbut switching to new plant only now: %04d-%02d-%02d.\n",
-											  self->mpmas_to_xn->sowDate.year,
-											  self->mpmas_to_xn->sowDate.month, 
-											  self->mpmas_to_xn->sowDate.day,
-											  pTi->pSimTime->iyear,
-											  pTi->pSimTime->mon,
-											  pTi->pSimTime->mday);
-						PRINT_ERROR(S);
-						g_free(S);		
-						
-						self->new_plant = 1; //set variables so that simulation can continue empty until fixed harvest date
-						self->harvest_done=0;
-						self->mainCrop_done=1;		
-						pPl->pModelParam->HarvestDay = self->mpmas_to_xn->harvestDate.day;
-						pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->harvestDate.month;
-						pPl->pModelParam->HarvestYear = self->mpmas_to_xn->harvestDate.year;
-						self->harvestAdaptive = 0;
+					{
+						//check whether the earliest possible is later than the scheduled one + maximum delay
+
+						xnmpmasDate maxDelayedDate = self->mpmas_to_xn->coverCropSowDate;
+						xpn_time_date_add_dt(&maxDelayedDate->year, &maxDelayedDate->month, &maxDelayedDate->day, self->mpmas_to_xn->coverCropMaxSowDelay);
+
+							if ( xpn_time_compare_date(earliestPossibleCoverCropSowDateFromNow.year,earliestPossibleCoverCropSowDateFromNow.month,
+								earliestPossibleCoverCropSowDateFromNow.day,
+								maxDelayedDate.year,self->maxDelayedDate.month,
+								maxDelayedDate.day )> 0 )
+								{ //later than planned and later than max delay
+							
+								S  = g_strdup_printf("ERROR: sowing of new cover crop should  "
+													 "be done latest by %04d-%02d-%02d,\nbut switching to new plant only now: %04d-%02d-%02d.\nCompliance with max date not possible (possibly considering tillage do be done before.)\n",
+													  maxDelayedDate.year,
+													  maxDelayedDate.month, 
+													  maxDelayedDate.day,
+													  pTi->pSimTime->iyear,
+													  pTi->pSimTime->mon,
+													  pTi->pSimTime->mday);
+								PRINT_ERROR(S);
+								g_free(S);		
+								
+								self->new_plant = 0;
+								self->coverCrop_harvested=1;
+							}
+							else { //later than planned, but before max delay
+									//adapt the sowing date
+									self->mpmas_to_xn->coverCropSowDate = earliestPossibleCoverCropSowDateFromNow;
+
+							}
+						}
+						self->coverCrop_sowDatecheck_done = 1;	
+				}
+				
+				if (self->sowDatecheck_done == 0 ) 
+				{	
+					//calculate earliest possible sowing date - start with now
+					xnmpmasDate earliestPossibleSowDateFromNow;
+								earliestPossibleSowDateFromNow.year = 	 pTi->pSimTime->iyear;
+								earliestPossibleSowDateFromNow.month = 	 pTi->pSimTime->mon;
+								earliestPossibleSowDateFromNow.day = 	 pTi->pSimTime->mday;
+
+					// add waiting time after tillage that is scheduled before sowing
+					for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
+						if (self->mpmas_to_xn->tillage[i].typeAdaptiveTillage==adaptiveTillageBeforeSowing);
+						{
+							xpn_time_date_add_dt(&earliestPossibleSowDateFromNow->year, &earliestPossibleSowDateFromNow->month, &earliestPossibleSowDateFromNow->day, 
+							self->mpmas_to_xn->tillage[i].daysBeforeAfter);
+							break;
+						}
+					}
+					//check whether the earliest possible is later than the scheduled one
+					if (xpn_time_compare_date(earliestPossibleSowDateFromNow.year,earliestPossibleSowDateFromNow.month,
+						earliestPossibleSowDateFromNow.day ,
+						self->mpmas_to_xn->sowDate.year,self->mpmas_to_xn->sowDate.month,
+						self->mpmas_to_xn->sowDate.day )> 0) )
+					{
+						//check whether the earliest possible is later than the scheduled one + maximum delay
+
+						xnmpmasDate maxDelayedDate = self->mpmas_to_xn->sowDate;
+						xpn_time_date_add_dt(&maxDelayedDate->year, &maxDelayedDate->month, &maxDelayedDate->day, self->mpmas_to_xn->maxSowDelay);
+
+						if ( xpn_time_compare_date(earliestPossibleSowDateFromNow.year,earliestPossibleSowDateFromNow.month,
+							earliestPossibleSowDateFromNow.day,
+							maxDelayedDate.year,self->maxDelayedDate.month,
+							maxDelayedDate.day )> 0 )
+						{ //later than planned and later than max delay
+
+							S  = g_strdup_printf("ERROR: sowing of new crop should  "
+												 "been done latest by %04d-%02d-%02d,\nbut switching to new plant only now: %04d-%02d-%02d.\nCompliance with max date not possible (possibly considering tillage do be done before.)\n",
+												  maxDelayedDate.year,
+												  maxDelayedDate.month, 
+												  maxDelayedDate.day,
+												  pTi->pSimTime->iyear,
+												  pTi->pSimTime->mon,
+												  pTi->pSimTime->mday);
+							PRINT_ERROR(S);
+							g_free(S);		
+							
+							self->new_plant = 1; //set variables so that simulation can continue empty until fixed harvest date
+							self->harvest_done=0;
+							self->mainCrop_done=1;		
+							pPl->pModelParam->HarvestDay = self->mpmas_to_xn->harvestDate.day;
+							pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->harvestDate.month;
+							pPl->pModelParam->HarvestYear = self->mpmas_to_xn->harvestDate.year;
+							self->harvestAdaptive = 0;
+							
+						}
+						else { //later than planned, but before max delay
+							//adapt the sowing date
+							self->mpmas_to_xn->sowDate = earliestPossibleSowDateFromNow;
+						}
+					}
+					self->sowDatecheck_done = 1;	
+
 				}	   
 			    //end added Troost 180527
 
@@ -513,7 +600,8 @@ if (NewDay(pTi))
                     pPl->pModelParam->HarvestDay = self->mpmas_to_xn->coverCropPloughUnderDate.day;
                     pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->coverCropPloughUnderDate.month;
                     pPl->pModelParam->HarvestYear = self->mpmas_to_xn->coverCropPloughUnderDate.year;
-										
+					
+					internal_actualCoverCropSowDate = 			self->mpmas_to_xn->coverCropSowDate;		
 					
 					pPl->pModelParam->cResidueCarryOff = 0; //residuals of coverCrop liegen lassen
 
@@ -591,7 +679,8 @@ if (NewDay(pTi))
 					self->harvestBBCH1ExtraDays = self->mpmas_to_xn->harvestBBCH1ExtraDays;
 					self->harvestBBCH2 = self->mpmas_to_xn->harvestBBCH2;
 					self->harvestBBCH2ExtraDays = self->mpmas_to_xn->harvestBBCH2ExtraDays;
-					
+					internal_actualSowDate = 			self->mpmas_to_xn->sowDate;
+				
 					 pPl->pModelParam->cResidueCarryOff = self->mpmas_to_xn->biom_remove;
                     // maybe needs to read the plant model
 		
@@ -1282,6 +1371,9 @@ if (NewDay(pTi))
 				self->xn_to_mpmas->actualTotalFertN[i] = 0;
 			}
 		}
+		self->xn_to_mpmas->actualSowDate = self->internal_actualSowDate;
+		self->xn_to_mpmas->actualCoverCropSowDate = self->internal_actualCoverCropSowDate;
+		
 	    self->lastAction_done = 1;
 		self->checkSwitchDate_done=1;
 		PRINT_MESSAGE(xpn, 3, "last action for old plant done\n");	

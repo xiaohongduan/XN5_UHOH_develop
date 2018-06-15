@@ -243,6 +243,13 @@ int xn_mpmas_translator::readLuaProps(const char* fnLuaProps )
 		temp.sowDens = getValueFromYamlNode<double>(luaProps[i]["sowing"]["density"], fnLuaProps,"sowing->density of luaID ", luaID);
 		temp.rowDist = getValueFromYamlNode<double>(luaProps[i]["sowing"]["row-spacing"], fnLuaProps,"sowing->row-spacing of luaID ", luaID);;
 		temp.sowDepth = getValueFromYamlNode<double>(luaProps[i]["sowing"]["depth"], fnLuaProps,"sowing->depth of luaID ", luaID);
+		if (luaProps[i]["sowing"]["max-days-delay"])
+		{
+			temp.maxSowDelay = getValueFromYamlNode<double>(luaProps[i]["sowing"]["max-days-delay"], fnLuaProps,"sowing->max-days-delay of luaID ", luaID);
+		}
+		else {
+			temp.maxSowDelay = 0;
+		}
 		
 		
 		if (luaProps[i]["sowing"]["adaptive"])
@@ -584,6 +591,14 @@ int xn_mpmas_translator::readLuaProps(const char* fnLuaProps )
 				temp.coverCropSowDate.year = -1;
 				temp.coverCropSowDate.month = -1;
 				temp.coverCropSowDate.day = -1;
+			}
+			
+			if (luaProps[i]["cover-crop"]["cover-sowing"]["max-days-delay"])
+			{
+				temp.coverCropMaxSowDelay = getValueFromYamlNode<double>(luaProps[i]["cover-crop"]["cover-sowing"]["max-days-delay"], fnLuaProps,"cover-crop->cover-sowing->max-days-delay of luaID ", luaID);
+			}
+			else {
+				temp.coverCropMaxSowDelay = 0;
 			}
 			
 			temp.coverCropSowDens = getValueFromYamlNode<double>(luaProps[i]["cover-crop"]["cover-sowing"]["density"], fnLuaProps,"cover-crop sowing->density of luaID ", luaID);
@@ -1211,6 +1226,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 	fprintf(dbgXnActualDates, "x\ty\tgrid\tLUA\tCropCode\tVariety\tYieldMPMAS\t"
 							  "FruitDM\tStem+LeaveDM\tharvest_date\t"
 							  "minfert_date0\tminfert_N0\tminfert_date1\tminfert_N1\tminfert_date2\tminfert_N2\tminfert_date3\tminfert_N3\tNmin0_30\tNmin30_90\tNmin60_90\t"
+							  "sow_date\tcovercrop_sow_date"
 							  "\n"
 	);
 	
@@ -1245,6 +1261,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 							"%02d-%02d-%02d\t%01.2f\t"
 							"%02d-%02d-%02d\t%01.2f"
 							"\t%01.2f\t%01.2f\t%01.2f"
+							"\t%02d-%02d-%02d\t%02d-%02d-%02d"
 							"\n",
 							col, row, gridId, lua, managIt->second.CropCode, managIt->second.variety,
 							
@@ -1277,8 +1294,15 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 								
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin0_30,
 								grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin30_60,
-								grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin60_90
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin60_90,
 								
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualSowDate.day,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualSowDate.month,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualSowDate.year,
+								
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualCoverCropSowDate.day,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualCoverCropSowDate.month,
+								grid_xn_to_mpmas[gridId * xnGridSize +ci].actualCoverCropSowDate.year
 						);
 
 

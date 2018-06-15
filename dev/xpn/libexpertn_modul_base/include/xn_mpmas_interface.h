@@ -81,6 +81,7 @@ typedef struct  {
     char CropCode[XNCROPCODELENGTH + 1];
     char CropName[XNNAMELENGTH +1 ];
     xnmpmasDate sowDate;
+    int maxSowDelay;
     char variety[XNNAMELENGTH + 1];
     double sowDens;
     double rowDist; 
@@ -99,6 +100,7 @@ typedef struct  {
 	double coverCropSowDens; // if necessary?
 	double coverCropRowDist;  // if necessary?
 	double coverCropSowDepth;  // if necessary?
+	int  coverCropMaxSowDelay;
 	xnmpmasDate coverCropPloughUnderDate;	
 	//End of Hong
 	
@@ -148,6 +150,11 @@ typedef struct {
 	xnmpmasDate actualHarvestDate; // to transfer the actual harvest date
 	xnmpmasDate actualMinFertDate[XNMPMASMINFERTSLOTS]; // to transfer the actual min-fertilisation date
 	double actualTotalFertN[XNMPMASMINFERTSLOTS];
+	
+	xnmpmasDate actualSowDate; 
+	xnmpmasDate actualCoverCropSowDate; 
+
+	
 	
 	int cellID; // to check the cellID from mpmas_to_xn
 	//End of Hong

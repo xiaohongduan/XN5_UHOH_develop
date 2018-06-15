@@ -944,7 +944,7 @@ void xpn_main_mpi_share_results_on_all_nodes (xpn_main *self)
 	g_free(recvbuf_double);
 	
 	//xn_to_mpmas INTS
-	entry_len = 4 + 3* XNMPMASMINFERTSLOTS;
+	entry_len = 4 + 3* XNMPMASMINFERTSLOTS + 6;
 	sendbuf_int = (int *) g_malloc0(sizeof(int) * n_own * entry_len);
 	recvbuf_int = (int *) g_malloc0(sizeof(int) * oneGridSize * entry_len);
 	
@@ -968,6 +968,14 @@ void xpn_main_mpi_share_results_on_all_nodes (xpn_main *self)
 			sendbuf_int[k * entry_len + 4 + 3 * i2 + 1] = self->grid_xn_to_mpmas[i].actualMinFertDate[i2].month;
 			sendbuf_int[k * entry_len + 4 + 3 * i2 + 2] = self->grid_xn_to_mpmas[i].actualMinFertDate[i2].day;
 		}
+		
+		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 0] = self->grid_xn_to_mpmas[i].actualSowDate.year;
+		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 1] = self->grid_xn_to_mpmas[i].actualSowDate.month;
+		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 2] = self->grid_xn_to_mpmas[i].actualSowDate.day;
+		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 3] = self->grid_xn_to_mpmas[i].actualCoverCropSowDate.year;
+		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 4] = self->grid_xn_to_mpmas[i].actualCoverCropSowDate.month;
+		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 5] = self->grid_xn_to_mpmas[i].actualCoverCropSowDate.day;		
+		
 		++k;
 	}
 
@@ -989,6 +997,13 @@ void xpn_main_mpi_share_results_on_all_nodes (xpn_main *self)
 			self->grid_xn_to_mpmas[i].actualMinFertDate[i2].month = recvbuf_int[i * entry_len + 4 + 3 * i2 + 1] ;
 			self->grid_xn_to_mpmas[i].actualMinFertDate[i2].day = recvbuf_int[i * entry_len + 4 + 3 * i2 + 2];
 		}
+		self->grid_xn_to_mpmas[i].actualSowDate.year = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 0];
+		self->grid_xn_to_mpmas[i].actualSowDate.month = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 1];
+		self->grid_xn_to_mpmas[i].actualSowDate.day = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 2];
+		self->grid_xn_to_mpmas[i].actualCoverCropSowDate.year = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 3];
+		self->grid_xn_to_mpmas[i].actualCoverCropSowDate.month = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 4];
+		self->grid_xn_to_mpmas[i].actualCoverCropSowDate.day = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 5];
+		
 		
 	}
 	//free memory
