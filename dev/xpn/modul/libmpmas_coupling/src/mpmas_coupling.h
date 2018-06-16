@@ -51,6 +51,8 @@ struct _mpmas_coupling
     int previousGrid;
     int harvest_done; //whether harvest has been done
     int coverCrop_harvested;//added Troost 180527
+    int coverCrop_sowDatecheck_done;//added Troost 180614
+	int sowDatecheck_done;//added Troost 180614
     int lastAction_done, checkSwitchDate_done, mainCrop_done;//Hong added on 20180524	
 	int irrigation_read;
     int new_management;//whether a new management info has been read
@@ -76,6 +78,9 @@ struct _mpmas_coupling
     char *ges_date_zwischen, *ges_fertilizer_zwischen, *ges_code_zwischen;
     double ges_n_tot_zwischen, ges_no3n_zwischen, ges_nh4n_zwischen, ges_urea_zwischen;
     double ges_amount_zwischen, ges_dry_matter_zwischen, ges_subst_zwischen;    
+    
+    
+
     
     //Harvest decision
     int daysSinceBBCH1, daysSinceBBCH2;
@@ -107,7 +112,8 @@ struct _mpmas_coupling
  
     xnmpmasDate internal_actualMinFertDate[XNMPMASMINFERTSLOTS]; // added Troost 180608
     double internal_actualTotalN[XNMPMASMINFERTSLOTS];		// added Troost 180608
-  
+    xnmpmasDate internal_actualCoverCropSowDate;// added Troost 180615
+    xnmpmasDate internal_actualSowDate;// added Troost 180615
   
     //Count simulation days
     int simulation_days;
