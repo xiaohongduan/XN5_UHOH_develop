@@ -97,13 +97,13 @@ int mpmas_coupling_Load(mpmas_coupling *self)
 		self->internal_actualMinFertDate[i].year = 0;
 		self->internal_actualTotalN[i] = 0.0;
 	}
-	self->internal_actualCoverCropSowDate[i].day = 0;
-	self->internal_actualCoverCropSowDate[i].month = 0;
-	self->internal_actualCoverCropSowDate[i].year = 0;
+	self->internal_actualCoverCropSowDate.day = 0;
+	self->internal_actualCoverCropSowDate.month = 0;
+	self->internal_actualCoverCropSowDate.year = 0;
 	
-	self->internal_actualSowDate[i].day = 0;
-	self->internal_actualSowDate[i].month = 0;
-	self->internal_actualSowDate[i].year = 0;
+	self->internal_actualSowDate.day = 0;
+	self->internal_actualSowDate.month = 0;
+	self->internal_actualSowDate.year = 0;
 	
 /*  removed Troost 180527	
 	//Begin of Hong: to record the date of last action of each management; if there is no action, date remains 0 
@@ -454,7 +454,8 @@ if (NewDay(pTi))
 
 				//start added Troost 180527
 				//consistency checks sowing date and cover crop sowing date
-				if ( (self->mpmas_to_xn->coverCropCode[0] != '\0') && (self->coverCrop_harvested==0 ) && self->coverCrop_sowDatecheck_done == 0; ) 
+				if ( (self->mpmas_to_xn->coverCropCode[0] != '\0') && (self->coverCrop_harvested==0 ) 
+					&& self->coverCrop_sowDatecheck_done == 0 ) 
 				{
 					//calculate earliest possible sowing date - start with now
 					xnmpmasDate earliestPossibleCoverCropSowDateFromNow;
@@ -466,7 +467,7 @@ if (NewDay(pTi))
 						for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
 							if (self->mpmas_to_xn->tillage[i].typeAdaptiveTillage==adaptiveTillageBeforeCoverCrop);
 							{
-								xpn_time_date_add_dt(&earliestPossibleCoverCropSowDateFromNow->year, &earliestPossibleCoverCropSowDateFromNow->month, &earliestPossibleCoverCropSowDateFromNow->day, 
+								xpn_time_date_add_dt(&earliestPossibleCoverCropSowDateFromNow.year, &earliestPossibleCoverCropSowDateFromNow.month, &earliestPossibleCoverCropSowDateFromNow.day, 
 								self->mpmas_to_xn->tillage[i].daysBeforeAfter);
 								break;
 							}
@@ -475,17 +476,17 @@ if (NewDay(pTi))
 					if (xpn_time_compare_date(earliestPossibleCoverCropSowDateFromNow.year,earliestPossibleCoverCropSowDateFromNow.month,
 						earliestPossibleCoverCropSowDateFromNow.day ,
 						self->mpmas_to_xn->coverCropSowDate.year,self->mpmas_to_xn->coverCropSowDate.month,
-						self->mpmas_to_xn->coverCropSowDate.day )> 0) )
+						self->mpmas_to_xn->coverCropSowDate.day ) > 0 )
 					{
 						//check whether the earliest possible is later than the scheduled one + maximum delay
 
 						xnmpmasDate maxDelayedDate = self->mpmas_to_xn->coverCropSowDate;
-						xpn_time_date_add_dt(&maxDelayedDate->year, &maxDelayedDate->month, &maxDelayedDate->day, self->mpmas_to_xn->coverCropMaxSowDelay);
+						xpn_time_date_add_dt(&maxDelayedDate.year, &maxDelayedDate.month, &maxDelayedDate.day, self->mpmas_to_xn->coverCropMaxSowDelay);
 
-							if ( xpn_time_compare_date(earliestPossibleCoverCropSowDateFromNow.year,earliestPossibleCoverCropSowDateFromNow.month,
+							if ( xpn_time_compare_date(earliestPossibleCoverCropSowDateFromNow.year, earliestPossibleCoverCropSowDateFromNow.month,
 								earliestPossibleCoverCropSowDateFromNow.day,
-								maxDelayedDate.year,self->maxDelayedDate.month,
-								maxDelayedDate.day )> 0 )
+								maxDelayedDate.year,maxDelayedDate.month,
+								maxDelayedDate.day ) > 0 )
 								{ //later than planned and later than max delay
 							
 								S  = g_strdup_printf("ERROR: sowing of new cover crop should  "
@@ -523,7 +524,7 @@ if (NewDay(pTi))
 					for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
 						if (self->mpmas_to_xn->tillage[i].typeAdaptiveTillage==adaptiveTillageBeforeSowing);
 						{
-							xpn_time_date_add_dt(&earliestPossibleSowDateFromNow->year, &earliestPossibleSowDateFromNow->month, &earliestPossibleSowDateFromNow->day, 
+							xpn_time_date_add_dt(&earliestPossibleSowDateFromNow.year, &earliestPossibleSowDateFromNow.month, &earliestPossibleSowDateFromNow.day, 
 							self->mpmas_to_xn->tillage[i].daysBeforeAfter);
 							break;
 						}
@@ -532,16 +533,16 @@ if (NewDay(pTi))
 					if (xpn_time_compare_date(earliestPossibleSowDateFromNow.year,earliestPossibleSowDateFromNow.month,
 						earliestPossibleSowDateFromNow.day ,
 						self->mpmas_to_xn->sowDate.year,self->mpmas_to_xn->sowDate.month,
-						self->mpmas_to_xn->sowDate.day )> 0) )
+						self->mpmas_to_xn->sowDate.day )> 0 )
 					{
 						//check whether the earliest possible is later than the scheduled one + maximum delay
 
 						xnmpmasDate maxDelayedDate = self->mpmas_to_xn->sowDate;
-						xpn_time_date_add_dt(&maxDelayedDate->year, &maxDelayedDate->month, &maxDelayedDate->day, self->mpmas_to_xn->maxSowDelay);
+						xpn_time_date_add_dt(&maxDelayedDate.year, &maxDelayedDate.month, &maxDelayedDate.day, self->mpmas_to_xn->maxSowDelay);
 
 						if ( xpn_time_compare_date(earliestPossibleSowDateFromNow.year,earliestPossibleSowDateFromNow.month,
 							earliestPossibleSowDateFromNow.day,
-							maxDelayedDate.year,self->maxDelayedDate.month,
+							maxDelayedDate.year,maxDelayedDate.month,
 							maxDelayedDate.day )> 0 )
 						{ //later than planned and later than max delay
 
@@ -601,7 +602,7 @@ if (NewDay(pTi))
                     pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->coverCropPloughUnderDate.month;
                     pPl->pModelParam->HarvestYear = self->mpmas_to_xn->coverCropPloughUnderDate.year;
 					
-					internal_actualCoverCropSowDate = 			self->mpmas_to_xn->coverCropSowDate;		
+					self->internal_actualCoverCropSowDate = self->mpmas_to_xn->coverCropSowDate;		
 					
 					pPl->pModelParam->cResidueCarryOff = 0; //residuals of coverCrop liegen lassen
 
@@ -679,7 +680,7 @@ if (NewDay(pTi))
 					self->harvestBBCH1ExtraDays = self->mpmas_to_xn->harvestBBCH1ExtraDays;
 					self->harvestBBCH2 = self->mpmas_to_xn->harvestBBCH2;
 					self->harvestBBCH2ExtraDays = self->mpmas_to_xn->harvestBBCH2ExtraDays;
-					internal_actualSowDate = 			self->mpmas_to_xn->sowDate;
+					self->internal_actualSowDate = 			self->mpmas_to_xn->sowDate;
 				
 					 pPl->pModelParam->cResidueCarryOff = self->mpmas_to_xn->biom_remove;
                     // maybe needs to read the plant model
