@@ -885,7 +885,7 @@ void xpn_main_mpi_share_results_on_all_nodes (xpn_main *self)
 	//Note: a MPI_type_struct would be nicer, but I am doing it the explicit way here
 	
 	//xn_to_mpmas DOUBLES
-	entry_len = 9;
+	entry_len = 10;
 	sendbuf_double = (double *) g_malloc0(sizeof(double) * n_own * entry_len);
 	recvbuf_double = (double *) g_malloc0(sizeof(double) * oneGridSize * entry_len);
 	
@@ -901,12 +901,13 @@ void xpn_main_mpi_share_results_on_all_nodes (xpn_main *self)
 	{
 		sendbuf_double[k * entry_len] = self->grid_xn_to_mpmas[i].fruitDryWeight;
 		sendbuf_double[k * entry_len +1] = self->grid_xn_to_mpmas[i].stemLeafDryWeight;
-		sendbuf_double[k * entry_len +2] = self->grid_xn_to_mpmas[i].Nmin0_30;
-		sendbuf_double[k * entry_len +3] = self->grid_xn_to_mpmas[i].Nmin30_60;
-		sendbuf_double[k * entry_len +4] = self->grid_xn_to_mpmas[i].Nmin60_90;
+		sendbuf_double[k * entry_len +2] = self->grid_xn_to_mpmas[i].stemOnlyDryWeight;
+		sendbuf_double[k * entry_len +3] = self->grid_xn_to_mpmas[i].Nmin0_30;
+		sendbuf_double[k * entry_len +4] = self->grid_xn_to_mpmas[i].Nmin30_60;
+		sendbuf_double[k * entry_len +5] = self->grid_xn_to_mpmas[i].Nmin60_90;
 		for (i2 = 0; i2 < XNMPMASMINFERTSLOTS; ++i2) 
 		{
-			sendbuf_double[k * entry_len + 5 + i2] = self->grid_xn_to_mpmas[i].actualTotalFertN[i2];
+			sendbuf_double[k * entry_len + 6 + i2] = self->grid_xn_to_mpmas[i].actualTotalFertN[i2];
 		}
 		++k;
 	}
@@ -930,12 +931,13 @@ void xpn_main_mpi_share_results_on_all_nodes (xpn_main *self)
 		
 		self->grid_xn_to_mpmas[i].fruitDryWeight = recvbuf_double[i * entry_len];
 		self->grid_xn_to_mpmas[i].stemLeafDryWeight = recvbuf_double[i * entry_len +1];
-		self->grid_xn_to_mpmas[i].Nmin0_30 = recvbuf_double[i * entry_len +2];
-		self->grid_xn_to_mpmas[i].Nmin30_60 = recvbuf_double[i * entry_len +3];
-		self->grid_xn_to_mpmas[i].Nmin60_90 = recvbuf_double[i * entry_len +4];
+		self->grid_xn_to_mpmas[i].stemOnlyDryWeight = recvbuf_double[i * entry_len +2];
+		self->grid_xn_to_mpmas[i].Nmin0_30 = recvbuf_double[i * entry_len +3];
+		self->grid_xn_to_mpmas[i].Nmin30_60 = recvbuf_double[i * entry_len +4];
+		self->grid_xn_to_mpmas[i].Nmin60_90 = recvbuf_double[i * entry_len +5];
 		for (i2 = 0; i2 < XNMPMASMINFERTSLOTS; ++i2) 
 		{
-			self->grid_xn_to_mpmas[i].actualTotalFertN[i2] = recvbuf_double[i * entry_len +5 +i2];
+			self->grid_xn_to_mpmas[i].actualTotalFertN[i2] = recvbuf_double[i * entry_len +6 +i2];
 		}
 		
 	}

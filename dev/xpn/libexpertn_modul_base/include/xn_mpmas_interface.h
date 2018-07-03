@@ -141,6 +141,7 @@ typedef struct  {
 typedef struct {
     double fruitDryWeight; // kg/ha
     double stemLeafDryWeight;
+    double stemOnlyDryWeight;
     double Nmin0_30;
     double Nmin30_60;
     double Nmin60_90;

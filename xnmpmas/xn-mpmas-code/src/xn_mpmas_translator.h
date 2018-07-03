@@ -27,6 +27,7 @@ namespace xnmpmas
 		typedef struct {
 			double yieldFactor;
 			double stoverYieldFactor;
+			double stemYieldFactor;
 		} luaInfo;
 	}
 }

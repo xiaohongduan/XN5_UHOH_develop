@@ -1160,6 +1160,7 @@ if (NewDay(pTi))
                 
             self->xn_to_mpmas->fruitDryWeight = pPl->pBiomass->fFruitWeight;
             self->xn_to_mpmas->stemLeafDryWeight = pPl->pBiomass->fLeafWeight + pPl->pBiomass->fStemWeight;
+            self->xn_to_mpmas->stemOnlyDryWeight = pPl->pBiomass->fStemWeight;
             //self->xn_to_mpmas->Nmin = pCh->pCBalance->fNO3NProfile;
             //pPl->pModelParam->HarvestDay=pTi->pSimTime->mday;
             //pPl->pModelParam->HarvestMonth=pTi->pSimTime->mon;

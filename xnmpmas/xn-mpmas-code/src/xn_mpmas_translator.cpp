@@ -328,7 +328,12 @@ int xn_mpmas_translator::readLuaProps(const char* fnLuaProps )
 		temp.biom_remove = getValueFromYamlNode<bool>(luaProps[i]["harvest"]["biomass-removed"], fnLuaProps,"harvest->biomass-removed of luaID ", luaID);
 		tempInfo.yieldFactor = getValueFromYamlNode<double>(luaProps[i]["harvest"]["yield-factor"], fnLuaProps,"harvest->yield-factor of luaID ", luaID);
 		tempInfo.stoverYieldFactor = getValueFromYamlNode<double>(luaProps[i]["harvest"]["stover-factor"], fnLuaProps,"harvest->stover-factor of luaID ", luaID);
-		
+
+		if (luaProps[i]["harvest"]["stem-factor"])
+			tempInfo.stemYieldFactor = getValueFromYamlNode<double>(luaProps[i]["harvest"]["stem-factor"], fnLuaProps,"harvest->stem-factor of luaID ", luaID);
+		else
+			tempInfo.stemYieldFactor = 0;
+
 //NEW CT 170107: 		
 		//tillage
 		if(luaProps[i]["tillage"])
@@ -1246,7 +1251,9 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 			
 
 			double mpmasYield = grid_xn_to_mpmas[gridId * xnGridSize + ci].fruitDryWeight * it2->second.yieldFactor
-							+ grid_xn_to_mpmas[gridId * xnGridSize + ci].stemLeafDryWeight * it2->second.stoverYieldFactor ;
+							+ grid_xn_to_mpmas[gridId * xnGridSize + ci].stemLeafDryWeight * it2->second.stoverYieldFactor 
+							+ grid_xn_to_mpmas[gridId * xnGridSize + ci].stemOnlyDryWeight * it2->second.stemYieldFactor ;
+
 
 			yieldMap1->setValue(row, col, mpmasYield);
 			
@@ -1254,7 +1261,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 
 
 			fprintf(dbgXnActualDates, "%d\t%d\t%d\t%d\t%s\t%s"
-							"\t%01.2f\t%01.2f\t%01.2f"
+							"\t%01.2f\t%01.2f\t%01.2f\t%01.2f"
 							"\t%02d-%02d-%02d\t"
 							"%02d-%02d-%02d\t%01.2f\t"
 							"%02d-%02d-%02d\t%01.2f\t"
@@ -1268,6 +1275,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 							mpmasYield,
 							grid_xn_to_mpmas[gridId * xnGridSize + ci].fruitDryWeight,
 							grid_xn_to_mpmas[gridId * xnGridSize + ci].stemLeafDryWeight,
+							grid_xn_to_mpmas[gridId * xnGridSize + ci].stemOnlyDryWeight,
 							
 							grid_xn_to_mpmas[gridId * xnGridSize +ci].actualHarvestDate.day,
 							grid_xn_to_mpmas[gridId * xnGridSize +ci].actualHarvestDate.month,
@@ -1332,6 +1340,7 @@ void xn_mpmas_translator::calcYieldsToArray(const STRUCT_xn_to_mpmas* grid_xn_to
 			int count = 0;
 			double harvest = 0.0;
 			double stoverHarvest = 0.0;
+			double stemHarvest = 0.0;
 			for (it = itlow; it != itup; it++)
 			{
 					int c = it->second;
@@ -1348,11 +1357,12 @@ void xn_mpmas_translator::calcYieldsToArray(const STRUCT_xn_to_mpmas* grid_xn_to
 						count++;
 						harvest += grid_xn_to_mpmas[gridId * xnGridSize + c].fruitDryWeight;
 						stoverHarvest += grid_xn_to_mpmas[gridId * xnGridSize + c].stemLeafDryWeight;
+						stemHarvest   += grid_xn_to_mpmas[gridId * xnGridSize + c].stemOnlyDryWeight;
 					}
 			}
 			if (count > 0)
 			{	map<int,luaInfo>::iterator it2 = LuaCouplingParameters.find(lua);
-				yieldArray[l] = (harvest / count) * it2->second.yieldFactor +  (stoverHarvest / count) * it2->second.stoverYieldFactor; 
+				yieldArray[l] = (harvest / count) * it2->second.yieldFactor +  (stoverHarvest / count) * it2->second.stoverYieldFactor  + (stemHarvest /count) * it2->second.stemYieldFactor ;
 				stoverYieldArray[l] = 0.0;
 			}
 			else 
