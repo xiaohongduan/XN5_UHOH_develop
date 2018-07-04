@@ -1229,7 +1229,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 	
 	FILE* dbgXnActualDates = fopen(fnAggXnOutput.c_str(), "w" );
 	fprintf(dbgXnActualDates, "x\ty\tgrid\tLUA\tCropCode\tVariety\tYieldMPMAS\t"
-							  "FruitDM\tStem+LeaveDM\tharvest_date\t"
+							  "FruitDM\tStem+LeaveDM\tStemDM\tharvest_date\t"
 							  "minfert_date0\tminfert_N0\tminfert_date1\tminfert_N1\tminfert_date2\tminfert_N2\tminfert_date3\tminfert_N3\tNmin0_30\tNmin30_90\tNmin60_90\t"
 							  "sow_date\tcovercrop_sow_date"
 							  "\n"
