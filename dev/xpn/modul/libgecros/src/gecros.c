@@ -2876,7 +2876,9 @@ int   BiomassGrowth_GECROS(gecros *self)
       pPltB->fGrainWeight     = (double)(WSO*10); //[g m-2] --> [kg ha-1]
 	  pPltB->fFruitWeight     = pPltB->fGrainWeight; //Hong: necassary for XN5
       pPltB->fStovWeight      = pPltB->fLeafWeight+pPltB->fStemWeight;
-
+        if(!strcmp(spec,"SB"))
+             pPltB->fStovWeight      = pPltB->fLeafWeight;
+      
       pGPltB->fLeafDeadWeight = (double)(WLVD); 
       pGPltB->fRootDeadWeight = (double)(WRTD);
 	  pPltB->fDeadLeafWeight  = (double)(WLVD*10);//[g m-2] --> [kg ha-1]
