@@ -1,0 +1,4 @@
+pak_crops port 3306
+pak_crops host 144.41.15.33
+pak_crops user pak_model
+pak_crops pwd climate

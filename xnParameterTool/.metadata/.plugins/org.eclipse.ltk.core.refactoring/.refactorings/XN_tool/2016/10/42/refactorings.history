@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Move element &apos;MySQLConnection.java&apos; to &apos;for1695_xn_parameters/src&apos;&#x0A;- Original project: &apos;XN_tool&apos;&#x0A;- Destination element: &apos;for1695_xn_parameters/src&apos;&#x0A;- Original element: &apos;de.uhoh.for1695.MySQLConnection.java&apos;&#x0A;- Update references to refactored element" description="Move compilation unit" destination="=for1695_xn_parameters/src" element1="/src&lt;de.uhoh.for1695{MySQLConnection.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.move" policy="org.eclipse.jdt.ui.moveResources" qualified="false" references="true" stamp="1476266428087" units="1" version="1.0"/>
+</session>

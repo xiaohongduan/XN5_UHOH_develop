@@ -1,0 +1,1 @@
+[destinationfolder]=D:\DF_mapmaker\output_maps

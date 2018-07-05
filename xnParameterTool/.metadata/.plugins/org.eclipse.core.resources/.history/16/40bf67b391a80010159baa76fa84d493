@@ -1,0 +1,90 @@
+package uni.hh.mapmaker;
+
+public class XN_tool_UI {
+
+	public static void main(String[] args) {
+		
+		int mode = 1; // Default mode creating xnd files
+		//String outfile = "./output/";
+		String outfile = "C:\\Program Files\\Expert-N 3.0\\param\\";
+		String mysqlconfig = "./Xnwrapper/xnfilemaker/config/mysql_config.txt";
+		int lu_id = -1;
+		int soil_id = -1;
+		int weather_station = -1;
+		int weather_year = -1;
+		int weatherfileID = -99;
+		String resultID = "Test";
+		int xn_config = 1;
+		String table = "tbl_xndfiles";
+		int cellGroup = -1;
+		int crop_id = -1;
+		int simulationPeriod = -1;
+		String file_link_cell_rfs = "-1";
+		String cropGrowthModel = "CERES";
+		String cellGroupScenario = "eq";
+		String RUN = "TEST";
+		boolean exact_dates = false;
+		//boolean is_subsequent_year = false;
+		
+		for (int i = 0; i < args.length; i++) {
+			switch (args[i].charAt(1) ) {
+				case 77: mode = Integer.parseInt(args[i].substring(2));break;//M
+				case 79: outfile = args[i].substring(2);break;//O
+				case 67: mysqlconfig = args[i].substring(2);break;//C
+				case 76: lu_id = Integer.parseInt(args[i].substring(2));break;//L
+				case 83: soil_id = Integer.parseInt(args[i].substring(2));break;//S
+				case 119: weather_station = Integer.parseInt( args[i].substring(2));break;//w
+				case 89: weather_year =Integer.parseInt(args[i].substring(2));break;//Y
+				case 87: weatherfileID = Integer.parseInt(args[i].substring(2));break;//W
+				case 82: resultID = args[i].substring(2);break;//R
+				case 88: xn_config = Integer.parseInt(args[i].substring(2));break;//X
+				case 84: table = args[i].substring(2);break;//T
+				case 71: cellGroup = Integer.parseInt(args[i].substring(2));break;//G
+				case 80: simulationPeriod = Integer.parseInt(args[i].substring(2));break;//P
+				case 70: file_link_cell_rfs = args[i].substring(2);break;//F
+				case 65: cropGrowthModel = args[i].substring(2);break;//A
+				case 66: crop_id = Integer.parseInt(args[i].substring(2));break;//B
+				case 90: cellGroupScenario = args[i].substring(2);break;//Z
+				case 85: RUN = args[i].substring(2);break;//U
+				case 120: exact_dates = true;
+				//TODO: activate (flag 1=true, 0=false indicating whether it is subsequent year
+				//case 71: is_subsequent_year = Boolean.parseBoolean(args[i].substring(2));break;//F 
+			}
+		}
+		//System.out.println("Group " + cellGroup + "\n");
+		/*TODO: activate		
+		FileMaker fm;
+		if(is_subsequent_year){
+			fm = new FileMaker(mysqlconfig,true);
+		}
+		else{
+			fm = new FileMaker(mysqlconfig);
+		}
+		
+		//TODO: deactivate 
+		*/
+		
+		FileMaker fm = new FileMaker(mysqlconfig);
+		
+		switch (mode) {
+			case 1: fm.asciiFileMaker_XND(outfile, resultID, lu_id, soil_id, weatherfileID, xn_config, RUN, cellGroup, simulationPeriod, cropGrowthModel, RUN, exact_dates);break;
+			case 2: fm.asciiFileMaker_XNW(outfile, weather_station, weather_year); break;
+			case 3: fm.asciiFileMaker_XNM(outfile, soil_id, cropGrowthModel, simulationPeriod, cellGroup, "-1", crop_id, RUN, -1);break;
+			case 4: fm.asciiFileMaker_XND_loop(outfile, table, cropGrowthModel, exact_dates) ;break;
+			case 5: fm.direct_yield_query(outfile, lu_id, soil_id, weatherfileID);break;
+			case 6: fm.asciiFileMaker_XNM_loop(outfile,  simulationPeriod, file_link_cell_rfs, cellGroupScenario, RUN) ;break;
+		}
+		
+		
+//		fm.asciiFileMaker_XND(	"C:\\workspace\\XN_tool\\output\\");
+
+//		fm.asciiFileMaker_XND("C:\\Program Files\\Expert-N 3.0\\test.xnd");
+		
+//		fm.asciiFileMaker_XNW("C:\\workspace\\XN_tool\\output\\test_xn_mas5.xnw", 2, 1996);
+		
+//		fm.asciiFileMaker_XNM("C:\\workspace\\XN_tool\\output\\crop.xnm");
+		
+//		fm.asciiFileMaker_Gecros_File("C:\\workspace\\XN_tool\\output\\gecros.xnm");
+	}
+	
+}

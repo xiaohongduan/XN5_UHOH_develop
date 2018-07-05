@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/XN_tool/src/uni/hh/mapmaker/XN_tool_UI.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="uni.hh.mapmaker.XN_tool_UI"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-M2 -w7  -Y2008 &quot;-CC:\\PAK046\\Xnwrapper\xnfilemaker\\config\\mysql_config.txt &quot; &#13;&#10;&quot;-Otestweather2008.xnw&quot;"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="XN_tool"/>
+</launchConfiguration>

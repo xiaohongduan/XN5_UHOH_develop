@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/XN_tool/src/uni/hh/mapmaker/XN_tool_UI.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="uni.hh.mapmaker.XN_tool_UI"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-M1 -L145 -S0  -W59 -C./config/mysql_config.txt -Rtest -Owht -X3 -V5"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="XN_tool"/>
+<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:XN_tool}"/>
+</launchConfiguration>
