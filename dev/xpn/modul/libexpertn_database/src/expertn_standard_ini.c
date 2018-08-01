@@ -1232,6 +1232,15 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
 		}
 	//xpn->pCl->pWeather->fTempAir=db_get_double(data_model,9); // mittlere Lufttemperatur
 	xpn->pCl->pWeather->fTempAir = calculateAirTemperature(xpn->pTi->pSimTime->fTimeDay,self->Tairmin,self->Tairmax,self->TairLastDayMax,self->TairNextDayMin,(double)xpn->pLo->pFarm->fLatitude,xpn->pTi->pSimTime->fTimeY);
+	
+	
+//Added by Hong on 20180724: in order to use the daily input from weather data for SurfaceMiner()
+	xpn->pCl->pWeather->fTempMax =self->Tairmax;
+	xpn->pCl->pWeather->fTempMin =self->Tairmin;
+	xpn->pCl->pWeather->fTempAve =self->meantemp;
+	xpn->pCl->pWeather->fGlobalStrahlung= self->global_radiation;
+	//End of Hong
+	
 	xpn->pCl->pWeather->fTempAir_zlvl = xpn->pCl->pWeather->fTempAir;
 	if (xpn->pCl->fTempMeasHeight==0.0)
 		{
