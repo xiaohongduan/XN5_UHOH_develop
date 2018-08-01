@@ -71,14 +71,14 @@ int schaaf_fertilizer(schaaf* self)
 			}
 			
 			//1.2 for XN-MPMAS
-			if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
+			else if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
 									xpn->pTi->pSimTime->mon,
 									xpn->pTi->pSimTime->mday,
 									pNF->pNext->Year,
 									pNF->pNext->Month,
 									pNF->pNext->Day) == 0)){
 										
-				xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext; 						
+				xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext;// XN-MPMAS assigns fertilization data to  xpn->pMa->pNFertilizer->pNext (mpmas_coupling.c line 596, line627) Otherwise xpn->pMa->pNFertilizer->pNext remains empty and it won't switch to the 2. step for the next fetilization action.    						
 				self->first_fertil_done += 1;
 				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
 					schaaf_mineral_fertilization(self);
@@ -96,7 +96,7 @@ int schaaf_fertilizer(schaaf* self)
 									pNF->pNext->Year,
 									pNF->pNext->Month,
 									pNF->pNext->Day) == 0)) {
-					xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext;
+					xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext; //The data in xpn->pMa->pNFertilizer is required by InfiltrationOrgDuenger(self) and InfiltrationOrgDuengerRegen(self). Therefore xpn->pMa->pNFertilizer should not be switched to the next struc before the date of next fertilization action.   
 					pNF = xpn->pMa->pNFertilizer;
 					if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
 						schaaf_mineral_fertilization(self);
@@ -123,8 +123,8 @@ int schaaf_fertilizer(schaaf* self)
 	{
         InfiltrationOrgDuenger(self);
         InfiltrationOrgDuengerRegen(self);
-        MinerOrgDuengHoff(self);
-        NitrOrgNH4Hoff(self);
+        //MinerOrgDuengHoff(self);
+        //NitrOrgNH4Hoff(self);
 	}
 
     return RET_SUCCESS;
@@ -136,6 +136,7 @@ int schaaf_mineral_fertilization(schaaf* self) //Hong: =TSFertilizer()?
     PTIME pTi = xpn->pTi;
     PMANAGEMENT pMa = xpn->pMa;
     PCHEMISTRY pCh = xpn->pCh;
+	PCBALANCE	pCB = pCh->pCBalance; //Added by Hong on 20180731
     double fumFacC;
     gchar* S, *S2;
 
@@ -182,6 +183,9 @@ int schaaf_mineral_fertilization(schaaf* self) //Hong: =TSFertilizer()?
 		pCh->pCProfile->fNHumusSurf  += (float)0.1*pMa->pNFertilizer->fNorgManure;
 		pCh->pCProfile->fCHumusSurf  += (float)0.1*pMa->pNFertilizer->fCorgManure;
 		pCh->pCProfile->fCNHumusSurf += pMa->pNFertilizer->fOrgManureCN;
+		
+		pCB->dCInputCum += (double)pMa->pNFertilizer->fCorgManure; //Hong added on 20180731 for C-balance
+		
 //End of Hong
 
     InitOrgDuenger(self);
@@ -1094,7 +1098,7 @@ int read_fertilizers(schaaf* self)
                     self->ges_fertilizer_zwischen = self->ges_fertilizer[start_i];
                     self->ges_code_zwischen = self->ges_code[start_i];
                     self->ges_n_tot_zwischen = self->ges_n_tot[start_i];
-					self->ges_n_org_tot_zwischen = self->ges_n_tot[start_i];
+					self->ges_n_org_tot_zwischen = self->ges_n_org_tot[start_i];//changed by EP and Hong on 20180702: es war self->ges_n_org_tot_zwischen = self->ges_n_tot[start_i] 
                     self->ges_no3n_zwischen = self->ges_no3n[start_i];
                     self->ges_nh4n_zwischen = self->ges_nh4n[start_i];
                     self->ges_urea_zwischen = self->ges_urea[start_i];
