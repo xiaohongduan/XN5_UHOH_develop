@@ -158,8 +158,8 @@ int daisy_miner_run(daisy_miner *self)
 	
 
 
-//Hong
-//SurfaceMiner(self); //exp_p durch stickstoff *self ersetzt
+//activated by Hong on 20180724
+SurfaceMiner(self); //exp_p durch stickstoff *self ersetzt
 //Hong
 //	rm    = (double)1.0;    /*orig :1.0; */			//analog crikle
 
@@ -716,3 +716,366 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 
 	return RET_SUCCESS;
 }
+
+
+//Added by Hong on 20180724:
+/*************************************************************************************/
+/* Procedur    :   SurfaceMineralisierung                                            */
+/* Beschreibung:   Mineralisierung der Oberflächenpools                              */
+/*                 Methode Grundlage SOILN / NITS mit Veränderungen                  */
+/*                                                                                   */
+/*              GSF/ab: Axel Berkenkamp         07.06.01                             */
+/*                  ab: Veränderung des C-Abbaus bei Nmin-Mangel 28.08.01            */
+/*                                                                                   */
+/*                                                                                   */
+/*                                                                                   */
+/*************************************************************************************/
+/*	veränd. Var.	pCP->fCLitterSurf          pCP->fNLitterSurf                     */
+/*					pCP->fCManureSurf          pCP->fNManureSurf                     */
+/*					pCP->fCHumusSurf           pCP->fNHumusSurf                      */
+/*                  pCL->fCO2C                 pCP->fNH4NSurf                        */
+/*					pCL->fCO2ProdR(?)          pCP->fNO3NSurf                        */
+/*                  pCP->fCNLitterSurf         pCP->fCNManureSurf                    */ 
+/*                  pCL->fHumusMinerR(?)       pCL->fHumusImmobR(?)                  */
+/*					pCL->fLitterMinerR(?)      pCL->fLitterImmobR(?)                 */
+/*                  pCL->fManureMinerR(?)      pCL->fManureImmobR(?)                 */
+/*					corr.Temp                  corr.Feucht                           */
+/*                                                                                   */
+/*************************************************************************************/
+ int SurfaceMiner(daisy_miner *self)
+ {
+  expertn_modul_base *xpn = &(self->parent);	 
+	 
+  DECLARE_COMMON_VAR
+  DECLARE_N_POINTER
+  struct ncorr corr ={(double)1};
+  
+  /******************************************************************/
+  /*                Variablendeklaration                            */
+  /******************************************************************/
+
+  /*Hilfsvariablen*/
+  double f1,f2,f3;
+  double fRedLit,fRedMan,fEffNew;
+  double NoImmLit, NoImmMan;
+  double fMinerEffFac,fMicBiomCN,fMinerHumFac;
+
+  /* Konstanten (1/dt) */
+  double fNH4ImmMaxK = (double)0.1;
+  double fNO3ImmMaxK = (double)0.1;
+  double fLitterImmK,fManureImmK;
+  double fLitterToNH4K,fManureToNH4K;
+
+  /* Raten für die C und N-Flüsse (dC/dt bzw. dN/dt) */
+  double fHumusMinerMaxR;  
+  double fLitterMinerMaxR; 
+  double fManureMinerMaxR; 
+  double fNToLitterR;
+  double fNH4ImmR,fNO3ImmR;
+  double fCLitterToHumusR,fCLitterToLitterR,fCLitterToCO2R;
+  double fCManureToHumusR,fCManureToLitterR,fCManureToCO2R;
+  double fCHumusToCO2R;
+  
+  double fNH4ToLitterR,fNO3ToLitterR;
+  double fNLitterToHumusR,fNManureToHumusR,fNManureToLitterR;
+  double fNHumusToNH4R,fNLitterToNH4R,fNManureToNH4R;
+  
+  /*Variablen für die Surface-Flüsse (eigentlich auch Raten) */
+  double fCLitterSurfDecay, fCManureSurfDecay, fCHumusSurfDecay;
+  double fNLitterSurfDecay, fNManureSurfDecay, fNHumusSurfDecay;
+
+  /*Variablen für die Massenbilanz*/
+  double fCTotalSurf,fNTotalSurf;
+  double fCDiffSurf,fNDiffSurf;
+  static double fCDiffSum, fNDiffSum;
+  /* Variablendeklaration Ende  */
+
+
+
+
+  N_ZERO_LAYER /* Setzten der Pointer auf die nullte Schicht*/
+
+
+  /******************************************************************/
+  /*                          Reduktionsfunktionen                  */
+  /******************************************************************/
+  
+  /* 1. Temperatur: Ansatz SOILN, Bezugswert: Tagesmittelwert der Luft*/ 
+  corr.Temp = abspowerDBL(pPA->fMinerQ10,((xpn->pCl->pWeather->fTempAve - pPA->fMinerTempB)/(double)10.0));//Hong: abspowerDBL is the same abspower
+
+
+  /* 2. Feuchte: Ansatz RESMAN, Bezugswert: Das wassergefüllte Porenvolumen
+     der obersten Bodenschicht, Optimalwert WFPS = 60% */
+  f1 = (pWL->pNext->fContAct + pWL->pNext->fIce) / pSL->pNext->fPorosity;
+
+  if (f1 < (double)0.6)
+    corr.Feucht = f1 / (double)0.6;
+
+  else
+    corr.Feucht = (double) 0.6 / f1;
+  /*Reduktionsfunktion Ende*/
+
+
+  /******************************************************************/
+  /*    C und N -Mineralisierungsraten (dC/dt bzw. dN/dt)           */
+  /******************************************************************/
+
+fHumusMinerMaxR  = pCL->pNext->fHumusMinerMaxR;
+fLitterMinerMaxR = pCL->pNext->fLitterMinerMaxR;
+fManureMinerMaxR = pCL->pNext->fManureMinerMaxR;
+fMinerEffFac     = pPA->pNext->fMinerEffFac;
+fMicBiomCN       = pCL->pNext->fMicBiomCN;
+fMinerHumFac     = pPA->pNext->fMinerHumFac;
+
+  fCHumusSurfDecay  = pCP->fCHumusSurf  * fHumusMinerMaxR  * corr.Temp * corr.Feucht;
+  fCLitterSurfDecay = pCP->fCLitterSurf * fLitterMinerMaxR * corr.Temp * corr.Feucht;
+  fCManureSurfDecay = pCP->fCManureSurf * fManureMinerMaxR * corr.Temp * corr.Feucht;
+
+  fNHumusSurfDecay  = pCP->fNHumusSurf  * fHumusMinerMaxR  * corr.Temp * corr.Feucht;
+  fNLitterSurfDecay = pCP->fNLitterSurf * fLitterMinerMaxR * corr.Temp * corr.Feucht;
+  fNManureSurfDecay = pCP->fNManureSurf * fManureMinerMaxR * corr.Temp * corr.Feucht;
+  /* C und N -Mineralisierungsraten Ende */
+
+  /******************************************************************/
+  /* Entscheidung Immobilisierung/Mineralisierung beim Litter u.    */
+  /* Manure Abbau. Der Wert hängt ab vom CN Wert der abgebauten     */
+  /* Substanz, dem CN Wert der aufgebauten Substanz (Mikrobielle    */ 
+  /* Biomasse und Humus) sowie dem Effektivitätsfaktor mit der die  */ 
+  /* Mikros Kohlenstoff verwerten können.                           */
+  /* Hilfsvariable positiv = Nettomineralisierung                   */
+  /* Hilfsvariable negativ = Nettoimmobilisierung                   */                            
+  /******************************************************************/
+
+  /* CN-Werte */
+  pCP->fCNLitterSurf = (pCP->fNLitterSurf > EPSILON)?
+    	pCP->fCLitterSurf / pCP->fNLitterSurf
+    	:(double)0.1; 
+            
+  pCP->fCNManureSurf = (pCP->fNManureSurf > EPSILON)?
+    	pCP->fCManureSurf / pCP->fNManureSurf
+      	:(double)0.1; 
+
+  /*Mineralisierungs bzw. Immobilisierungsfaktor*/
+   if (pCP->fCNLitterSurf > (double)0.1)
+   {
+    f2     = (double)1 / pCP->fCNLitterSurf - fMinerEffFac / fMicBiomCN;
+	fLitterToNH4K = (f2 > 0)? f2 : 0;
+    fLitterImmK   = (f2 < 0)? (double)-1 * f2 : 0;
+   }
+
+  else
+   {
+    fLitterToNH4K = (double)0;
+    fLitterImmK   = (double)0;
+   }
+
+  if (pCP->fCNManureSurf > (double)0.1)
+   {
+    f3     = (double)1 / pCP->fCNManureSurf - fMinerEffFac / fMicBiomCN;
+    fManureToNH4K = (f3 > 0)? f3 : 0;
+    fManureImmK   = (f3 < 0)? (double)-1 * f3 : 0;
+   }
+  
+  else
+   {
+    fManureToNH4K = (double)0;
+    fManureImmK   = (double)0;
+   }
+  /* Entscheidung Immobilisierung/Mineralisierung Ende*/
+
+
+  /*************************************************************************/
+  /* Wenn die Immobilisierung mehr N-Bedarf entwickelt als mineralisches N */
+  /* zur Verfügung steht, wird das Wachstum der Mikroorganismen und die    */
+  /* Bildung von Humus unterbunden, sowie der C-Abbau reduziert            */
+  /*************************************************************************/
+
+  fNToLitterR = fLitterImmK * fCLitterSurfDecay + fManureImmK * fCManureSurfDecay;
+
+  /*Maximale Immobilisierungsraten*/
+  fNH4ImmR = fNH4ImmMaxK * pCP->fNH4NSurf;
+  fNO3ImmR = fNO3ImmMaxK * pCP->fNO3NSurf;
+
+  if (fNToLitterR  > (fNH4ImmR + fNO3ImmR))
+   {  
+    if (fLitterImmK)
+	 {
+	  NoImmLit = (double)0.0;
+      fEffNew = fMicBiomCN / pCP->fCNLitterSurf;
+      fRedLit = min(fEffNew,fMinerEffFac);
+      fLitterToNH4K = (double)0;
+      fLitterImmK   = (double)0;
+     }
+	else
+	 {
+	  NoImmLit = (double)1.0;
+	  fRedLit  = (double)1.0;
+	 }
+
+    if (fManureImmK)
+	 {
+	  NoImmMan = (double)0.0;
+      fEffNew = fMicBiomCN / pCP->fCNManureSurf;
+      fRedMan = min(fEffNew,fMinerEffFac);
+      fManureToNH4K = (double)0;
+      fManureImmK   = (double)0;
+     }
+    
+	else
+	 {
+	  NoImmMan = (double)1.0;
+	  fRedMan  = (double)1.0;
+	 }
+
+	fNToLitterR = (double)0.0; 
+   }
+  
+  else
+   {
+    fRedLit = (double)1.0;
+	fRedMan = (double)1.0;
+	NoImmLit = (double)1.0;
+	NoImmMan = (double)1.0;
+   }
+   
+  /*Berechnung des Reduktionsfaktors alte Variante  	
+  fRed = (double)1.0;                      // Reduktionsfaktor =1 => keine Reduktion 
+
+    fRed = (fNH4ImmR + fNO3ImmR) / fNToLitterR;
+
+  if (fLitterImmK)
+  {   
+   fCLitterSurfDecay = fRed * fCLitterSurfDecay;
+   fNLitterSurfDecay = fRed * fNLitterSurfDecay;
+  }
+
+  if (fManureImmK)
+  {
+   fCManureSurfDecay = fRed * fCManureSurfDecay;
+   fNManureSurfDecay = fRed * fNManureSurfDecay;
+  }
+
+  fNToLitterR        = fRed * fNToLitterR;
+  Berechnung Reduktion des Abbaus Ende */
+
+
+  /******************************************************************/
+  /* Veraenderung des C-Pools pro Zeitschritt                       */
+  /******************************************************************/
+    
+  /* 1. Gesamt C vor dem Zeitschritt */
+  fCTotalSurf = pCP->fCHumusSurf + pCP->fCLitterSurf + pCP->fCManureSurf + pCL->fCO2C;
+
+  /* 2. Abbau des C-Litter Pools pro Zeitschritt */
+  
+  if(!NoImmLit)
+   {
+    fCLitterToCO2R    = fCLitterSurfDecay * fRedLit;
+    fCLitterToHumusR  = (double)0.0;
+    fCLitterToLitterR = (double)0.0;
+   }
+
+  else
+   {
+    fCLitterToHumusR  = fCLitterSurfDecay * fMinerEffFac * fMinerHumFac;
+    fCLitterToCO2R    = fCLitterSurfDecay * ((double)1.0 - fMinerEffFac);
+    fCLitterToLitterR = fCLitterSurfDecay * fMinerEffFac * ((double)1.0 - fMinerHumFac);
+   }
+  
+  /* 3. Abbau des C-Manure Pools pro Zeitschritt */
+  
+  if(!NoImmMan)
+   {  
+    fCManureToCO2R    = fCManureSurfDecay * fRedMan;
+    fCManureToHumusR  = (double)0.0;
+    fCManureToLitterR = (double)0.0;
+   }
+
+  else
+   {
+    fCManureToHumusR  = fCManureSurfDecay * fMinerEffFac * fMinerHumFac;
+    fCManureToCO2R    = fCManureSurfDecay * ((double)1.0 - fMinerEffFac);
+    fCManureToLitterR = fCManureSurfDecay * fMinerEffFac * ((double)1.0 - fMinerHumFac);
+   }
+
+  /* 4. Abbau des C-Humus Pools */
+  fCHumusToCO2R     = fCHumusSurfDecay;
+  
+  /* 5. Zunahme im CO2 Pool */
+  pCL->fCO2ProdR = fCLitterToCO2R +  fCManureToCO2R + fCHumusToCO2R;
+
+  /* 6. Veraenderung in den C-Pools */
+  pCP->fCLitterSurf -= (fCLitterToHumusR + fCLitterToCO2R - fCManureToLitterR) * DeltaT;
+  pCP->fCManureSurf -= (fCManureToHumusR + fCManureToCO2R + fCManureToLitterR) * DeltaT;
+  pCP->fCHumusSurf  += (fCLitterToHumusR + fCManureToHumusR - fCHumusToCO2R) * DeltaT;
+  pCL->fCO2C        += pCL->fCO2ProdR * DeltaT;
+  
+  //Added by Hong on 20180731
+/*  if (pCL->fCO2C>0.0)
+    {
+	  pCP->dCO2SurfEmisCum +=pCL->fCO2C;
+     }
+*/
+  /* Veränderungen im C-Pool Ende */
+
+
+  /********************************************************************************/
+  /*      Veraenderung der N-Pools durch Mineralisierung pro Zeitschritt          */
+  /********************************************************************************/
+    
+  /* 1. Gesamt N vor dem Zeitschritt */
+  fNTotalSurf = pCP->fNHumusSurf + pCP->fNLitterSurf + pCP->fNManureSurf + pCP->fNH4NSurf + pCP->fNO3NSurf;
+
+  /* 2. Immobilisierung im Litter-Pool */
+  fNH4ToLitterR = fNToLitterR * RelAnteil(pCP->fNH4NSurf,pCP->fNO3NSurf);
+  fNO3ToLitterR = fNToLitterR * RelAnteil(pCP->fNO3NSurf,pCP->fNH4NSurf);
+
+  /* 3. Bildung von mikrobieller Biomasse */
+  fNManureToLitterR = fCManureToLitterR / fMicBiomCN;
+
+
+  /* 4. Humifizierung im Humus-Pool */
+  if(!NoImmLit)
+   fNLitterToHumusR = (double)0.0;
+  else
+   fNLitterToHumusR = fCLitterToHumusR / fMicBiomCN;
+
+  if(!NoImmMan)
+   fNManureToHumusR = (double)0.0;
+  else
+   fNManureToHumusR = fCManureToHumusR / fMicBiomCN;
+   
+  /* 5. Ammonium-Mineralisierung aus Humus, Litter und Manure */
+  fNHumusToNH4R  = fNHumusSurfDecay;
+  fNLitterToNH4R = fLitterToNH4K * fCLitterSurfDecay;
+  fNManureToNH4R = fManureToNH4K * fCManureSurfDecay;
+
+  /* 6. Veränderungen in den N Pools */
+  pCP->fNH4NSurf += (fNHumusToNH4R  + fNLitterToNH4R  + fNManureToNH4R -  fNH4ToLitterR) * DeltaT;
+  pCP->fNO3NSurf -= fNO3ToLitterR * DeltaT;
+  
+  pCP->fNLitterSurf += (fNToLitterR + fNManureToLitterR - fNLitterToNH4R - fNLitterToHumusR) * DeltaT;
+  pCP->fNManureSurf -= (fNManureToHumusR + fNManureToLitterR + fNManureToNH4R) * DeltaT;
+  pCP->fNHumusSurf += (fNLitterToHumusR + fNManureToHumusR - fNHumusToNH4R) * DeltaT;
+  /* Veränderungen im N-Pool Ende */
+
+  /* Übertragung auf globale Variablen */
+  pCL->fNImmobR = fNToLitterR;
+  pCL->fMinerR = fNHumusToNH4R + fNLitterToNH4R + fNManureToNH4R;
+  pCL->fHumusMinerR  = fNHumusToNH4R;
+  pCL->fLitterMinerR = fNLitterToNH4R;
+  pCL->fManureMinerR = fNManureToNH4R;
+
+  /********************************************************************************/
+  /* Massenbilanz, die Summe der Veränderungen muss ungefär Null ergeben */
+  /********************************************************************************/
+  
+  fCDiffSurf = pCP->fCHumusSurf + pCP->fCLitterSurf + pCP->fCManureSurf + pCL->fCO2C - fCTotalSurf;
+  fNDiffSurf = pCP->fNHumusSurf + pCP->fNLitterSurf + pCP->fNManureSurf + pCP->fNH4NSurf + pCP->fNO3NSurf - fNTotalSurf;
+  /*Massenbilanz Ende*/
+  
+  fCDiffSum += fCDiffSurf;
+  fNDiffSum += fNDiffSurf;
+  return 1;
+ } /*Funktion Ende*/
+//End of Hong
