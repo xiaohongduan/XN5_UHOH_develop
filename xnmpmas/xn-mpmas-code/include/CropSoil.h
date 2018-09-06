@@ -31,6 +31,7 @@
 #include <string>
 #include <cstring>
 #include <cstdio>
+#include <vector>
 
 //general parameters
 typedef struct
@@ -103,9 +104,13 @@ typedef struct
 //-----------------------------------------------------------------------------
 
 //data structures for cropping activities
-typedef struct
+typedef struct caYld
 {  double yld;    //grain yield
    double ysm;    //stover energy yield
+
+#ifdef MULTIPERIOD
+   std::vector<double>extraAttributes;
+#endif
 }  caYld;
 
 

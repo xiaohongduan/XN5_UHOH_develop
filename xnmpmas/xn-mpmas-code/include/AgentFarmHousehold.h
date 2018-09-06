@@ -373,6 +373,7 @@ class agentF : public agent
 // Troost **********end block insert**********
 
 	virtual double computeDistanceFromFarmstead(int xCoord, int yCoord);
+	virtual int computeDirectionFromFarmstead(int xCoord, int yCoord);
 	virtual double computeTransportCostFromFarmstead(int xCoord, int yCoord);
 	virtual void addWaterRightsRentedIn(int mapRow, int mapCol, w_rechte* w);
 	virtual void printWaterRentedInOnScreen();
@@ -406,8 +407,8 @@ class agentF : public agent
 #endif //MIPSTART
 
 #ifdef MULTIPERIOD
-	double makeMultiPeriodPlanStartOfYear(int);
-	double multiperiod_startOfYearPlan(int);
+	double makeMultiPeriodPlanStartOfYear(doInvestModes, string);
+	double multiperiod_startOfYearPlan(doInvestModes, string);
 	void resetLiquidityAccounts();
 #endif
 	virtual void implement_investments();
@@ -416,13 +417,14 @@ class agentF : public agent
 	virtual void multiperiod_implementInvestments();
 	virtual int multiperiod_tryToDisinvest(int code, int age, double quantity, int adaptCapital, vector<objAccountingInfo>& accountInfo, string remark, int dieOnError = true);
 	virtual void multiperiod_updateAssetsOffspring();
-
+#endif
 
 	vector<investdef> externalExportAssetRegistry();
 	void externalImportAsset_fromStream(istream& in);
 	void externalImportAsset(int pos, investdef asset);
-
-#endif
+	void checkInvestmentDecisionBeforeExternalScriptCall(milpModeTypes milpMode);
+	void reportSolutionForExternalScriptCall(map<int,vector<double> > & outputMapWithSolutions);
+	void setSpecificUboundsForDecisionExternalScripts();
 
 #ifdef DISTEST
 	virtual void implement_investmentsNew(); //intermediate while coding, rename later
@@ -565,14 +567,14 @@ class agentF : public agent
 	void multiperiod_updateAgentVariablesAtStartOfPeriod();
 	void multiperiod_prepareMIP();
 	void addCropProductionAreasToResultArrayAndAgentCropAreaVector(double* resultArray, int sizeResultArray);
+	void makeNRUCropProductionAreas();
 	void multiperiod_allocateIntegerCropAreasSpatially();
-	void importYieldsAggregatedLandUse( int numberCroppingActivities, int* CropManagementYldArrayIndex, int* soiTypeID, double* cropYield, double* stoverYield);
+	void multiperiod_allocateIntegerCropAreasSpatially_NRUs();
+	void importYieldsAggregatedLandUse( int numberCroppingActivities, int* CropManagementYldArrayIndex, int* soiTypeID, double* cropYield, double* stoverYield, double** extraAttrs);
 	void multiperiod_importYieldsFromCells(bool harvestAfterNewLandUseDecision);
 
-
-
 #endif //MULTIPERIOD
-	virtual int copyLPdataInvMode(int);//substitute
+	virtual int copyLPdataInvMode(int numIntegSets, int doInvest); //
 	virtual int copyLpDataInInvestmentMode(int isIntegerProblem);
 	
 	virtual void copyAvailablePermanentCropsInInvestmentMode(int availPCropsIdx);
@@ -834,7 +836,7 @@ class agentF : public agent
 	virtual void writeCapRHSData(FILE* stream);
 	virtual void writeHhListToStream(FILE* stream);
 #ifdef MULTIPERIOD
-	virtual void multiperiod_writeOutDecisionResults();
+	virtual void multiperiod_writeOutDecisionResults(bool aggregateOnly);
 #endif
 
 #ifdef RNGSTREAM
@@ -983,6 +985,14 @@ class agentF : public agent
 	void multiperiod_updateAssetsFromUpdatedHerd();
 #endif
 
+#ifdef MULTIPERIOD
+	void initAgentCharacteristicsVector();
+	void set_extraAgentCharacteristic(int id, double value);
+	double get_extraAgentCharacteristic(int id);
+	void add_to_extraAgentCharacteristic(int id, double value);
+	void multiperiod_updateExtraAgentCharacteristics();
+#endif
+
 	/**
 		Functions related to random number streams
 	*/
@@ -1079,7 +1089,8 @@ class agentF : public agent
 	vector<double> depreciationForThisAndNextPeriods;
 	vector<double> interestForThisAndNextPeriods;
 	vector<double> principalForThisAndNextPeriods;
-	vector<pair<int,double> > agentCropProductionAreas; //first: LuciaArrayIndex for LandUseActivity, second: agentsArea, should contain only the non-zero areas, should be sorted by first
+	vector<pair<int,double> > agentCropProductionAreas; //first: LuciaArrayIndex for LandUseActivity, second: agentsArea, should contain only the non-zero areas, should be sorted by first, only used with static NRU assignment
+	MapOfSubindexedVectorIndexedDoubles agentCropProductionNRUAreas; //first: NRU, second: cropManagementID,  third: agentsArea, should contain only the non-zero areas, should be sorted by first, only used with user-defined NRU assignment
 #endif
 // Troost 20140611 Disinvestment of assets
 // Troost **********begin block insert**********
@@ -1238,7 +1249,9 @@ class agentF : public agent
 	MatrixDouble mEntries;		//matrix with information for "forced" solution
 
 	l_vektor bprod;//Loesungsvektor (Umfaenge, Zielfunktionskoeff., Zielwert)
-
+#ifdef MULTIPERIOD
+	double* umfLastActual; //if there are several deicision stages in multiperiod the last true production solution needs to be stored, as it is not the last one solved
+#endif
 
 // Troost 20170310 Cplex Mip starts
 // Troost **********begin block insert**********
@@ -1278,11 +1291,16 @@ class agentF : public agent
 // Troost **********end block insert**********
 
 #ifdef LIVSIM_COUPLING
-	LivSimHerd livsimHerd;
+	LivSimHerdCollection livsimHerdCollection;
 	map<int,int> linkLvsimIdToAssetRegistryRow;
 	int animalIdCount;
 	double totalLivSimMilkProduction;
 #endif
+#ifdef MULTIPERIOD
+	double*** extraCropActivityCharacteristics;
+	vector<double> extraAgentCharacteristics;
+#endif
+
 //------------------------------------------------------------------------------------
 };
 

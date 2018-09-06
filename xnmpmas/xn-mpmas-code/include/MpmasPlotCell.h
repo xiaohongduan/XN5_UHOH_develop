@@ -64,6 +64,7 @@ class mpmasPlotCell
 	int renterID;//i.e. agent renting-in: -1 indicates parcel not rented-out, -2 indicates parcel returned to owner
 
 	double cellDistanceHome;//Euklidean distance of plot from farmstead
+	int cellDirectionHome;//Angle (degrees) from farmstead (0 = 360 = North; 90 = East)
 	//double entf;//distance to farmstead
 
 	int cellSoilType;  //soil type,    int typ;		//soil type
@@ -108,6 +109,10 @@ class mpmasPlotCell
    int crop_ind;      // index into CropMixClass
 	double cropYield;
 	double stoverYield;
+#ifdef MULTIPERIOD
+	vector<double> extraCropActAttributes;
+#endif
+
 
 #ifdef LIVSIM_COUPLING
 	//double feedState;
@@ -225,6 +230,9 @@ public:
 	virtual void setDistanceFromHome(double cellDistanceHome);//cell
 	virtual double get_entf();//plot
 	virtual void set_entf(double);//plot
+
+	virtual double getDirectionFromHome(void);//cell
+	virtual void setDirectionFromHome(int);//cell
 
 	virtual int getFlagOwnerOK(void);//cell
 	virtual void setFlagOwnerOK(int cellFlagIdentifiedByOwner);//cell
@@ -361,6 +369,11 @@ public:
 	//void setFeedState(double x){feedState = x;}
 	void setCumulatedGrazingPressure(double x ){cumulatedGrazingPressure = x;}
 	void addToCumulatedGrazingPressure(double x ){cumulatedGrazingPressure += x;}
+#endif
+
+#ifdef MULTIPERIOD
+	double getExtraCropActAttribute(int i);
+	void setExtraCropActAttribute(int i, double value);
 #endif
 
 

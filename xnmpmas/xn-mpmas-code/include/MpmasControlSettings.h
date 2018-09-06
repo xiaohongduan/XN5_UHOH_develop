@@ -13,6 +13,7 @@
 #ifdef ODB
 
 #include <vector>
+#include <map>
 #include <string>
 #include <cstring>
 #include <cmath>
@@ -112,6 +113,10 @@ public:
 #ifdef ODBSTORE
 	void postRestoreRoutines();
 #endif
+
+	void readExternalScriptsFile() ;
+	void readAgentCharacteristicsInfoFile() ;
+
 //Helpful screen output
 	static void printToScreen_InputOptions(); //Note: Class static function
 	static void printToScreen_TestFunOptions(); //Note: Class static function
@@ -293,6 +298,8 @@ public:
 	int DEMOGRAPHY_MDL()	{		return demography_mdl;	}
 	int DEMOGRAPHY_UDEF()	{		return demography_udef;	}
 	int NUMBER_UDEF_LSCAPE_PARAMETERS()	{		return numUserDefinedLandscapeParameters;	}
+	int NUMBER_UDEF_LSCAPE_PARAMETERS_FOR_CATEG()	{		return numUserDefinedLandscapeParametersForCateg;	}
+	void set_NUMBER_UDEF_LSCAPE_PARAMETERS_FOR_CATEG(int i)	{		 numUserDefinedLandscapeParametersForCateg = i;	}
 	int CHANGING_SOIL_TYPES() {return changingSoilTypes;}
 	int EXO_YIELDEXP()	{		return exo_yieldexp;	}
 
@@ -497,6 +504,20 @@ public:
 	int EXTRAGAP() {return sparseMatrixExtraGap;}
 	void set_EXTRAGAP(int i) {sparseMatrixExtraGap = i;}
 
+	string get_externalScriptCall_PreInvest() { return externalScriptCall_PreInvest ;}
+	string get_externalScriptCall_CropModel() { return externalScriptCall_CropModel ;}
+	string get_externalScriptCall_InYear() { return externalScriptCall_InYear ;}
+	vector<int> get_externalScript_InYear_ChangedMaps() { return externalScript_InYear_ChangedMaps ;}
+
+	int ADDITIONAL_DECISION_STAGES() {return additionalDecisionStages;}
+	void set_ADDITIONAL_DECISION_STAGES(int i) {additionalDecisionStages = i;}
+#ifdef MULTIPERIOD
+	size_t get_NumberExtraAgentCharacteristics() {return namesExtraAgentCharacteristics.size();}
+	int get_extraAgentCharacteristicsIdForString(string s);
+	string get_extraAgentCharacteristicsStringForId(size_t i);
+#endif
+
+
 private:
 		#pragma db id
 		unsigned long settingsID;
@@ -568,6 +589,7 @@ private:
 		int type_nru_assignment;
 		typeofUserdefinedNRUassignment typeUserDefinedNRUassignment;
 		int numUserDefinedLandscapeParameters;
+		int numUserDefinedLandscapeParametersForCateg;
 
 // Troost 20160331 Soil type transitions
 // Troost **********begin block insert**********
@@ -690,6 +712,18 @@ private:
 #endif//IP_COUPLING
 
 		int sparseMatrixExtraGap;
+
+		string externalScriptCall_PreInvest;
+		int additionalDecisionStages;
+
+		string externalScriptCall_CropModel;
+		string externalScriptCall_InYear;
+		vector<int> externalScript_InYear_ChangedMaps;
+#ifdef MULTIPERIOD
+		vector<string> namesExtraAgentCharacteristics;
+		map<string,size_t> idsExtraAgentCharacteristics;
+#endif
+
 };
 
 

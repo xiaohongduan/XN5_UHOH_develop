@@ -136,7 +136,9 @@ enum	EnumFileType
 // Troost **********end block insert**********
 	fileTypePathActPrecipitation, // Tbe 150212
 	fileTypePathPotEvapotranspiration,
-	fileTypePathActPrices
+	fileTypePathActPrices,
+	fileTypeUserdefinedGisOutputYearly,
+	fileTypeExtraCropActAttributeOutput
 };
 
 enum Content
@@ -182,6 +184,9 @@ enum Content
 	contStoverYields,
 	contPreviousCropAct,
 	contPreviousNRU,
+	contDirectionFromHome,
+	contNRU,
+	contExtraCropActAttribute,
 	//add new spatial content here !!!, not above if possible (exceptions for monthly/coupling content, otherwise -A flag numbers will be changed, and that would not be nice
 	contLastSpatial,
 	///Other formats, or special types, that are not gridded data
@@ -195,7 +200,7 @@ enum Content
 	fileTypeSectorRandomWaterRights, fileTypeSectorActualWaterRights, fileTypeSectorInfrastructureProjects, fileTypeSectorExistingRentalContracts,
 	fileTypeLanduseByCatchment, fileTypeTimeHandler, fileTypeIrrigationFactors, fileTypeSpatialExportInfo,
 	fileTypeSoilToNRU,fileTypeLandmarketParameters,fileTypeInvestmentsAttachedToLand,
-	fileTypeLivSimAssetTransformationInfo,
+	fileTypeLivSimAssetTransformationInfo,fileTypeExternalScriptCalls,fileTypeExtraAgentCharInfo,fileTypeExtraAgentCharInit,
 	fileTypeENDFILETYPE,
 
 	///Misc.
@@ -544,7 +549,8 @@ enum typeofUserdefinedNRUassignment
 {	udefNRUnone	= -1,
 	udefNRUbySimilarity = 0,
 	udefNRUbyDistance,
-	udefNRUbyDistanceAndParcelSize
+	udefNRUbyDistanceAndParcelSize,
+	udefNRUbyDistanceDirectionAndDynamicValues
 };
 
 
@@ -605,6 +611,14 @@ enum landAndAssetSplits
 	landAndAssetSplitsLand,
 	landAndAssetSplitsAsset,
 	landAndAssetSplitsMax
+};
+
+enum doInvestModes
+{
+	lpInvestDontStoreSolution,
+	lpInvestNormalInvestment,
+	lpInvestPrelimLandApplication,
+	lpInvestPrelimExternalScript
 };
 
 #endif

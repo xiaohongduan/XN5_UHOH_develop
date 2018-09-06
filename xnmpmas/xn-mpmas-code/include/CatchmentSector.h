@@ -232,7 +232,7 @@ public:
 	virtual void besitzer_eintragen(int z, int s, int nr);
 	virtual void updateCellUserMapID(int z, int s, int userID);
 	virtual void updateCellMapColor(int z, int s, int mapColor);
-	virtual void updateUserInMap(int z, int s, int userID, int mapColor, double dist); //141002 Troost, to make sure everything is updated
+	virtual void updateUserInMap(int z, int s, int userID, int mapColor, double dist, int direction); //141002 Troost, to make sure everything is updated
 	virtual void alle_nutzer_zuruecksetzen();
 
 	virtual void updateParcelGroups();
@@ -546,7 +546,9 @@ public:
 // Troost **********begin block insert**********
 	virtual double getUserDefinedValueinCell(int r, int c, int userContentId);
 // Troost **********end block insert**********
-
+#ifdef MULTIPERIOD
+	double getExtraCropActAttributeInCell(int r, int c, int userContentId);
+#endif //MULTIPERIOD
 
 	// --------------------------------
 	///         modify content of landscape
@@ -559,8 +561,8 @@ public:
 	virtual void setSpatialInfo_Content(Content cont, Raster2D data_); //d
    
    ///	specific functions, define how to connect "cont" to "landscape.Cell"
-   virtual void copyContentRaster2Cell(Content cont, Raster2D& rasterCont); //d RTA 080724
-   virtual void copyContentValueIntoCell(int r, int c, Content cont, double value); //d
+   virtual void copyContentRaster2Cell(Content cont, Raster2D& rasterCont, int udefLayer=-1); //d RTA 080724
+   virtual void copyContentValueIntoCell(int r, int c, Content cont, double value, int udefLayer = -1); //d
 	virtual void copyContentValueIntoCell_monthly(int r, int c, int month, Content cont, double value); //d
 
    // If contentType is stored at sector level, then this function is called
@@ -570,13 +572,13 @@ public:
    // from all varabiles defined within this function
 
 	///	general functions, require that BasicData - getContentString(cont) existiert
-	virtual void writeToFileRaster(Content cont);
+	virtual void writeToFileRaster(Content cont, int userContentId = -1);
 	virtual void writeToFileRaster_monthly(Content cont, int m);
 
 	void writeN_jToFileWithDims(ofstream& out);	
 	///	specific functions, define how to connect "cont" to "landscape.Cell"
-   virtual void createRasterFromCell(Content cont, Raster2D& gis);
-	virtual void createRasterFromCell(Content cont, Raster2D& gis, bool flag_forceToCell);
+   virtual void createRasterFromCell(Content cont, Raster2D& gis, int userContentId = -1);
+	virtual void createRasterFromCell(Content cont, Raster2D& gis, bool flag_forceToCell, int userContentId);
 	virtual void createRasterFromCell_monthly(Content cont, Raster2D& gis, int m);
 
 

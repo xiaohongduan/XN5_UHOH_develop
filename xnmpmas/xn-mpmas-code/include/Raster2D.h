@@ -140,7 +140,7 @@ public:
    // Reads data from GIS-ASCII-file: First reads header, initializes memory, then reads data.
    //virtual void initializeFromFile(ifstream&  streamData);
 
-   virtual void initializeFromFile(FILE* streamData);
+   virtual void initializeFromFile(FILE* streamData, string fnForError = "?");
 
    //Troost added: To be able to pass in both string(streams) and text files (Note: istream, not ifstream)
    void initializeFromStream(istream& );

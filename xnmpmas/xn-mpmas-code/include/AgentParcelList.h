@@ -203,6 +203,7 @@ class p_liste
 	void updateMatrixAreaOfNRUbyPeriods(int numPeriods);
 	vector<vector<double> >* getMatrixAreaOfNRUbyPeriods ();
 	map<pair<int, int>, pair<double, double> > getYieldsByNRUs(bool harvestAfterNewLandUseDecision); //cropYield,stoverYield by YldIndex, NRU
+	map<pair<int,int>, vector<double> > getYieldsWithExtraCropActAttributesByNRUs(bool harvestAfterNewLandUseDecision);
 #endif
 	//TSPC crop-soil model
 	virtual void makeConvVector(void);
@@ -297,12 +298,16 @@ class p_liste
 
 	virtual mpmasPlotCell* allocateOneHaToActivityPP(int crA, int crIndex);//##substitute 090222
 	virtual mpmasPlotCell* assignCropActivityToNextPlot(int actID, int soil, int crIndex);
+	virtual mpmasPlotCell* assignCropActivityToNextPlotByNRU(int actID, int nru, int crIndex);
 	virtual void assignCropActivityToPlot(int actID, mpmasPlotCell* pl, int crIndex = -1);
 
 // Troost 20160331 Soil type transitions
 // Troost **********begin block insert**********
 	void setAllPlotsWithoutCrops();
 // Troost **********end block insert**********
+#ifdef MULTIPERIOD
+	void setAllPlotsToUnownedLandUse();
+#endif
 #ifdef LIVSIM_COUPLING
 	void setAllPlotsWithoutGrazingPressure();
 #endif

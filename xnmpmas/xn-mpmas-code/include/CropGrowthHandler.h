@@ -63,7 +63,7 @@ class CropGrowthHandler
 		virtual int getLpColumn(int cropActID);
 
 		virtual int getNumberOfCropActivities();
-		virtual int getNumberOfSeasonsPerPeriod();
+		virtual int getNumberCommunicatedYieldMapsPerPeriod();
 
 #ifdef MULTIPERIOD
 		map<int,int>* getMappingLandUseActivityIdToCropIndices();
@@ -71,6 +71,8 @@ class CropGrowthHandler
 		void getCopyOfArrayOfLandUseActivityIDs(int* arrayToCopyInto);
 		int getYldArrayIndexForCropActivityID(int cropActID);
 		int getCropManagementIdForYldArrayIndex(int YldIndex);
+		int getNumberExtraCropActAttributes();
+		const vector<int>* getPointerToLandUseForUnownedLandVector();
 
 #endif //MULTIPERIOD
 

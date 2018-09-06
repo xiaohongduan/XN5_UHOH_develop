@@ -137,9 +137,11 @@ class ldscape
 // Troost 20140527 Generalize dynamic NRUs
 // Troost **********begin block insert**********
 	virtual double getUserDefinedValueInCell(int r, int c, int userContentID);
+
 // Troost **********end block insert**********
-
-
+#ifdef MULTIPERIOD
+	double getExtraCropActAttributeInCell(int r, int c, int userContentID);
+#endif
 
 	virtual void setValueInCell_monthly(int r, int c, int m, Content cont, double value);
 	virtual double getValueInCell_monthly(int r, int c, int m, Content cont);
@@ -183,7 +185,7 @@ class ldscape
 	int getContentAtFarmsteadLocationOfAgentId(int i, Content cont);
 
 
-	int getNumAgents() {return farmsteadLocations.size() ; }
+	size_t getNumAgents() {return farmsteadLocations.size() ; }
 
 
 	// --------------------------------------

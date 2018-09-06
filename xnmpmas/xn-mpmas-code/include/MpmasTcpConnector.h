@@ -159,6 +159,18 @@ template <class Derived> class MpmasTcpConnectionSendableTable
 		void deserializeTableFromStream (istream& is, char fieldsep) {deserializeTableFromStream(is, fieldsep, '\n' );}
 
 		void printToScreen() { serializeTableToStream(cout);}
+		void writeToFile(string filename) {
+				ofstream s (filename.c_str());
+				if (!(s.is_open()))
+				{
+					stringstream errmsg;
+					errmsg << "Error when opening " << filename <<
+							  "\n";
+					throw runtime_error(errmsg.str());
+				}
+				serializeTableToStream(s);
+				s.close();
+		}
 
 		virtual ~MpmasTcpConnectionSendableTable(){}
 };

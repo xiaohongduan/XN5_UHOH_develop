@@ -205,6 +205,8 @@ class MultiperiodSolutionReaderByArgs: public MultiperiodSolutionReader
 			}
 			return result;
 		}
+
+
 		//returns results
 		MapOfVectorIndexedDoubles calculateResultMap(double* sol, double* zrow, bool includeNonzero = false) const
 		{  //returns a map, whose first element is a vector of int arguments, and the second is the corresponding solution from the MIP
@@ -353,6 +355,13 @@ class MultiperiodSolutionReaderByArgs: public MultiperiodSolutionReader
 				}
 			}
 		}
+
+
+
+
+
+
+
 		unsigned makeFastAccessArrayFor2Dims(map<pair<int,int>, int>* transformationMap)
 		{	// create an aligned array for faster copying based on transformationMap
 			// multikey index is transformed into single int array index for later result arrays, allows use of getResultsUsingFastAccessArray()

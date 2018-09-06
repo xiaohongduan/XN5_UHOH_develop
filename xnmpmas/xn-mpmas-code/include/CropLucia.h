@@ -69,12 +69,18 @@ public:
 	double getExogenousStoverYieldExpectation();
 // Troost **********end block insert**********
 
+	int isLandUseForUnownedLand();
+#ifdef MULTIPERIOD
+	 double getExtraAttribute(size_t index) const;
+	void setExtraAttribute(size_t index, double value);
+#endif
+
 	///@name Read, write, and copy functions
 	//@{	
 	void copyRhsToThis(const InfoLuciaCrops& rhs);
 	void printToScreen();
 	void writeToFile(FILE* strm);
-	void readFromFile(FILE* strm);
+	void readFromFile(FILE* strm, size_t numExtraChars = 0);
 
 	///reads and writes only crop and stover yields
 	void writeYieldsToFile(FILE* strm);
@@ -87,7 +93,7 @@ public:
 
 // Troost 20130813 Exogenous Yield Expectations (Country Model Germany)
 // Troost **********begin block insert**********
-	void readExogenousYieldExpectationsFromFile(FILE* strm);
+	void readExogenousYieldExpectationsFromFile(FILE* strm, size_t numExtra = 0);
 // Troost **********end block insert**********
 
 #ifdef MULTIPERIOD
@@ -140,6 +146,11 @@ private:
 	double exogenousCropYieldExpectation;
 	double exogenousStoverYieldExpectation;
 // Troost **********end block insert**********
+#ifdef MULTIPERIOD
+	int thisIsLandUseForUnownedLand;
+
+	vector<double> extraAttributes;
+#endif
 };
 
 //---------------------------------------------------------------------------------------
@@ -216,7 +227,7 @@ class CropLucia
 	///get info on cropping activities
 	virtual int getMaxNumberCropsPerSoilType();
    virtual int getTotalNumberCropActivities();
-   virtual int getNumberCropSeasons();
+   virtual int getNumberCommunicatedYieldMapsPerPeriod();
 
 	///searches in InfoLuciaCrop
 	virtual int getLuciaArrayIndexForCropActivityID(int cropActID);//cropActID = unique ID in crop input file
@@ -232,11 +243,13 @@ class CropLucia
 	int getNewSoilTypeIdAfterHarvestForLuciaArrayIndex(int arrayIndex);
 	vector<assetRequiredForCrop> getAssetsRequiredForLuciaArrayIndex(int arrayIndex);
 	int getCropManagementIdForYldArrayIndex(int YldIndex);
+	int getLuciaArrayIndexForCropManagementIdAndSoilType(int managId, int soilType);//index within soil type
 #endif
 
 
 	virtual InfoLuciaCrops getInfoOnCropActivity(int arrayIndex);
 	const InfoLuciaCrops* getPointerToInfoOnCropActivity(int arrayIndex);
+	InfoLuciaCrops* getMutablePointerToInfoOnCropActivity(int arrayIndex);
 
 	///searches in InfoLuciaNRUs
 	virtual int getLuciaNruIndexForLpColumn(int colLP, int& crA, int& nru);//returns if found
@@ -247,6 +260,11 @@ class CropLucia
 	///Note: array index in Lucia soil and Lucia NRUs must match
 	virtual int getLuciaInternalIndexForZeroLaborActivity(int soil);
 	virtual int getLuciaArrayIndexForZeroLaborActivity(int soil);
+#ifdef MULTIPERIOD
+	int getCropActivityForUnownedLand(int type) { return landUseForUnownedLand[type] ;}
+	const vector<int>* getPointerToLandUseForUnownedLandVector() { return &landUseForUnownedLand ;}
+#endif
+
 
 	///Functions related to farm surveys
 	virtual int getLpColumnOfFirstCropActivity();
@@ -279,6 +297,8 @@ class CropLucia
 
 	int getYldArrayIndexForCropManagementID(int cmID);
 	int getYldArrayIndexForCropActivityID(int cropActID);
+
+	size_t getNumberExtraCropActAttributes(){return numExtraCropActAttributes;}
 
 #endif //MULTIPERIOD
 	//@}
@@ -316,7 +336,10 @@ protected:
    int totalNumberCropActivities;
 
 	///number of cropping seasons per year
-   int numberCropSeasons;
+   int numberCommunicatedYieldMapsPerPeriod;
+
+
+
 
 	///data for all crop activities
 	InfoLuciaCrops* cropActivities;
@@ -329,6 +352,10 @@ protected:
 	map<int,int> mapCropManagementToArrayIndex; //map from cropmanagementID to first dimension array index of cropManagement/NRU arrays  (e.g. actYlds, expYlds)
 	map<pair<int,int>, int> mapCropManagementAndSoilTypeToArrayIndex;//map from cropManagementID/Map Soil Type to ArrayIndex in internal cropActivities array
 	map<int,int>mapLandUseActivityIndexToCropActivityArrayIndex;//map from land use activity ID (input file, crop growth model) to ArrayIndex in internal cropActivities array
+
+	vector<int> landUseForUnownedLand;
+
+	size_t numExtraCropActAttributes;
 #endif
 	//@}
 

@@ -73,6 +73,7 @@ inline void printIfTDT()
 #endif
 }
 void expectFileDelimiter(FILE* strm, string delim, string filename, string extraInfo);
+void expectFileDelimiter(istream& strm, string delim, string filename, string extraInfo);
 string StringToUpper(string strToConvert);
 string StringToLower(string strToConvert);
 #endif

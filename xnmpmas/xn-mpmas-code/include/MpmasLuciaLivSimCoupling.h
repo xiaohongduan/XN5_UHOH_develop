@@ -18,16 +18,18 @@ class s_liste;
 
 using namespace std;
 
-enum LivSimFeedGroups
+/*enum LivSimFeedGroups
 {
 	livSimFeedGroupDefault,
 	livSimFeedGroupCalves,
 	livSimFeedGroupLactating
-};
+};*/
 
 //#define MPMAS_DEBUG_LIVSIM_DESERIALIZATION
-
-
+#define LIVSIM_SUBHERD_MAX 100
+inline int asLivSimHerdId(int fstID, int herdGroupId) {return fstID * LIVSIM_SUBHERD_MAX +  herdGroupId;}
+inline int fstIdFromLivSimHerdId(int herd_id) {return (int) ( herd_id / LIVSIM_SUBHERD_MAX) ; }//integer division !
+inline int herdgroupIdFromLivSimHerdId(int herd_id) {return (int) ( herd_id % LIVSIM_SUBHERD_MAX) ; }//integer division !
 
 #define MACROLIST_LivSimHerdManagementTable_COLUMNS \
 	   X(int, target_herd,  0) \
@@ -38,7 +40,7 @@ enum LivSimFeedGroups
 	   Y(int, max_lact,  5)
 
 
-// Note: column zero in table is herdId, but that is not part of member attributes
+// Note: column zero in table is herd_id, but that is not part of member attributes
 #define MACROLIST_LivSimHerdMemberTable_ATTRIBUTES \
 		X(int, id,  1) \
 		X(string, breed,  2) \
@@ -52,39 +54,36 @@ enum LivSimFeedGroups
 	   X(int, lactind, 10) \
 	   X(int, damid, 11) \
 	   X(int, removed, 12) \
-	   X(double, milk, 13) \
-	   Y(int, feeding_group_id, 14)
+	   Y(double, milk, 13)
 
 
 #define MACROLIST_LivSimGrazingTable_ATTRIBUTES \
 		X(int, herd_id,  0) \
-		X(int, feeding_group_id, 1)\
-		X(int, season,  2) \
-	   X(int, pixel_x,  3) \
-	   X(int, pixel_y,  4) \
-	   Y(int, priority,  5)
+		X(int, season,  1) \
+	   X(int, pixel_x,  2) \
+	   X(int, pixel_y,  3) \
+	   Y(int, priority,  4)
 
 
 
 #define MACROLIST_LivSimFeedingTable_ATTRIBUTES \
 		X(int, herd_id,  0) \
-		X(int, feeding_group_id,  1) \
-	   X(int, feed_type,  2) \
-	   X(int, feed_id,  3) \
-	   X(double, jan,   4) \
-	   X(double, feb,   5) \
-	   X(double, mar,   6) \
-	   X(double, apr,   7) \
-	   X(double, may,  8) \
-	   X(double, jun,  9) \
-	   X(double, jul,  10) \
-	   X(double, aug,  11) \
-	   X(double, sep,  12) \
-	   X(double, oct,  13) \
-	   X(double, nov,  14) \
-	   Y(double, dec,  15)
+	   X(int, feed_type,  1) \
+	   X(int, feed_id,  2) \
+	   X(double, jan,   3) \
+	   X(double, feb,   4) \
+	   X(double, mar,   5) \
+	   X(double, apr,   6) \
+	   X(double, may,  7) \
+	   X(double, jun,  8) \
+	   X(double, jul,  9) \
+	   X(double, aug,  10) \
+	   X(double, sep,  11) \
+	   X(double, oct,  12) \
+	   X(double, nov,  13) \
+	   Y(double, dec,  14)
 
-
+//X(int, feeding_group_id,  1)
 //defining macros for X-macros idiom
 namespace MpmasLuciaLivSim	 {
 	inline void stream_column_error_check(istream& is, string entityname, string columnname ) throw()
@@ -142,6 +141,16 @@ class LivSimHerdManagementTable : public MpmasTcpConnectionSendableTable<LivSimH
 #undef X
 #undef Y
 		{}
+
+		//Copy constructor - just taking all arguments in the order as listed in the macro and initialize them with 0
+		LivSimHerdManagementTable( const LivSimHerdManagementTable & in )
+		{
+#define X(a,b,c) b = in.b ;
+#define Y(a,b,c) b = in.b ;
+		MACROLIST_LivSimHerdManagementTable_COLUMNS
+#undef X
+#undef Y
+		}
 
 		string getTableName() { return string("LivSimHerdManagementTable"); };
 
@@ -203,6 +212,7 @@ class LivSimAnimalInfo
 #undef X
 #undef Y
 
+
 public:
 		//Default constructor - just taking all arguments in the order as listed in the macro and initialize them corresponding attributes
 		LivSimAnimalInfo( ) : //initializer list
@@ -211,7 +221,7 @@ public:
 			MACROLIST_LivSimHerdMemberTable_ATTRIBUTES
 #undef X
 #undef Y
-	{}
+	{ id = -1;}
 
 
 		//Standard constructor - just taking all arguments in the order as listed in the macro and initialize them corresponding attributes
@@ -292,19 +302,46 @@ class LivSimHerd
 	   //
 		void addAnimal(LivSimAnimalInfo newAnimal) { animals.push_back(newAnimal);}
 		//void removeAnimal(LivSimAnimalInfo animal) { animals.remove(animal);}
-		void removeAnimalById(int id) {
+		void setAnimalRemovedById(int id) {
 			list<LivSimAnimalInfo>::iterator it = std::find_if(animals.begin(), animals.end(), matchAnimalID(id));
 			if (it != animals.end())
 			{
 				it->set_removed(true);
+				//animals.erase(it);
 			}
 			else
 			{	stringstream errmsg;
-				errmsg << "Error can't remove animal " << id << " from herd " << herdId << ". Animal not found in herd\n";
+				errmsg << "Error can't remove (set removed) animal " << id << " from herd " << herdId << ". Animal not found in herd\n";
 				throw runtime_error(errmsg.str());
 			}
 		}
-		LivSimAnimalInfo* getAnimalById(int id)
+		LivSimAnimalInfo takeOutAnimalById(int id) {
+			list<LivSimAnimalInfo>::iterator it = std::find_if(animals.begin(), animals.end(), matchAnimalID(id));
+			if (it != animals.end())
+			{
+				//it->set_removed(true);
+				LivSimAnimalInfo copyForReturn = *it;
+				animals.erase(it);
+				return copyForReturn;
+			}
+			else
+			{	stringstream errmsg;
+				errmsg << "Error can't remove (take out) animal " << id << " from herd " << herdId << ". Animal not found in herd\n";
+				throw runtime_error(errmsg.str());
+			}
+		}
+
+		const LivSimAnimalInfo getAnimalById(int id)
+		{
+			list<LivSimAnimalInfo>::iterator it = std::find_if(animals.begin(), animals.end(), matchAnimalID(id));
+			if (it != animals.end())
+			{
+				return (*it);
+			}
+			return LivSimAnimalInfo();
+
+		}
+		LivSimAnimalInfo* getPtrToAnimalById(int id)
 		{
 			list<LivSimAnimalInfo>::iterator it = std::find_if(animals.begin(), animals.end(), matchAnimalID(id));
 			if (it != animals.end())
@@ -316,7 +353,7 @@ class LivSimHerd
 		}
 		void clear() { animals.clear();}
 		int getHerdId() { return herdId;}
-
+		size_t getHerdSize() { return animals.size(); }
 
 	   //serialization for communication
 	  void serializeMembers (ostream & os, char fieldsep, char linesep)
@@ -359,6 +396,10 @@ class LivSimHerd
 				}
 			}
 		}
+
+		void adoptAnimalsFromHerd (LivSimHerd* oldHerd);
+
+
 };
 
 class LivSimHerdIterator
@@ -370,7 +411,7 @@ public:
     LivSimHerdIterator(LivSimHerd& herd)
     : herd_(&herd), internalIt( herd.animals.begin() ) {}
 
-    LivSimAnimalInfo& getAnimal()
+    const LivSimAnimalInfo& getAnimal()
     {
         return *internalIt;
     }
@@ -725,11 +766,11 @@ class MpmasLivSimFeedingPlan {
 		//vector constructor
 			MpmasLivSimFeedingPlan(
 							int herd_id_,
-							int feeding_group_id_,
+							//int feeding_group_id_,
 						   int feed_type_,
 						   int feed_id_,
 						   vector<double> quantities
-					) : herd_id(herd_id_), feeding_group_id(feeding_group_id_), feed_type(feed_type_), feed_id(feed_id_)
+					) : herd_id(herd_id_), /*feeding_group_id(feeding_group_id_),*/ feed_type(feed_type_), feed_id(feed_id_)
 	{
 				if (quantities.size() != 12)
 					throw runtime_error ("Error: invalid number of months in MpmasLivSimFeedingPlan constructor\n");
@@ -936,6 +977,7 @@ typedef map<int,vector<int> > MpmasLuciaPastureIdList;
 class MpmasLivSimTransformationInfo
 {
 	private:
+		LivSimHerdManagementTable herdManagementTable;
 		MpmasToLivSimMap matchAssetToLivSimAnimal;
 		LivSimToMpmasMap matchLivSimAnimalToAsset;
 		MpmasLuciaPastureIdList pastureAllowedCropManagementIDs;
@@ -947,13 +989,13 @@ class MpmasLivSimTransformationInfo
 		int maxSeason;
 
 
-		LivSimHerdManagementTable herdManagementTable;
+
 
 
 	public:
-	MpmasLivSimTransformationInfo(): matchAssetToLivSimAnimal(),matchLivSimAnimalToAsset(), pastureAllowedCropManagementIDs(), parentMpmasNetwork(NULL), age_age_factor(1), precision_age(10), precision_bw(10), maxSeason(0)
+	MpmasLivSimTransformationInfo(): herdManagementTable(), matchAssetToLivSimAnimal(),matchLivSimAnimalToAsset(), pastureAllowedCropManagementIDs(), parentMpmasNetwork(NULL), age_age_factor(1), precision_age(10), precision_bw(10), maxSeason(0)
 	{};
-	MpmasLivSimTransformationInfo(s_liste* parentNetwork): matchAssetToLivSimAnimal(),matchLivSimAnimalToAsset(), pastureAllowedCropManagementIDs(),  parentMpmasNetwork(parentNetwork), age_age_factor(1), precision_age(10), precision_bw(10),maxSeason(0)
+	MpmasLivSimTransformationInfo(s_liste* parentNetwork): herdManagementTable(),matchAssetToLivSimAnimal(),matchLivSimAnimalToAsset(), pastureAllowedCropManagementIDs(),  parentMpmasNetwork(parentNetwork), age_age_factor(1), precision_age(10), precision_bw(10),maxSeason(0)
 	{};
 	~MpmasLivSimTransformationInfo(){};
 
@@ -979,5 +1021,200 @@ class MpmasLivSimTransformationInfo
 	LivSimHerdManagementTable getHerdManagementTable() {return herdManagementTable;}
 };
 
+
+
+
+
+class LivSimHerdCollection
+{
+	protected:
+		int fstId;
+		typedef vector<LivSimHerd*> typeOfHerdList;
+		typeOfHerdList herds;
+		typedef map<int,int> typeOfAnimalHerdMap;
+		typeOfAnimalHerdMap herdOfAnimal;
+
+	   friend class LivSimHerdCollectionIterator;
+
+	public :
+
+	   LivSimHerdCollection() : fstId(-1), herds(LIVSIM_SUBHERD_MAX) /*NULL initialization by default constructor, writing NULL explicitly gives 32bit errors though*/, herdOfAnimal() {herds[0] = new LivSimHerd(asLivSimHerdId(fstId,0));}
+
+	   LivSimHerdCollection(int _id) : fstId(_id),  herds(LIVSIM_SUBHERD_MAX)/*NULL initialization by default constructor, writing NULL explicitly gives 32bit errors though*/, herdOfAnimal() { herds[0] = new LivSimHerd(asLivSimHerdId(fstId,0));}
+	   ~LivSimHerdCollection()
+	   {	for (int i = 0; i < LIVSIM_SUBHERD_MAX; ++i)
+	   	{
+	   		if (herds[i] != NULL)
+	   			delete herds[i];
+
+	   		herds[i] = NULL;
+	   	}
+ 	 	 }
+	   //
+		void addAnimal(LivSimAnimalInfo newAnimal, int whichHerd) {
+			if (whichHerd >= LIVSIM_SUBHERD_MAX)
+			{
+				stringstream errmsg;
+				errmsg << "Error can't add animal " << newAnimal.get_id() << " to herd " << whichHerd << ". Herd index too high\n";
+				throw runtime_error(errmsg.str());
+			}
+			if (herds[whichHerd] == NULL )
+			{
+				herds[whichHerd] = new LivSimHerd(asLivSimHerdId(fstId,whichHerd));
+			}
+			herds[whichHerd]->addAnimal(newAnimal);
+			pair<typeOfAnimalHerdMap::iterator,bool> ret =  herdOfAnimal.insert(pair<int,int>(newAnimal.get_id(), whichHerd));
+			if(ret.second == false)
+			{
+				stringstream errmsg;
+				errmsg << "Error trying to add animal " << newAnimal.get_id() << " which already exists in herd\n";
+				throw runtime_error(errmsg.str());
+			}
+
+		}
+
+		void setAnimalRemovedById(int id) {
+			typeOfAnimalHerdMap::iterator it = herdOfAnimal.find(id);
+			if (it != herdOfAnimal.end())
+			{
+				herds.at(it->second)->setAnimalRemovedById(id);
+				//herdOfAnimal.erase(id);
+			}
+			else
+			{	stringstream errmsg;
+				errmsg << "Error can't remove animal " << id << " of agent " << fstId << ". Animal not found in agent's herd\n";
+				throw runtime_error(errmsg.str());
+			}
+		}
+		LivSimAnimalInfo getAnimalById(int id)
+		{
+			typeOfAnimalHerdMap::iterator it = herdOfAnimal.find(id);
+			if (it != herdOfAnimal.end())
+			{
+				return herds.at(it->second)->getAnimalById(id);
+			}
+			return LivSimAnimalInfo();
+		}
+		void clear() {
+			for (int i = 0; i < LIVSIM_SUBHERD_MAX; ++i)
+			{
+				if (herds[i] != NULL)
+					delete herds[i];
+
+				herds[i] = NULL;
+			}
+			herds[0] = new LivSimHerd(asLivSimHerdId(fstId,0));
+			//herds.clear();
+		}
+		int getFstId() { return fstId ;}
+
+		void resetHerdGroups()
+		{ //move all herd groups back to herd zero
+			for (int i = 1; i < LIVSIM_SUBHERD_MAX; ++i)
+			{
+				if (herds[i] != NULL)
+					herds[0]->adoptAnimalsFromHerd(herds[i]);
+			}
+			for (typeOfAnimalHerdMap::iterator it = herdOfAnimal.begin(); it != herdOfAnimal.end(); ++it)
+			{
+				it->second = 0;
+			}
+		}
+		void moveAnimalToHerdGroup(int animalId, int whichHerd)
+		{
+			LivSimAnimalInfo newAnimal;
+			typeOfAnimalHerdMap::iterator it = herdOfAnimal.find(animalId);
+			if (it != herdOfAnimal.end())
+			{
+				newAnimal = herds.at(it->second)->takeOutAnimalById(animalId);
+
+			}
+			else
+			{	stringstream errmsg;
+				errmsg << "Error can't move animal " << animalId << " of agent " << fstId << " to (sub)herd  "<< whichHerd<< ". Animal not found in agent's whole herd\n";
+				throw runtime_error(errmsg.str());
+			}
+
+
+			if (whichHerd >= LIVSIM_SUBHERD_MAX)
+			{
+				stringstream errmsg;
+				errmsg << "Error can't add animal " << newAnimal.get_id() << " to herd " << whichHerd << ". Herd index too high\n";
+				throw runtime_error(errmsg.str());
+			}
+			if (herds[whichHerd] == NULL )
+			{
+				herds[whichHerd] = new LivSimHerd(asLivSimHerdId(fstId,whichHerd));
+			}
+			herds[whichHerd]->addAnimal(newAnimal);
+
+			herdOfAnimal[animalId] = whichHerd;
+
+		}
+		void addHerdsToTable(LivSimHerdTable& herds_table)
+		{
+			for (int i = 0; i< LIVSIM_SUBHERD_MAX; ++i)
+			{
+				if (herds[i] != NULL)
+				{
+					herds_table.addHerd( herds[i] );
+				}
+			}
+		}
+		size_t getNumberAnimalsInHerd(int whichHerd)
+		{
+			if (whichHerd >= LIVSIM_SUBHERD_MAX)
+			{
+				stringstream errmsg;
+				errmsg << "Error can't get number of animals in herd " << whichHerd << ". Herd index too high\n";
+				throw runtime_error(errmsg.str());
+			}
+			if (herds[whichHerd] == NULL )
+			{
+				return 0;
+			}
+			return herds[whichHerd]->getHerdSize();
+		}
+		size_t getNumberNonRemovedAnimalsInHerd(int whichHerd);
+};
+
+class LivSimHerdCollectionIterator
+{
+    LivSimHerdCollection* herdCollection_;
+    vector<LivSimHerd*>::iterator internalIt   ;
+
+public:
+    LivSimHerdCollectionIterator(LivSimHerdCollection& herdC)
+    : herdCollection_(&herdC), internalIt( herdCollection_->herds.begin() ) {}
+
+    LivSimHerd* getHerd()
+    {
+        return *internalIt;
+    }
+
+    LivSimHerdCollectionIterator& operator ++ ()
+    {
+   	 if(internalIt == herdCollection_->herds.end())
+   			 return *this;
+
+   	 	 ++internalIt; //increase at least once
+
+   	 while(internalIt != herdCollection_->herds.end()
+   			 && *internalIt == NULL)
+   		 ++internalIt; //increase while zero ()) LP is not guaranteed to set only the first herds)
+
+   	 return *this;
+    }
+
+    bool operator != (const LivSimHerdCollectionIterator& i) const
+    {
+        assert(herdCollection_ == i.herdCollection_);
+        return internalIt != i.internalIt;
+    }
+    bool reachedEnd ()
+    {
+   	 return (internalIt == herdCollection_->herds.end() );
+    }
+};
 
 #endif // _MPMAS_LUCIA_LIVSIM_COUPLING_H_

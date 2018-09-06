@@ -61,13 +61,13 @@ class mpmas
 #ifndef MCHECK
 	///@name Get and set functions
 	//@{
-	int getNumberOfYearsToSimulate();
+	int getNumberOfPeriodsToSimulate();
 	int getNumberOfSpinUpRounds();
 	string getInputDirectory() ;
 	string getOutputDirectory();
 	string getScenarioName();
 	int getNumberOfCroppingActivities ();
-	int getNumberOfSeasonsPerPeriod();
+	int getNumberCommunicatedYieldMapsPerPeriod();
 
 	region* getPointerToRegion();
 
@@ -95,26 +95,33 @@ class mpmas
 	void agentsImplementLandUse_LookUpTable(int numCropActs = 0, int* cropActID = NULL, double* cropArea = NULL);
 	void agentsImplementLandUse_Maps(Raster2D& outputRaster);
 	void agentsImplementLandUse_ExtYieldsNoMaps();
-	void agentsReceiveYields_LookUpTable(double* cropYield, double* stoverYield);
-	void agentsReceiveYields_Maps(Raster2D& yield1map, Raster2D& yield2map, bool harvestAfterNewLandUseDecision);
+	void agentsReceiveYields_LookUpTable(double* cropYield, double* stoverYield, double** extrAttrs);
+	void agentsReceiveYields_Maps(Raster2D& yield1map, Raster2D& yield2map,vector<Raster2D>& extraMaps, bool harvestAfterNewLandUseDecision);
 	void agentsImportExtYieldsNoMaps();
+	int getNumberExtraCropActAttributes();
 #ifdef LIVSIM_COUPLING
 	void agentsImplementHerdManagement(LivSimHerdTable*& herds_tablePtr, LivSimGrazingTable& grazing_table, LivSimFeedingTable& feeding_table);
 	void importHerdChangesFromStream(istream & herdChangeFile);
 	void agentsUpdateAssetsFromUpdatedHerd();
+
+#endif
 #endif
 
-
-
+	void updateUserdefinedAttributesInMaps(Raster2D& grasslandStatusMap, int udefLayerID, int updateNRUs);
 	//generic interface
 	map<int,vector<investdef> > agentsExportAssets();
-	void externalUpdateAgentAssets(map<int,vector<investdef> > );
-	void externalUpdateAgentAssets_fromFile( string fileName );
-	string printExportFile_AgentAssets(string dateCode);
+	/*void externalUpdateAgentAssets(map<int,vector<investdef> > );*/
+	void externalUpdateAgentAssets_fromFile( string fileName , bool updateRhs = false);
+	void printExportFile_AgentAssets(string fn);
+	string printExportFile_SelectedSolutionPreInvest(string fn, map<int,vector<double> > outputMap);
 
-
-#endif
 	void exportMapsAnnualAsRequested();
+
+	string get_externalScriptCall_PreInvest();
+	string get_externalScriptCall_CropModel();
+	string get_externalScriptCall_InYear();
+	void do_externalScriptCall_InYearIfRequested(int period);
+
 	virtual void runThroughModelMonths();
 #ifdef MONICA	
 	///disable agents in specific sectors after initialization

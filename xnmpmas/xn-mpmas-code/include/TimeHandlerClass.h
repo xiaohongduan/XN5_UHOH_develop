@@ -69,6 +69,7 @@ public:
 	virtual int TOTAL_IRRIGATION_MONTHS();
 	virtual int TOTALPERIODS();   
    virtual bool ISNORTHERN();
+   int getNumPeriodsPerYear();
 
 	void setMONATE(int m_);
 	 
@@ -83,9 +84,18 @@ public:
 	 
 	 
 	/// Access to current time (internal model counting)
-	int PERIODE()               { return currentRelativePeriod;} // old, erase later
-	int CURRENTMODELPERIOD()    { return currentRelativePeriod;}
+
+#ifdef MULTIPERIOD
+	int PERIODE()               { return currentPeriodCount;} // old, erase later
+	int CURRENT_CYCLIC_PERIOD() { return currentCyclicPeriod;}
+	int CURRENTMODELPERIOD()    { return currentPeriodCount;}
+	int CURRENTMODELYEAR()    { return currentRelativeYear;}
+#else
+	int PERIODE()               { return currentRelativeYear;} // old, erase later
+	int CURRENTMODELPERIOD()    { return currentRelativeYear;}
+#endif
 	int CURRENTMODELMONTH()     { return currentRelativeMonth;}
+
 
    /// Read and write
    void initializeDummy();
@@ -165,7 +175,7 @@ private:
 	int currentAbsoluteYear;
 
 	// Ongoing date within model run, in real years ( 1-1996)
-	int currentRelativePeriod;
+	int currentRelativeYear;
 	int currentRelativeMonth;
 	
 	// Absolute, fixed times
@@ -184,6 +194,11 @@ private:
 	int maximumNumberOfPeriodsModeled;
 
 	bool isNorthernHemisphere;
+
+	int periodsPerYear;
+	int currentPeriodCount;
+	int currentCyclicPeriod;
+
 
 	/// Determining number of days in month
 #ifdef ODB

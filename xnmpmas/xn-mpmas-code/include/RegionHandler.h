@@ -96,6 +96,23 @@ struct nruDistanceSizeDef
 int nruDistanceSizeDefLess(const nruDistanceSizeDef& first, const nruDistanceSizeDef& second);
 // Troost **********end block insert**********
 
+
+struct nruDistanceDirectionUDef
+{
+		double upperDistanceBound;
+
+		int upperDirectionBound;
+		vector<double> udefBounds;
+
+		int nru;
+		nruDistanceDirectionUDef() : upperDistanceBound(0.0),  upperDirectionBound(360),udefBounds(0), nru(-1){};
+		nruDistanceDirectionUDef(double dist_,int dirup_, vector<double> udefs_, int nru_) :
+					upperDistanceBound(dist_), upperDirectionBound(dirup_),udefBounds(udefs_), nru(nru_){};
+};
+
+int nruDistanceDirectionUDefLess(const nruDistanceDirectionUDef& first, const nruDistanceDirectionUDef& second);
+
+
 class region
 {
 	public:
@@ -168,8 +185,8 @@ class region
 	virtual int agentsDoExpectationFormation(TimeHandler& th_const);//refactored from <agentsDoExpectationAndPlanning>
 	virtual void agentsDoInvestmentAndProductionPlanning(TimeHandler& th_const);//refactored from <agentsDoExpectationAndPlanning>
 #ifdef MULTIPERIOD
-	void agentsDoStartOfPeriodDecision();
-	void multiperiod_outputAgentDecisionResults(string decisionStage);
+	void agentsDoStartOfPeriodDecision(doInvestModes doProduce, string decisionStageName);
+	string multiperiod_outputAgentDecisionResults(string decisionStage, bool aggregateOnly = false, bool noAggYears = false);
 	void agentsCalculateIncomes();
 	void updateSoilTypes();
 #endif
@@ -181,9 +198,9 @@ class region
 	virtual void resetEdicAnnualData(TimeHandler& timeHandle_const);
 
 	/// Spatial functions, copying between "cell" and "parcel"
-	virtual void joinRegionMap(Content cont, Raster2D& rasterRegion);
+	virtual void joinRegionMap(Content cont, Raster2D& rasterRegion, int userContentId = -1);
 	//virtual void joinRegionMap(Content cont, Raster2D& rasterRegion, int m); replaced by default value below
-	virtual void joinRegionMap(Content cont, Raster2D& rasterRegion, int m, bool flag_setFilename = true, bool flag_forceCell = false);
+	virtual void joinRegionMap(Content cont, Raster2D& rasterRegion, int m, bool flag_setFilename, bool flag_forceCell, int userContentId );
 
 	//virtual void translateFromParcelCallToRaster(Content cont, Raster2D& test);// ## Tbe 110920 not in use
 
@@ -194,20 +211,24 @@ class region
 	virtual void exportMapsGeneric(bool flagIsAnnual, TimeHandler& timeHandle_const);
 
 	/// Export aggregated land-use
-	virtual void exportAggregatedLandUse(FILE* openStream = NULL, int numCropActs = 0, int* cropActID = NULL, double* cropArea = NULL);
+	void exportAggregatedLandUse(FILE* openStream = NULL, int numCropActs = 0, int* cropActID = NULL, double* cropArea = NULL);
+	vector<string> exportUserDefinedMaps();
 #ifdef MULTIPERIOD
 	void multiperiod_exportLandUseSpatially( Raster2D& outputRaster);
 	void multiperiod_exportAggregatedLandUse(FILE* openStream, int numCropActs, int* cropActID, double* cropArea);
 	void multiperiod_recordLandUseForExtYieldsNoMaps();
-	void multiperiod_importYieldsAggregatedLandUse( double* cropYield, double* stoverYield);
-	void multiperiod_importYieldMaps(Raster2D& rasterCropYields, Raster2D& rasterStoverYields, bool harvestAfterNewLandUseDecision);
+	void multiperiod_importYieldsAggregatedLandUse( double* cropYield, double* stoverYield, double** extraAttrs);
+	void multiperiod_importYieldMaps(Raster2D& rasterCropYields, Raster2D& rasterStoverYields, vector<Raster2D>& extraMaps, bool harvestAfterNewLandUseDecision);
 	void multiperiod_agentsImportExtYieldsNoMaps();
-
+	int getNumberExtraCropActAttributes();
 #ifdef LIVSIM_COUPLING
 	void multiperiod_agentsImplementHerdManagement(LivSimHerdTable& herds_table, LivSimGrazingTable& grazing_table, LivSimFeedingTable& feeding_table);
 	void multiperiod_agentsUpdateAssetsFromUpdatedHerd();
+
 #endif
 #endif//MULTIPERIOD
+	void updateUserdefinedAttributesInMaps(Raster2D& grasslandStatusMap, int udefLayerID, int updateNRUs);
+
 
 	/// Import yield maps from external model
 	virtual void importYieldMapsFromExternalModel();//Tbe 090303
@@ -302,12 +323,13 @@ class region
 
 
 	virtual int getNRUForSoilDistanceSize(int soilType, double distance, int size);
+	virtual int getNRUForSoilDistanceDirectionUdef(int soilType, double distance, int direction, vector<double> udefs);
 	virtual int getNumSoilNRUGroupLevels();
 	virtual int getSoilSimilarityGroupForSoilAtLevel(int soil, int level);
 // Troost **********end block insert**********
 
 	virtual int getNumberOfCroppingActivities();
-	int getNumberOfSeasonsPerPeriod();
+	int getNumberCommunicatedYieldMapsPerPeriod();
 	virtual eumtr2003* getEuCap2003Info();
 
 	int* getArraySoilTypeForNRU();
@@ -315,11 +337,11 @@ class region
 	void closeStreamInvestments();
 	void recordInvestment(int farmsteadId, int period, int objectID, double quantity, int age, string remark);
 
-#ifdef MULTIPERIOD
-	map<int,vector<investdef> > agentsExportAssets();
-	void externalUpdateAgentAssets(map<int,vector<investdef> > );
-	void externalUpdateAgentAssets_fromStream(istream & in);
 
+	map<int,vector<investdef> > agentsExportAssets();
+	/*void externalUpdateAgentAssets(map<int,vector<investdef> > );*/
+	void externalUpdateAgentAssets_fromStream(istream & in, bool updateRhs = false);
+#ifdef MULTIPERIOD
 #ifdef LIVSIM_COUPLING
 	void initializeLivSimHerdsForCoupling();
 #endif //LIVSIM_COUPLING
@@ -346,6 +368,7 @@ protected:
 	MatrixDouble SoilNRUGroups;
 // Troost **********end block insert**********
 	vector<vector<nruDistanceSizeDef> > soilDistanceSizeToNRUmap;
+	vector<vector<nruDistanceDirectionUDef> > soilDistanceDirectionUdefToNRUmap;
 
 	int* soilTypeForNRU;
 	FILE* investmentsStrm;

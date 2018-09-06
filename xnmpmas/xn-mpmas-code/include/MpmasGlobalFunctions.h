@@ -110,8 +110,11 @@ namespace mpmasGlobal {
 	#define POLICY_PERENNIAL_BONUS 1
 	#define POLICY_INFRAPROJ 2
 	#define POLICY_EUMTR2003 4
+   #define POLICY_PREINVESTMENT_EXTERNAL_SCRIPT 8
+	#define POLICY_INYEAR_EXTERNAL_SCRIPT 16
 
 
+	inline int ADDITIONAL_DECISION_STAGES() { return globalMpmasSettings->ADDITIONAL_DECISION_STAGES();}
 
 	inline int DEMOGRAPHY_MDL(){	return globalMpmasSettings->DEMOGRAPHY_MDL();   }	//Type of demography model
 	inline int DEMOGRAPHY_UDEF(){	return globalMpmasSettings->DEMOGRAPHY_UDEF();   }	//user-defined household member characteristics?
@@ -134,6 +137,8 @@ namespace mpmasGlobal {
 	// Troost 20140527 Generalize dynamic NRUs
 	// Troost **********begin block insert**********
 	inline int NUMBER_UDEF_LSCAPE_PARAMETERS(){	return globalMpmasSettings->NUMBER_UDEF_LSCAPE_PARAMETERS();   }
+	inline int NUMBER_UDEF_LSCAPE_PARAMETERS_FOR_CATEG(){	return globalMpmasSettings->NUMBER_UDEF_LSCAPE_PARAMETERS_FOR_CATEG();   }
+	inline void set_NUMBER_UDEF_LSCAPE_PARAMETERS_FOR_CATEG(int i){	return globalMpmasSettings->set_NUMBER_UDEF_LSCAPE_PARAMETERS_FOR_CATEG(i) ;   }
 	// Troost **********end block insert**********
 
 	inline int CHANGING_SOIL_TYPES(){	return globalMpmasSettings->CHANGING_SOIL_TYPES();   }
@@ -374,7 +379,15 @@ namespace mpmasGlobal {
 #endif
 
 	inline int EXTRAGAP() {return globalMpmasSettings->EXTRAGAP();}
-
+	inline string 	 get_externalScriptCall_PreInvest() { return globalMpmasSettings->get_externalScriptCall_PreInvest() ;}
+	inline string 	 get_externalScriptCall_CropModel() { return globalMpmasSettings->get_externalScriptCall_CropModel() ;}
+	inline string 	 get_externalScriptCall_InYear() { return globalMpmasSettings->get_externalScriptCall_InYear() ;}
+	inline vector<int> 	 get_externalScript_InYear_ChangedMaps() { return globalMpmasSettings->get_externalScript_InYear_ChangedMaps() ;}
+#ifdef MULTIPERIOD
+	inline size_t get_NumberExtraAgentCharacteristics() {return globalMpmasSettings->get_NumberExtraAgentCharacteristics();}
+	inline int get_extraAgentCharacteristicsIdForString(string s) {return globalMpmasSettings->get_extraAgentCharacteristicsIdForString(s) ;}
+	inline string get_extraAgentCharacteristicsStringForId(size_t i){return globalMpmasSettings->get_extraAgentCharacteristicsStringForId(i);}
+#endif
 }	//end mpmasScope
 #endif //ODB
 #endif

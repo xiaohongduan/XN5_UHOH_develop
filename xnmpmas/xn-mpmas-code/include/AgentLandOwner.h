@@ -143,6 +143,11 @@ class agentL : public agent
 
    virtual void writeAgtIdEntry(FILE* stream);
    virtual void writeAgtWaterData(int month);
+
+   void copyContent_PlotToLandscape(Content cont);
+#ifdef MULTIPERIOD
+   void setAllPlotsToUnownedLandUse();
+#endif
 };
 
 

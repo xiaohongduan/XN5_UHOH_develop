@@ -49,6 +49,7 @@ class b_liste
 	agent* firstBetrieb;
 	agent* merkeBetrieb;//wird fuer suche_naechsten() gebraucht
 
+
 	public:
 	b_liste(int scID);//Uebergabe Betriebslisten bzw. Subcatchment-Nummer
 	virtual ~b_liste();
@@ -87,9 +88,9 @@ class b_liste
 
 #ifdef MULTIPERIOD
 	void addToTotalCropProduction(double* cropArea = NULL, int numCropActs = -1);
-	void agentsImportYieldsAggregatedLandUse(  double* cropYield, double* stoverYield);
+	void agentsImportYieldsAggregatedLandUse(  double* cropYield, double* stoverYield, double** extraAttrs);
 	void multiperiod_importActualYieldsFromCells(bool harvestAfterNewLandUseDecision);
-	void multiperiod_agentsImportExtYieldsNoMaps(vector<int>& cropActivityID,  double* cropYield, double* stoverYield );
+	void multiperiod_agentsImportExtYieldsNoMaps(vector<int>& cropActivityID,  double* cropYield, double* stoverYield, double** extraAttrs);
 
 #ifdef LIVSIM_COUPLING
 	void multiperiod_exportLivSimHerdManagement(LivSimHerdTable& herds_table, LivSimGrazingTable& grazing_table, LivSimFeedingTable& feeding_table);
@@ -98,6 +99,8 @@ class b_liste
 
 
 #endif //MULTIPERIOD
+
+	void agentsUpdateNRUs();
 
 	virtual int get_bl_nr(void);//liefert Nr. der Betriebsliste zurueck
    virtual void set_bl_nr(int bl_nr_);
@@ -117,7 +120,7 @@ class b_liste
 	virtual void agentsMakeNewExpectations();//refactored from <uebergang_periode>
 	virtual void agentsMakeNewPlanningDecisions();//refactored from <uebergang_periode>
 #ifdef MULTIPERIOD
-	void agentsMakeStartOfPeriodDecision();
+	void agentsMakeStartOfPeriodDecision(doInvestModes, string);
 	void implementInvestmentsAndOffspring();
 	void agentsResetAccountingVariables();
 
@@ -198,7 +201,7 @@ class b_liste
 	virtual void printToScreen(agent*);
 	virtual void printOnScreen_list(void);
 #ifdef MULTIPERIOD
-	virtual void multiperiod_writeAgentDecisionsToFiles();
+	virtual void multiperiod_writeAgentDecisionsToFiles(bool aggregateOnly);
 	virtual void multiperiod_removeExitingAgents();
 #else
 	virtual void betriebsaufgabe_periode();//loescht aufgeloeste Betriebe
@@ -246,11 +249,14 @@ class b_liste
 	virtual int restoreLivestockListOfAgent(int _fstID);//returns 0 when OK
 
 
-#ifdef MULTIPERIOD
-	map<int,vector<investdef> > agentsExportAssets();
-	void externalUpdateAgentAssets(map<int,vector<investdef> > updatedAssets );
-	void externalUpdateAgentAssets_fromStream(istream & in );
 
+	map<int,vector<investdef> > agentsExportAssets();
+	/*void externalUpdateAgentAssets(map<int,vector<investdef> > updatedAssets, bool updateRhs = false );*/
+	void externalUpdateAgentAssets_fromStream(istream & in, bool updateRhs = false );
+
+	void agentsApplyForExternalAssetAllocation(milpModeTypes milpMode, map<int, vector<double> > & outputMapWithSolutions);
+
+#ifdef MULTIPERIOD
 #ifdef LIVSIM_COUPLING
 	void initializeLivSimHerdsForCoupling();
 #endif //LIVSIM_COUPLING

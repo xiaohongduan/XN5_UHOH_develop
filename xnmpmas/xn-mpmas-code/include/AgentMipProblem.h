@@ -99,6 +99,8 @@
 //#define EPS 1.0e-6 //OSL seems to work with 1.0e-7 (see "ekk_c_api.h")
 #define NR 2
 
+class agentF; //forward decl
+
 //auxiliary class for specially ordered set
 class sos
 {  protected:
@@ -404,6 +406,21 @@ class mpPrbl
    vector<MultiperiodMipVariableValue*> userDefinedHouseholdAttributes;
    vector<MultiperiodMipVariableValue*> agentsLivSimMilkYieldToBeUpdated;
 
+   vector<MultiperiodMipVariableValue*>cyclicDataToBeUpdated;
+   vector<MultiperiodMipVariableValue*>changingDataToBeUpdated;
+   vector<MultiperiodMipVariableValue*>stageSpecificDataToBeUpdated;
+
+   vector<MultiperiodMipVariableValue*> agentCharacteristicsToBeUpdated;
+   vector<MultiperiodMipVariableValue*> nruAttributesToBeUpdated;
+   vector<MultiperiodMipVariableValue*> nruAttributesRangeTestToBeUpdated;
+   vector<MultiperiodMipVariableValue*> nruDistanceToBeUpdated;
+   vector<MultiperiodMipVariableValue*> nruDistanceRangeTestToBeUpdated;
+
+   vector<MultiperiodMipVariableValue*> cropActAttributesToBeUpdated;
+   vector<MultiperiodMipVariableValue*> cropActAttributesRangeTestToBeUpdated;
+   vector<MultiperiodMipVariableValue*> cropActAttributesExpectationsToBeUpdated;
+   vector<MultiperiodMipVariableValue*> cropActAttributesExpectationsRangeTestToBeUpdated;
+
 
    vector<vector<vector<MultiperiodMipVariableValue*> > > assetCapacitiesToBeUpdated;
    vector<vector<vector<MultiperiodMipVariableValue*> > > assetVintagesToBeUpdated;
@@ -428,12 +445,14 @@ class mpPrbl
    MultiperiodSolutionReaderByArgs readerAssetTransform;
    MultiperiodSolutionReaderByArgs readerInnovationArea;
    MultiperiodSolutionReaderByArgs readerResultOutput;
+   MultiperiodSolutionReaderByArgs readerResultToExternalScript;
 
    MultiperiodSolutionReaderByArgs readerLivestockAssetsToLivSimHerdGroups;
    MultiperiodSolutionReaderByArgs readerLivSimHerdGroupsToNRU;
    MultiperiodSolutionReaderByArgs readerLivSimHerdGroupFeeding;
 
-
+   MultiperiodSolutionReaderByArgs readerAgentCharacteristicSet;
+   MultiperiodSolutionReaderByArgs readerAgentCharacteristicAdd;
 
 #endif //MULTIPERIOD
 
@@ -653,6 +672,17 @@ class mpPrbl
 	MatrixDouble applicationForLandDistributionCols;
 // Troost **********end block insert**********
 
+// Troost 20180418 External script calls
+// Troost **********begin block insert**********
+	int numberSolutionsToExternalScriptPreInvest;
+	MatrixDouble solutionsToExternalScriptPreInvest;
+	int numberUboundsPreInvest;
+	MatrixDouble uboundsPreInvest;
+	vector<string> solutionFileToExternalScriptPreInvestColumnNames;
+
+
+// Troost **********end block insert**********
+
 // Troost 20170310 Cplex Mip starts
 // Troost **********begin block insert**********
 #ifdef MIPSTART
@@ -747,6 +777,11 @@ class mpPrbl
 	static vector<cplexOption> cplexFailedSecondOptions;
 #pragma db transient
 	static vector<cplexOption> cplexLimitReachedOptions;
+#pragma db transient
+	int* priorityIntegers;
+#pragma db transient
+	int* priorityIndices;
+
 #endif//USE_CPLEX
 #if defined(LPPACKED) && defined(USE_OSL)
 	bool usePacked; //only if LPPACKED is used is CoinPackedMatrix used directly (Cbc, Sym) or do we use dels_p (for OSL)
@@ -774,6 +809,9 @@ class mpPrbl
 	ofstream resultAggregateStream;
 	ofstream resultDecisionsStream;
 	double* resultAggregateArray; //filled by reader function
+
+	vector<vector<double> > seasonalValueDatabase;
+	vector<vector<double> > decisionStageDatabase;
 #endif
 
 public:
@@ -829,6 +867,8 @@ public:
    void readMpmasInsertValuesFromStream( FILE* strm, string filename);
    void readMpmasReadValues( FILE* strm, string filename);
    void readMpmasReadResultAggregates( FILE* strm, string filename);
+   void readMpmasSeasonalValueDatabase( FILE* strm, string filename);
+   void readMpmasDecisionStageDatabase( FILE* strm, string filename);
 #endif
    //?	virtual void LP_readLpNR(char* filename);
 #else
@@ -999,6 +1039,19 @@ public:
 // Troost **********end block insert**********
 
 
+// Troost 20180418 External script calls
+// Troost **********begin block insert**********
+	int getNumberSolutionToExternalScriptPreInvest();
+	int getNumberUboundsPreInvest();
+	int getLpColumnToExternalScriptPreInvest(int i);
+	int getLpColumnUboundsPreInvest(int i);
+	int getFileColumnToExternalScriptPreInvest(int i);
+	int getUboundPreInvest(int i);
+	string getColumnNameFileToExternalScriptPreInvest(int i);
+	size_t getNumVariableColumnsInFileToExternalScriptPreInvest();
+// Troost **********end block insert**********
+
+
 // Troost 20170310 Cplex Mip starts
 // Troost **********begin block insert**********
 #ifdef MIPSTART
@@ -1045,7 +1098,10 @@ public:
 	virtual void updateOrigMatrixWithActualPrices();
 	virtual void sendCostDataToMarketHandler();
 #ifdef MULTIPERIOD
+	void updateGenericMatrixForDecisionStage(int decisionStage);
+
 	void multiperiod_updatePricesInOrigMatrix();
+	void updateMipDecisionStage(int decisionStage);
 	void updateAgentExpectationsPrices(double* priceExpectations, int arraySize);
 	void updateAgentExpectationsPrices(double* priceExpectations, int arraySize, double* varsRHS, double* zrow);
 	void updateAgentFromPreviousSolution(double* oldSolution, int arraySize);
@@ -1076,11 +1132,27 @@ public:
 	void updateAgentAssetVintageCapacities(map<int, vector<double> >* inputMap);
 	void updateAgentAssetVintageCapacities(map<int, vector<double> >* inputMap, double* varsRHS, double* zrow);
 
+	void updateAgentAttributes(vector<double>* attributeValues);
+	void updateAgentAttributes(vector<double>* attributeValues, double* varsRHS, double* zrow);
+
 
 	void updateAgentYields(caYld** inputArray, int inputArraySize0, int inputArraySize1, double* varsRHS, double* zrow);
 	void updateAgentYields(caYld** inputArray, int inputArraySize0, int inputArraySize1);
 	void updateAgentYieldExpectations(caYld** inputArray, int inputArraySize0, int inputArraySize1, double* varsRHS, double* zrow);
 	void updateAgentYieldExpectations(caYld** inputArray, int inputArraySize0, int inputArraySize1);
+
+	void updateAgentCropActAttributeExpectations(caYld** inputArray, int inputArraySize0, int inputArraySize1 );
+	void updateAgentCropActAttribute(caYld** inputArray, int inputArraySize0, int inputArraySize1 );
+	void updateAgentCropActAttributeRangeExpectations(caYld** inputArray, int inputArraySize0, int inputArraySize1 );
+	void updateAgentCropActAttributeRange( caYld** inputArray, int inputArraySize0, int inputArraySize1 );
+
+
+
+	void updateAgentSeasonals( int curCyclicPeriod, int cycleLength);
+
+   void updatePlotAttributesAggregatedByNRU(agentF* afp, double* varsRHS, double* zrow);
+   void updatePlotAttributesAggregatedByNRU(agentF* afp);
+
 
 
 	void applyDiscountRateToObjCoeff(double dRate);
@@ -1099,12 +1171,18 @@ public:
 	void updateAgentTemplate1DimFromArray(vector<MultiperiodMipVariableValue*>* listToChange, double* inputArray, int inputArraySize, double* varsRHS, double* zrow);
 	void updateAgentTemplateSingleVal(vector<MultiperiodMipVariableValue*>* listToChange, double val_, double* varsRHS, double* zrow);
 	void updateAgentTemplate2DimsMapped(vector<vector<vector<MultiperiodMipVariableValue*> > >* toChange, map<int, vector<double> >* inputMap, double* varsRHS, double* zrow);
-//memory management
+
+
+
+
+
+	//memory management
 	void deallocateMultiperiodMipVariableValues(vector<MultiperiodMipVariableValue*>* vec);
 
 //lookup structure preparation
 	void updateCropManagementIdToCgmArrayIndex(map<int,int>* transformationMap);
 	unsigned updateCropManagementIdSoilTypeToCgmArrayIndex(map<pair<int,int>,int>* transformationMap);
+
 
 //values to be read from the solution
 	bool isInLp_incomeBeforeTaxes()	{	return readerIncome.isDefined();	}
@@ -1124,11 +1202,17 @@ public:
 	double getShortTermInterestPaid(double* sol, double* zrow)	{ return readerShortTermInterestPaid.calculateValue(sol, zrow);	}
 
 	void addCropProductionAreasToResultArray (double* sol, double* zrow, double* resultArray, int sizeResultArray, vector<pair<int,double> >* agentCropAreas);
+	MapOfSubindexedVectorIndexedDoubles  getNRUCropProductionAreasMap(double* sol, double* zrow)  { return readerCropNRU.calculateSubindexedResultMap(sol, zrow, 1 );}
 
-	MapOfVectorIndexedDoubles  getInvestments(double* sol, double* zrow)  { return readerAssetInvestments.calculateResultMap(sol, zrow);} ;
-	MapOfVectorIndexedDoubles  getDisinvestments(double* sol, double* zrow)  { return readerAssetDisinvestments.calculateResultMap(sol, zrow);} ;
-	MapOfVectorIndexedDoubles  getAssetsKept(double* sol, double* zrow)  { return readerAssetKeep.calculateResultMap(sol, zrow);} ;
-	MapOfSubindexedVectorIndexedDoubles getAssetsTransformed(double* sol, double* zrow)  { return readerAssetTransform.calculateSubindexedResultMap(sol, zrow, 2);} ;
+	MapOfVectorIndexedDoubles  getInvestments(double* sol, double* zrow)  { return readerAssetInvestments.calculateResultMap(sol, zrow);}
+	MapOfVectorIndexedDoubles  getDisinvestments(double* sol, double* zrow)  { return readerAssetDisinvestments.calculateResultMap(sol, zrow);}
+	MapOfVectorIndexedDoubles  getAssetsKept(double* sol, double* zrow)  { return readerAssetKeep.calculateResultMap(sol, zrow);}
+	MapOfSubindexedVectorIndexedDoubles getAssetsTransformed(double* sol, double* zrow)  { return readerAssetTransform.calculateSubindexedResultMap(sol, zrow, 2);}
+
+	MapOfVectorIndexedDoubles  getAgentAttributeChanges(double* sol, double* zrow)  { return readerAgentCharacteristicSet.calculateResultMap(sol, zrow);}
+	MapOfVectorIndexedDoubles  getAgentAttributeAdditions(double* sol, double* zrow)  { return readerAgentCharacteristicAdd.calculateResultMap(sol, zrow);}
+
+
 
 #ifdef LIVSIM_COUPLING
 	MapOfVectorIndexedDoubles  getHerdGroupPlacementsOnNRUs(double* sol, double* zrow)  { return readerLivSimHerdGroupsToNRU.calculateResultMap(sol, zrow);}
@@ -1139,9 +1223,9 @@ public:
 
 	double getAreaForInnovation(double* sol, double* zrow, int objID, int & nothingFoundFlag) { return readerInnovationArea.getResultForArgs(sol, zrow, vector<int>(1,objID), nothingFoundFlag )  ;}
 
-	void multiperiod_writeResultAggregatesToStream(  int fstID, int agentExits, double* sol, double* zrow);
-	void multiperiod_openDecisionResultStreams(string decisionStage);
-	void multiperiod_closeDecisionResultStreams();
+	void multiperiod_writeResultAggregatesToStream(  int fstID, int agentExits, double* sol, double* zrow, int aggregateOnly = false);
+	string multiperiod_openDecisionResultStreams(string decisionStage, bool aggregateOnly = false, bool noAggYears = false);
+	void multiperiod_closeDecisionResultStreams(bool aggregateOnly);
 
 #endif
 	//modifies Milp tableau before loading OSL model

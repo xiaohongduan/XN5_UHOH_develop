@@ -98,10 +98,10 @@ class scuenca
    // (b) copied to cell, with "copyRaster2Cell"
    virtual void copyRaster2Landscape(Raster2D& catchmentMap, Content cont);
    // ... copies to sector, where it is determined if content is stored at cell or at sector level
-   virtual void copyRaster2Landscape(Raster2D& catchmentMap, Content cont, bool flag_fixCopyToCell);
+   virtual void copyRaster2Landscape(Raster2D& catchmentMap, Content cont, bool flag_fixCopyToCell, int udefLayer = -1);
 
 
-   virtual void makeSectorwiseHistogram(MatrixDouble& histogramBySector, Content cont);      
+   virtual void makeSectorwiseHistogram(MatrixDouble& histogramBySector, Content cont, int userContentId = -1);
 	//@}
 	//---------------------------------------------------------------------------
 
@@ -161,6 +161,7 @@ class scuenca
 	virtual void writeSectoralWaterInfoToFile(TimeHandler& timeHandle_const, string fn_append);
 	virtual void openFile(string fn, bool isFirst, ofstream& out);
 
+	void checkDimensionConsistencyOfFiles(Raster2D& testRaster);
 
 	//@}
 
@@ -169,10 +170,10 @@ class scuenca
 
 	///@name Data output functions
 	//@{
-      virtual void joinCatchmentMap(Content cont, Raster2D& gisFull);
-      virtual void joinCatchmentMap(Content cont, Raster2D& gisFull, int monthIndex, bool flag_forceToCell);
+      virtual void joinCatchmentMap(Content cont, Raster2D& gisFull, int userContentId = -1);
+      virtual void joinCatchmentMap(Content cont, Raster2D& gisFull, int monthIndex, bool flag_forceToCell, int userContentId = -1);
 
-      virtual void writeToFile_SektorMaps(Content cont);
+      virtual void writeToFile_SektorMaps(Content cont, int userContentId = -1);
       virtual void writeToFile_SektorMaps_monthly(Content cont, int m);
 
       virtual void writeInputToFile(char*);
