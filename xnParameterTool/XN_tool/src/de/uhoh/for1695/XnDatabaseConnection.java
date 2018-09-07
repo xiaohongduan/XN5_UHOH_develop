@@ -1500,6 +1500,11 @@ class	XnDatabaseConnection {
 			fieldList = Arrays.asList("CO2A","COEFR", "COEFT", "COEFV",	"FCRSH", "FNRSH", "PNPRE", "CB", "CX", "TM");
 			parse_and_upload_xnm_gecros_section (xnmIn, crop_code, plantParamId, variety, "80008", fieldList);
 			
+			if (crop_code.equals("SB")) {
+				fieldList = Arrays.asList("SINKBEET", "EFF", "CFS");
+				parse_and_upload_xnm_gecros_section (xnmIn, crop_code, plantParamId, variety, "80011", fieldList);
+			}
+			
 			
 			xnmIn.close();
 			ok = true;

@@ -161,12 +161,13 @@ int main(int ac, char **av)
 				for (int i = 0; i < mpmas_argc; i++)
 				{	mpmas_argv[i] = (char*) mpmasOptions[i].c_str();
 				}
-				mpmasInstance = new mpmas( mpmas_argc, (char**)mpmas_argv) ;				
+				mpmasInstance = new mpmas( mpmas_argc, (char**)mpmas_argv) ;		
+									
 				printf("Processor %d: Mpmas initialization finished...\n", my_rank);
 			//}
 			
 			#ifndef ODB
-				mpmasPtr = mpmas;
+				mpmasPtr = mpmasInstance;
 			#endif //ODB
 
 /*
@@ -193,11 +194,11 @@ int main(int ac, char **av)
 			
 			if(configuration.skipMpmasDecisions())
 			{
-					numYears = configuration.getNumberOfYearsToSimulate();
+					numYears = configuration.getNumberOfPeriodsToSimulate();
 					numSpinUp = 0;
 			}		
 			else
-			{		numYears = mpmasInstance->getNumberOfYearsToSimulate();
+			{		numYears = mpmasInstance->getNumberOfPeriodsToSimulate();
 					numSpinUp = mpmasInstance->getNumberOfSpinUpRounds();
 					configuration.setNumberOfYearsToSimulate(numYears);
 					configuration.setScenarioName(mpmasInstance->getScenarioName());
@@ -239,13 +240,35 @@ int main(int ac, char **av)
 					fehlerabbruch();		
 						
 			}
-			int* cropActIDX = new int [mpmasGridSize];
-			double* cropAreaX = new double [mpmasGridSize];
-			double* cropYieldX = new double [mpmasGridSize];
-			double* stoverYieldX = new double [mpmasGridSize];
+			int* cropActIDX ;
+			double* cropAreaX;
+			double* cropYieldX;
+			double* stoverYieldX;
+			double** extraAttrsX = NULL;
+			
+			int numExtraCropAttr = mpmas.getNumberExtraCropActAttributes();
+			
+			if (configuration.getCouplingType() == xnmpmasCouplingVirtualSlots)
+			{
+				int* cropActIDX = new int [mpmasGridSize];
+				double* cropAreaX = new double [mpmasGridSize];
+				double* cropYieldX = new double [mpmasGridSize];
+				double* stoverYieldX = new double [mpmasGridSize];
+				extraAttrsX = new double* [mpmasGridSize];
+				for (int i = 0; i < numExtraCropAttr; ++i)
+				{
+					extraAttrsX[i] = new double[numExtraCropAttr];
+					
+				}
+			}
+
 			Raster2D*  luaMap = NULL;
 			Raster2D*  yield1Map = NULL;
 			Raster2D*  yield2Map = NULL;
+			
+			vector<Raster2D> cropExtraAttrRasters(numExtraCropAttr, Raster2D());
+
+			
 /*
  * 	START COUPLED SIMULATIONS
  */
@@ -480,36 +503,41 @@ int main(int ac, char **av)
 							delete yield2Map;
 							yield1Map = new Raster2D(*luaMap);
 							yield2Map = new Raster2D(*luaMap);
+							for (int j = 0; j < numExtraCropAttr; ++j)
+							{
+								 cropExtraAttrRasters[i] = Raster2D(*luaMap);
+							}
 							
 							stringstream fnXnOuputSummary;
 							fnXnOuputSummary << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName()  << "XN_results_" << setw(2) << setfill('0') << year << ".txt";
 							
-							translator.calcYieldsToMaps(xpn->grid_xn_to_mpmas, yield1Map, yield2Map, !configuration.isCleanSeason(), fnXnOuputSummary.str());
+							translator.calcYieldsToMaps(xpn->grid_xn_to_mpmas, yield1Map, yield2Map, cropExtraAttrRasters, !configuration.isCleanSeason(), fnXnOuputSummary.str());
 						}
 							break;
 						case xnmpmasCouplingVirtualSlots:
-							translator.calcYieldsToArray(xpn->grid_xn_to_mpmas, cropYieldX, stoverYieldX, !configuration.isCleanSeason());
+							translator.calcYieldsToArray(xpn->grid_xn_to_mpmas, cropYieldX, stoverYieldX, extraAttrsX, numExtraCropAttr, !configuration.isCleanSeason());
+							if(mpmasGlobal::TestFun(19) && my_rank == 0)
+							{
+								char fnDbg [250];
+								sprintf(fnDbg,"YieldArrayDebugging%02d.txt", year);
+								printf("...writing YieldArrayDebugging file\n");			
+								FILE* dbgFH = fopen(fnDbg,"w");
+								if (dbgFH != NULL)
+								{
+									for(int i = 0; i < mpmasGridSize; i++)
+									{
+										fprintf(dbgFH, "%d\t%.2f\t%.2f\t%.2f\n",cropActIDX[i], cropAreaX[i], cropYieldX[i],stoverYieldX[i]);
+									}
+								}
+								fclose(dbgFH);
+							}
 							break;
 						default:
 							sprintf(fehlertxt, "Error: Unknown coupling type! (Processor %d)\n", my_rank);
 							fehlerabbruch();
 					}
 					
-					if(mpmasGlobal::TestFun(19) && my_rank == 0)
-					{
-						char fnDbg [250];
-						sprintf(fnDbg,"YieldArrayDebugging%02d.txt", year);
-						printf("...writing YieldArrayDebugging file\n");			
-						FILE* dbgFH = fopen(fnDbg,"w");
-						if (dbgFH != NULL)
-						{
-							for(int i = 0; i < mpmasGridSize; i++)
-							{
-								fprintf(dbgFH, "%d\t%.2f\t%.2f\t%.2f\n",cropActIDX[i], cropAreaX[i], cropYieldX[i],stoverYieldX[i]);
-							}
-						}
-						fclose(dbgFH);
-					}
+					
 				
 				}
 				//process yields (communicate to MPMAS or write out
@@ -542,7 +570,7 @@ int main(int ac, char **av)
 					case xnmpmasCouplingVirtualSlots:
 						 //TODO: currently done also in first year though though arrays are empty
 						printf("...communicate yields to MPMAS\n");	
-						mpmasInstance->agentsReceiveYields_LookUpTable(cropYieldX, stoverYieldX );
+						mpmasInstance->agentsReceiveYields_LookUpTable(cropYieldX, stoverYieldX , extraAttrsX);
 						break;
 					case xnmpmasCouplingOneToOne:
 						if (my_rank == 0)
@@ -555,7 +583,7 @@ int main(int ac, char **av)
 								yield2Map->writeToFile(fnYields2.str());							
 							}
 						}
-						mpmasInstance->agentsReceiveYields_Maps(*yield1Map, *yield2Map, ! configuration.isCleanSeason());
+						mpmasInstance->agentsReceiveYields_Maps(*yield1Map, *yield2Map,  cropExtraAttrRasters, ! configuration.isCleanSeason());
 
 						break;	
 						
