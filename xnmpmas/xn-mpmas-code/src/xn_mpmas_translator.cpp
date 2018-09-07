@@ -926,7 +926,7 @@ int xn_mpmas_translator::readCropGridAssociation(const char* fnCropGrids )
 		char cropcode[XNCROPCODELENGTH +1];
 		int grid;
 		int rtcod = 0;
-		rtcod = fscanf(infile, "%" STRINGIFY(XNCROPCODELENGTH) "s %d", &cropcode, &grid);
+		rtcod = fscanf(infile, "%" STRINGIFY(XNCROPCODELENGTH) "s %d", cropcode, &grid);
 		if (rtcod != 2)
 		{
 			if (feof(infile))
@@ -1268,40 +1268,40 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 
 
 			if (numExtra > 0)
-				cropExtraAttrRasters[0]>setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualSowDate) );
+				cropExtraAttrRasters[0].setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualSowDate) );
 
 			if (numExtra > 1)
-				cropExtraAttrRasters[1]>setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualHarvestDate) );
+				cropExtraAttrRasters[1].setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualHarvestDate) );
 
 			if (numExtra > 2)
-				cropExtraAttrRasters[2]>setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualCoverCropSowDate) );
+				cropExtraAttrRasters[2].setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualCoverCropSowDate) );
 
 			if (numExtra > 3)
-				cropExtraAttrRasters[3]>setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[0]) );
+				cropExtraAttrRasters[3].setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[0]) );
 
 			if (numExtra > 4)
-				cropExtraAttrRasters[4]>setValue(row, col,  grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[0] );
+				cropExtraAttrRasters[4].setValue(row, col,  grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[0] );
 
 			if (numExtra > 5)
-				cropExtraAttrRasters[5]>setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[1]) );
+				cropExtraAttrRasters[5].setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[1]) );
 
 			if (numExtra > 6)
-				cropExtraAttrRasters[6]>setValue(row, col,  grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[1] );
+				cropExtraAttrRasters[6].setValue(row, col,  grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[1] );
 
 			if (numExtra > 7)
-				cropExtraAttrRasters[7]>setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[2]) );
+				cropExtraAttrRasters[7].setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[2]) );
 
 			if (numExtra > 8)
-				cropExtraAttrRasters[8]>setValue(row, col,  grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[2] );
+				cropExtraAttrRasters[8].setValue(row, col,  grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[2] );
 
 			if (numExtra > 9)
-				cropExtraAttrRasters[9]>setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[3]) );
+				cropExtraAttrRasters[9].setValue(row, col,  convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[3]) );
 
 			if (numExtra > 10)
-				cropExtraAttrRasters[10]>setValue(row, col,  grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[3] );
+				cropExtraAttrRasters[10].setValue(row, col,  grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[3] );
 
 			if (numExtra > 11)
-				cropExtraAttrRasters[11]>setValue(row, col,  grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin0_30 
+				cropExtraAttrRasters[11].setValue(row, col,  grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin0_30 
 															+ grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin30_60 
 															+ grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin60_90 );
 
@@ -1389,9 +1389,9 @@ void xn_mpmas_translator::calcYieldsToArray(const STRUCT_xn_to_mpmas* grid_xn_to
 			double harvest = 0.0;
 			double stoverHarvest = 0.0;
 			double stemHarvest = 0.0;
-			for (int i = 0; i < numExtraCropAttr; ++i)
+			for (int i = 0; i < numExtra; ++i)
 				extraAttrsX[l][i] = 0.0;
-			}
+			
 			for (it = itlow; it != itup; it++)
 			{
 					int c = it->second;
@@ -1410,31 +1410,31 @@ void xn_mpmas_translator::calcYieldsToArray(const STRUCT_xn_to_mpmas* grid_xn_to
 						stoverHarvest += grid_xn_to_mpmas[gridId * xnGridSize + c].stemLeafDryWeight;
 						stemHarvest   += grid_xn_to_mpmas[gridId * xnGridSize + c].stemOnlyDryWeight;
 						if (numExtra > 0)
-							extraAttrsX[l][0] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualSowDate);
+							extraAttrsX[l][0] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +c].actualSowDate);
 						if (numExtra > 1)
-							extraAttrsX[l][1] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualHarvestDate);
+							extraAttrsX[l][1] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +c].actualHarvestDate);
 						if (numExtra > 2)
-							extraAttrsX[l][2] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualCoverCropSowDate);	
+							extraAttrsX[l][2] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +c].actualCoverCropSowDate);	
 						if (numExtra > 3)
-							extraAttrsX[l][3] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[0]);								
+							extraAttrsX[l][3] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +c].actualMinFertDate[0]);								
 						if (numExtra > 4)
-							extraAttrsX[l][4] += grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[0];								
+							extraAttrsX[l][4] += grid_xn_to_mpmas[gridId * xnGridSize +c].actualTotalFertN[0];								
 						if (numExtra > 5)
-							extraAttrsX[l][5] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[1]);								
+							extraAttrsX[l][5] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +c].actualMinFertDate[1]);								
 						if (numExtra > 6)
-							extraAttrsX[l][6] += grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[1];								
+							extraAttrsX[l][6] += grid_xn_to_mpmas[gridId * xnGridSize +c].actualTotalFertN[1];								
 						if (numExtra > 7)
-							extraAttrsX[l][7] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[2]);								
+							extraAttrsX[l][7] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +c].actualMinFertDate[2]);								
 						if (numExtra > 8)
-							extraAttrsX[l][8] += grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[2];								
+							extraAttrsX[l][8] += grid_xn_to_mpmas[gridId * xnGridSize +c].actualTotalFertN[2];								
 						if (numExtra > 9)
-							extraAttrsX[l][9] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +ci].actualMinFertDate[3]);								
+							extraAttrsX[l][9] += convertDateToDayOfYear(grid_xn_to_mpmas[gridId * xnGridSize +c].actualMinFertDate[3]);								
 						if (numExtra > 10)
-							extraAttrsX[l][10] += grid_xn_to_mpmas[gridId * xnGridSize +ci].actualTotalFertN[3];								
+							extraAttrsX[l][10] += grid_xn_to_mpmas[gridId * xnGridSize +c].actualTotalFertN[3];								
 						if (numExtra > 11)
-							extraAttrsX[l][11] += grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin0_30 
-															+ grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin30_60 
-															+ grid_xn_to_mpmas[gridId * xnGridSize +ci].Nmin60_90;								
+							extraAttrsX[l][11] += grid_xn_to_mpmas[gridId * xnGridSize +c].Nmin0_30 
+															+ grid_xn_to_mpmas[gridId * xnGridSize +c].Nmin30_60 
+															+ grid_xn_to_mpmas[gridId * xnGridSize +c].Nmin60_90;								
 
 
 					}

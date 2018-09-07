@@ -654,7 +654,9 @@ for(i=0;i<oneGridsize*self->grid_layers; i++)
 				  self->xpn_class[i]->pXSys->MPI_rank=self->rank;
 				  self->xpn_class[i]->pXSys->MPI_size=self->numtasks;
 				  self->xpn_class[i]->pXSys->MPI_ranks=(int*)g_malloc0(sizeof(int)*self->cfg->number_of_xpn);// ?				  
-		          memcpy(self->xpn_class[i]->pXSys->MPI_ranks, recordRank, sizeof(self->xpn_class[i]->pXSys->MPI_ranks));
+		          //memcpy(self->xpn_class[i]->pXSys->MPI_ranks, recordRank, sizeof(self->xpn_class[i]->pXSys->MPI_ranks));
+		          memcpy(self->xpn_class[i]->pXSys->MPI_ranks, recordRank, sizeof(int)*self->cfg->number_of_xpn); //test to correct warning
+		          
 			}
 		}
 	 
@@ -838,7 +840,7 @@ int xpn_main_run(xpn_main *self)
 
 void xpn_main_write_vars_to_matrices(xpn_main *self)
 {
-	int i,i2;
+	//int i,i2;
 	
 /*	for (i2=0;i2<matrix_size_x;i2++)
 		for (i=0;i<matrix_size_y;i++)

@@ -194,7 +194,7 @@ int main(int ac, char **av)
 			
 			if(configuration.skipMpmasDecisions())
 			{
-					numYears = configuration.getNumberOfPeriodsToSimulate();
+					numYears = configuration.getNumberOfYearsToSimulate();
 					numSpinUp = 0;
 			}		
 			else
@@ -240,20 +240,20 @@ int main(int ac, char **av)
 					fehlerabbruch();		
 						
 			}
-			int* cropActIDX ;
-			double* cropAreaX;
-			double* cropYieldX;
-			double* stoverYieldX;
+			int* cropActIDX = NULL;
+			double* cropAreaX= NULL;
+			double* cropYieldX= NULL;
+			double* stoverYieldX= NULL;
 			double** extraAttrsX = NULL;
 			
-			int numExtraCropAttr = mpmas.getNumberExtraCropActAttributes();
+			int numExtraCropAttr = mpmasInstance->getNumberExtraCropActAttributes();
 			
 			if (configuration.getCouplingType() == xnmpmasCouplingVirtualSlots)
 			{
-				int* cropActIDX = new int [mpmasGridSize];
-				double* cropAreaX = new double [mpmasGridSize];
-				double* cropYieldX = new double [mpmasGridSize];
-				double* stoverYieldX = new double [mpmasGridSize];
+				cropActIDX = new int [mpmasGridSize];
+				cropAreaX = new double [mpmasGridSize];
+				cropYieldX = new double [mpmasGridSize];
+				stoverYieldX = new double [mpmasGridSize];
 				extraAttrsX = new double* [mpmasGridSize];
 				for (int i = 0; i < numExtraCropAttr; ++i)
 				{
@@ -505,7 +505,7 @@ int main(int ac, char **av)
 							yield2Map = new Raster2D(*luaMap);
 							for (int j = 0; j < numExtraCropAttr; ++j)
 							{
-								 cropExtraAttrRasters[i] = Raster2D(*luaMap);
+								 cropExtraAttrRasters[j] = Raster2D(*luaMap);
 							}
 							
 							stringstream fnXnOuputSummary;
