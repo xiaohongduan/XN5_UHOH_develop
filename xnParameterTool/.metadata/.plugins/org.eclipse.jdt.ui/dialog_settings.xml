@@ -80,6 +80,8 @@
 			<item value=".xml"/>
 		</list>
 	</section>
+	<section name="BreadcrumbItemDropDown">
+	</section>
 	<section name="BuildPathsPropertyPage">
 		<item value="2" key="pageIndex"/>
 	</section>

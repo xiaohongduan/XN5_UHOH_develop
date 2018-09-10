@@ -55,7 +55,7 @@ xn_mpmas_options::xn_mpmas_options(int ac, char **av)
 		throw runtime_error(errmsg.str());
 	}
 
-	// use boost::property_tree to readd ini file and split into section.key nodes
+	// use boost::property_tree to read ini file and split into section.key nodes
 	boost::property_tree::ptree ini_entries;
 	boost::property_tree::ini_parser::read_ini(av[1], ini_entries);
  	int temp1 = ini_entries.get<int>("Coupling.couplingType");

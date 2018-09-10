@@ -2386,7 +2386,7 @@ class	XnDatabaseConnection {
 						 + " JOIN for1695_mpmas.tbl_consumables t3 ON t2.goods_id = t3.goods_id"
 						 + " WHERE i2 > 0 )"
 						 + " UNION "
-						 + " (SELECT 170, 1,100,4, 2, 1, 10,0)"
+						 + " (SELECT 170, 0.0001,100,4, 1, 11, 20,20)"
 						 + " ORDER BY process_id";	
 			ResultSet sowingList = myConnection.query(s2);
 			

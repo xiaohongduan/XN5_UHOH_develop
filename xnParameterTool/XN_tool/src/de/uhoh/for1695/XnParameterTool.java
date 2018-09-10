@@ -706,7 +706,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     	if (currentProject.project_type == 0) {
     		myConnection.writeXn5CropManagementFiles(xn5FilePrefix, myConfig.currentProjectId);
     	}
-    	else if (currentProject.project_type == 1){
+    	else if (currentProject.project_type > 0){
     		int adaptive = 0;
     		try {
     			ResultSet rs = myConnection.getGeneralInfoForProject(myConfig.currentProjectId);
@@ -720,7 +720,10 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     		
         	myConnection.writeBemsCropManagementInfo(xn5FilePrefix, myConfig.currentProjectId, adaptive);
         	myConnection.writeXn5CropManagementFileDummies(xn5FilePrefix, myConfig.currentProjectId);
-        	myConnection.writeBEMSCropManagementMaps(xn5FilePrefix, myConfig.currentProjectId);
+        	
+        	if (currentProject.project_type == 1) {
+        		myConnection.writeBEMSCropManagementMaps(xn5FilePrefix, myConfig.currentProjectId);
+        	}
     	}
     }
     private void createXpn (String xn5FilePrefix, String projectName) {
