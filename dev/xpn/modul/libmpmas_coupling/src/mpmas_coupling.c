@@ -1351,7 +1351,7 @@ if (NewDay(pTi))
 
 //start added 180527 Troost		
 		
-	if( self->mainCrop_done==1 && self->harvest_done == 1 &&
+	if( self->mainCrop_done==1 && self->harvest_done == 1 && ! self->lastAction_done && !self->checkSwitchDate_done &&
 		xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
 							self->lastActionDate.year,self->lastActionDate.month,self->lastActionDate.day) > 0
 		) //check if the date of last action has passed (one day after that, so that action could take place

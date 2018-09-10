@@ -61,6 +61,8 @@ namespace xnmpmas
 		}
 		int convertDateToDayOfYear (xnmpmasDate date)
 		{
+			if (date.month <= 0 || date.day <= 0)
+				return 0;
 			return daysTillMonth[ isLeapYear( date.year ) ][date.month - 1 ] + date.day;
 		}
 		
@@ -141,6 +143,7 @@ xn_mpmas_translator::xn_mpmas_translator(xnmpmasCouplingTypes type_, const char*
 			
 			break;
 		case xnmpmasCouplingFixedMaps:
+		case xnmpmasCouplingOneToOne:
 			break;
 		default:
 			std::string errmsg ("Error: Unknown coupling type!\n");
@@ -1217,7 +1220,7 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 	//management.stopDate = 
 	return management;
 }
-void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas, Raster2D* yieldMap1, Raster2D* yieldMap2, vector<Raster2D> cropExtraAttrRasters, int overlapping, string fnAggXnOutput)
+void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas, Raster2D* yieldMap1, Raster2D* yieldMap2, vector<Raster2D>& cropExtraAttrRasters, int overlapping, string fnAggXnOutput)
 {
 	yieldMap1->setAllValues(-1.0);
 	yieldMap2->setAllValues(-1.0);

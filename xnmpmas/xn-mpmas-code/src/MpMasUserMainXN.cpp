@@ -496,7 +496,7 @@ int main(int ac, char **av)
 				if (configuration.isCleanSeason() || year != -numSpinUp) //in first year with overlapping seasons, no yields available yet
 				{	printf("Processor %d: ...read yields\n", my_rank);
 					switch(configuration.getCouplingType() )
-					{   //TODO: currently done also in first year though though arrays are empty
+					{   //TODO: currently done also in first year though arrays are empty
 						case xnmpmasCouplingFixedMaps:  //same as OneToOne
 						case xnmpmasCouplingOneToOne:
 						{	delete yield1Map;
@@ -506,6 +506,7 @@ int main(int ac, char **av)
 							for (int j = 0; j < numExtraCropAttr; ++j)
 							{
 								 cropExtraAttrRasters[j] = Raster2D(*luaMap);
+								 cropExtraAttrRasters[j]->setEmpty();
 							}
 							
 							stringstream fnXnOuputSummary;
@@ -539,60 +540,61 @@ int main(int ac, char **av)
 					
 					
 				
-				}
-				//process yields (communicate to MPMAS or write out
-				
-				switch(configuration.getCouplingType() )
-				{	case xnmpmasCouplingFixedMaps:
-						if (my_rank == 0)
-						{  printf("...write yields to Maps\n");	
-							if (yield1Map != NULL)
-							{	stringstream fnYields1,fnYields2;
-								fnYields1 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields1_"  <<  (firstyear + year) << ".txt";
-								fnYields2 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields2_"  <<  (firstyear + year) << ".txt";
-								yield1Map->writeToFile(fnYields1.str());
-								yield2Map->writeToFile(fnYields2.str());							
-							}											
-						}
-#if XNMPMASDBG
-						/*else  
-						{ 
-							if (yield1Map != NULL)
-							{	stringstream fnYields1,fnYields2;
-								fnYields1 << mpmasInstance->getOutputDirectory() <<"/out/" <<configuration.getScenarioName() << "_yields1_"  <<  (firstyear + year) << "_proc_" << my_rank << ".txt";
-								fnYields2 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields2_"  <<  (firstyear + year)  << "_proc_" << my_rank << ".txt";
-								yield1Map->writeToFile(fnYields1.str());
-								yield2Map->writeToFile(fnYields2.str());							
+					
+					//process yields (communicate to MPMAS or write out
+					
+					switch(configuration.getCouplingType() )
+					{	case xnmpmasCouplingFixedMaps:
+							if (my_rank == 0)
+							{  printf("...write yields to Maps\n");	
+								if (yield1Map != NULL)
+								{	stringstream fnYields1,fnYields2;
+									fnYields1 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields1_"  <<  (firstyear + year) << ".txt";
+									fnYields2 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields2_"  <<  (firstyear + year) << ".txt";
+									yield1Map->writeToFile(fnYields1.str());
+									yield2Map->writeToFile(fnYields2.str());							
+								}											
 							}
-						}*/
-#endif //XNMPMASDBG						
-						break;
-					case xnmpmasCouplingVirtualSlots:
-						 //TODO: currently done also in first year though though arrays are empty
-						printf("...communicate yields to MPMAS\n");	
-						mpmasInstance->agentsReceiveYields_LookUpTable(cropYieldX, stoverYieldX , extraAttrsX);
-						break;
-					case xnmpmasCouplingOneToOne:
-						if (my_rank == 0)
-						{   printf("...write yields to maps for debugging\n");	
-							if (yield1Map != NULL)
-							{	stringstream fnYields1,fnYields2;
-								fnYields1 << mpmasInstance->getOutputDirectory()<<"/out/" << mpmasInstance->getScenarioName() << "CropYields_"  <<  (firstyear + year) << ".txt";
-								fnYields2 << mpmasInstance->getOutputDirectory()<<"/out/" << mpmasInstance->getScenarioName() << "StoverYields_"  <<  (firstyear + year) << ".txt";
-								yield1Map->writeToFile(fnYields1.str());
-								yield2Map->writeToFile(fnYields2.str());							
+	#if XNMPMASDBG
+							/*else  
+							{ 
+								if (yield1Map != NULL)
+								{	stringstream fnYields1,fnYields2;
+									fnYields1 << mpmasInstance->getOutputDirectory() <<"/out/" <<configuration.getScenarioName() << "_yields1_"  <<  (firstyear + year) << "_proc_" << my_rank << ".txt";
+									fnYields2 << mpmasInstance->getOutputDirectory() <<"/out/" << configuration.getScenarioName() << "_yields2_"  <<  (firstyear + year)  << "_proc_" << my_rank << ".txt";
+									yield1Map->writeToFile(fnYields1.str());
+									yield2Map->writeToFile(fnYields2.str());							
+								}
+							}*/
+	#endif //XNMPMASDBG						
+							break;
+						case xnmpmasCouplingVirtualSlots:
+							printf("...communicate yields to MPMAS\n");	
+							if ( cropYieldX != NULL)
+								mpmasInstance->agentsReceiveYields_LookUpTable(cropYieldX, stoverYieldX , extraAttrsX);
+							break;
+						case xnmpmasCouplingOneToOne:
+							if (my_rank == 0)
+							{   printf("...write yields to maps for debugging\n");	
+								if (yield1Map != NULL)
+								{	stringstream fnYields1,fnYields2;
+									fnYields1 << mpmasInstance->getOutputDirectory()<<"/out/" << mpmasInstance->getScenarioName() << "CropYields_"  <<  (firstyear + year) << ".txt";
+									fnYields2 << mpmasInstance->getOutputDirectory()<<"/out/" << mpmasInstance->getScenarioName() << "StoverYields_"  <<  (firstyear + year) << ".txt";
+									yield1Map->writeToFile(fnYields1.str());
+									yield2Map->writeToFile(fnYields2.str());							
+								}
 							}
-						}
-						mpmasInstance->agentsReceiveYields_Maps(*yield1Map, *yield2Map,  cropExtraAttrRasters, ! configuration.isCleanSeason());
+							if (yield1Map != NULL)
+								mpmasInstance->agentsReceiveYields_Maps(*yield1Map, *yield2Map,  cropExtraAttrRasters, ! configuration.isCleanSeason());
 
-						break;	
-						
-					default:
-						sprintf(fehlertxt, "Error: Unknown coupling type! (Processor %d)\n", my_rank);
-						fehlerabbruch();		
+							break;	
+							
+						default:
+							sprintf(fehlertxt, "Error: Unknown coupling type! (Processor %d)\n", my_rank);
+							fehlerabbruch();		
+					}
+					
 				}
-				
-				
 				
 				printf("Processor %d: ...updating weather history (a)\n", my_rank);				
 				translator.updateWeatherHistory(xpn->grid_xn_to_mpmas2, firstyear + year, curDate);
