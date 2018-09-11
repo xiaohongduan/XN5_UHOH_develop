@@ -50,10 +50,10 @@ typedef struct weather
     float    fTempMax;      // Hoechnstens Temps vom Vortag
     float    fTempMin;*/
 	//Begin of Hong, for GECROS
-	//double fTempMax;
-	//double fTempMin;
-	//double fTempAve;
-	//double fGlobalStrahlung;
+	double fTempMax;
+	double fTempMin;
+	double fTempAve;
+	double fGlobalStrahlung;
 	//End of hong
 /*neu*/ double   fTempAir;      // Grad Celsius Lufttemperatur bei der Hoehe ZLVL m = SFCTMP
     double fTempAir_zlvl;// Grad Cellsius Lufttemperatur bei der Hoehe ZLVL m = SFCTMP
