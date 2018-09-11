@@ -115,7 +115,7 @@ struct _daisy_miner
 #define DECLARE_COMMON_VAR \
 	int OK            = 1;\
 	int iLayer        = 0;\
-	double DeltaT     = pTi->pTimeStep->fAct;
+	double DeltaT     = xpn->pTi->pTimeStep->fAct;
 
 #define DECLARE_N_POINTER \
 	PSLAYER      pSL;\
