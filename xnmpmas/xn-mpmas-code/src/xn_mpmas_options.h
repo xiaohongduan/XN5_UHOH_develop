@@ -45,7 +45,13 @@ class xn_mpmas_options {
 	
 
 	int simYears;
+	int stopBeforeXNinFinalPeriod;
+	int produceILMScouplingMaps;
 	string scenarioName;
+	
+	int shortened;
+	
+	vector<int> sowDateRepresentative;
 	
 public:
 	xn_mpmas_options(int ac, char **av);
@@ -93,5 +99,9 @@ public:
 	xnmpmasDate getStartDate()						{ return getfirstSowingDateThisSeason(getFirstXpnYear());}
 	
 	bool skipMpmasDecisions() { return (couplingType == xnmpmasCouplingFixedMaps);}
+	int getStopBeforeXNinFinalPeriod() { return stopBeforeXNinFinalPeriod;}
+	int getProduceILMScouplingMaps() { return produceILMScouplingMaps;}
+	
+	vector<int>  getSowDateRepresentatives() { return sowDateRepresentative; }
 };
 #endif // XN_MPMAS_OPTIONS_H

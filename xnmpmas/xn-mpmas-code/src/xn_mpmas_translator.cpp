@@ -1141,7 +1141,7 @@ void xn_mpmas_translator::defineLuaforCellsFromArray(int year, int mpmasArraySiz
 }
 
 
-STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmasYear)
+STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmasYear, Raster2D* cropMapILMS , Raster2D* sowMapILMSearly, Raster2D* sowMapILMSlate, vector<int>* sowDateRepresentatives)
 {	int ws = 1; // change to zero if not overlapping years
 	STRUCT_mpmas_to_xn management;
 	if (cell < 0 || cell >= xnGridSize)
@@ -1166,6 +1166,23 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 	}
 	management = (*managIt).second;
 
+
+	if (cropMapILMS != NULL) 
+	{
+		if (lua != 170 && strncmp( management.CropCode, "MZ",2) && strncmp( management.CropCode, "SB",2)   ) //Maize and sugar beet are not early removed crops
+		{
+			int col = cell / xnGridYdim; //integer division
+			int row = cell % xnGridYdim;
+			cropMapILMS->setValue(row, col, 1);
+		}
+		else //currently everything else is set to NOAH_MP cropland 
+		{
+			int col = cell / xnGridYdim; //integer division
+			int row = cell % xnGridYdim;
+			cropMapILMS->setValue(row, col, 0);
+		}
+		
+	}
 	//debugging
 	//printf("In <xn_mpmas_translator::getManagementForCell>: Cell: %d, LUA: %d, CropCode: %s\n",cell, lua,management.CropCode);
 	
@@ -1187,12 +1204,122 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 				springCrop = xnmpmas::adaptation::isSpringCrop(adaptIt->second.sowingDayFormula);
 				
 			management.sowDate = convertDayOfYearToDate( sowDoy, mpmasYear + springCrop);
+			
+/*			if (cropMapILMS !=  NULL && sowMapILMS != NULL) 
+			{
+				int col = cell / xnGridYdim; //integer division
+				int row = cell % xnGridYdim;
+			
+				if (cropMapILMS->getValue(row, col) > 0 )
+				{
+					sowMapILMS->setValue(row, col, sowDoy);
+				}
+			}*/
 	}
 	else 
 	{
 			management.sowDate.year = management.sowDate.year + mpmasYear - 1; // -1 because in management information years are stored as 01 and 02, respectively
+			
+	/*		if (cropMapILMS !=  NULL && sowMapILMS != NULL) 
+			{
+				int col = cell / xnGridYdim; //integer division
+				int row = cell % xnGridYdim;
+			
+				if (cropMapILMS->getValue(row, col) > 0 )
+				{
+					sowMapILMS->setValue(row, col, convertDateToDayOfYear( management.sowDate) );
+				}
+			}*/
 	}
 	
+	//sowing date for ILMS
+	//currently not the sow date of the actual crop is used, but the sow date for that cell of a representative growing activity for
+	//early resp. late crops
+	if (sowMapILMSearly != NULL  ) 
+	{
+
+		
+		if (sowDateRepresentatives != NULL && (*sowDateRepresentatives)[0]  > -1)
+		{
+			int col = cell / xnGridYdim; //integer division
+			int row = cell % xnGridYdim;
+			int repEarlyLua = (*sowDateRepresentatives)[0];
+			
+			map<int, STRUCT_mpmas_to_xn>::iterator repEarlyManagIt = LuaXnParameters.find(repEarlyLua); //Note: LuaXnParameters must contain something for empty cells under lua -1
+			if (repEarlyManagIt == LuaXnParameters.end())
+			{
+				std::stringstream errmsg;
+				errmsg << "Error in xn_mpmas_translator::getManagementForCell:  No Expert-N management defined for land use activity " 
+					   << repEarlyLua <<" representing early-removed land use in ILMS\n";
+					   
+				throw runtime_error(errmsg.str());
+			}
+			STRUCT_mpmas_to_xn repEarlyManagement = (*repEarlyManagIt).second;
+			
+			int sowDoy = -1;
+			
+			map<int, cropAdaptationParameters>::iterator repEarlyAdaptIt = LuaAdaptationParameters.find(repEarlyLua);
+			if (repEarlyAdaptIt == LuaAdaptationParameters.end())
+			{
+				std::stringstream errmsg;
+				errmsg << "Error in xn_mpmas_translator::getManagementForCell:  No Adaptation parameters defined for land use activity " 
+					   << repEarlyLua <<" representing early-removed land use in ILMS\n";
+				throw runtime_error(errmsg.str());
+			}
+			if ( repEarlyAdaptIt->second.sowingDayFormula != notAdaptive ) 
+			{
+					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repEarlyAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting);
+			}
+			else 
+			{
+					sowDoy = convertDateToDayOfYear( repEarlyManagement.sowDate);
+			}		
+			sowMapILMSearly->setValue(row, col, sowDoy );
+		}
+		
+	}
+	if (sowMapILMSlate != NULL  ) 
+	{
+		if (sowDateRepresentatives != NULL && (*sowDateRepresentatives)[1]  > -1)
+		{
+			int col = cell / xnGridYdim; //integer division
+			int row = cell % xnGridYdim;
+		
+			
+			int repLateLua = (*sowDateRepresentatives)[1];
+			
+			map<int, STRUCT_mpmas_to_xn>::iterator repLateManagIt = LuaXnParameters.find(repLateLua); //Note: LuaXnParameters must contain something for empty cells under lua -1
+			if (repLateManagIt == LuaXnParameters.end())
+			{
+				std::stringstream errmsg;
+				errmsg << "Error in xn_mpmas_translator::getManagementForCell:  No Expert-N management defined for land use activity " 
+					   << repLateLua <<" representing late-covering land use in ILMS\n";
+				throw runtime_error(errmsg.str());
+			}
+			STRUCT_mpmas_to_xn repLateManagement = (*repLateManagIt).second;
+			
+			int sowDoy = -1;
+			
+			map<int, cropAdaptationParameters>::iterator repLateAdaptIt = LuaAdaptationParameters.find(repLateLua);
+			if (repLateAdaptIt == LuaAdaptationParameters.end())
+			{
+				std::stringstream errmsg;
+				errmsg << "Error in xn_mpmas_translator::getManagementForCell:  No Adaptation parameters defined for land use activity " 
+					   << repLateLua <<" representing late-covering land use in ILMS\n";
+				throw runtime_error(errmsg.str());
+			}
+			if ( repLateAdaptIt->second.sowingDayFormula != notAdaptive ) 
+			{
+					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repLateAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting);
+			}
+			else 
+			{
+					sowDoy = convertDateToDayOfYear( repLateManagement.sowDate);
+			}		
+			sowMapILMSlate->setValue(row, col, sowDoy );
+		}
+		
+	}
 	
 	//Adapt dates from relative to current year
 	//Note: input file should have year = 1 for everything done in the year when sowing of first crop takes place (i.e. sowing of winter crops in Germany)
