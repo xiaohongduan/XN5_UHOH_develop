@@ -6,20 +6,20 @@
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="stover_factor" key="selection"/>
+		<item value="elevationInfoTableForWeatherCells" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
-			<item value="stover_factor"/>
-			<item value="root_factor"/>
-			<item value="ResultSet"/>
-			<item value="adpat"/>
-			<item value="tillageList"/>
-			<item value="max_plant_height"/>
-			<item value="_fixedMapsLanduse"/>
-			<item value="XnCropCodeToGrid"/>
+			<item value="elevationInfoTableForWeatherCells"/>
+			<item value="elevationInfoTableWeatherCells"/>
+			<item value="doy_correct"/>
+			<item value="^"/>
+			<item value="simulation_projects_bems_cells_management"/>
+			<item value="simulation_projects_xn5_cells"/>
+			<item value="simulation_projects_xnmpmas_coupling"/>
+			<item value="init_weather_history.txt"/>
 		</list>
 		<list key="replacehistory">
 			<item value=""/>
@@ -32,8 +32,8 @@
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
 		<item value="372" key="DIALOG_WIDTH"/>
 		<item value="1|Ubuntu|11.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
-		<item value="904" key="DIALOG_HEIGHT"/>
-		<item value="111" key="DIALOG_Y_ORIGIN"/>
-		<item value="236" key="DIALOG_X_ORIGIN"/>
+		<item value="804" key="DIALOG_HEIGHT"/>
+		<item value="163" key="DIALOG_Y_ORIGIN"/>
+		<item value="726" key="DIALOG_X_ORIGIN"/>
 	</section>
 </section>
