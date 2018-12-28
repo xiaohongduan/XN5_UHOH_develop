@@ -2666,13 +2666,18 @@ class	XnDatabaseConnection {
 							case 1: typeString = "before-sowing"; break;
 							case 2: typeString = "before-cover"; break;
 							case 3: typeString = "after-harvest"; break;
+							case 4: typeString = "before-sowing"; break;
 							default:
 								throw new Exception("Error: invalid adapt_date_type");
 						}
 						out.println("      adaptive  : ");
 						out.println("        type      : "+typeString);
-						out.println("        days      : "+tillageList.getString("adapt_date_days"));
-
+						if ( tillageList.getInt("adapt_date_type") == 4) {
+							out.println("        days      : 0");
+						}
+						else {
+							out.println("        days      : "+tillageList.getString("adapt_date_days"));
+						}
 					}
 					tillageList.next();
 				}
@@ -2895,7 +2900,7 @@ class	XnDatabaseConnection {
 						    + " JOIN simulation_projects_gecros_crops_included t4"
 						    + "   ON t1.crop_code = t4.crop_code"
 						    + " AND t1.variety = t4.variety "
-							+ " AND t1.simulation_project_id =t4.simulation_project_id"
+							+ " AND t1.simulation_project_id =t4.simulation_project_id AND t4.include = 1"
 							+ " JOIN plant_parameterization_gecros t5 ON"
 							+ " t1.crop_code = t5.crop_code"
 						    + "  AND t1.variety = t5.variety"
@@ -4815,7 +4820,7 @@ class	XnDatabaseConnection {
 						+" WHERE simulation_project_id = " + projectId
 						+ " AND weather_station_id > -1 ;"
 						;
-			if (elevCorrectionClassSize > -1) {
+			if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
 				s1 = "SELECT DISTINCT weather_table_name, weather_station_id, ROUND(alt / " +elevCorrectionClassSize + " ) * "+ elevCorrectionClassSize+ " AS alt"
 						+" FROM `"+xn5_cells_table_name+"` t1"
 						+" WHERE simulation_project_id = " + projectId
@@ -4839,11 +4844,16 @@ class	XnDatabaseConnection {
 				
 				
 				String filename = directory +"/" + cellList.getString("weather_table_name") + "_" + cellList.getString("weather_station_id") ;
-				if (elevCorrectionClassSize > -1) {
+				if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
 					filename += String.format("%04d", cellList.getInt("alt") );
 					
 				}
-				boolean rc = writeWeatherData(filename, cellList.getString("weather_table_name") , cellList.getInt("weather_station_id"), startYear, endYear, writeHistory, !is_first, directory + "/"+ projectName + "_init_weather_history.txt", maxDailyPrecip, elevationCorrectionType, cellList.getDouble("alt"), elevationInfoTableForWeatherCells);
+				boolean rc = writeWeatherData(filename, cellList.getString("weather_table_name") , cellList.getInt("weather_station_id"), 
+														startYear, endYear, writeHistory, !is_first, 
+															directory + "/"+ projectName + "_init_weather_history.txt", maxDailyPrecip, 
+															elevationCorrectionType, 
+															elevationCorrectionType > 0 && elevCorrectionClassSize > -1 ?  	cellList.getDouble("alt") : 0, 
+														elevationInfoTableForWeatherCells);
 				
 				if (!rc) {
 					throw new Exception("Error when writing weather data and weather history for BEMS");
@@ -4894,7 +4904,7 @@ class	XnDatabaseConnection {
 						+" ORDER BY xn5_cell_y DESC, xn5_cell_x ;"				
 						;
 				
-				if (elevCorrectionClassSize > -1) {
+				if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
 					s2 = "SELECT xn5_cell_x, xn5_cell_y, weather_station_id , ROUND(alt / "+ elevCorrectionClassSize+") * "+ elevCorrectionClassSize +" AS alt  "
 							+" FROM `"+xn5_cells_table_name+"` t1"
 							+" WHERE simulation_project_id = " + projectId
@@ -4949,7 +4959,7 @@ class	XnDatabaseConnection {
 						
 					}
 					else {
-						if (elevCorrectionClassSize > -1) {
+						if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
 							out.print(xn5cellList.getInt("weather_station_id") * 10000 + xn5cellList.getInt("alt"));
 						}
 						else {
@@ -5097,8 +5107,12 @@ class	XnDatabaseConnection {
 					out2 = new PrintWriter(new BufferedWriter(new FileWriter(history_filename, true)));
 					
 				}
-				else {
+				else if ( write_init_history_file > 0 && ! appendHistory && history_filename.compareToIgnoreCase("") == 0 ) {
 					out2 = new PrintWriter(new BufferedWriter(new FileWriter(filename+"_init_history.txt")));
+					out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
+				}
+				else if ( write_init_history_file > 0 &&  appendHistory && history_filename.compareToIgnoreCase("") == 0 ) {
+					out2 = new PrintWriter(new BufferedWriter(new FileWriter(filename+"_init_history.txt", true)));
 					out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
 				}
 				

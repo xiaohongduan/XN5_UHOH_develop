@@ -2666,6 +2666,7 @@ class	XnDatabaseConnection {
 							case 1: typeString = "before-sowing"; break;
 							case 2: typeString = "before-cover"; break;
 							case 3: typeString = "after-harvest"; break;
+							case 4: typeString = "before-sowing"; break;
 							default:
 								throw new Exception("Error: invalid adapt_date_type");
 						}
@@ -2895,7 +2896,7 @@ class	XnDatabaseConnection {
 						    + " JOIN simulation_projects_gecros_crops_included t4"
 						    + "   ON t1.crop_code = t4.crop_code"
 						    + " AND t1.variety = t4.variety "
-							+ " AND t1.simulation_project_id =t4.simulation_project_id"
+							+ " AND t1.simulation_project_id =t4.simulation_project_id AND t4.include = 1"
 							+ " JOIN plant_parameterization_gecros t5 ON"
 							+ " t1.crop_code = t5.crop_code"
 						    + "  AND t1.variety = t5.variety"
@@ -4815,7 +4816,7 @@ class	XnDatabaseConnection {
 						+" WHERE simulation_project_id = " + projectId
 						+ " AND weather_station_id > -1 ;"
 						;
-			if (elevCorrectionClassSize > -1) {
+			if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
 				s1 = "SELECT DISTINCT weather_table_name, weather_station_id, ROUND(alt / " +elevCorrectionClassSize + " ) * "+ elevCorrectionClassSize+ " AS alt"
 						+" FROM `"+xn5_cells_table_name+"` t1"
 						+" WHERE simulation_project_id = " + projectId
@@ -4839,11 +4840,16 @@ class	XnDatabaseConnection {
 				
 				
 				String filename = directory +"/" + cellList.getString("weather_table_name") + "_" + cellList.getString("weather_station_id") ;
-				if (elevCorrectionClassSize > -1) {
+				if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
 					filename += String.format("%04d", cellList.getInt("alt") );
 					
 				}
-				boolean rc = writeWeatherData(filename, cellList.getString("weather_table_name") , cellList.getInt("weather_station_id"), startYear, endYear, writeHistory, !is_first, directory + "/"+ projectName + "_init_weather_history.txt", maxDailyPrecip, elevationCorrectionType, cellList.getDouble("alt"), elevationInfoTableForWeatherCells);
+				boolean rc = writeWeatherData(filename, cellList.getString("weather_table_name") , cellList.getInt("weather_station_id"), 
+														startYear, endYear, writeHistory, !is_first, 
+															directory + "/"+ projectName + "_init_weather_history.txt", maxDailyPrecip, 
+															elevationCorrectionType, 
+															elevationCorrectionType > 0 && elevCorrectionClassSize > -1 ?  	cellList.getDouble("alt") : 0, 
+														elevationInfoTableForWeatherCells);
 				
 				if (!rc) {
 					throw new Exception("Error when writing weather data and weather history for BEMS");
@@ -4894,7 +4900,7 @@ class	XnDatabaseConnection {
 						+" ORDER BY xn5_cell_y DESC, xn5_cell_x ;"				
 						;
 				
-				if (elevCorrectionClassSize > -1) {
+				if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
 					s2 = "SELECT xn5_cell_x, xn5_cell_y, weather_station_id , ROUND(alt / "+ elevCorrectionClassSize+") * "+ elevCorrectionClassSize +" AS alt  "
 							+" FROM `"+xn5_cells_table_name+"` t1"
 							+" WHERE simulation_project_id = " + projectId
@@ -4949,7 +4955,7 @@ class	XnDatabaseConnection {
 						
 					}
 					else {
-						if (elevCorrectionClassSize > -1) {
+						if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
 							out.print(xn5cellList.getInt("weather_station_id") * 10000 + xn5cellList.getInt("alt"));
 						}
 						else {
@@ -5050,18 +5056,36 @@ class	XnDatabaseConnection {
 				  
 				double weatherCellElevation = 0;
 				if (elevationCorrectionType > 0) {
-					String selev = "SELECT orog FROM " + elevationInfoTable + " WHERE station_id = "+station_id+";"; 
-					ResultSet rsElev = myConnection.query(selev);
-					
-					if (! rsElev.first() ) {
-						JOptionPane.showMessageDialog(null, "Error: No elevation information found for "+station_id+ " in "+elevationInfoTable+".");
-						System.out.println("Error: No elevation information found for "+station_id+ " in "+elevationInfoTable+".");
-						rsElev.close();
-						return false;
+					 try {  
+						 weatherCellElevation = Integer.parseInt(elevationInfoTable);  
+					  } catch(NumberFormatException nfe) {  
+					      // Log exception.
+					     weatherCellElevation = -9999;
+					  }  
+					if (weatherCellElevation ==  -9999 ) { 
+						
+						if (! elevationInfoTable.contains(".")) {
+							elevationInfoTable = "for1695_weather."+elevationInfoTable;
+						}
+						String selev = "SELECT orog FROM " + elevationInfoTable + " WHERE station_id = "+station_id+";"; 
+						ResultSet rsElev = myConnection.query(selev);
+						
+						if (rsElev == null)
+						{
+							JOptionPane.showMessageDialog(null, "Error: When trying to query "+elevationInfoTable+".");
+							System.out.println("Error: When trying to query "+elevationInfoTable+".");
+							rsElev.close();
+						}
+						
+						if (! rsElev.first() ) {
+							JOptionPane.showMessageDialog(null, "Error: No elevation information found for "+station_id+ " in "+elevationInfoTable+".");
+							System.out.println("Error: No elevation information found for "+station_id+ " in "+elevationInfoTable+".");
+							rsElev.close();
+							return false;
+						}
+						
+						weatherCellElevation = rsElev.getDouble("orog");
 					}
-					
-					weatherCellElevation = rsElev.getDouble("orog");
-				
 				}
 				
 				
@@ -5079,8 +5103,12 @@ class	XnDatabaseConnection {
 					out2 = new PrintWriter(new BufferedWriter(new FileWriter(history_filename, true)));
 					
 				}
-				else {
+				else if ( write_init_history_file > 0 && ! appendHistory && history_filename.compareToIgnoreCase("") == 0 ) {
 					out2 = new PrintWriter(new BufferedWriter(new FileWriter(filename+"_init_history.txt")));
+					out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
+				}
+				else if ( write_init_history_file > 0 &&  appendHistory && history_filename.compareToIgnoreCase("") == 0 ) {
+					out2 = new PrintWriter(new BufferedWriter(new FileWriter(filename+"_init_history.txt", true)));
 					out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
 				}
 				
@@ -5110,10 +5138,10 @@ class	XnDatabaseConnection {
 								
 								double obsSpecHum = rs.getDouble("specific_humidity");
 								double obsPressure = rs.getDouble("air_pressure");
-								if (obsSpecHum > 9998 || obsSpecHum < -98)
+								if (obsSpecHum > 9998 || obsSpecHum < 0.0)
 								{
 									
-									System.out.println("Specific humidity not given, backcalculation from RH: ");
+									System.out.println("Specific humidity not given, backcalculation from given RH: ");
 								
 									double tempAvgK1 = tempAvg + 273.16;
 									if (tempAvg >= 0) {
@@ -5122,8 +5150,6 @@ class	XnDatabaseConnection {
 									else { 
 										obsSpecHum = relHum/ (100* 0.263 * obsPressure * Math.pow(Math.exp( 22.46 * (tempAvgK1-273.16)/(tempAvgK1 -273.16+272.62)) ,-1.0));
 									}
-									
-									 =
 											
 								}
 								
