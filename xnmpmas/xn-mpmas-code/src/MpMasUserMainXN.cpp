@@ -84,12 +84,7 @@ int main(int ac, char **av)
 {
 	printf("XN-MPMAS version 29\n");
 	try {
-		//Input argument handling
-		xn_mpmas_options configuration (ac,av);
-		xn_mpmas_translator translator(configuration.getCouplingType(), configuration.getFnLuaParameters().c_str(), configuration.getFnCropGrids().c_str(), configuration.getFnCellAllocation().c_str(), configuration.getStartDate() );
 
-		// XPN Class
-		xpn_main *xpn;
 
 		int world_size = 1; //default values also necessary if no MPI is used (Expert-N 5.0 req)
 		int my_rank = 0;
@@ -108,6 +103,15 @@ int main(int ac, char **av)
 		{
 			printf("MPI info: using %d MPI processes\n", world_size);
 		}
+#endif //PAR2	
+		//Input argument handling
+		xn_mpmas_options configuration (ac,av);
+		xn_mpmas_translator translator(configuration.getCouplingType(), configuration.getFnLuaParameters().c_str(), configuration.getFnCropGrids().c_str(), configuration.getFnCellAllocation().c_str(), configuration.getStartDate() );
+
+		// XPN Class
+		xpn_main *xpn;
+		
+#if defined(PAR2)
 		{//BEGIN ARTIFICAL ENCLOSING BLOCK TO MAKE SURE mpmas IS destroyed BEFORE MPI_Finalize() is called;
 #endif //PAR2	
 
@@ -198,7 +202,10 @@ int main(int ac, char **av)
 					numSpinUp = 0;
 			}		
 			else
-			{		numYears = mpmasInstance->getNumberOfPeriodsToSimulate();
+			{		int numYearsCoupl = configuration.getNumberOfYearsToSimulate();
+					int numYearsMPMAS = mpmasInstance->getNumberOfPeriodsToSimulate();
+					
+					numYears = numYearsCoupl < numYearsMPMAS ? numYearsCoupl : numYearsMPMAS;
 					numSpinUp = mpmasInstance->getNumberOfSpinUpRounds();
 					configuration.setNumberOfYearsToSimulate(numYears);
 					configuration.setScenarioName(mpmasInstance->getScenarioName());
@@ -265,6 +272,16 @@ int main(int ac, char **av)
 			Raster2D*  luaMap = NULL;
 			Raster2D*  yield1Map = NULL;
 			Raster2D*  yield2Map = NULL;
+			
+			Raster2D*  cropMapILMS = NULL;
+			Raster2D*  sowMapILMSearly = NULL;
+			Raster2D*  sowMapILMSlate = NULL;
+			vector<int>* sowDateRepresentatives = NULL;
+			
+			if (configuration.getProduceILMScouplingMaps() )
+			{
+				sowDateRepresentatives = new vector<int>(configuration.getSowDateRepresentatives());
+			}
 			
 			vector<Raster2D> cropExtraAttrRasters(numExtraCropAttr, Raster2D());
 
@@ -358,12 +375,25 @@ int main(int ac, char **av)
 				
 				printf("\nProcessor %d : ...set management on fields:\n", my_rank);	
 
+				if (configuration.getProduceILMScouplingMaps())
+				{
+					delete cropMapILMS;
+					delete sowMapILMSearly;
+					delete sowMapILMSlate;
+					cropMapILMS = new Raster2D(*luaMap);
+					sowMapILMSearly = new Raster2D(*luaMap);
+					sowMapILMSlate = new Raster2D(*luaMap);
+					cropMapILMS->setAllValues(-1);
+					sowMapILMSearly->setAllValues(-1);
+					sowMapILMSlate->setAllValues(-1);
+				}
+
 //Begin of Hong:for gridId-loop 
 				for (int gridId=0; gridId<grid_layers; gridId++)     
 				{  
 //End of Hong				
 					for (int i=0; i< xnGridSize; i++)
-					{	STRUCT_mpmas_to_xn tempStruct = translator.getManagementForCell(i, firstyear + year);		
+					{	STRUCT_mpmas_to_xn tempStruct = translator.getManagementForCell(i, firstyear + year, cropMapILMS, sowMapILMSearly, sowMapILMSlate, sowDateRepresentatives);		
 						
 						//Begin of Hong
 						expertn_modul_base  *xpn_own_grid=xpn->grid_mpmas_to_xn[ gridId * xnGridSize +  i].xpn_own_grid;
@@ -385,6 +415,9 @@ int main(int ac, char **av)
 						//xpn->grid_mpmas_to_xn[ gridId * xnGridSize +  i].currentGrid= 0; //does not need to be set here, because is already set in getManagementForCell
 						xpn->grid_mpmas_to_xn[ gridId * xnGridSize +  i].nextGrid= 1; //currently ignored
 						xpn->grid_mpmas_to_xn[ gridId * xnGridSize +  i].updateManagement= 1;
+						
+						
+		
 					}
 					
 				 
@@ -412,6 +445,32 @@ int main(int ac, char **av)
 //Begin of Hong				
 				} //End of gridId-loop			  			  
 // End of Hong!
+
+				if (configuration.getProduceILMScouplingMaps())
+				{
+					stringstream fnCropMapILMS;
+					fnCropMapILMS << mpmasInstance->getOutputDirectory()<<"/out/" << mpmasInstance->getScenarioName() << "CropMapILMS"
+					 			 	 	 << setw(2) <<setfill('0') << year << ".txt";
+					cropMapILMS->writeToFile(fnCropMapILMS.str());
+					stringstream fnSowMapILMSearly;
+					fnSowMapILMSearly << mpmasInstance->getOutputDirectory()<<"/out/" << mpmasInstance->getScenarioName() << "SowMapILMSearly"
+					 			 	 	 << setw(2) <<setfill('0') << year << ".txt";
+					sowMapILMSearly->writeToFile(fnSowMapILMSearly.str());
+					stringstream fnSowMapILMSlate;
+					fnSowMapILMSlate << mpmasInstance->getOutputDirectory()<<"/out/" << mpmasInstance->getScenarioName() << "SowMapILMSlate"
+					 			 	 	 << setw(2) <<setfill('0') << year << ".txt";
+					sowMapILMSlate->writeToFile(fnSowMapILMSlate.str());
+					
+					
+				}
+
+
+				if (year == numYears && configuration.getStopBeforeXNinFinalPeriod() )
+				{
+					printf("Ending after decision output in final period as requested\n");
+					break;
+				}
+
 				cout << "\nProcessor " << my_rank << ": Run XPN until LAST HARVEST STOP: "  << nextStop.day << "-" << nextStop.month << "-" << nextStop.year << endl	;
 				xpn_main_run(xpn); //Run until LAST HARVEST STOP, after last harvest date of season to collect yields from last year
 				printf("\nProcessor %d: LAST HARVEST STOP:\n", my_rank);
@@ -506,7 +565,7 @@ int main(int ac, char **av)
 							for (int j = 0; j < numExtraCropAttr; ++j)
 							{
 								 cropExtraAttrRasters[j] = Raster2D(*luaMap);
-								 cropExtraAttrRasters[j]->setEmpty();
+								 cropExtraAttrRasters[j].setEmpty();
 							}
 							
 							stringstream fnXnOuputSummary;
@@ -599,7 +658,7 @@ int main(int ac, char **av)
 				printf("Processor %d: ...updating weather history (a)\n", my_rank);				
 				translator.updateWeatherHistory(xpn->grid_xn_to_mpmas2, firstyear + year, curDate);
 								
-				//in last year stop here:
+				//in last year stop here (unless stop requested after decision [for ILMS coupled runs ] and not after yields):
 				if (year == numYears)
 				{
 					break;
@@ -701,6 +760,15 @@ int main(int ac, char **av)
 			yield1Map = NULL;
 			delete yield2Map;
 			yield2Map = NULL;
+			
+			delete cropMapILMS;
+			cropMapILMS = NULL;
+			delete sowMapILMSearly;
+			sowMapILMSearly = NULL;
+			delete sowMapILMSlate;
+			sowMapILMSlate = NULL;
+			delete sowDateRepresentatives;
+			sowDateRepresentatives = NULL;
 			
 			xpn = xpn_main_done(xpn);
 			delete mpmasInstance;
