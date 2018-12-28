@@ -463,7 +463,7 @@ if (NewDay(pTi))
 								earliestPossibleCoverCropSowDateFromNow.month = 	 pTi->pSimTime->mon;
 								earliestPossibleCoverCropSowDateFromNow.day = 	 pTi->pSimTime->mday;
 
-					// add wating time after tillage that is scheduled before sowing
+					// add waiting time after tillage that is scheduled before sowing
 						for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
 							if (self->mpmas_to_xn->tillage[i].typeAdaptiveTillage==adaptiveTillageBeforeCoverCrop);
 							{
@@ -1515,12 +1515,12 @@ int checkIfHarvest(mpmas_coupling *self)
             //if we are > BBCH2, but not over the limit, increase the counter of days
             else {
                 self->daysSinceBBCH2 += 1;
-                return 0;
+                //no return here, to allow checking for absolute maximum harvest date
             }
         }
-        else if (currentDay == pPl->pModelParam->HarvestDay
-        && currentMonth == pPl->pModelParam->HarvestMonth
-        && currentYear == pPl->pModelParam->HarvestYear ) 
+        if (currentDay == pPl->pModelParam->HarvestDay
+			&& currentMonth == pPl->pModelParam->HarvestMonth
+			&& currentYear == pPl->pModelParam->HarvestYear ) 
             {
 				//Hong for debug:
 				printf("maximum harvest date reached, harvesting despite BBCH not being reached\n");
