@@ -44,9 +44,10 @@ class ccluster : public cluster
 	virtual void assignAssetsToAgent(agentF*);
 	virtual void assignAssetsToAgentWithAge(agentF*);
 
-   virtual void assignCharactToAgent(agentF*);
+   virtual int assignCharactToAgent(agentF*);
    //virtual void writeDistribInFile(char*);## Tbe 110108 moved this function to cluster level
    virtual void printOnScreenCC();
+
 };
 
 

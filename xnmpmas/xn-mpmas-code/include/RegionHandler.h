@@ -183,13 +183,15 @@ class region
 	
 	/// Agent planning at start and end of period
 	virtual int agentsDoExpectationFormation(TimeHandler& th_const);//refactored from <agentsDoExpectationAndPlanning>
-	virtual void agentsDoInvestmentAndProductionPlanning(TimeHandler& th_const);//refactored from <agentsDoExpectationAndPlanning>
 #ifdef MULTIPERIOD
 	void agentsDoStartOfPeriodDecision(doInvestModes doProduce, string decisionStageName);
 	string multiperiod_outputAgentDecisionResults(string decisionStage, bool aggregateOnly = false, bool noAggYears = false);
 	void agentsCalculateIncomes();
 	void updateSoilTypes();
+#else
+	virtual void agentsDoInvestmentAndProductionPlanning(TimeHandler& th_const);//refactored from <agentsDoExpectationAndPlanning>
 #endif
+
 	virtual void agentsExitingDecision(int periode);
 
 	/// Edic routing model
@@ -209,10 +211,12 @@ class region
 	virtual void exportCropMapsAnnual(TimeHandler& timeHandle_const);
 	virtual void exportMapsAnnualAsRequested(TimeHandler& timeHandle_const);
 	virtual void exportMapsGeneric(bool flagIsAnnual, TimeHandler& timeHandle_const);
-
-	/// Export aggregated land-use
-	void exportAggregatedLandUse(FILE* openStream = NULL, int numCropActs = 0, int* cropActID = NULL, double* cropArea = NULL);
 	vector<string> exportUserDefinedMaps();
+	/// Export aggregated land-use
+#ifndef MULTIPERIOD
+	void exportAggregatedLandUse(FILE* openStream = NULL, int numCropActs = 0, int* cropActID = NULL, double* cropArea = NULL);
+#endif //ndef MULTIPERIOD
+
 #ifdef MULTIPERIOD
 	void multiperiod_exportLandUseSpatially( Raster2D& outputRaster);
 	void multiperiod_exportAggregatedLandUse(FILE* openStream, int numCropActs, int* cropActID, double* cropArea);
@@ -229,10 +233,10 @@ class region
 #endif//MULTIPERIOD
 	void updateUserdefinedAttributesInMaps(Raster2D& grasslandStatusMap, int udefLayerID, int updateNRUs);
 
-
+#ifndef MULTIPERIOD
 	/// Import yield maps from external model
 	virtual void importYieldMapsFromExternalModel();//Tbe 090303
-
+#endif
 	/// Import crop yields directly from external look-up table
 	virtual void importCropYieldsFromExternalModel(FILE* openStream = NULL, const int numCropActs = 0, const int* cropActID = NULL, const double* cropYield = NULL, const double* stoverYield = NULL);//Tbe 130305
 
@@ -245,16 +249,19 @@ class region
 #endif
 
 	/// Land-use allocation functions
+#ifndef MULTIPERIOD
 	virtual void agentsImplementLandusePlans();// renamed from <agentsAllocateSpatiallyLanduse>
+#endif //ndef MULTIPERIOD
 	virtual void agentsIrrigationWater2Landscape(int m);
 
 	/// Generic functions between "Landscape" and "CropMixClass"
 	virtual void agentsExportContentTypeToLandscape(Content cont, int m);
 	virtual void agentsImportLandscapeToCropMixClass(Content cont, int m);
 
+#ifndef MULTIPERIOD
 	// ... Use data in <CropMixClass>
 	virtual void agentsInterpretTempInCropMixClass(Content cont, int m);
-
+#endif
 	///Special functions for dynamic inflows 
 	// Copy inflows for current month to catchments
 	virtual void updateDynamicInflows_preknown(int catchID, TimeHandler& timeHandle_const);

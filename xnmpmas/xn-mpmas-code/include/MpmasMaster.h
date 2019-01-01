@@ -225,10 +225,11 @@ class mpmas
 
 
 	virtual void updateInnovationDiffusion();
+#ifndef MULTIPERIOD
 	virtual void prepareLandUseForCropYieldCalculation();
 
 	virtual void determineMarketingOutcomes();
-
+#endif
 
 
 	/// write final data to files

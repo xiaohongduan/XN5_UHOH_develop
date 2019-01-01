@@ -113,6 +113,43 @@ struct objAccountingInfo
 };
 // Troost **********end block insert**********
 
+#ifdef MULTIPERIOD
+class yieldHistory
+{
+		typedef vector<vector<deque<double> > > vvdDouble;
+
+		vvdDouble yield;
+		vvdDouble stover;
+		vector<vvdDouble> extraAttrs ;
+
+public:
+		yieldHistory(int numCA_, int numNRU_, int numExtra_, caYld** start);
+		yieldHistory();
+
+		~yieldHistory();
+
+		void appendYear(size_t numCA_, size_t numNRU_, size_t numExtra_,  caYld** newRecord );
+
+		void writeToStream(ostream& out, int fstId);
+
+		double getIndividualYield(size_t ca, size_t nru, size_t year);
+		double getIndividualStoverYield(size_t ca, size_t nru, size_t year);
+		double getIndividualExtraAttr(size_t ca, size_t nru, size_t extra, size_t year);
+		deque<double>* getYieldSeriesPointer(size_t ca, size_t nru);
+		deque<double>* getStoverYieldSeriesPointer(size_t ca, size_t nru);
+		deque<double>* getExtraAttrSeriesPointer(size_t ca, size_t nru, size_t extraAttrId);
+
+};
+struct expectationParameters {
+
+		int methodPrices;
+		int methodYields;
+		vector<double> parametersYields;
+
+		expectationParameters() : methodPrices(-1), methodYields(-1), parametersYields(){};
+};
+#endif
+
 
 
 
@@ -315,11 +352,15 @@ class agentF : public agent
 	virtual void makeWaterSupplyExpectationInMonth(int m);
 	virtual void makeWaterDemandExpectationYearly();
 	virtual void makeWaterDemandExpectationInMonth(int m);
+#ifndef MULTIPERIOD
 	virtual void makeYieldExpectationsForCropWat();
 	virtual void initializeYieldExpectationsForCropWat();
 
+
 	virtual void makeYieldExpectationsForTspc();//renamed from <makeYieldExpect>
 	virtual void initializeYieldExpectationsForTspc();//renamed from <initYieldExpect>
+#endif //ndef MULTIPERIOD
+
 	virtual void makeYieldExpectationsForLucia();
 	virtual void initializeYieldExpectationsForLucia();
 	virtual void initPlotsInNRUs();
@@ -357,8 +398,9 @@ class agentF : public agent
 	virtual double getRentalPaymentsReceived();
 	virtual void setRentalPaymentsReceived(double pmt);
 	virtual void addToRentalPaymentsReceived(double pmt);
-
+#ifndef MULTIPERIOD
 	virtual double decideOnBidForParcelGroup(parcelGroup* pg, int milpMode);
+#endif //ndef MULTIPERIOD
 #ifdef MIPSTART
 	virtual double decideOnBidForParcelGroup_ColumnBasedValuation(parcelGroup* pg, int milpMode);
 #endif
@@ -382,8 +424,10 @@ class agentF : public agent
 
 // Troost 20170516 Advanced Demography Model 2
 // Troost **********begin block insert**********
+#ifndef MULTIPERIOD
 	virtual void checkApplicationForLandRedistribution(milpModeTypes milpmode);
 	virtual void submitApplicationForLandRedistribution();
+#endif
 // Troost **********end block insert**********
 
 //------------------------------------------------------------------------------------
@@ -391,7 +435,7 @@ class agentF : public agent
 	/**
 	* Farm decision-making functions using MP
 	*/	
-	
+#ifndef MULTIPERIOD
 	///Functions for investment, production, marketing, and consumption
 	virtual double investPlan(int saveSol, double* solutionToBeSavedForWarmStart = NULL); //## substitute Psi 131129
 	virtual double makeInvestmentPlan(int saveSol, bool saveForWartstart = false, double* solutionToBeSavedForWarmStart = NULL);
@@ -401,6 +445,7 @@ class agentF : public agent
 	virtual double makeMarketingPlan(int doMarketing, bool saveForWartstart = false, double* solutionToBeSavedForWarmStart = NULL);
 	virtual double consumPlan(int doConsume, double* solutionToBeSavedForWarmStart = NULL); //## substitute Psi 131129
 	virtual double makeConsumptionPlan(int doConsume, bool saveForWartstart = false, double* solutionToBeSavedForWarmStart = NULL);
+#endif //ndef MULTIPERIOD
 
 #ifdef MIPSTART
 	vector<double> landRentalValuation(map<int,parcelGroupOffer*>::iterator firstOffer,map<int,parcelGroupOffer*>::iterator afterLastOffer , double* solutionToBeSavedForWarmStart = NULL);
@@ -422,16 +467,21 @@ class agentF : public agent
 	vector<investdef> externalExportAssetRegistry();
 	void externalImportAsset_fromStream(istream& in);
 	void externalImportAsset(int pos, investdef asset);
+#ifndef MULTIPERIOD
 	void checkInvestmentDecisionBeforeExternalScriptCall(milpModeTypes milpMode);
+#endif //ndef MULTIPERIOD
 	void reportSolutionForExternalScriptCall(map<int,vector<double> > & outputMapWithSolutions);
 	void setSpecificUboundsForDecisionExternalScripts();
 
+#ifndef MULTIPERIOD
 #ifdef DISTEST
 	virtual void implement_investmentsNew(); //intermediate while coding, rename later
 #else
 	virtual void implement_investmentsOld(); //intermediate while coding, rename later
 #endif
 	virtual void implement_investmentsOSL();
+#endif //ndef MULTIPERIOD
+
 	virtual void inventorizeDeferredObjects();
 
 #ifdef MULTIPERIOD
@@ -453,10 +503,10 @@ class agentF : public agent
 	virtual void updateAgentAttributesInZRow();
 	virtual void updateAgentAttributesInMatrix();
 	virtual double getAgentAttributeForMatrix(int attribute, int i, int attribute2 = -1);
-
+#ifdef RNGSTREAM
 	virtual void updateHouseholdMembersInZRow();
 	virtual void updateHouseholdMembersInMatrix();
-
+#endif
 	virtual void updateFarmsteadNRUInZRow();
 	virtual void updateFarmsteadNRUInMatrix();
 
@@ -466,6 +516,13 @@ class agentF : public agent
 	virtual void updateLandscapeAttributesInMatrix();
 	virtual double getAggregatedUserDefinedLandscapeParameterForNRU(int paramID, int agg, int nru);
 // Troost **********end block insert**********
+
+#ifdef MULTIPERIOD
+	virtual double getAggregatedUserDefinedLandscapeParameterForSharedNRU(int paramID, int agg, int nru);
+	int getNumberPlotsOfCommonPropertyOfSoilType(int nru);
+	vector<int> getListOfCommonPropertyGroupMembership();
+	void addToListOfCommonPropertyGroupMembership(int);
+#endif
 
 	///Functions for solving MP problems
 	virtual int getNNrowsInternal();
@@ -553,16 +610,20 @@ class agentF : public agent
 	virtual void schattenpreise_speichern();
 	virtual void schattenpreise_wiederherstellen();
 
+#ifndef MULTIPERIOD
 	virtual void computeShadowPricesForLand(int milpMode);
 	virtual void computeShadowPricesForWater(int milpMode);
 	virtual void computeShadowPricesForAdjacentContraints(int milpMode, int firstRow, int numberRows);
+
 
 	virtual void updateAgentZRow();
 	virtual void copyZeroColumnsToAgentZRow();
 	virtual void updateStartPeriodRHS(int reload=false);
 	virtual void updateEndOfPeriodRHS();
-	virtual void checkForNegativeValuesInRHS();
 	virtual void copyInvPCropsRHS();
+#endif //ndef MULTIPERIOD
+
+	virtual void checkForNegativeValuesInRHS();
 #ifdef MULTIPERIOD
 	void multiperiod_updateAgentVariablesAtStartOfPeriod();
 	void multiperiod_prepareMIP();
@@ -573,7 +634,7 @@ class agentF : public agent
 	void importYieldsAggregatedLandUse( int numberCroppingActivities, int* CropManagementYldArrayIndex, int* soiTypeID, double* cropYield, double* stoverYield, double** extraAttrs);
 	void multiperiod_importYieldsFromCells(bool harvestAfterNewLandUseDecision);
 
-#endif //MULTIPERIOD
+#else //ndef MULTIPERIOD
 	virtual int copyLPdataInvMode(int numIntegSets, int doInvest); //
 	virtual int copyLpDataInInvestmentMode(int isIntegerProblem);
 	
@@ -629,11 +690,15 @@ class agentF : public agent
 // Troost **********end block insert**********
 	virtual void updateRHSRemDurationConstraints();
 
+#endif //ndef MULTIPERIOD
 	virtual void modifyProductionSolution(int num, int*& cols, double*& values);
 	virtual void setProductionSolutionColumn(double va, int colLP);
 
 	virtual void copyCoefficientsTimePreferenceOfMarketSales(int penaltyNumber);
 	virtual void setAllCoefficientsInInvestmentActivitiesToZero();
+
+
+
 
 // Troost 20130915 Additional output quadratic programming
 // Troost **********begin block insert**********
@@ -662,8 +727,9 @@ class agentF : public agent
 	*/ 
 
 	///Functions for crop yields
+#ifndef MULTIPERIOD
 	virtual void computeCropTspcYields(FILE* beforeYieldsStrm, FILE* afterYieldsStrm);
-
+#endif
 
 
 
@@ -676,7 +742,9 @@ class agentF : public agent
 	///Functions for irrigation farming
 	virtual double computeAverageOnFieldIrrigationEfficiency(IrrigationMethodSector* sectorPointerToIrrigationMethods);
 	virtual double irrigateCropsByPriorityGroups(int month);
+#ifndef MULTIPERIOD
 	virtual void computeCropWaterYields(FILE* beforeYieldsStrm, FILE* afterYieldsStrm);
+#endif
 	virtual void setOutputOfAllCropsToZero();
 	virtual void applyYieldReductionFactorsAndUpdateLpSolution();
 
@@ -702,8 +770,9 @@ class agentF : public agent
 	*/ 
 
 	///Functions for crop yields
+#ifndef MULTIPERIOD
 	virtual void computeCropLuciaYields(FILE* beforeYieldsStrm, FILE* afterYieldsStrm);
-
+#endif
 //------------------------------------------------------------------------------------
 
 	/**
@@ -723,11 +792,15 @@ class agentF : public agent
 	/**
 	* Functions called at end of period
 	*/
+#ifdef MULTIPERIOD
 	
+	void multiperiod_estimateYieldsOfMissingCropsBySimilarity();
+#else
 	///Function for crops yields
-	virtual void resetActualYieldsToDefault();
-	virtual void makePlantYields();//formerly 'ertraege_berechnen()'
+		virtual void resetActualYieldsToDefault();
+		virtual void makePlantYields();//formerly 'ertraege_berechnen()'
 	virtual void estimateYieldsOfMissingCrops();
+#endif
 
 	///Functions related to income statement
 	virtual double estimateValueOfOwnLandAndWater();//renamed from <bodenvermoegen_bestimmen>
@@ -782,14 +855,20 @@ class agentF : public agent
 		
 // Troost 20170516 Advanced Demography Model 2
 // Troost **********begin block insert**********
+#ifndef MULTIPERIOD
 	agentF* transferAssetsAndLandToNewHousehold(int whichNew, vector<hhmember*> memberList);
 	void transferAssetsAndLandToLandOwnerAgent();
+#endif
 	int getNextNewFstID();
 	coord determineLocationOfNewFarmstead( const set<mpmasPlotCell*, plotSetSorter> & plotsToTransfer);
    void includeNewHouseholdMembers(vector<hhmember*>& memberList);
    void receiveAssetsAsNewOwner(vector<investdef>& assetList, string , bool permanentCropsAlreadyBlocked = true);
+#ifdef MULTIPERIOD
+   void initializeExpectationsFromOtherAgent(caYldExp** otherExpYld,		caYld** otherActYld, double* otherPriceExp  );
+#else
    void initializeExpectationsFromOtherAgent(caYld** otherExpYld, caYld** otherActYld, double* otherPriceExp  );
    void checkIfNewFarmingHouseholdsAreGeneratedAndReleaseAssetsAndLand(vector<agentF*>& newFarms, FILE* outStream);
+#endif
 // Troost **********end block insert**********
 
 	///Functions for carry-over of resources, especially livestock
@@ -879,28 +958,30 @@ class agentF : public agent
 	/**
 	 * Functions needed for spatial allocation and TDT coupling
 	 */
-
+#ifndef MULTIPERIOD
 	///Crop mix implementation and spatial allocation of crops
 	virtual void createCropMixFromSolutionVector();// renamed from <createDataForSpatialAllocationOfCrops>
 	virtual void allocateCropActivitiesSpatially(void);
-	
+
 	virtual void fixRoundingErrorsInProductionSolution(int soil, int cropIdx, double ha);
 	virtual void addFallowToProductionSolution(int soil, int cropIdx, double ha);
 	virtual void fixEmptyPlotErrors();
 	virtual void addFallowToEmptyPlots(int soil, int cropIdx, int actID);
-
+#endif //ndef MULTIPERIOD
 	//get number of crop mixes and crop activities, according to crop growth model
 	virtual int getNumberOfCropMixes();
 	virtual int getNumberOfCropActivities();
+#ifndef MULTIPERIOD
 	virtual int getCropMixIndexForSoilType(int soilType);
 	virtual void printAgentCropMixToFile(char* filename);
+#endif //ndef MULTIPERIOD
 	virtual void printAgentPlotListArrayToFile(char* filename);
-
+#ifndef MULTIPERIOD
 	//get info for zero labor activity (=fallow), according to soil type or NRU
 	virtual int getLpColumnOfZeroLaborActivity(int nru);
 	virtual int getActivityIdOfZeroLaborActivity(int nru);
 	virtual int getPriorityOfZeroLaborActivity(int nru);
-
+#endif //ndef MULTIPERIO
 	// For coupling and spatially active runs
 	/* TODO 2 -oArnold -cImplement : Using content type (here a switch must still be implemented) information is retrieved and then assigned to the content type, into a temporary variable */
 	virtual void assignToCropMixClassTemp_ByContentType(Content cont, int m);
@@ -916,11 +997,12 @@ class agentF : public agent
 	virtual void copy_Landscape2CropMixClassTemp_monthly(Content cont, int m);//Tbe 090303 fixed bug
 	virtual void copy_Landscape2CropMixClassTemp(Content cont);//Tbe 090303
 
+#ifndef MULTIPERIOD
 	// Interpret data in crop mix class
 	virtual void interpretTempInCropMixClass(Content cont, int m);//## substitute
 	virtual void interpretDataRetrieved(Content cont, MatrixDouble& vector_data);//## substitute
 	virtual void processReceivedDataInCropMixes(Content cont);//Tbe 090303
-
+#endif //ndef MULTIPERIOD
 	//virtual void copyContent_Landscape2Parcels(Content cont);// ## Tbe 110920 not in use
 	//virtual void copyContent_Landscape2Parcels(Content cont, bool flag_fixCopyToCell);// ## Tbe 110920 not in use
 	//virtual void copyContent_Landscape2Parcels_monthly(Content cont, int m); // ## eliminate
@@ -999,6 +1081,13 @@ class agentF : public agent
 #ifdef RNGSTREAM
 	double getRandInitialAge() {return farmRandomNumbers.getRandAgeAtInit();}
 #endif
+
+
+#ifdef MULTIPERIOD
+	void setExpectationParameters(expectationParameters input) { advancedExpectationsParams = input; }
+	bool hasExpectationsParametersInitialized() { return advancedExpectationsParams.methodPrices > -1; }
+	void doubleExponentialSmoothSeries( deque<double> * series, double state_weight, double trend_weight, double& newState, double& newTrend);
+#endif
 //------------------------------------------------------------------------------------   	
 	///@name Constructor, destructor etc.
 	//@{		
@@ -1015,7 +1104,6 @@ class agentF : public agent
 	double* sog_ptr;		//Zeiger auf den "Sogfaktor"
 	double* opp_ptr;     //Zeiger auf "Opplohn"
 //	MatrixDouble* dkulturen_ptr;//Pointer to matrix <verfuegb_dkulturen> //substitute
-
 
 
 	///Constructor 
@@ -1212,10 +1300,18 @@ class agentF : public agent
 	 * Data structures for TSPC and Lucia crop growth modules
 	*/
 	///expected yields per NRU
-	caYld** expYlds;        
+#ifdef MULTIPERIOD
+	caYldExp** expYlds;
+#else
+	caYld** expYlds;
+#endif
 	///actual yields per NRU
 	caYld** actYlds;
 
+#ifdef MULTIPERIOD
+	yieldHistory agentYieldHistory;
+	expectationParameters advancedExpectationsParams;
+#endif
 //------------------------------------------------------------------------------------
 
 	/**
@@ -1299,6 +1395,12 @@ class agentF : public agent
 #ifdef MULTIPERIOD
 	double*** extraCropActivityCharacteristics;
 	vector<double> extraAgentCharacteristics;
+
+// Troost 201801207 Common property
+// Troost **********begin block insert**********
+	vector<int> commonPropertyGroupMemberships;
+// Troost **********end block insert**********
+
 #endif
 
 //------------------------------------------------------------------------------------

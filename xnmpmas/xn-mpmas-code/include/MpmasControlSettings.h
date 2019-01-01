@@ -719,6 +719,8 @@ private:
 		string externalScriptCall_CropModel;
 		string externalScriptCall_InYear;
 		vector<int> externalScript_InYear_ChangedMaps;
+
+
 #ifdef MULTIPERIOD
 		vector<string> namesExtraAgentCharacteristics;
 		map<string,size_t> idsExtraAgentCharacteristics;

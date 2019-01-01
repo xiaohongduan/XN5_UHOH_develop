@@ -98,6 +98,10 @@ class b_liste
 #endif//LIVSIM_COUPLING
 
 
+#ifdef MULTIPERIOD
+	void readExpectationParametersForIndividualAgents();
+#endif
+
 #endif //MULTIPERIOD
 
 	void agentsUpdateNRUs();
@@ -118,16 +122,17 @@ class b_liste
    virtual void writeInitialEndowmentToFile();
 
 	virtual void agentsMakeNewExpectations();//refactored from <uebergang_periode>
-	virtual void agentsMakeNewPlanningDecisions();//refactored from <uebergang_periode>
 #ifdef MULTIPERIOD
 	void agentsMakeStartOfPeriodDecision(doInvestModes, string);
 	void implementInvestmentsAndOffspring();
 	void agentsResetAccountingVariables();
-
+#else
+	virtual void agentsMakeNewPlanningDecisions();//refactored from <uebergang_periode>
 #endif
 
 
 	virtual void agentsWritePercentageByIpg();
+#ifndef MULTIPERIOD
 	virtual void agentsEngageOnLandRentalMarket(int milpMode);//renamed from <pacht_periode>
 	virtual void getBidForRentIn //renamed from <hole_gebot>
 		(p_gebot* g, int bnr, int typ, int z, int s, w_jahr* vol, double pacht, int milpMode);
@@ -138,9 +143,13 @@ class b_liste
 	virtual void deleteMinimumBidsForSoilType(int bnr, int typ);//renamed from <kopie_loeschen> ##not in use
 	virtual void deleteAllMinimumBids(int bnr);//renamed from <alle_kopien_loeschen>
 	virtual int makeAgentUpdateItsRHS(int bnr, int typ, int z, int s, w_jahr* vol, double pacht, int milpMode, int pnr, int psc, w_rechte* w);//refactored from <kapaz_aktualisieren>
+#endif //ndef MULTIPERIOD
 	virtual int makeAgentImplementExistingContracts(int userMapID, int catchmID, int sectorID, int mapRowIdx, int mapColIdx, double payment,  int duration, w_jahr* vol = NULL, w_rechte* w = NULL);//refactored from <makeAgentUpdateItsRHS>
+#ifndef MULTIPERIOD
+
 	virtual void makeAgentRestoreShadowPrices(int);//renamed from <alte_schattenpreise>
 	virtual void makeUpdatedPlanningDecision(int bnr, int milpMode);//renamed from <neu_planen>
+#endif //ndef MULTIPERIOD
 	virtual double adjustContractsForRentingOut(int bnr, double volB, int m);//renamed from <verpachtung_korrigieren>
 	virtual void adjustContractsForRentingIn(int bnr, double volN, int m);//renamed from <zupachtung_korrigieren>
 
@@ -152,9 +161,9 @@ class b_liste
 	virtual void agentsEngageOnLandRentalMarket_ParcelGroupVersion(int milpMode);
 	virtual void transferParcelGroupRentedOut (int oid, int uid, double payment, parcelGroup* pg );
 // Troost **********end block insert**********
-
+#ifndef MULTIPERIOD
 	void agentsApplyForLandRedistribution(milpModeTypes milpMode);
-
+#endif //ndef MULTIPERIOD
    // ======================================================
    /// Functions for irrigation and EDIC Model
    // ------------------------------------------------------
@@ -182,11 +191,12 @@ class b_liste
    virtual agent* computeTotIrrigAppliedInSectorAndEfficiency(agent* anker, int sk, int sc, int thisMonth, double irrigAmountSector, double& etaOfSectorAgents );
 
 	// ------------------------------------------------------
-
+#ifndef MULTIPERIOD
 	virtual void agentsHarvestCropsAndLivestock();//refactored from <b_liste::produktion_periode>
+
 	virtual void agentsMakeMarketingPlans();
 	virtual void agentsMakeConsumptionPlans();//refactored from <b_liste::produktion_periode>
-
+#endif
 	virtual void calculateAgentIncomes();//Betriebseinkommen und andere Kennziffern
 
 	// Write to file 
@@ -211,9 +221,10 @@ class b_liste
    //virtual void writeAllParcelsOfAgentFToFile(void);// ## Tbe 110927 not in use, not sure if this function works at all
    virtual void writeAllCropWaterDataToFile(void);//## Tbe 080220
 
+#ifndef MULTIPERIOD
 	///assigns crop activities to crop mixes per soil type, and allocates them spatially if needed
 	virtual void createCropMixAndAssignSpatiallyIfNeeded();//renamed from <allocateSpatiallyExplicit_AllCrops>
-
+#endif
 	//Function updates the value "cont" from all parcells of agent to cell grid
 	//This function is used for time-dependent, monthly content, see 
 	//switch-statement(cont) in "agentF::copyContent_PlotToLandscape"
@@ -225,8 +236,9 @@ class b_liste
 
 	virtual void agentsExportVariables2Landscape(Content cont, int m);
    virtual void copy_Landscape2CropMixClassTemp_monthly(int m,Content cont);
+#ifndef MULTIPERIOD
    virtual void agentsInterpretTempInCropMixClass(Content cont, int m);
-
+#endif
    // for testing ... 
    virtual void testMeanPerAgent(Content cont);
 
@@ -253,9 +265,9 @@ class b_liste
 	map<int,vector<investdef> > agentsExportAssets();
 	/*void externalUpdateAgentAssets(map<int,vector<investdef> > updatedAssets, bool updateRhs = false );*/
 	void externalUpdateAgentAssets_fromStream(istream & in, bool updateRhs = false );
-
+#ifndef MULTIPERIOD
 	void agentsApplyForExternalAssetAllocation(milpModeTypes milpMode, map<int, vector<double> > & outputMapWithSolutions);
-
+#endif
 #ifdef MULTIPERIOD
 #ifdef LIVSIM_COUPLING
 	void initializeLivSimHerdsForCoupling();

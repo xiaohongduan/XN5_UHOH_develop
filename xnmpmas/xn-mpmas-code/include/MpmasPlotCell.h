@@ -70,12 +70,19 @@ class mpmasPlotCell
 	int cellSoilType;  //soil type,    int typ;		//soil type
 	int nruID;  //ID nutrient response unit
 
+#ifdef MULTIPERIOD
 // Troost 20160331 Soil type transitions
 // Troost **********begin block insert**********
-#ifdef MULTIPERIOD
+
 	int cellSoilTypeNextSeason;
-#endif
+
 // Troost **********end block insert**********
+
+// Troost 201801207 Common property
+// Troost **********begin block insert**********
+	int commonPropertyGroup;
+// Troost **********end block insert**********
+#endif
 
 	int color;         //color of cell user's plots
 
@@ -186,13 +193,20 @@ public:
 	virtual void set_typ(int);//plot
 	virtual int getType(void);//cell
 	virtual void setSoilType(int cellSoilType);//cell
-// Troost 20160331 Soil type transitions
-// Troost **********begin block insert**********
+
 #ifdef MULTIPERIOD
+// Troost 20160331 Soil type transitions
+// Troost **********begin block insert*********
 	virtual void setSoilTypeNextSeason(int s);
 	virtual void doSoilTypeTransition();
-#endif
+	// Troost **********end block insert**********
+// Troost 201801207 Common property
+// Troost **********begin block insert**********
+	void setCommonPropertyGroup(int t);
+	int getCommonPropertyGroup();
 // Troost **********end block insert**********
+#endif
+
 	virtual double getUserDefinedContent(int userContentId);//cell
 	virtual void setUserDefinedContent(int userContentId, double val);//cell
 

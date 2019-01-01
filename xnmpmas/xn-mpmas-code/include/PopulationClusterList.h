@@ -306,7 +306,7 @@ class c_liste
 	virtual int careerAfterRetirement(int car);
 	virtual int careerIfHHead(int car);
 	virtual int careerIfPartnerOfHHead(int car);
-	int careerAsNewMother(int car);
+//int getCareerAsNewMother(int car);
 #endif //RNGSTREAM
 // Troost **********end block insert**********
 
