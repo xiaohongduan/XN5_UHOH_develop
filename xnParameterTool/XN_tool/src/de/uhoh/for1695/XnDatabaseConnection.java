@@ -2673,7 +2673,7 @@ class	XnDatabaseConnection {
 						out.println("      adaptive  : ");
 						out.println("        type      : "+typeString);
 						if ( tillageList.getInt("adapt_date_type") == 4) {
-							out.println("        days      : 0");
+							out.println("        days      : 1");
 						}
 						else {
 							out.println("        days      : "+tillageList.getString("adapt_date_days"));

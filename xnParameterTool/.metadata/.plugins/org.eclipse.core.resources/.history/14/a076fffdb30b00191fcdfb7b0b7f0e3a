@@ -2666,13 +2666,18 @@ class	XnDatabaseConnection {
 							case 1: typeString = "before-sowing"; break;
 							case 2: typeString = "before-cover"; break;
 							case 3: typeString = "after-harvest"; break;
+							case 4: typeString = "before-sowing"; break;
 							default:
 								throw new Exception("Error: invalid adapt_date_type");
 						}
 						out.println("      adaptive  : ");
 						out.println("        type      : "+typeString);
-						out.println("        days      : "+tillageList.getString("adapt_date_days"));
-
+						if ( tillageList.getInt("adapt_date_type") == 4) {
+							out.println("        days      : 0");
+						}
+						else {
+							out.println("        days      : "+tillageList.getString("adapt_date_days"));
+						}
 					}
 					tillageList.next();
 				}

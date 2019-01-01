@@ -1684,9 +1684,9 @@ int checkIfMineralFertilization(mpmas_coupling *self)
     if (self->nextMinFertAction >= XNMPMASMINFERTSLOTS || self->nextMinFertAction >= self->numMinFert ) {
         return 0;
     }
-    //if timing of fertilization is adaptive, check whether indicated BBCH stage has been reached
+    //if timing of fertilization is adaptive, check whether indicated BBCH stage of MAIN crop has been reached
     else if ( self->mineralFertilization[self->nextMinFertAction].adaptive && self->mineralFertilization[self->nextMinFertAction].bbch > 0) {   
-        if (currentBBCH >= self->mineralFertilization[self->nextMinFertAction].bbch)
+        if ( self->mainCrop_done == 1 && self->harvest_done == 0 && currentBBCH >= self->mineralFertilization[self->nextMinFertAction].bbch)
             return 1;
         else
             return 0;
@@ -1727,7 +1727,7 @@ int checkIfOrganicFertilization(mpmas_coupling *self)
     }
     //if timing of fertilization is adaptive, check whether indicated BBCH stage has been reached
     else if ( self->organicFertilization[self->nextOrgFertAction].adaptive ) {   
-        if (currentBBCH >= self->organicFertilization[self->nextOrgFertAction].bbch)
+        if (self->mainCrop_done == 1 && self->harvest_done == 0 && currentBBCH >= self->organicFertilization[self->nextOrgFertAction].bbch)
             return 1;
         else
             return 0;
