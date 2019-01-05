@@ -2560,14 +2560,14 @@ class	XnDatabaseConnection {
 					}
 					if (adaptSowingList.getInt("process_id") == curProcId && adaptSowingList.getInt("sowingDayFormula") > -1 && ! adaptSowingList.wasNull() ) {
 						out.println("    adaptive  :");
+						out.println("      type: "+adaptSowingList.getInt("sowingDayFormula"));
 						switch(adaptSowingList.getInt("sowingDayFormula")) {
 							case 0: 				
-								out.println("      basetemp: "+adaptSowingList.getString("basetemp"));
 								out.println("      tgzthr: "+adaptSowingList.getString("tgzthr"));
-								out.println("      ggdthr: "+adaptSowingList.getString("gddthr"));
+								out.println("      gddthr: "+adaptSowingList.getString("gddthr"));
 								out.println("      const: "+adaptSowingList.getString("seed_cons"));
 								out.println("      coef_tgz: "+adaptSowingList.getString("seed_coef_tgz"));
-								out.println("      coef_gdd: "+adaptSowingList.getString("seed_coef_gdd"));
+								out.println("      coef-gdd: "+adaptSowingList.getString("seed_coef_gdd"));
 								break;
 							case 1: 				
 								out.println("      basetemp: "+adaptSowingList.getString("basetemp"));
@@ -2578,9 +2578,9 @@ class	XnDatabaseConnection {
 							case 2:
 							case 3: 				
 								out.println("      basetemp: "+adaptSowingList.getString("basetemp"));
-								out.println("      ggdthr: "+adaptSowingList.getString("gddthr"));
+								out.println("      gddthr: "+adaptSowingList.getString("gddthr"));
 								out.println("      const: "+adaptSowingList.getString("seed_cons"));
-								out.println("      coef_gdd: "+adaptSowingList.getString("seed_coef_gdd"));
+								out.println("      coef-gdd: "+adaptSowingList.getString("seed_coef_gdd"));
 							break;
 						}
 					}
@@ -2672,8 +2672,12 @@ class	XnDatabaseConnection {
 						}
 						out.println("      adaptive  : ");
 						out.println("        type      : "+typeString);
-						out.println("        days      : "+tillageList.getString("adapt_date_days"));
-
+						if ( tillageList.getInt("adapt_date_type") == 4) {
+							out.println("        days      : 1");
+						}
+						else {
+							out.println("        days      : "+tillageList.getString("adapt_date_days"));
+						}
 					}
 					tillageList.next();
 				}

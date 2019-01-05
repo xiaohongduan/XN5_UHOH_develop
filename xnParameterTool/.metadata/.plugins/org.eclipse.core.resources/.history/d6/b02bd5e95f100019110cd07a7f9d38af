@@ -2566,21 +2566,21 @@ class	XnDatabaseConnection {
 								out.println("      tgzthr: "+adaptSowingList.getString("tgzthr"));
 								out.println("      gddthr: "+adaptSowingList.getString("gddthr"));
 								out.println("      const: "+adaptSowingList.getString("seed_cons"));
-								out.println("      coef-tgz: "+adaptSowingList.getString("seed_coef_tgz"));
-								out.println("      coef-gdd: "+adaptSowingList.getString("seed_coef_gdd"));
+								out.println("      coef_tgz: "+adaptSowingList.getString("seed_coef_tgz"));
+								out.println("      coef_gdd: "+adaptSowingList.getString("seed_coef_gdd"));
 								break;
 							case 1: 				
 								out.println("      basetemp: "+adaptSowingList.getString("basetemp"));
 								out.println("      tgzthr: "+adaptSowingList.getString("tgzthr"));
 								out.println("      const: "+adaptSowingList.getString("seed_cons"));
-								out.println("      coef-tgz: "+adaptSowingList.getString("seed_coef_tgz"));						
+								out.println("      coef_tgz: "+adaptSowingList.getString("seed_coef_tgz"));						
 								break;
 							case 2:
 							case 3: 				
 								out.println("      basetemp: "+adaptSowingList.getString("basetemp"));
 								out.println("      gddthr: "+adaptSowingList.getString("gddthr"));
 								out.println("      const: "+adaptSowingList.getString("seed_cons"));
-								out.println("      coef-gdd: "+adaptSowingList.getString("seed_coef_gdd"));
+								out.println("      coef_gdd: "+adaptSowingList.getString("seed_coef_gdd"));
 							break;
 						}
 					}
@@ -4960,10 +4960,10 @@ class	XnDatabaseConnection {
 					}
 					else {
 						if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
-							out.print(xn5cellList.getString("weather_station_id")  +  String.format("%04d",xn5cellList.getInt("alt")));
+							out.print(xn5cellList.getInt("weather_station_id") * 10000 + xn5cellList.getInt("alt"));
 						}
 						else {
-							out.print(xn5cellList.getString("weather_station_id"));
+							out.print(xn5cellList.getInt("weather_station_id"));
 						}
 						xn5cellList.next();
 					}
@@ -5239,31 +5239,11 @@ class	XnDatabaseConnection {
 						
 						double tempAvg = rs.getDouble("avg_temp");
 
-						switch (elevationCorrectionType) {
-							case 0:
-								break;
-							case 1: { 
-								double tempdiff = (weatherCellElevation - altitude)/100 * 0.7;
-								tempAvg = tempAvg + tempdiff;
-							}
-								break;
-	
-							default:
-								break;
 						
-						}
-							
+						
 						out2.write(String.format("%04d", rs.getInt("year"))+"\t"+ String.format("%d", rs.getInt("day_year") + doy_correct));
 						out2.write(tab);
-						
-						if (elevationCorrectionType > 0 ) {
-							out2.write(String.valueOf(station_id) + String.format("%04d", Math.round( altitude) ) );
-						}
-						else {
-							out2.write(String.valueOf(station_id) );
-						}
-				
-						
+						out2.write(String.valueOf(station_id));
 						out2.write(tab);
 						out2.write(Double.toString( tempAvg));
 						out2.write(tab);

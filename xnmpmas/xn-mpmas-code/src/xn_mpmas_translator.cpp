@@ -1367,7 +1367,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 	FILE* dbgXnActualDates = fopen(fnAggXnOutput.c_str(), "w" );
 	fprintf(dbgXnActualDates, "x\ty\tgrid\tLUA\tCropCode\tVariety\tYieldMPMAS\t"
 							  "FruitDM\tStem+LeaveDM\tStemDM\tharvest_date\t"
-							  "minfert_date0\tminfert_N0\tminfert_date1\tminfert_N1\tminfert_date2\tminfert_N2\tminfert_date3\tminfert_N3\tNmin0_30\tNmin30_90\tNmin60_90\t"
+							  "minfert_date0\tminfert_N0\tminfert_date1\tminfert_N1\tminfert_date2\tminfert_N2\tminfert_date3\tminfert_N3\tNmin0_30\tNmin30_60\tNmin60_90\t"
 							  "sow_date\tcovercrop_sow_date"
 							  "\n"
 	);
@@ -1738,31 +1738,105 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 	}
 	else // weather not cell specific 
 	{ 	//first load raster map indicating weather station for each cell
-		Raster2D cellToStationMap = Raster2D(fnMap.c_str());
 		
-		if ( xnGridXdim != cellToStationMap.cols() || xnGridYdim != cellToStationMap.rows()  )
+		//Note not using Raster2D here, as we may need to cope with long integer IDs and Raster2D is double-based.
+		
+		//Raster2D cellToStationMap = Raster2D(fnMap.c_str());
+		
+		ifstream cellToStationMapStream (fnMap.c_str());
+		
+		FILE* cellToStationMapStream = fopen(fnMap.c_str(), "r");
+		if(NULL == cellToStationMapStream )
+		{
+			stringstream errmsg;
+			errmsg  <<  "Error when trying to open:" << fnMap <<  "\n";
+			throw runtime_error(errmsg.str());
+		}
+		int cellToStationMap_rows, cellToStationMap_cols; 
+		double xllC, yllC, noData,cellSize;
+
+		char varString [254];
+		
+		rtcod = fscanf(cellToStationMapStream, "%253s %d", varString, &cellToStationMap_cols);
+		if (rtcod != 2)
+		{
+				stringstream errmsg;
+				errmsg  <<  "Error when reading NCOLS in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+			
+		}
+		
+		rtcod = fscanf(cellToStationMapStream, "%253s %d", varString, &cellToStationMap_rows);
+		if (rtcod != 2)
+		{
+			stringstream errmsg;
+				errmsg  <<  "Error when reading NROWS in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+		}
+		
+		
+		
+		if ( xnGridXdim != cellToStationMap_cols || xnGridYdim != cellToStationMap_rows  )
 		{	stringstream errmsg;
-			errmsg  << "Error: Dimensions ("<<cellToStationMap.cols() << ","<< cellToStationMap.rows() 
+			errmsg  << "Error: Dimensions ("<<cellToStationMap.cols << ","<< cellToStationMap_rows 
 					<<")  of cellWeatherRecordsLinkMap inconsistent with dimensions (" 
 					<< xnGridXdim << "," << xnGridYdim <<")  of XnCellRaster\n";
 			throw runtime_error(errmsg.str() );
 		}
-		multimap<int,int> cellsByStation;//key = station, value = cells associated to that station
-
-		for (int x = 0; x < xnGridXdim; ++x)
-		{	for (int y = 0; y < xnGridYdim; ++y)	
-			{
-				int s = (int) cellToStationMap.getValue(y,x);
-				cellsByStation.insert(pair<int,int>(s, x * xnGridYdim + y));
+		
+		rtcod = fscanf(cellToStationMapStream, "%253s %lf", varString, &xllC);
+		if (rtcod != 2)
+		{
+			stringstream errmsg;
+				errmsg  <<  "Error when reading XLLCORNER in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+		}
+		rtcod = fscanf(cellToStationMapStream, "%253s %lf", varString, &yllC);
+		if (rtcod != 2)
+		{
+			stringstream errmsg;
+				errmsg  <<  "Error when reading YLLCORNER in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+		}
+		rtcod = fscanf(cellToStationMapStream, "%253s %lf", varString, &cellSize);
+		if (rtcod != 2)
+		{
+			stringstream errmsg;
+				errmsg  <<  "Error when reading CELLSIZE in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+		}
+		rtcod = fscanf(cellToStationMapStream, "%253s %lf", varString, &noData);
+		if (rtcod != 2)
+		{
+			stringstream errmsg;
+				errmsg  <<  "Error when reading NODATA_VALUE in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+		}
+		
+		multimap<long long,int> cellsByStation;//key = station, value = cells associated to that station
+		for (int y = xnGridYdim -1; y >= 0 ; --y)	
+		{	for (int x = 0; x < xnGridXdim; ++x)
+			{	
+				long long s;
+				rtcod = fscanf(cellToStationMapStream, "%lld", varString, &s);
+				if (rtcod != 1)
+				{
+					stringstream errmsg;
+					errmsg  <<  "Error when reading station id for cell " << x << ", " << y << " in " << fnMap <<  "\n";
+					throw runtime_error(errmsg.str());
+				}				
+				cellsByStation.insert(pair<long long,int>(s, x * xnGridYdim + y));
 			}
 		}
-/*		cout << "cellsByStation:\n";
-		for (multimap<int,int>::iterator it =  cellsByStation.begin(); it != cellsByStation.end(); it++)
+		cellToStationMapStream.close();
+		
+		cout << "cellsByStation:\n";
+		for (multimap<long long,int>::iterator it =  cellsByStation.begin(); it != cellsByStation.end(); it++)
 		{
 			cout << it->first << "\t" << it->second << "\n";
 		}
 		cout.flush();
-*/
+
 		
 		ifstream infile(fnHistory.c_str());			
 		if (infile.fail())
@@ -1782,15 +1856,15 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 		}
 		//save iterators to avoid searching everytime
 		// initialize to first station's values in map
-		multimap<int,int>::iterator lastItLow = cellsByStation.begin();
-		multimap<int,int>::iterator lastItUpp = cellsByStation.upper_bound(lastItLow->first);
+		multimap<long long,int>::iterator lastItLow = cellsByStation.begin();
+		multimap<long long,int>::iterator lastItUpp = cellsByStation.upper_bound(lastItLow->first);
 
 		//loop over remaining lines	
 		while (	getline(infile, line) )
 		{
 			
 			stringstream lineS(line); //make stream from extracted line 
-			int year, dayofyear, station;
+			int year, dayofyear; long long station;
 			double airtemp, soiltemp;
 			
 			lineS >> year;

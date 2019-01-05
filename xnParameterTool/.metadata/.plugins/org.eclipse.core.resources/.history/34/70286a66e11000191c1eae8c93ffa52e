@@ -5257,7 +5257,7 @@ class	XnDatabaseConnection {
 						out2.write(tab);
 						
 						if (elevationCorrectionType > 0 ) {
-							out2.write(String.valueOf(station_id) + String.format("%04d", Math.round( altitude) ) );
+							out2.write(String.valueOf(station_id) + String.format("%04d", altitude ) );
 						}
 						else {
 							out2.write(String.valueOf(station_id) );
