@@ -160,7 +160,7 @@ int     xpn_main_run(xpn_main *self);
 
 void    xpn_main_write_vars_to_matrices(xpn_main *self);
 
-void 	xpn_main_mpi_share_results_on_all_nodes (xpn_main *self);
+void 	xpn_main_mpi_share_results_on_all_nodes (xpn_main *self, int weatherOnly);
 
 
 xpn_main *xpn_main_done(xpn_main *self);

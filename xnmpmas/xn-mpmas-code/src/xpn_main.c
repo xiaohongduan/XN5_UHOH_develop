@@ -850,7 +850,7 @@ void xpn_main_write_vars_to_matrices(xpn_main *self)
 	*/
 }
 //start added 180528 Troost
-void xpn_main_mpi_share_results_on_all_nodes (xpn_main *self)
+void xpn_main_mpi_share_results_on_all_nodes (xpn_main *self, int weatherOnly)
 {
 	int i,i2,k, entry_len;
 	int *n_for_procs, *starts_for_procs;
@@ -886,134 +886,136 @@ void xpn_main_mpi_share_results_on_all_nodes (xpn_main *self)
 	//Send actual data
 	//Note: a MPI_type_struct would be nicer, but I am doing it the explicit way here
 	
-	//xn_to_mpmas DOUBLES
-	entry_len = 10;
-	sendbuf_double = (double *) g_malloc0(sizeof(double) * n_own * entry_len);
-	recvbuf_double = (double *) g_malloc0(sizeof(double) * oneGridSize * entry_len);
-	
-	for ( i = 0; i <  self->numtasks; ++i)
+	if (weatherOnly == 0) 
 	{
-		actual_n_for_procs[i] = n_for_procs[i] * entry_len;
-		actual_starts_for_procs[i] = starts_for_procs[i] * entry_len;
-	}
-	
-	
-	
-	for (i =  self->loop_min_xn_to_mpmas_grid,k=0; i < self->loop_max_xn_to_mpmas_grid; ++i) 
-	{
-		sendbuf_double[k * entry_len] = self->grid_xn_to_mpmas[i].fruitDryWeight;
-		sendbuf_double[k * entry_len +1] = self->grid_xn_to_mpmas[i].stemLeafDryWeight;
-		sendbuf_double[k * entry_len +2] = self->grid_xn_to_mpmas[i].stemOnlyDryWeight;
-		sendbuf_double[k * entry_len +3] = self->grid_xn_to_mpmas[i].Nmin0_30;
-		sendbuf_double[k * entry_len +4] = self->grid_xn_to_mpmas[i].Nmin30_60;
-		sendbuf_double[k * entry_len +5] = self->grid_xn_to_mpmas[i].Nmin60_90;
-		for (i2 = 0; i2 < XNMPMASMINFERTSLOTS; ++i2) 
-		{
-			sendbuf_double[k * entry_len + 6 + i2] = self->grid_xn_to_mpmas[i].actualTotalFertN[i2];
-		}
-		++k;
-	}
-
-	//dbg
-	/* for (k=0; k < n_own; ++k) {
-		printf("FruitDryWeight to be sent: %d [%d] : %f\n", self->rank, k, sendbuf_double[k*entry_len]); 
-
-	}
-	for (k=0; k < self->numtasks; ++k) {
-		printf("Rankinfo at: %d [%d] : n= %d, start = %d\n", self->rank, k, n_for_procs[k], starts_for_procs[k]); 
-
-	} */
-
-	MPI_Allgatherv(sendbuf_double, n_own * entry_len, MPI_DOUBLE, recvbuf_double, actual_n_for_procs, actual_starts_for_procs, MPI_DOUBLE, MPI_COMM_WORLD);
-
-	for (i = 0; i < oneGridSize; ++i) 
-	{
-		if (i >=  self->loop_min_xn_to_mpmas_grid && i < self->loop_max_xn_to_mpmas_grid) //for debugging don't overwrite own values
-			continue;
+		//xn_to_mpmas DOUBLES
+		entry_len = 10;
+		sendbuf_double = (double *) g_malloc0(sizeof(double) * n_own * entry_len);
+		recvbuf_double = (double *) g_malloc0(sizeof(double) * oneGridSize * entry_len);
 		
-		self->grid_xn_to_mpmas[i].fruitDryWeight = recvbuf_double[i * entry_len];
-		self->grid_xn_to_mpmas[i].stemLeafDryWeight = recvbuf_double[i * entry_len +1];
-		self->grid_xn_to_mpmas[i].stemOnlyDryWeight = recvbuf_double[i * entry_len +2];
-		self->grid_xn_to_mpmas[i].Nmin0_30 = recvbuf_double[i * entry_len +3];
-		self->grid_xn_to_mpmas[i].Nmin30_60 = recvbuf_double[i * entry_len +4];
-		self->grid_xn_to_mpmas[i].Nmin60_90 = recvbuf_double[i * entry_len +5];
-		for (i2 = 0; i2 < XNMPMASMINFERTSLOTS; ++i2) 
+		for ( i = 0; i <  self->numtasks; ++i)
 		{
-			self->grid_xn_to_mpmas[i].actualTotalFertN[i2] = recvbuf_double[i * entry_len +6 +i2];
+			actual_n_for_procs[i] = n_for_procs[i] * entry_len;
+			actual_starts_for_procs[i] = starts_for_procs[i] * entry_len;
 		}
 		
-	}
-	//free memory
-	g_free(sendbuf_double);
-	g_free(recvbuf_double);
-	
-	//xn_to_mpmas INTS
-	entry_len = 4 + 3* XNMPMASMINFERTSLOTS + 6;
-	sendbuf_int = (int *) g_malloc0(sizeof(int) * n_own * entry_len);
-	recvbuf_int = (int *) g_malloc0(sizeof(int) * oneGridSize * entry_len);
-	
-	for ( i = 0; i <  self->numtasks; ++i)
-	{
-		actual_n_for_procs[i] = n_for_procs[i] * entry_len;
-		actual_starts_for_procs[i] = starts_for_procs[i] * entry_len;
-	}
-	
-	
-	
-	for (i =  self->loop_min_xn_to_mpmas_grid,k=0; i < self->loop_max_xn_to_mpmas_grid; ++i) 
-	{
-		sendbuf_int[k * entry_len] = self->grid_xn_to_mpmas[i].cellID;
-		sendbuf_int[k * entry_len +1] = self->grid_xn_to_mpmas[i].actualHarvestDate.year;
-		sendbuf_int[k * entry_len +2] = self->grid_xn_to_mpmas[i].actualHarvestDate.month;
-		sendbuf_int[k * entry_len +3] = self->grid_xn_to_mpmas[i].actualHarvestDate.day;
-		for (i2 = 0; i2 < XNMPMASMINFERTSLOTS; ++i2) 
+		
+		
+		for (i =  self->loop_min_xn_to_mpmas_grid,k=0; i < self->loop_max_xn_to_mpmas_grid; ++i) 
 		{
-			sendbuf_int[k * entry_len + 4 + 3 * i2 + 0] = self->grid_xn_to_mpmas[i].actualMinFertDate[i2].year;
-			sendbuf_int[k * entry_len + 4 + 3 * i2 + 1] = self->grid_xn_to_mpmas[i].actualMinFertDate[i2].month;
-			sendbuf_int[k * entry_len + 4 + 3 * i2 + 2] = self->grid_xn_to_mpmas[i].actualMinFertDate[i2].day;
+			sendbuf_double[k * entry_len] = self->grid_xn_to_mpmas[i].fruitDryWeight;
+			sendbuf_double[k * entry_len +1] = self->grid_xn_to_mpmas[i].stemLeafDryWeight;
+			sendbuf_double[k * entry_len +2] = self->grid_xn_to_mpmas[i].stemOnlyDryWeight;
+			sendbuf_double[k * entry_len +3] = self->grid_xn_to_mpmas[i].Nmin0_30;
+			sendbuf_double[k * entry_len +4] = self->grid_xn_to_mpmas[i].Nmin30_60;
+			sendbuf_double[k * entry_len +5] = self->grid_xn_to_mpmas[i].Nmin60_90;
+			for (i2 = 0; i2 < XNMPMASMINFERTSLOTS; ++i2) 
+			{
+				sendbuf_double[k * entry_len + 6 + i2] = self->grid_xn_to_mpmas[i].actualTotalFertN[i2];
+			}
+			++k;
+		}
+
+		//dbg
+		/* for (k=0; k < n_own; ++k) {
+			printf("FruitDryWeight to be sent: %d [%d] : %f\n", self->rank, k, sendbuf_double[k*entry_len]); 
+
+		}
+		for (k=0; k < self->numtasks; ++k) {
+			printf("Rankinfo at: %d [%d] : n= %d, start = %d\n", self->rank, k, n_for_procs[k], starts_for_procs[k]); 
+
+		} */
+
+		MPI_Allgatherv(sendbuf_double, n_own * entry_len, MPI_DOUBLE, recvbuf_double, actual_n_for_procs, actual_starts_for_procs, MPI_DOUBLE, MPI_COMM_WORLD);
+
+		for (i = 0; i < oneGridSize; ++i) 
+		{
+			if (i >=  self->loop_min_xn_to_mpmas_grid && i < self->loop_max_xn_to_mpmas_grid) //for debugging don't overwrite own values
+				continue;
+			
+			self->grid_xn_to_mpmas[i].fruitDryWeight = recvbuf_double[i * entry_len];
+			self->grid_xn_to_mpmas[i].stemLeafDryWeight = recvbuf_double[i * entry_len +1];
+			self->grid_xn_to_mpmas[i].stemOnlyDryWeight = recvbuf_double[i * entry_len +2];
+			self->grid_xn_to_mpmas[i].Nmin0_30 = recvbuf_double[i * entry_len +3];
+			self->grid_xn_to_mpmas[i].Nmin30_60 = recvbuf_double[i * entry_len +4];
+			self->grid_xn_to_mpmas[i].Nmin60_90 = recvbuf_double[i * entry_len +5];
+			for (i2 = 0; i2 < XNMPMASMINFERTSLOTS; ++i2) 
+			{
+				self->grid_xn_to_mpmas[i].actualTotalFertN[i2] = recvbuf_double[i * entry_len +6 +i2];
+			}
+			
+		}
+		//free memory
+		g_free(sendbuf_double);
+		g_free(recvbuf_double);
+		
+		//xn_to_mpmas INTS
+		entry_len = 4 + 3* XNMPMASMINFERTSLOTS + 6;
+		sendbuf_int = (int *) g_malloc0(sizeof(int) * n_own * entry_len);
+		recvbuf_int = (int *) g_malloc0(sizeof(int) * oneGridSize * entry_len);
+		
+		for ( i = 0; i <  self->numtasks; ++i)
+		{
+			actual_n_for_procs[i] = n_for_procs[i] * entry_len;
+			actual_starts_for_procs[i] = starts_for_procs[i] * entry_len;
 		}
 		
-		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 0] = self->grid_xn_to_mpmas[i].actualSowDate.year;
-		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 1] = self->grid_xn_to_mpmas[i].actualSowDate.month;
-		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 2] = self->grid_xn_to_mpmas[i].actualSowDate.day;
-		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 3] = self->grid_xn_to_mpmas[i].actualCoverCropSowDate.year;
-		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 4] = self->grid_xn_to_mpmas[i].actualCoverCropSowDate.month;
-		sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 5] = self->grid_xn_to_mpmas[i].actualCoverCropSowDate.day;		
 		
-		++k;
-	}
-
-	MPI_Allgatherv(sendbuf_int, n_own * entry_len, MPI_INT, recvbuf_int, actual_n_for_procs, actual_starts_for_procs, MPI_INT, MPI_COMM_WORLD);
-
-	for (i = 0; i < oneGridSize; ++i) 
-	{
-		if (i >=  self->loop_min_xn_to_mpmas_grid && i < self->loop_max_xn_to_mpmas_grid) //for debugging don't overwrite own values
-			continue;
 		
-		self->grid_xn_to_mpmas[i].cellID = recvbuf_int[i * entry_len];
-		self->grid_xn_to_mpmas[i].actualHarvestDate.year = recvbuf_int[i * entry_len +1];
-		self->grid_xn_to_mpmas[i].actualHarvestDate.month = recvbuf_int[i * entry_len +2];
-		self->grid_xn_to_mpmas[i].actualHarvestDate.day = recvbuf_int[i * entry_len +3];
-
-		for (i2 = 0; i2 < XNMPMASMINFERTSLOTS; ++i2) 
+		for (i =  self->loop_min_xn_to_mpmas_grid,k=0; i < self->loop_max_xn_to_mpmas_grid; ++i) 
 		{
-			self->grid_xn_to_mpmas[i].actualMinFertDate[i2].year = recvbuf_int[i * entry_len + 4 + 3 * i2 + 0];
-			self->grid_xn_to_mpmas[i].actualMinFertDate[i2].month = recvbuf_int[i * entry_len + 4 + 3 * i2 + 1] ;
-			self->grid_xn_to_mpmas[i].actualMinFertDate[i2].day = recvbuf_int[i * entry_len + 4 + 3 * i2 + 2];
+			sendbuf_int[k * entry_len] = self->grid_xn_to_mpmas[i].cellID;
+			sendbuf_int[k * entry_len +1] = self->grid_xn_to_mpmas[i].actualHarvestDate.year;
+			sendbuf_int[k * entry_len +2] = self->grid_xn_to_mpmas[i].actualHarvestDate.month;
+			sendbuf_int[k * entry_len +3] = self->grid_xn_to_mpmas[i].actualHarvestDate.day;
+			for (i2 = 0; i2 < XNMPMASMINFERTSLOTS; ++i2) 
+			{
+				sendbuf_int[k * entry_len + 4 + 3 * i2 + 0] = self->grid_xn_to_mpmas[i].actualMinFertDate[i2].year;
+				sendbuf_int[k * entry_len + 4 + 3 * i2 + 1] = self->grid_xn_to_mpmas[i].actualMinFertDate[i2].month;
+				sendbuf_int[k * entry_len + 4 + 3 * i2 + 2] = self->grid_xn_to_mpmas[i].actualMinFertDate[i2].day;
+			}
+			
+			sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 0] = self->grid_xn_to_mpmas[i].actualSowDate.year;
+			sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 1] = self->grid_xn_to_mpmas[i].actualSowDate.month;
+			sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 2] = self->grid_xn_to_mpmas[i].actualSowDate.day;
+			sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 3] = self->grid_xn_to_mpmas[i].actualCoverCropSowDate.year;
+			sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 4] = self->grid_xn_to_mpmas[i].actualCoverCropSowDate.month;
+			sendbuf_int[k * entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 5] = self->grid_xn_to_mpmas[i].actualCoverCropSowDate.day;		
+			
+			++k;
 		}
-		self->grid_xn_to_mpmas[i].actualSowDate.year = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 0];
-		self->grid_xn_to_mpmas[i].actualSowDate.month = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 1];
-		self->grid_xn_to_mpmas[i].actualSowDate.day = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 2];
-		self->grid_xn_to_mpmas[i].actualCoverCropSowDate.year = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 3];
-		self->grid_xn_to_mpmas[i].actualCoverCropSowDate.month = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 4];
-		self->grid_xn_to_mpmas[i].actualCoverCropSowDate.day = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 5];
-		
-		
+
+		MPI_Allgatherv(sendbuf_int, n_own * entry_len, MPI_INT, recvbuf_int, actual_n_for_procs, actual_starts_for_procs, MPI_INT, MPI_COMM_WORLD);
+
+		for (i = 0; i < oneGridSize; ++i) 
+		{
+			if (i >=  self->loop_min_xn_to_mpmas_grid && i < self->loop_max_xn_to_mpmas_grid) //for debugging don't overwrite own values
+				continue;
+			
+			self->grid_xn_to_mpmas[i].cellID = recvbuf_int[i * entry_len];
+			self->grid_xn_to_mpmas[i].actualHarvestDate.year = recvbuf_int[i * entry_len +1];
+			self->grid_xn_to_mpmas[i].actualHarvestDate.month = recvbuf_int[i * entry_len +2];
+			self->grid_xn_to_mpmas[i].actualHarvestDate.day = recvbuf_int[i * entry_len +3];
+
+			for (i2 = 0; i2 < XNMPMASMINFERTSLOTS; ++i2) 
+			{
+				self->grid_xn_to_mpmas[i].actualMinFertDate[i2].year = recvbuf_int[i * entry_len + 4 + 3 * i2 + 0];
+				self->grid_xn_to_mpmas[i].actualMinFertDate[i2].month = recvbuf_int[i * entry_len + 4 + 3 * i2 + 1] ;
+				self->grid_xn_to_mpmas[i].actualMinFertDate[i2].day = recvbuf_int[i * entry_len + 4 + 3 * i2 + 2];
+			}
+			self->grid_xn_to_mpmas[i].actualSowDate.year = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 0];
+			self->grid_xn_to_mpmas[i].actualSowDate.month = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 1];
+			self->grid_xn_to_mpmas[i].actualSowDate.day = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 2];
+			self->grid_xn_to_mpmas[i].actualCoverCropSowDate.year = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 3];
+			self->grid_xn_to_mpmas[i].actualCoverCropSowDate.month = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 4];
+			self->grid_xn_to_mpmas[i].actualCoverCropSowDate.day = recvbuf_int[i 	* entry_len + 4 + 3 * XNMPMASMINFERTSLOTS + 5];
+			
+			
+		}
+		//free memory
+		g_free(sendbuf_int);
+		g_free(recvbuf_int);
 	}
-	//free memory
-	g_free(sendbuf_int);
-	g_free(recvbuf_int);
-	
 	
 	//xn_to_mpmas2 DOUBLES
 	entry_len = 2 * XNMPMASDAYSOFYEAR;

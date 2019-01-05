@@ -478,7 +478,7 @@ int main(int ac, char **av)
 				
 				// Synchronization of yield results from XN to all nodes
 				MPI_Barrier(MPI_COMM_WORLD);
-				xpn_main_mpi_share_results_on_all_nodes(xpn);
+				xpn_main_mpi_share_results_on_all_nodes(xpn,0);
 				MPI_Barrier(MPI_COMM_WORLD);
 				
 
@@ -676,8 +676,14 @@ int main(int ac, char **av)
 				printf("\nProcessor %d: SOWING DECISION STOP:\n", my_rank);
 				curDate = nextStop; // copy before changed
 				
+				// Synchronization of weather results from XN to all nodes
+				MPI_Barrier(MPI_COMM_WORLD);
+				xpn_main_mpi_share_results_on_all_nodes(xpn,1);
+				MPI_Barrier(MPI_COMM_WORLD);
 				
-				if(XNMPMASDBG) 
+				
+				if(XNMPMASDBG && my_rank == 0)
+							 	 
 				{//post-xpn-run debugging output
 					printf("...writing dbg_XnCommunicatedWeather_ file\n");	
 					// Comment for-loop if you do not want to print air and soil temperatures
@@ -710,16 +716,15 @@ int main(int ac, char **av)
 							printf("Id: %d, i: %d, j: %d, check_changed: %f\n",gridId,i,i2,xpn->grid_xn_to_mpmas[gridId * xnGridSize +i2*matrix_size_y+i].check_changed);
 							//End of Hong
 							*/
-							if (my_rank == 0)
-							{ 	
-								int startDoy = translator.getStartDoy(firstyear + year);
-								for(int i3=0;i3<XNMPMASDAYSOFYEAR;i3++)
-								{   int isYear = firstyear + year;
-									if (i3+1 <  startDoy)
-										isYear += 1; 
-									fprintf(dbgXnWeatherCom, "g: %d i: %d, j: %d, SimulationDay: %d/%d, AirTemp: %f, SoilTemp: %f\n",gridId, i,i2,i3,isYear,xpn->grid_xn_to_mpmas2[gridId * xnGridSize +i2*matrix_size_y+i].airTemp[i3],xpn->grid_xn_to_mpmas2[gridId * xnGridSize +i2*matrix_size_y+i].topsoilTemp[i3]);	
-								}
+
+							int startDoy = translator.getStartDoy(firstyear + year);
+							for(int i3=0;i3<XNMPMASDAYSOFYEAR;i3++)
+							{   int isYear = firstyear + year;
+								if (i3+1 <  startDoy)
+									isYear += 1; 
+								fprintf(dbgXnWeatherCom, "g: %d i: %d, j: %d, SimulationDay: %d/%d, AirTemp: %f, SoilTemp: %f\n",gridId, i,i2,i3,isYear,xpn->grid_xn_to_mpmas2[gridId * xnGridSize +i2*matrix_size_y+i].airTemp[i3],xpn->grid_xn_to_mpmas2[gridId * xnGridSize +i2*matrix_size_y+i].topsoilTemp[i3]);	
 							}
+							
 						}
 					  }
 //Begin of Hong
