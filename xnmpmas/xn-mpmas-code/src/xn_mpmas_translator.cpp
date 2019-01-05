@@ -1743,7 +1743,6 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 		
 		//Raster2D cellToStationMap = Raster2D(fnMap.c_str());
 		
-		ifstream cellToStationMapStream (fnMap.c_str());
 		
 		FILE* cellToStationMapStream = fopen(fnMap.c_str(), "r");
 		if(NULL == cellToStationMapStream )
@@ -1757,7 +1756,7 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 
 		char varString [254];
 		
-		rtcod = fscanf(cellToStationMapStream, "%253s %d", varString, &cellToStationMap_cols);
+		int rtcod = fscanf(cellToStationMapStream, "%253s %d", varString, &cellToStationMap_cols);
 		if (rtcod != 2)
 		{
 				stringstream errmsg;
@@ -1778,7 +1777,7 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 		
 		if ( xnGridXdim != cellToStationMap_cols || xnGridYdim != cellToStationMap_rows  )
 		{	stringstream errmsg;
-			errmsg  << "Error: Dimensions ("<<cellToStationMap.cols << ","<< cellToStationMap_rows 
+			errmsg  << "Error: Dimensions ("<<cellToStationMap_cols << ","<< cellToStationMap_rows 
 					<<")  of cellWeatherRecordsLinkMap inconsistent with dimensions (" 
 					<< xnGridXdim << "," << xnGridYdim <<")  of XnCellRaster\n";
 			throw runtime_error(errmsg.str() );
@@ -1818,7 +1817,7 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 		{	for (int x = 0; x < xnGridXdim; ++x)
 			{	
 				long long s;
-				rtcod = fscanf(cellToStationMapStream, "%lld", varString, &s);
+				rtcod = fscanf(cellToStationMapStream, "%lld", &s);
 				if (rtcod != 1)
 				{
 					stringstream errmsg;
@@ -1828,7 +1827,7 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 				cellsByStation.insert(pair<long long,int>(s, x * xnGridYdim + y));
 			}
 		}
-		cellToStationMapStream.close();
+		fclose(cellToStationMapStream);
 		
 		cout << "cellsByStation:\n";
 		for (multimap<long long,int>::iterator it =  cellsByStation.begin(); it != cellsByStation.end(); it++)
@@ -1887,14 +1886,14 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 			}
 			if (dayofyear < 1 || dayofyear > 366)
 			{
-				fprintf(stderr, "Error in %s: Invalid input %d %d %d %f %f\n", fnHistory.c_str(), year, dayofyear, station, airtemp, soiltemp );
+				fprintf(stderr, "Error in %s: Invalid input %d %d %lld %f %f\n", fnHistory.c_str(), year, dayofyear, station, airtemp, soiltemp );
 				std::stringstream errmsg;
 				errmsg << "Error in " << fnHistory << ":\n"
 				<< "Invalid input" << year <<" "<< dayofyear<<" "<< station <<" "<< airtemp <<" "<< soiltemp <<  "\n";
 				throw runtime_error(errmsg.str());
 			}
 			
-			multimap<int,int>::iterator itLow, itUpp;
+			multimap<long long,int>::iterator itLow, itUpp;
 			if (lastItLow->first  == station )
 			{	itLow =  lastItLow;
 				itUpp = lastItUpp;
@@ -1906,7 +1905,7 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 			}
 			
 			//loop over all cells associated to that station and insert the value into the corresponding record
-			for ( multimap<int,int>::iterator itStationCells = itLow;
+			for ( multimap<long long,int>::iterator itStationCells = itLow;
 						itStationCells != itUpp;
 						itStationCells++)
 			{
