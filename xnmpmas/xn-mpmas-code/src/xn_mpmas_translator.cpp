@@ -1942,17 +1942,22 @@ void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_x
 	
 	int startDoy, endDoy, year1, year2;
 	
-	
-	
 	startDoy = convertDateToDayOfYear(lastWeatherUpDate);
-	endDoy = convertDateToDayOfYear(curDate);
+	endDoy = convertDateToDayOfYear(curDate) -1;
+	
 	year1 = lastWeatherUpDate.year;
 	year2 = curDate.year;
 	
 	cout << "Updating weather " << startDoy << "/" << year1 << " to " << endDoy << "/" << year2 << "\n";
 	
 	int daysYear1 = isLeapYear(year1) ? 366 : 365;
-//	int daysYear2 = isLeapYear(year2) ? 366 : 365;
+	//int daysYear2 = isLeapYear(year2) ? 366 : 365;
+	if (endDoy <= 0) {
+		year2 = year1;
+		endDoy =  daysYear1;
+		//daysYear2 = daysYear2;
+	}
+	
 			
 //	int startDoy1 = getStartDoy(thisSeasonsStartyear);
 //	int startDoy2 = getStartDoy(thisSeasonsStartyear + 1);
