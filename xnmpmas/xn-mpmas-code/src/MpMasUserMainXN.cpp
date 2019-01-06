@@ -722,7 +722,7 @@ int main(int ac, char **av)
 							{   int isYear = firstyear + year;
 								if (i3+1 <  startDoy)
 									isYear += 1; 
-								fprintf(dbgXnWeatherCom, "g: %d i: %d, j: %d, SimulationDay: %d/%d, AirTemp: %f, SoilTemp: %f\n",gridId, i,i2,i3,isYear,xpn->grid_xn_to_mpmas2[gridId * xnGridSize +i2*matrix_size_y+i].airTemp[i3],xpn->grid_xn_to_mpmas2[gridId * xnGridSize +i2*matrix_size_y+i].topsoilTemp[i3]);	
+								fprintf(dbgXnWeatherCom, "g: %d i: %d, j: %d, SimulationDay: %d/%d, AirTemp: %f, SoilTemp: %f\n",gridId, i,i2,i3+1,isYear,xpn->grid_xn_to_mpmas2[gridId * xnGridSize +i2*matrix_size_y+i].airTemp[i3],xpn->grid_xn_to_mpmas2[gridId * xnGridSize +i2*matrix_size_y+i].topsoilTemp[i3]);	
 							}
 							
 						}

@@ -1927,6 +1927,7 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 		}
 	
 	}
+	lastWeatherUpdate = startDate;
 	//TODO: check completenes of weatherHistory (years should be historySize + 1 to account for the calendar year/season overlap
 }
 int xn_mpmas_translator::getStartDoy(int currentyear)
@@ -1936,6 +1937,135 @@ int xn_mpmas_translator::getStartDoy(int currentyear)
 	return convertDateToDayOfYear(thisStartDate);
 }
 
+void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_xn_to_mpmas2, int thisSeasonsStartyear, xnmpmasDate curDate, int sowingDecStop)
+{   //copy information on cell-specific weather data from XN/MPMAS shared array into weatherHistory
+	
+	int curDoy = convertDateToDayOfYear(curDate);
+	
+	int startDoy, endDoy, year1, year2;
+	
+	startDoy = convertDateToDayOfYear(lastWeatherUpDate);
+	endDoy = curDoy
+	year1 = lastWeatherUpDate.year;
+	year2 = curDate.year;
+	
+	int daysYear1 = isLeapYear(year1) ? 366 : 365;
+	int daysYear2 = isLeapYear(year2) ? 366 : 365;
+			
+//	int startDoy1 = getStartDoy(thisSeasonsStartyear);
+//	int startDoy2 = getStartDoy(thisSeasonsStartyear + 1);
+	
+	for (int i = 0; i < xnGridSize; ++i)
+	{	
+		int lua = currentXnCropGrid.at(i);//TODO: switch correctly !!!
+		int gridId = LuaXnParameters.at(lua).currentGrid;
+		
+		if (year1 == year2 && startDoy <= endDoy) 
+		{	
+			if (xnGridWeatherHistory[i][0].year == year1)	
+			{
+				for (int j = startDoy-1; j < endDoy; ++j)
+				{	// -1 to convert from doy (>=1) to array position (>=0)
+					xnGridWeatherHistory[i][0].airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
+					xnGridWeatherHistory[i][0].topsoilTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
+				}
+				xnGridWeatherHistory[i][0].numDays = endDoy ;
+
+			}
+			else if (xnGridWeatherHistory[i][0].year == year1 - 1 )	
+			{
+				weatherRecord temp = weatherRecord(year1);
+				for (int j = startDoy-1; j < endDoy; ++j)
+				{
+					temp.airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
+					temp.topsoilTemp[ j]  = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
+				}
+				temp.numDays = endDoy ;
+				
+				//remove last record ??
+				xnGridWeatherHistory[i].pop_back();
+				//add new record at beginning
+				xnGridWeatherHistory[i].push_front(temp);				
+			}
+			else 
+			{
+				std::stringstream errmsg;
+					errmsg << "Error in <updateWeatherHistory>:\n"
+					<< "Gap in weather history: New year " << year1 << ", last existing year " << xnGridWeatherHistory[i][0].year <<"\n";
+					throw runtime_error(errmsg.str());
+			}
+		}
+		else if (year1 == year2 - 1 ) 
+		{	
+			if (xnGridWeatherHistory[i][0].year == year1)	
+			{
+				for (int j = startDoy-1; j < daysYear1; ++j)
+				{	// -1 to convert from doy (>=1) to array position (>=0)
+					xnGridWeatherHistory[i][0].airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
+					xnGridWeatherHistory[i][0].topsoilTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
+				}
+				xnGridWeatherHistory[i][0].numDays = endDoy ;
+			}
+			else if (xnGridWeatherHistory[i][0].year == year1 - 1 )	
+			{
+				weatherRecord temp = weatherRecord(year1);
+				for (int j = startDoy -1 ; j < daysYear1; ++j)
+				{
+					temp.airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
+					temp.topsoilTemp[ j]  = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
+				}
+				temp.numDays = endDoy ;
+				
+				//remove last record ??
+				xnGridWeatherHistory[i].pop_back();
+				//add new record at beginning
+				xnGridWeatherHistory[i].push_front(temp);				
+			}
+			else 
+			{
+				std::stringstream errmsg;
+					errmsg << "Error in <updateWeatherHistory>:\n"
+					<< "Gap in weather history: New year " << year1 << ", last existing year " << xnGridWeatherHistory[i][0].year <<"\n";
+					throw runtime_error(errmsg.str());
+			}
+		
+		
+			if (xnGridWeatherHistory[i][0].year == year2)	
+			{
+					std::stringstream errmsg;
+					errmsg << "Error in <updateWeatherHistory>:\n"
+					<< "Unexpected case: New year (second in recevied info) " << year2 << "already exists, last existing year " << xnGridWeatherHistory[i][0].year <<"\n";
+					throw runtime_error(errmsg.str());
+			}
+			else if (xnGridWeatherHistory[i][0].year == year2 - 1 )	
+			{
+				weatherRecord temp = weatherRecord(year2);
+				for (int j = 0 ; j < endDoy; ++j)
+				{
+					temp.airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
+					temp.topsoilTemp[ j]  = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
+				}
+				temp.numDays = endDoy ;
+				
+				//remove last record ??
+				xnGridWeatherHistory[i].pop_back();
+				//add new record at beginning
+				xnGridWeatherHistory[i].push_front(temp);				
+			}
+			else 
+			{
+				std::stringstream errmsg;
+					errmsg << "Error in <updateWeatherHistory>:\n"
+					<< "Gap in weather history: New year " << year2 << ", last existing year " << xnGridWeatherHistory[i][0].year <<"\n";
+					throw runtime_error(errmsg.str());
+			}		
+		}
+	}
+	lastWeatherUpDate = curDate;
+}
+
+
+/*
 void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_xn_to_mpmas2, int thisSeasonsStartyear, xnmpmasDate curDate)
 {   //copy information on cell-specific weather data from XN/MPMAS shared array into weatherHistory
 	
@@ -1976,6 +2106,12 @@ void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_x
 
 	}
 }
+
+*/
+
+
+
+
 #define tempNumIncorrect 1
 /*void xn_mpmas_translator::updateWeatherHistory(STRUCT_xn_to_mpmas2* grid_xn_to_mpmas2, int currentyear, xnmpmasDate curDate)
 {   //copy information on cell-specific weather data from XN/MPMAS shared array into weatherHistory
