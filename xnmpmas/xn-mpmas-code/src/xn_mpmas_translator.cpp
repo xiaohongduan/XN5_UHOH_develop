@@ -1197,7 +1197,7 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 	}
 	if ( adaptIt->second.sowingDayFormula != notAdaptive ) 
 	{
-			int sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(adaptIt->second), xnGridWeatherHistory[cell], historyWeighting);
+			int sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(adaptIt->second), xnGridWeatherHistory[cell], historyWeighting, convertDateToDayOfYear(startDate) - 1);
 
 			int springCrop = 0;
 			if(ws)
@@ -1268,7 +1268,7 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 			}
 			if ( repEarlyAdaptIt->second.sowingDayFormula != notAdaptive ) 
 			{
-					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repEarlyAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting);
+					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repEarlyAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting, convertDateToDayOfYear(startDate) - 1 );
 			}
 			else 
 			{
@@ -1310,7 +1310,7 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 			}
 			if ( repLateAdaptIt->second.sowingDayFormula != notAdaptive ) 
 			{
-					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repLateAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting);
+					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repLateAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting, convertDateToDayOfYear(startDate) - 1);
 			}
 			else 
 			{
@@ -1942,10 +1942,14 @@ void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_x
 	
 	int startDoy, endDoy, year1, year2;
 	
+	
+	
 	startDoy = convertDateToDayOfYear(lastWeatherUpDate);
 	endDoy = convertDateToDayOfYear(curDate);
 	year1 = lastWeatherUpDate.year;
 	year2 = curDate.year;
+	
+	cout << "Updating weather " << startDoy << "/" << year1 << " to " << endDoy << "/" << year2 << "\n";
 	
 	int daysYear1 = isLeapYear(year1) ? 366 : 365;
 //	int daysYear2 = isLeapYear(year2) ? 366 : 365;
@@ -2002,7 +2006,7 @@ void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_x
 					xnGridWeatherHistory[i][0].airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
 					xnGridWeatherHistory[i][0].topsoilTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
 				}
-				xnGridWeatherHistory[i][0].numDays = endDoy ;
+				xnGridWeatherHistory[i][0].numDays = daysYear1 ;
 			}
 			else if (xnGridWeatherHistory[i][0].year == year1 - 1 )	
 			{
@@ -2012,7 +2016,7 @@ void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_x
 					temp.airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
 					temp.topsoilTemp[ j]  = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
 				}
-				temp.numDays = endDoy ;
+				temp.numDays = daysYear1 ;
 				
 				//remove last record ??
 				xnGridWeatherHistory[i].pop_back();
