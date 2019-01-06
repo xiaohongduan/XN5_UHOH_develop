@@ -1927,7 +1927,7 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 		}
 	
 	}
-	lastWeatherUpdate = startDate;
+	lastWeatherUpDate = startDate;
 	//TODO: check completenes of weatherHistory (years should be historySize + 1 to account for the calendar year/season overlap
 }
 int xn_mpmas_translator::getStartDoy(int currentyear)
@@ -1937,7 +1937,7 @@ int xn_mpmas_translator::getStartDoy(int currentyear)
 	return convertDateToDayOfYear(thisStartDate);
 }
 
-void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_xn_to_mpmas2, int thisSeasonsStartyear, xnmpmasDate curDate, int sowingDecStop)
+void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_xn_to_mpmas2, int thisSeasonsStartyear, xnmpmasDate curDate)
 {   //copy information on cell-specific weather data from XN/MPMAS shared array into weatherHistory
 	
 	int curDoy = convertDateToDayOfYear(curDate);
