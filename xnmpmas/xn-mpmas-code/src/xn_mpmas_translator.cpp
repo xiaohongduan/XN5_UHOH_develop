@@ -1940,17 +1940,15 @@ int xn_mpmas_translator::getStartDoy(int currentyear)
 void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_xn_to_mpmas2, int thisSeasonsStartyear, xnmpmasDate curDate)
 {   //copy information on cell-specific weather data from XN/MPMAS shared array into weatherHistory
 	
-	int curDoy = convertDateToDayOfYear(curDate);
-	
 	int startDoy, endDoy, year1, year2;
 	
 	startDoy = convertDateToDayOfYear(lastWeatherUpDate);
-	endDoy = curDoy
+	endDoy = convertDateToDayOfYear(curDate);
 	year1 = lastWeatherUpDate.year;
 	year2 = curDate.year;
 	
 	int daysYear1 = isLeapYear(year1) ? 366 : 365;
-	int daysYear2 = isLeapYear(year2) ? 366 : 365;
+//	int daysYear2 = isLeapYear(year2) ? 366 : 365;
 			
 //	int startDoy1 = getStartDoy(thisSeasonsStartyear);
 //	int startDoy2 = getStartDoy(thisSeasonsStartyear + 1);
