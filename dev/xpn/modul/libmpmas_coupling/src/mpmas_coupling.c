@@ -502,6 +502,10 @@ if (NewDay(pTi))
 								
 								self->new_plant = 0;
 								self->coverCrop_harvested=1;
+								self->internal_actualCoverCropSowDate.day = 0;
+								self->internal_actualCoverCropSowDate.month = 0;
+								self->internal_actualCoverCropSowDate.year = 0;
+
 							}
 							else { //later than planned, but before max delay
 									//adapt the sowing date
@@ -564,6 +568,10 @@ if (NewDay(pTi))
 							pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->harvestDate.month;
 							pPl->pModelParam->HarvestYear = self->mpmas_to_xn->harvestDate.year;
 							self->harvestAdaptive = 0;
+	
+							self->internal_actualSowDate.day = 0;
+							self->internal_actualSowDate.month = 0;
+							self->internal_actualSowDate.year = 0;
 							
 						}
 						else { //later than planned, but before max delay
@@ -579,6 +587,9 @@ if (NewDay(pTi))
 			        
 			    if (self->mpmas_to_xn->coverCropCode[0] == '\0') {
 					 self->coverCrop_harvested= 1;
+				 	 self->internal_actualCoverCropSowDate.day = 0;
+				     self->internal_actualCoverCropSowDate.month = 0;
+				     self->internal_actualCoverCropSowDate.year = 0;
 			    }    
 			      //1.1 read cover crop info if any
 				if ((self->mpmas_to_xn->coverCropCode[0] != '\0') && self->coverCrop_harvested==0 &&(xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->mpmas_to_xn->coverCropSowDate.year,self->mpmas_to_xn->coverCropSowDate.month,self->mpmas_to_xn->coverCropSowDate.day)<=0))         
