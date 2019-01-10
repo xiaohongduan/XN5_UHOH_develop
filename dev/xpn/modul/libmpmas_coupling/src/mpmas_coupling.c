@@ -1799,7 +1799,8 @@ int get_daily_air_and_soil_temperatures(mpmas_coupling *self)
         self->__temperature.fTempSoil5cm = 0.0;
         self->simulation_days++;
         
-    } else {
+	} /*else {*/ //Not else, we need to do this also when the day starts, otherwise we get a wrong average!
+        
         if ((pWe->fTempAir > self->__temperature.fTempMax)&&(pTi->pSimTime->fTimeDay > 0.5)) {
             self->__temperature.fTempMax = pWe->fTempAir_daily_models;
         }
@@ -1813,17 +1814,17 @@ int get_daily_air_and_soil_temperatures(mpmas_coupling *self)
         act_depth = 0.0; //m
 
         for(i=0,pSL=pSo->pSLayer->pNext,pHL=pHe->pHLayer->pNext, pWL=pWa->pWLayer->pNext; pSL->pNext!=NULL; pSL=pSL->pNext, pHL=pHL->pNext, pWL=pWL->pNext, i++)
-            {
-            act_depth +=pSL->fThickness*1.0e-3; // mm -> m
-            if (act_depth >= depth)
-                {
-                self->__temperature.fTempSoil5cm += pHe->pHLayer->pNext->fSoilTemp * dt;
-                break;
-                }
-            }
+		{
+			act_depth +=pSL->fThickness*1.0e-3; // mm -> m
+			if (act_depth >= depth)
+			{
+				self->__temperature.fTempSoil5cm += pHe->pHLayer->pNext->fSoilTemp * dt;
+				break;
+			}
+		}
 
 
-    }
+    //}
 
     /*self->weather.fTempAve = *(self->TairMean);
     self->weather.fTempMin = *(self->TairMin);
