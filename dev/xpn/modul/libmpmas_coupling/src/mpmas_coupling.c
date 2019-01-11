@@ -463,6 +463,13 @@ if (NewDay(pTi))
 								earliestPossibleCoverCropSowDateFromNow.month = 	 pTi->pSimTime->mon;
 								earliestPossibleCoverCropSowDateFromNow.day = 	 pTi->pSimTime->mday;
 
+
+					xpn_time_date_add_dt(&earliestPossibleCoverCropSowDateFromNow.year, 
+							&earliestPossibleCoverCropSowDateFromNow.month, &earliestPossibleCoverCropSowDateFromNow.day, 
+								1); //Since pmas_coupling is last, nothing will happen today anymore ???
+
+
+
 					// add waiting time after tillage that is scheduled before sowing
 						for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
 							if (self->mpmas_to_xn->tillage[i].typeAdaptiveTillage==adaptiveTillageBeforeCoverCrop);
@@ -523,6 +530,12 @@ if (NewDay(pTi))
 								earliestPossibleSowDateFromNow.year = 	 pTi->pSimTime->iyear;
 								earliestPossibleSowDateFromNow.month = 	 pTi->pSimTime->mon;
 								earliestPossibleSowDateFromNow.day = 	 pTi->pSimTime->mday;
+
+
+					xpn_time_date_add_dt(&earliestPossibleSowDateFromNow.year, 
+							&earliestPossibleSowDateFromNow.month, &earliestPossibleSowDateFromNow.day, 
+								1); //Since pmas_coupling is last, nothing will happen today anymore ???
+
 
 					// add waiting time after tillage that is scheduled before sowing
 					for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
@@ -671,6 +684,7 @@ if (NewDay(pTi))
 					self->new_plant = 1;
 					self->harvest_done=0;
 					self->mainCrop_done=1;//Added by Hong on 20180524
+					self->coverCrop_harvested=1;//to avoid getting trapped in nirvana with mainCrop_done = 1 and coverCrop_harvested == 0
 					self->daysSinceBBCH1 = 0;
 					self->daysSinceBBCH2 = 0;										
 		
