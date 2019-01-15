@@ -1494,7 +1494,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 
 		}
 	}
-	fclose(dbgXnActualDates)
+	fclose(dbgXnActualDates);
 }
 
 void xn_mpmas_translator::calcYieldsToArray(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas,  double* yieldArray, double* stoverYieldArray, double** extraAttrsX,  int numExtra,  int overlapping)

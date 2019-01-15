@@ -389,6 +389,9 @@ namespace mpmasGlobal {
 	inline int get_extraAgentCharacteristicsIdForString(string s) {return globalMpmasSettings->get_extraAgentCharacteristicsIdForString(s) ;}
 	inline string get_extraAgentCharacteristicsStringForId(size_t i){return globalMpmasSettings->get_extraAgentCharacteristicsStringForId(i);}
 #endif
+	inline int yearsToSkipExpectationUpdating() { return globalMpmasSettings->yearsToSkipExpectationUpdating();}
+	inline void setYearsToSkipExpectationUpdating(int n) { globalMpmasSettings->setYearsToSkipExpectationUpdating(n);}
+
 }	//end mpmasScope
 #endif //ODB
 #endif

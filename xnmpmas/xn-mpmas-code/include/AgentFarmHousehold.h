@@ -1086,7 +1086,7 @@ class agentF : public agent
 #ifdef MULTIPERIOD
 	void setExpectationParameters(expectationParameters input) { advancedExpectationsParams = input; }
 	bool hasExpectationsParametersInitialized() { return advancedExpectationsParams.methodPrices > -1; }
-	void doubleExponentialSmoothSeries( deque<double> * series, double state_weight, double trend_weight, double& newState, double& newTrend);
+	void doubleExponentialSmoothSeries( deque<double> * series, double state_weight, double trend_weight, double& newForecast, double& newTrend);
 #endif
 //------------------------------------------------------------------------------------   	
 	///@name Constructor, destructor etc.
