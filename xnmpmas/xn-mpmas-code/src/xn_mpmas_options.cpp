@@ -60,7 +60,7 @@ xn_mpmas_options::xn_mpmas_options(int ac, char **av): sowDateRepresentative(vec
 	string couplingIniName = "";
 	int overriddenSimYears = -1;
 	int overridenStopBeforeXnFinal = false;
-	
+	produceILMScouplingMaps = false;
 	
 	while (i < ac)
 	{

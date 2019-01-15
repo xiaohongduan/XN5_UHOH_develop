@@ -463,6 +463,7 @@ if (NewDay(pTi))
 								earliestPossibleCoverCropSowDateFromNow.month = 	 pTi->pSimTime->mon;
 								earliestPossibleCoverCropSowDateFromNow.day = 	 pTi->pSimTime->mday;
 
+
 					// add waiting time after tillage that is scheduled before sowing
 						for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
 							if (self->mpmas_to_xn->tillage[i].typeAdaptiveTillage==adaptiveTillageBeforeCoverCrop);
@@ -476,7 +477,7 @@ if (NewDay(pTi))
 					if (xpn_time_compare_date(earliestPossibleCoverCropSowDateFromNow.year,earliestPossibleCoverCropSowDateFromNow.month,
 						earliestPossibleCoverCropSowDateFromNow.day ,
 						self->mpmas_to_xn->coverCropSowDate.year,self->mpmas_to_xn->coverCropSowDate.month,
-						self->mpmas_to_xn->coverCropSowDate.day ) > 0 )
+						self->mpmas_to_xn->coverCropSowDate.day ) >= 0 ) 
 					{
 						//check whether the earliest possible is later than the scheduled one + maximum delay
 
@@ -1111,7 +1112,8 @@ if (NewDay(pTi))
 
 		//start added Troost 180527
 		//check for harvest of cover crop
-		if ( (1 == self->new_plant)  && (self->coverCrop_harvested == 0)  && (self->mainCrop_done == 0)  && (self->harvest_done == 0) && (1 == checkIfHarvest(self)) )
+		if ( (1 == self->new_plant)  && (self->coverCrop_harvested == 0)  && (self->mainCrop_done == 0)  && 
+				(self->harvest_done == 0) && (1 == checkIfHarvest(self)) )
         {
 			self->new_plant= 0;
 			self->coverCrop_harvested = 1;
