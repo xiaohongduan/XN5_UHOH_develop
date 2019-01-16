@@ -5010,13 +5010,13 @@ class	XnDatabaseConnection {
 				}
 				
 				
-				String s = "SELECT year, month, day, dayofyear(STR_TO_DATE(CONCAT(day,'-',month,'-',year), '%d-%m-%y')) as day_year, avg_temp,maximum_temperature, minimum_temperature, IFNULL(soil_temp_5_cm, -99.9) as soil_temp_5_cm, IFNULL( soil_temp_10_cm, -99.9) as soil_temp_10_cm, IFNULL( soil_temp_20_cm, -99.9) as soil_temp_20_cm," 
+				String s = "SELECT year, month, day, day_year, avg_temp,maximum_temperature, minimum_temperature, IFNULL(soil_temp_5_cm, -99.9) as soil_temp_5_cm, IFNULL( soil_temp_10_cm, -99.9) as soil_temp_10_cm, IFNULL( soil_temp_20_cm, -99.9) as soil_temp_20_cm," 
 						+ " precipitation, avg_wind_speed, relative_humidity, IFNULL(global_radiation, 9999.9) as global_radiation, air_pressure, IFNULL(snow_depth, 9999.9) as snow_depth, IFNULL(sunshine_duration,99.9) as sunshine_duration, IFNULL(dewpoint, -99.9) as dewpoint, IFNULL(pan_evaporation, 9999.9) as pan_evaporation , IFNULL(saturation_deficit_air, 9999.9) as saturation_deficit_air, specific_humidity"
 						+ " FROM for1695_weather. " + tableName 
 						+ " 	WHERE station_id = "+station_id+" AND year BETWEEN "+ first_data_year +"  AND "+ last_data_year +
 						"			ORDER BY year, month, day;";
 				ResultSet rs = myConnection.query(s);
-/*				
+				
 				int doy_correct = 0;
 				
 				String sx = "SELECT MIN(day_year) as doyMin"
@@ -5028,18 +5028,18 @@ class	XnDatabaseConnection {
 				rs2.first();
 				if (rs2.getInt("doyMin") == 0) 
 						doy_correct = 1;
-			*/
+			
 
 				if (! rs.first() ) {
 					JOptionPane.showMessageDialog(null, "Error: No weather data found. ");
 					System.out.println("Error: No weather data found.");
-					rs.close();// rs2.close();
+					rs.close(); rs2.close();
 					return false;
 				}
 				if ( write_init_history_file > 0 && (rs.getInt("year") > first_data_year)  ) {
 					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for initial BEMS history found. ");
 					System.out.println("Error: Not enough weather data for initial BEMS history found.");
-					rs.close();// rs2.close();
+					rs.close(); rs2.close();
 					return false;
 
 				}
@@ -5047,13 +5047,13 @@ class	XnDatabaseConnection {
 				if (  write_init_history_file != 2 && rs.getInt("year") < last_data_year  ) {
 					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for simulation run time found. ");
 					System.out.println("Error: Not enough weather data for simulation run time found.");
-					rs.close(); //rs2.close();
+					rs.close(); rs2.close();
 					return false;
 				}
 				if (  write_init_history_file == 2 && rs.getInt("year") < last_data_year  ) {
 					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for history found. ");
 					System.out.println("Error: Not enough weather data for history found (end of history too short).");
-					rs.close(); //rs2.close();
+					rs.close(); rs2.close();
 					return false;
 				}
 				
@@ -5278,7 +5278,7 @@ class	XnDatabaseConnection {
 					}
 					
 				}
-				rs.close(); //rs2.close();
+				rs.close(); rs2.close();
 				if ( write_init_history_file != 2) {
 					out.close();
 				}

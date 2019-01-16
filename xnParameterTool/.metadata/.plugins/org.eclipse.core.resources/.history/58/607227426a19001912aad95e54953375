@@ -5047,13 +5047,13 @@ class	XnDatabaseConnection {
 				if (  write_init_history_file != 2 && rs.getInt("year") < last_data_year  ) {
 					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for simulation run time found. ");
 					System.out.println("Error: Not enough weather data for simulation run time found.");
-					rs.close(); //rs2.close();
+					rs.close(); rs2.close();
 					return false;
 				}
 				if (  write_init_history_file == 2 && rs.getInt("year") < last_data_year  ) {
 					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for history found. ");
 					System.out.println("Error: Not enough weather data for history found (end of history too short).");
-					rs.close(); //rs2.close();
+					rs.close(); rs2.close();
 					return false;
 				}
 				
@@ -5278,7 +5278,7 @@ class	XnDatabaseConnection {
 					}
 					
 				}
-				rs.close(); //rs2.close();
+				rs.close(); rs2.close();
 				if ( write_init_history_file != 2) {
 					out.close();
 				}
