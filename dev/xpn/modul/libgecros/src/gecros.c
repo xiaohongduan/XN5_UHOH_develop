@@ -2479,7 +2479,10 @@ int Photosynthesis_GECROS(gecros *self)
       //SLNMIN Parameter (minimum leaf N content for Photosynthesis)
 
       //CO2A Parameter (ambient CO2 concentration)
-      LS   = INSW(self->LODGE,(double)0.,(double)AFGENERATOR(pPl->pDevelop->fStageSUCROS,VLS));//LS = (double)0.;
+//      LS   = INSW(self->LODGE,(double)0.,(double)AFGENERATOR(pPl->pDevelop->fStageSUCROS,VLS));//LS = (double)0.;
+// 20190116 Troost, for now (VLS pointer wrongly increased in AFGENERATOR), since no Lodging input possible:
+	LS = (double)0.;
+
       //EAJMAX Parameter (Farquahar Photosynthesís model)
       //XVN Parameter (Farquhar Photosynthesis model)
       //XJN Parameter (Farquhar Photosynthesis model)
