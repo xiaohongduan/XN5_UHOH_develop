@@ -1151,6 +1151,7 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 }
 void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
 {
+    double Solar_radiation(expertn_modul_base *xpn, double); //SG20190212
 	expertn_modul_base *xpn = &(self->parent);
 //	double dt;
 	int i;
@@ -1193,7 +1194,9 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
 			self->snowdepth = self->climate_values->valuelist[i][12];
 			self->par = self->climate_values->valuelist[i][13];
             
-            //SG20190211: fehlende Spalten im Wetter-File
+            //SG20190211: 
+            
+            //fehlende Spalten im Wetter-File (Tageswerte) ergänzen:
             
             //self->SoilT02 = self->climate_values->valuelist[i][14];
             //self->SoilT05 = self->climate_values->valuelist[i][15];
@@ -1201,11 +1204,30 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
             //self->SoilT20 = self->climate_values->valuelist[i][17];
             //self->SoilT50 = self->climate_values->valuelist[i][18];
         
-             if(self->climate_values->size_of_values>19)
+             if(self->climate_values->size_of_values>19) //wenn Spalte CO2 vorhanden vorhanden
                  self->AtmCO2ppm =   self->climate_values->valuelist[i][19];//SG20190211 - Provisorium für Rajina! Später "Throughfall" [19]; Groundwater [20]; "Atm. CO2" [21];
              
             //self->CnpyDrn = self->climate_values->valuelist[i][20];
             //self->WatTbl= self->climate_values->valuelist[i][21];
+            
+            
+            //Berechnung fehlender Globalstrahlung, falls Sonnenscheindauer gegeben ist:
+            if ((self->global_radiation < -9)||(self->global_radiation>=99))
+            {
+                if ((self->sunshine_duration>=0)&&(self->sunshine_duration<=99))
+                {
+                      self->global_radiation = Solar_radiation(xpn, self->sunshine_duration);
+                }
+                else
+                {
+                    //Fehlermeldung: weder Sonnenscheindauer noch Globalstrahlung gegeben
+                    PRINT_ERROR_ID((&(self->parent)),"Neither  global radiation nor sunshine duration given at this date!");
+                    return;
+                }
+            }
+     //end of SG
+	           
+        
   
 			// Gestrige Temperatur
 			if (i>0)
@@ -1259,6 +1281,7 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
     //SG20190211:
    if((self->AtmCO2ppm>199.999)&&(self->AtmCO2ppm<2000.01))
         xpn->pCl->pWeather->fAtmCO2ppm =     self->AtmCO2ppm;
+    //end of SG
 	
 	xpn->pCl->pWeather->fTempAir_zlvl = xpn->pCl->pWeather->fTempAir;
 	if (xpn->pCl->fTempMeasHeight==0.0)
@@ -1284,3 +1307,54 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
 	//xpn->pCl->pWeather->fTempAir=db_get_double(data_model,9); // mittlere Lufttemperatur
 	xpn->pCl->pWeather->fTempAir_daily_models = xpn->pCl->pWeather->fTempAir;
 }
+
+//SG20190212
+double Solar_radiation(expertn_modul_base *xpn, double sunshine_duration)
+{
+    //Calculation of global ration from sun shine duration
+    //(following FAO56 guideline)
+    
+//	expertn_modul_base *xpn = &(self->parent);
+
+//	PWEATHER  		pWE = xpn->pCl->pWeather;
+	PTIME			pTi = xpn->pTi;
+
+
+//	double	fP, flamda, , fra, frc, ;
+
+	double   fJ, fdr, fdelta, fphi, ftemp, fomegas;
+	double	fRa, fN, fn;
+	double   fas=(double)0.25, fbs=(double)0.5;
+	
+    double DailyGlobalRadiation;
+
+	if(NewDay(pTi)) {
+
+		fJ = (double)pTi->pSimTime->fTimeY;
+	
+		fdr = (double)1 + (double)0.033*(double)cos((double)0.0172*fJ);	       //equation (21)
+
+		fdelta = (double)0.409*(double)sin((double)0.0172*fJ - (double)1.39);  //equation (22)
+		fphi   = xpn->pLo->pFarm->fLatitude*(double)PI/(double)180;
+
+		ftemp = -(double)tan(fphi)*(double)tan(fdelta);					   //equation (20)
+		if(     ftemp <= (double)-1)	fomegas = (double)PI;
+		else if(ftemp >= (double)1 )	fomegas = (double)0;
+		else						fomegas = (double)acos(ftemp);
+
+		fRa = (double)37.6*fdr*(fomegas*(double)sin(fphi)*(double)sin(fdelta) //equation (19)
+		                        + (double)cos(fphi)*(double)cos(fdelta)*(double)sin(fomegas));
+		fN  = (double)24/(double)PI * fomegas;							   //equation (25)
+
+
+			if (sunshine_duration >= (double)0) {
+				// Berechnung der aktuellen Globalstrahlung //equation (52)
+				fn = sunshine_duration;
+				DailyGlobalRadiation = fRa*(fn/fN * fbs + fas);
+			}
+    }
+return DailyGlobalRadiation;
+}
+
+    //end of SG
+	
