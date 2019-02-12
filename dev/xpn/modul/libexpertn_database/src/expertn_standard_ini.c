@@ -1192,6 +1192,21 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
 			self->saetigungsdefizit = self->climate_values->valuelist[i][11];
 			self->snowdepth = self->climate_values->valuelist[i][12];
 			self->par = self->climate_values->valuelist[i][13];
+            
+            //SG20190211: fehlende Spalten im Wetter-File
+            
+            //self->SoilT02 = self->climate_values->valuelist[i][14];
+            //self->SoilT05 = self->climate_values->valuelist[i][15];
+            //self->SoilT10 = self->climate_values->valuelist[i][16];
+            //self->SoilT20 = self->climate_values->valuelist[i][17];
+            //self->SoilT50 = self->climate_values->valuelist[i][18];
+        
+             if(self->climate_values->size_of_values>19)
+                 self->AtmCO2ppm =   self->climate_values->valuelist[i][19];//SG20190211 - Provisorium für Rajina! Später "Throughfall" [19]; Groundwater [20]; "Atm. CO2" [21];
+             
+            //self->CnpyDrn = self->climate_values->valuelist[i][20];
+            //self->WatTbl= self->climate_values->valuelist[i][21];
+  
 			// Gestrige Temperatur
 			if (i>0)
 				{
@@ -1240,6 +1255,10 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
 	xpn->pCl->pWeather->fTempAve =self->meantemp;
 	xpn->pCl->pWeather->fGlobalStrahlung= self->global_radiation;
 	//End of Hong
+    
+    //SG20190211:
+   if((self->AtmCO2ppm>199.999)&&(self->AtmCO2ppm<2000.01))
+        xpn->pCl->pWeather->fAtmCO2ppm =     self->AtmCO2ppm;
 	
 	xpn->pCl->pWeather->fTempAir_zlvl = xpn->pCl->pWeather->fTempAir;
 	if (xpn->pCl->fTempMeasHeight==0.0)

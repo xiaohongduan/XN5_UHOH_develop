@@ -149,6 +149,8 @@ struct _expertn_standard_ini
 	double Tairmax;
 	double Tairmin;
 	double meantemp;
+    
+    double AtmCO2ppm; //SG20190211
 
 
 	// run weather small time step:
