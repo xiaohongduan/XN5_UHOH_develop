@@ -46,16 +46,17 @@ int ceres_DailyCanopyPhotosynthesis_WH_BA(ceres *self)
 
                 LUEw = 6.0; //von CERES //LUEw=9.0;
                 
-                //		LUEw = 6.0; //von CERES: LUEw=9.0;
+                // LUEw = 6.0; //von CERES: LUEw=9.0;
 		        LUEw = 7.5; //von CERES: LUEw=9.0; LUEw=7.5; /Kraichgau 2009: 7.5
 	           //	LUEw = 9.0; //von CERES: LUEw=9.0; LUEw=7.5;
 
 		
-/*	          //SG 20110810:
-		      //CO2-dependency of light use efficency for AgMIP-project
-		      fCO2= (fAtmCO2 > 0? fAtmCO2:CO2);
-		       LUEw = (12.5 * fCO2)/(280.0+fCO2); //LUEw(280 ppm) = 6.25, LUEw(360 ppm) = 7.03, LUEw(720 ppm) = 9.0*/
+/*	        //SG 20110810:
+		        //CO2-dependency of light use efficency for AgMIP-project
+		        fCO2= (fAtmCO2 > 0? fAtmCO2:CO2);
+		         LUEw = (12.5 * fCO2)/(280.0+fCO2); //LUEw(280 ppm) = 6.25, LUEw(360 ppm) = 7.03, LUEw(720 ppm) = 9.0*/
                
+               //SG 20190213 - CO2 effect on light use efficiency
                 LUEw = (12.5 *  xpn->pCl->pWeather->fAtmCO2ppm)/(280.0+ xpn->pCl->pWeather->fAtmCO2ppm); //LUEw(280 ppm) = 6.25, LUEw(360 ppm) = 7.03, LUEw(720 ppm) = 9.0
         
                 //Photosynthetic Active Radiation(PAR MJ/m2 day)
@@ -120,6 +121,8 @@ int ceres_DailyCanopyPhotosynthesis_MZ(ceres *self)
     PPLTWATER           pPltW   =pPl->pPltWater;
     PPLTNITROGEN        pPltN   =pPl->pPltNitrogen;
 
+    double fCO2, fCO2Effect; //SG 20190213
+    
         if (pPl->pDevelop->fStageSUCROS<(double)0.0) return 0;
 
         //==========================================================================================
@@ -127,6 +130,41 @@ int ceres_DailyCanopyPhotosynthesis_MZ(ceres *self)
         //==========================================================================================
 
         LUEw=5.0; //g/MJ
+        
+    //*******************************************************
+	//SG 20140909:
+	//CO2-dependency of light use efficency for AgMIP-project
+	// nach DSSAT Crop Modelling Course Summer 2007
+	fCO2=xpn->pCl->pWeather->fAtmCO2ppm;
+
+	if (fCO2 <= 0.0)
+	{
+		fCO2Effect = 1.0;
+	}
+	else if(fCO2 < 280)
+	{
+		fCO2Effect = 0.8 * fCO2 / 280;
+	}
+	else if (fCO2 <= 330)
+	{
+		fCO2Effect = (fCO2-280)/(330-280)*0.2+ 0.8;
+	}
+	else if (fCO2 <= 450)
+	{
+		fCO2Effect = (fCO2-330)/(450-330)*0.2+ 1.0;
+	}
+	else
+	{
+		fCO2Effect = (fCO2-450)/(1000-450)*0.3+ 1.2;;
+	}
+
+	if (fCO2Effect > 1.5) 
+		fCO2Effect = 1.5;
+
+	LUEw = LUEw * fCO2Effect;
+
+	//*******************************************************
+
 
         //==========================================================================================
         //      Photosynthetic Active Radiation & Potential Biomass Growth Rate(fPotBiomGrowRate)
@@ -164,12 +202,13 @@ int ceres_DailyCanopyPhotosynthesis_SF(ceres *self)
 {
 	expertn_modul_base *xpn = &(self->parent); 
     PPLANT pPl = xpn->pPl;    
-double  PAR,IPAR,TempDay,PRFT;
-        double  fQN, fQD, fK1, fK2, fC1, fC2;
-    PCANOPY                     pCan    =pPl->pCanopy;
-    PBIOMASS            pBiom   =pPl->pBiomass;
-    PPLTWATER           pPltW   =pPl->pPltWater;
-    PPLTNITROGEN        pPltN   =pPl->pPltNitrogen;
+    double  PAR,IPAR,TempDay,PRFT;
+    double  fQN, fQD, fK1, fK2, fC1, fC2;
+    double fCO2Effect; //SG 20190213
+    PCANOPY             pCan    =pPl->pCanopy;
+    PBIOMASS           pBiom   =pPl->pBiomass;
+    PPLTWATER         pPltW   =pPl->pPltWater;
+    PPLTNITROGEN  pPltN   =pPl->pPltNitrogen;
 
         if (pPl->pDevelop->fStageSUCROS<(double)0.0) return RET_SUCCESS;
 
@@ -199,7 +238,6 @@ double  PAR,IPAR,TempDay,PRFT;
         //fK1 = radiation use efficiency [g(biomass)/MJ(PAR)]
         fK1 = (double)(1.4+1.8*(1.0-exp(-0.5*pCan->fLAI)));
         fK1 = (double)(min(3.0,fK1));
-
 
         if(pPl->pDevelop->iStageCERES>=4)
         {
@@ -237,12 +275,18 @@ double  PAR,IPAR,TempDay,PRFT;
                 PRFT = ((double)45.0-TempDay)/(double)14.0;
 
         PRFT=max((double)0.0, PRFT);
-
+        
+        //SG 20190213
+        fCO2Effect = 2.75*xpn->pCl->pWeather->fAtmCO2ppm/(580 + xpn->pCl->pWeather->fAtmCO2ppm);
 
     //==========================================================================
     //Actual Biomass Growth Rate
     //==========================================================================
-        pBiom->fBiomGrowR=self->fPotBiomGrowRate
+    /*    pBiom->fBiomGrowR=self->fPotBiomGrowRate
+                                                        *(double)min(min(PRFT,pPltW->fStressFacPhoto),pPltN->fNStressPhoto);*/
+
+     //SG 20190213 - CO2 effect included
+     pBiom->fBiomGrowR=self->fPotBiomGrowRate*fCO2Effect
                                                         *(double)min(min(PRFT,pPltW->fStressFacPhoto),pPltN->fNStressPhoto);
 
         pBiom->fBiomGrowR =max(pBiom->fBiomGrowR, (double)0.0001);
