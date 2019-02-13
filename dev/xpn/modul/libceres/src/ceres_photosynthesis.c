@@ -45,6 +45,18 @@ int ceres_DailyCanopyPhotosynthesis_WH_BA(ceres *self)
                 //==========================================================================================
 
                 LUEw = 6.0; //von CERES //LUEw=9.0;
+                
+                //		LUEw = 6.0; //von CERES: LUEw=9.0;
+		        LUEw = 7.5; //von CERES: LUEw=9.0; LUEw=7.5; /Kraichgau 2009: 7.5
+	           //	LUEw = 9.0; //von CERES: LUEw=9.0; LUEw=7.5;
+
+		
+/*	          //SG 20110810:
+		      //CO2-dependency of light use efficency for AgMIP-project
+		      fCO2= (fAtmCO2 > 0? fAtmCO2:CO2);
+		       LUEw = (12.5 * fCO2)/(280.0+fCO2); //LUEw(280 ppm) = 6.25, LUEw(360 ppm) = 7.03, LUEw(720 ppm) = 9.0*/
+               
+                LUEw = (12.5 *  xpn->pCl->pWeather->fAtmCO2ppm)/(280.0+ xpn->pCl->pWeather->fAtmCO2ppm); //LUEw(280 ppm) = 6.25, LUEw(360 ppm) = 7.03, LUEw(720 ppm) = 9.0
         
                 //Photosynthetic Active Radiation(PAR MJ/m2 day)
                 PAR     =0.5*(double)self->weather.fDaylySolRad;
