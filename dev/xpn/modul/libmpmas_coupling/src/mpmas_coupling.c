@@ -623,9 +623,68 @@ if (NewDay(pTi))
                     pSI->fPlantDens = self->mpmas_to_xn->coverCropSowDens;
                     pSI->fRowWidth = self->mpmas_to_xn->coverCropRowDist;
                     pSI->fSowDepth = self->mpmas_to_xn->coverCropSowDepth;
-                    pPl->pModelParam->HarvestDay = self->mpmas_to_xn->coverCropPloughUnderDate.day;
-                    pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->coverCropPloughUnderDate.month;
-                    pPl->pModelParam->HarvestYear = self->mpmas_to_xn->coverCropPloughUnderDate.year;
+                    
+                    
+                    //adapt cover crop ploughing to potentially shifted sowing date:
+                    
+                    xnmpmasDate latestPossibleCoverCropPloughing;
+                    latestPossibleCoverCropPloughing.day = self->mpmas_to_xn->sowDate.day;
+                    latestPossibleCoverCropPloughing.month = self->mpmas_to_xn->sowDate.month;
+                    latestPossibleCoverCropPloughing.year = self->mpmas_to_xn->sowDate.year;
+
+					for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
+						if (self->mpmas_to_xn->tillage[i].typeAdaptiveTillage==adaptiveTillageBeforeSowing);
+						{
+							xpn_time_date_add_dt(&latestPossibleCoverCropPloughing.year, &latestPossibleCoverCropPloughing.month, &latestPossibleCoverCropPloughing.day, 
+							-self->mpmas_to_xn->tillage[i].daysBeforeAfter);
+							break;
+						}
+					}
+                    
+					xpn_time_date_add_dt(&latestPossibleCoverCropPloughing.year, 
+							&latestPossibleCoverCropPloughing.month, &latestPossibleCoverCropPloughing.day, 
+								-10); 
+
+                   if (xpn_time_compare_date(self->mpmas_to_xn->coverCropPloughUnderDate.year,self->mpmas_to_xn->coverCropPloughUnderDate.month,
+							self->mpmas_to_xn->coverCropPloughUnderDate.day,
+							latestPossibleCoverCropPloughing.year,latestPossibleCoverCropPloughing.month,
+							latestPossibleCoverCropPloughing.day) > 0 )
+					{
+							pPl->pModelParam->HarvestYear =  latestPossibleCoverCropPloughing.year; 
+							pPl->pModelParam->HarvestMonth = latestPossibleCoverCropPloughing.month;
+							pPl->pModelParam->HarvestDay =    latestPossibleCoverCropPloughing.day;
+                    
+							//check if tillage was scheduled on the cover crop sowing day and if yes, move it, too
+							
+							for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
+								if (xpn_time_compare_date(self->mpmas_to_xn->coverCropPloughUnderDate.year,self->mpmas_to_xn->coverCropPloughUnderDate.month,
+									self->mpmas_to_xn->coverCropPloughUnderDate.day,  
+									self->mpmas_to_xn->tillage[i].tillDate.year, self->mpmas_to_xn->tillage[i].tillDate.month, 
+									self->mpmas_to_xn->tillage[i].tillDate.day) == 0 )
+								{
+									self->mpmas_to_xn->tillage[i].tillDate.year = latestPossibleCoverCropPloughing.year;
+									self->mpmas_to_xn->tillage[i].tillDate.month  = latestPossibleCoverCropPloughing.month;
+									self->mpmas_to_xn->tillage[i].tillDate.day =    latestPossibleCoverCropPloughing.day;
+									
+									self->tillage[i] = self->mpmas_to_xn->tillage[i];
+									
+								}
+							}
+                    
+					}
+					else {
+							pPl->pModelParam->HarvestDay = self->mpmas_to_xn->coverCropPloughUnderDate.day;
+							pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->coverCropPloughUnderDate.month;
+							pPl->pModelParam->HarvestYear = self->mpmas_to_xn->coverCropPloughUnderDate.year;
+						
+						
+					}
+					
+                    
+                    
+
+                    
+ 
 					
 					self->internal_actualCoverCropSowDate = self->mpmas_to_xn->coverCropSowDate;		
 					
