@@ -1193,6 +1193,7 @@ class ProjectGeneralTableModel implements TableModel {
 			case 9:
 			case 10:
 			case 13:
+			case 14:
 					return String.class;
 			default:
 					return Integer.class;
@@ -1213,7 +1214,7 @@ class ProjectGeneralTableModel implements TableModel {
 	  		   return objD;
 	  		   
 	  	  }
-	  	  else if ((columnIndex == 9) || (columnIndex == 10) || (columnIndex == 13))
+	  	  else if ((columnIndex == 9) || (columnIndex == 10) || (columnIndex == 13)  || (columnIndex == 14))
 	  	  {
 	  		   String objS = myRowSet.getString(columnIndex + 1);
 	  		   return objS;
@@ -1253,8 +1254,9 @@ class ProjectGeneralTableModel implements TableModel {
 							myRowSet.getString("endMonth"), myRowSet.getString("endDay"),
 							myRowSet.getString("plotSize"), myRowSet.getString("adaptive"), myRowSet.getString("max_daily_precip"),
 							myRowSet.getString("xn5_cells_table"), myRowSet.getString("bems_cells_management_table"),
-							myRowSet.getString("elevationCorrectionType"),
-							myRowSet.getString("elevationCorrectionClassSize"),myRowSet.getString("elevationInfoTableWeatherCells")
+							myRowSet.getString("elevationCorrectionType"),	myRowSet.getString("elevationCorrectionClassSize"),
+							myRowSet.getString("elevationInfoTableWeatherCells")
+							,myRowSet.getString("co2_table")
 							)) {
 	
 		    			JOptionPane.showMessageDialog(null, "Error: Changing general simulation project info failed.");
@@ -3904,6 +3906,8 @@ class ExportWeatherDialog extends JDialog implements ActionListener {
 	private JTextField tfLastYear;
 	private JTextField tfMaxDailyPrecip;
 	
+	private JCheckBox cbCO2;
+	private JTextField tfCO2Table;
 	
 	private JCheckBox cbInits;
 	private JCheckBox cbElevationCorr;
@@ -3932,7 +3936,7 @@ class ExportWeatherDialog extends JDialog implements ActionListener {
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         JPanel panel = new JPanel();
-        panel.setLayout( new java.awt.GridLayout(11, 2, 1,30) );
+        panel.setLayout( new java.awt.GridLayout(13, 2, 1,30) );
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
         
         JLabel fileLabel = new JLabel("Filename:");
@@ -3971,6 +3975,17 @@ class ExportWeatherDialog extends JDialog implements ActionListener {
         panel.add(new JLabel("New altitude: "));
         tfElevationNewHeight = new JTextField("", 4);
         panel.add(tfElevationNewHeight);
+        
+        
+        panel.add(new JLabel("Add CO2 concentration?"));
+        cbCO2 = new JCheckBox();
+        panel.add(cbCO2);
+        
+        panel.add(new JLabel("Table with CO2 concentration time series: "));
+        tfCO2Table = new JTextField("for1695_weather.", 50);
+        panel.add(tfCO2Table);
+        
+        
         
         
         panel.add(new JLabel("Generate BEMS initial history?"));
@@ -4018,16 +4033,21 @@ class ExportWeatherDialog extends JDialog implements ActionListener {
     		 String first_year = tfFirstYear.getText();
     		 String last_year = tfLastYear.getText();
     		 Double maxDailyPrecip = Double.valueOf(tfMaxDailyPrecip.getText());
-
+    		 
+    		 String co2Table = tfCO2Table.getText();
+    		 
     		 String prefix = myMainWindow.askForOutputDirectory();
     		 
     		 String origAltitudeInfo = tfTableWithElevationOrigHeight.getText();
-    		 int newAltitude = Integer.valueOf(tfElevationNewHeight.getText());
-    		 
+    		 int newAltitude = 0;
+    		 if (cbElevationCorr.isSelected()) { 
+    			 newAltitude = Integer.valueOf(tfElevationNewHeight.getText());
+    		 }
     		 
 
      		 prefix += "/"+ filename;
-     		 boolean ret = myMainWindow.myConnection.writeWeatherData(prefix, tablename, Integer.valueOf(stationid), Integer.valueOf(first_year), Integer.valueOf(last_year), cbInits.isSelected() ? 1 : 0, false, "", maxDailyPrecip, cbElevationCorr.isSelected() ? 1:0, newAltitude, origAltitudeInfo);
+     		 boolean ret = myMainWindow.myConnection.writeWeatherData(prefix, tablename, Integer.valueOf(stationid), Integer.valueOf(first_year), Integer.valueOf(last_year), cbInits.isSelected() ? 1 : 0, false, "", maxDailyPrecip, cbElevationCorr.isSelected() ? 1:0, newAltitude, origAltitudeInfo
+     				, cbCO2.isSelected(), co2Table );
     		     			
     		 if(ret)
     		 {	rc = 0;

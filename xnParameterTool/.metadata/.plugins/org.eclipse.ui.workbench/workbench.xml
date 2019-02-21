@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<workbench progressCount="21" version="2.0">
+<workbench progressCount="16" version="2.0">
 <workbenchAdvisor/>
 <window height="439" maximized="true" width="982" x="292" y="99">
 <fastViewData fastViewLocation="1024"/>
@@ -52,7 +52,7 @@
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/XN_tool/src/de/uhoh/for1695/MySQLConnection.java"/>
 <editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1720" selectionTopPixel="1105"/>
 </editor>
-<editor activePart="true" focus="true" id="org.eclipse.jdt.ui.ClassFileEditor" name="MysqlIO.class" partName="MysqlIO.class" path="/tmp/MysqlIO.class4048160777550855232.class" title="MysqlIO.class" tooltip="com.mysql.jdbc.MysqlIO" workbook="DefaultEditorWorkbook">
+<editor activePart="true" focus="true" id="org.eclipse.jdt.ui.ClassFileEditor" name="MysqlIO.class" partName="MysqlIO.class" path="/tmp/MysqlIO.class4638036349131215905.class" title="MysqlIO.class" tooltip="com.mysql.jdbc.MysqlIO" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/lib\/mysql-connector-java-5.0.7-bin.jar&lt;com.mysql.jdbc(MysqlIO.class"/>
 <editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="0"/>
 </editor>

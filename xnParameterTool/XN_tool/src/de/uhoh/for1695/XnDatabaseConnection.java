@@ -4020,8 +4020,9 @@ class	XnDatabaseConnection {
 			}
 			s= "REPLACE INTO simulation_projects_general " +
 			" SELECT " + toId + ", startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize, adaptive, max_daily_precip " +
-					", xn5_cells_table, bems_cells_management_table, elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells  " +
-					"FROM simulation_projects_general WHERE simulation_project_id = " + fromId + ";";
+					", xn5_cells_table, bems_cells_management_table, elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells,  " +
+					"co2_table " +
+					" FROM simulation_projects_general WHERE simulation_project_id = " + fromId + ";";
 			
 			if(!  myConnection.updateDb(s)) {
 				return false;
@@ -4433,7 +4434,7 @@ class	XnDatabaseConnection {
 	//PROJECT GENERAL INFO
 	public ResultSet getGeneralInfoForProject( int projectId ) {
 		String s = "SELECT startDay, startMonth, startYear, endDay, endMonth, endYear, plotSize, adaptive, max_daily_precip, xn5_cells_table, bems_cells_management_table" 
-				+ ", elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells "	+
+				+ ", elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells , co2_table"	+
 				" FROM simulation_projects_general WHERE simulation_project_id = " + projectId + ";";
 				
 		return myConnection.query(s);
@@ -4444,11 +4445,12 @@ class	XnDatabaseConnection {
 			String startMonth, String startDay, 
 			String endMonth, String endDay,
 			String plotSize , String adaptive, String max_daily_precip, String xn5cells, String bemsManag,
-			String elevationCorrectionType, String elevationCorrectionClassSize, String elevationInfoTableWeatherCells) {
+			String elevationCorrectionType, String elevationCorrectionClassSize, 
+			String elevationInfoTableWeatherCells, String co2Table) {
 		String s = "REPLACE INTO simulation_projects_general " +
 				"VALUES ("+ projectId+", "+ startYear +", "+endYear+","+startMonth+","+startDay+","
 				+endMonth+","+endDay+","+plotSize+","+adaptive+","+max_daily_precip+",'"+xn5cells+"','"+ bemsManag
-				+"',"+ elevationCorrectionType+","+ elevationCorrectionClassSize+", '"+elevationInfoTableWeatherCells+"');";	
+				+"',"+ elevationCorrectionType+","+ elevationCorrectionClassSize+", '"+elevationInfoTableWeatherCells+"', '"+co2Table+"');";	
 		return myConnection.updateDb(s);
 	}
 	
@@ -4787,10 +4789,7 @@ class	XnDatabaseConnection {
 		
 		try {
 			
-			
-			
-			
-			String s0 = "SELECT startYear, endYear,  adaptive, max_daily_precip, elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells " //elevation correction class_size 
+			String s0 = "SELECT startYear, endYear,  adaptive, max_daily_precip, elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells, co2_table "  
 					+ " FROM simulation_projects_general "
 					+ " WHERE simulation_project_id = "+ projectId + ";";
 			ResultSet projectInfo = myConnection.query(s0);	
@@ -4808,6 +4807,8 @@ class	XnDatabaseConnection {
 			int elevationCorrectionType = projectInfo.getInt("elevationCorrectionType");
 			int elevCorrectionClassSize = projectInfo.getInt("elevationCorrectionClassSize");
 			String elevationInfoTableForWeatherCells = projectInfo.getString("elevationInfoTableWeatherCells");
+			String co2Table = projectInfo.getString("co2_table");
+
 			int writeHistory = 1;
 			if ( projectType == 0)
 				writeHistory = 0;
@@ -4829,11 +4830,37 @@ class	XnDatabaseConnection {
 			}
 			ResultSet cellList = myConnection.query(s1);	
 			
-			
-			
 			if (! cellList.first()) {
 				return true;
 			}
+			
+			boolean doCO2 = false;
+			ResultSet co2Series = null;
+			
+			if (co2Table != null && ! co2Table.isEmpty() && !co2Table.matches("^\\s*$") )
+			{
+				doCO2 = true;
+				
+				if (! co2Table.contains(".")) {
+					co2Table = "for1695_weather."+co2Table;
+				}
+				
+				String s2 = "SELECT year, month, day, co2_ppm "
+						+ " FROM " + co2Table 
+						+ " 	WHERE year BETWEEN "+ startYear +"  AND "+ endYear +
+						"			ORDER BY year, month, day;";
+				co2Series = myConnection.query(s2);
+				
+				if (! co2Series.first() ) {
+					JOptionPane.showMessageDialog(null, "Error: No CO2 time series found in table "+ co2Table + ".");
+					System.out.println("Error:  No CO2 time series found in table "+ co2Table + ".");
+					co2Series.close();
+					return false;
+				}
+					
+			}
+			
+			
 			
 			
 			cellList.beforeFirst();
@@ -4853,7 +4880,7 @@ class	XnDatabaseConnection {
 															directory + "/"+ projectName + "_init_weather_history.txt", maxDailyPrecip, 
 															elevationCorrectionType, 
 															elevationCorrectionType > 0 && elevCorrectionClassSize > -1 ?  	cellList.getDouble("alt") : 0, 
-														elevationInfoTableForWeatherCells);
+														elevationInfoTableForWeatherCells, doCO2, co2Series);
 				
 				if (!rc) {
 					throw new Exception("Error when writing weather data and weather history for BEMS");
@@ -4984,6 +5011,7 @@ class	XnDatabaseConnection {
 			}
 			projectInfo.close();
 			cellList.close();
+			if (doCO2)	co2Series.close();
 		}	
 		catch(Exception e) {
 			e.printStackTrace();
@@ -4994,7 +5022,57 @@ class	XnDatabaseConnection {
 		return ok;
 	}
 	public boolean writeWeatherData(String filename, String tableName, int station_id, int first_year, int last_year, 
-					int write_init_history_file, boolean appendHistory, String history_filename, double maxDailyPrecip,  int elevationCorrectionType, double altitude, String elevationInfoTable) {
+			int write_init_history_file, boolean appendHistory, String history_filename, double maxDailyPrecip,  
+			int elevationCorrectionType, double altitude, String elevationInfoTable, boolean doCO2, String co2Table) {
+		
+		boolean ok = false;
+		
+		try {
+			
+			ResultSet co2Series = null;
+			
+			if (doCO2 && co2Table != null && ! co2Table.isEmpty() && !co2Table.matches("^\\s*$") )
+			{
+				
+				if (! co2Table.contains(".")) {
+					co2Table = "for1695_weather."+co2Table;
+				}
+				
+				String s2 = "SELECT year, month, day, co2_ppm "
+						+ " FROM  " + co2Table 
+						+ " 	WHERE year BETWEEN "+ first_year +"  AND "+ last_year +
+						"			ORDER BY year, month, day;";
+				co2Series = myConnection.query(s2);
+				
+				if (! co2Series.first() ) {
+					JOptionPane.showMessageDialog(null, "Error: No CO2 time series found in table "+ co2Table + ".");
+					System.out.println("Error:  No CO2 time series found in table "+ co2Table + ".");
+					co2Series.close();
+					return false;
+				}
+					
+			}
+			else {
+				doCO2 = false;
+			}
+			writeWeatherData(filename, tableName, station_id, first_year, last_year, 
+					write_init_history_file, appendHistory, history_filename, maxDailyPrecip,  
+					elevationCorrectionType, altitude, elevationInfoTable,  doCO2,  co2Series);
+			
+		}	
+		catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		ok = true;	
+		
+		return ok;
+	}
+	
+	
+	public boolean writeWeatherData(String filename, String tableName, int station_id, int first_year, int last_year, 
+					int write_init_history_file, boolean appendHistory, String history_filename, double maxDailyPrecip,  
+					int elevationCorrectionType, double altitude, String elevationInfoTable, boolean doCO2, ResultSet co2Series) {
 
 //Note: write_init_history_file 0 = no, 1 = yes, 2 = only history no normal file
 		
@@ -5091,12 +5169,19 @@ class	XnDatabaseConnection {
 						weatherCellElevation = rsElev.getDouble("orog");
 					}
 				}
-				
+
+				String  co2string = "";
+				if (	doCO2		){
+					co2string = ",CO2 [ppm]";
+					co2Series.beforeFirst();
+
+				}
+
 				
 				PrintWriter out = null;
 				if (write_init_history_file != 2) {
 					out	= new PrintWriter(new BufferedWriter(new FileWriter(filename+".csv")));
-					out.println("Date,global radiation [Mj/qm],max temp [°C],min temp [°C],precipitation [mm],sunshine duration [h],rel hum [%],wind speed [m/s],mean temp [°C],dew point [°C],Kesselverdunstung [mm],vapour saturation deficit [%],snow height [mm],par [mol/qm*d],temp soil at 2cm [°C],temp soil at 5cm [°C],temp soil at 10cm [°C],temp soil at 20cm [°C],temp soil at 50cm [°C]");
+					out.println("Date,global radiation [Mj/qm],max temp [°C],min temp [°C],precipitation [mm],sunshine duration [h],rel hum [%],wind speed [m/s],mean temp [°C],dew point [°C],Kesselverdunstung [mm],vapour saturation deficit [%],snow height [mm],par [mol/qm*d],temp soil at 2cm [°C],temp soil at 5cm [°C],temp soil at 10cm [°C],temp soil at 20cm [°C],temp soil at 50cm [°C]" + co2string);
 				}
 				PrintWriter out2 = null;
 				if ( write_init_history_file > 0 && ! appendHistory && history_filename.compareToIgnoreCase("") != 0) {
@@ -5117,7 +5202,6 @@ class	XnDatabaseConnection {
 				}
 				
 				rs.beforeFirst();
-				
 				double precipStillToWrite = 0.0;
 				
 				while (rs.next()) {
@@ -5179,14 +5263,10 @@ class	XnDatabaseConnection {
 								
 								
 							}
-								break;
-					
-								
-								
-								
+							break;
+							
 							default:
 								break;
-						
 						}
 						
 						
@@ -5233,6 +5313,33 @@ class	XnDatabaseConnection {
 						out.write(Double.toString( rs.getDouble("soil_temp_20_cm")));
 						out.write(", ");
 						out.write("-99.9");//soil_temp_50_cm
+						
+						if(doCO2) {
+							if ( !co2Series.next() ) {
+								JOptionPane.showMessageDialog(null, "Error: Not enough CO2 values found for weather time series.");
+								System.out.println("Error: Not enough CO2 values found for weather time series.");
+								co2Series.close();
+								rs.close();
+								return false;
+								
+								
+							}
+							if (co2Series.getInt("year") != rs.getInt("year")
+								|| co2Series.getInt("month") != rs.getInt("month")
+								|| co2Series.getInt("day") != rs.getInt("day")
+									
+								)
+							{
+								JOptionPane.showMessageDialog(null, "Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
+								System.out.println("Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
+								co2Series.close();
+								rs.close();
+								return false;
+							}
+							out.write(", ");
+							out.write(Double.toString( co2Series.getDouble("co2_ppm")));// CO2 ppm
+						}
+						
 						out.write("\n");
 					}
 					if ( (write_init_history_file > 0)  &&  (rs.getInt("year") <= first_year) ) {
