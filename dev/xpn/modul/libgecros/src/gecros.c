@@ -2377,6 +2377,8 @@ int Photosynthesis_GECROS(gecros *self)
 	  double DELT = (double)xpn->pTi->pTimeStep->fAct;
 	  //double HOUR = 12 - 0.5 * self->DAYL + self->DAYL*(double)xpn->pTi->pSimTime->fTimeDay;
       double HOUR = (double)xpn->pTi->pSimTime->fTimeDay*24; //Hong
+      
+      double CO2A; //SG20190212
 
 
 //Check if C3 or C4 crop
@@ -2479,9 +2481,13 @@ int Photosynthesis_GECROS(gecros *self)
       //SLNMIN Parameter (minimum leaf N content for Photosynthesis)
 
       //CO2A Parameter (ambient CO2 concentration)
-//      LS   = INSW(self->LODGE,(double)0.,(double)AFGENERATOR(pPl->pDevelop->fStageSUCROS,VLS));//LS = (double)0.;
-// 20190116 Troost, for now (VLS pointer wrongly increased in AFGENERATOR), since no Lodging input possible:
-	LS = (double)0.;
+
+      //SG20190212 - variable atmospheric CO2-concentrations from daily weather input
+      CO2A = (pCl->pWeather->fAtmCO2ppm > 199.99?pCl->pWeather->fAtmCO2ppm:self->CO2A);
+
+    //      LS   = INSW(self->LODGE,(double)0.,(double)AFGENERATOR(pPl->pDevelop->fStageSUCROS,VLS));//LS = (double)0.;
+    // 20190116 Troost, for now (VLS pointer wrongly increased in AFGENERATOR), since no Lodging input possible:
+  	LS = (double)0.;
 
       //EAJMAX Parameter (Farquahar Photosynthesís model)
       //XVN Parameter (Farquhar Photosynthesis model)
@@ -2508,9 +2514,15 @@ int Photosynthesis_GECROS(gecros *self)
 
 //gross photosynthesis rate
 
-      pCbn->fGrossPhotosynR = (double)DailyCanopyGrossPhotosynthesis_GECROS(self,self->SC,self->SINLD,self->COSLD,self->DAYL,self->DSINBE,
+ /*     pCbn->fGrossPhotosynR = (double)DailyCanopyGrossPhotosynthesis_GECROS(self,self->SC,self->SINLD,self->COSLD,self->DAYL,self->DSINBE,
           DDTR,TMPA,HOUR,DVP,WNM,C3C4,LAIC,TLAI,HT,self->LWIDTH,RD,self->SD1,self->RSS,self->BLD,NLV,TNLV,self->SLNMIN,
           DWSUP,self->CO2A,LS,self->EAJMAX,self->XVN,self->XJN,self->THETA,WCUL,FVPD, &PPCAN,&APCANS,&APCANN,&APCAN,
+                 &PTCAN,&ATCAN,&PESOIL,&AESOIL,&DIFS,&DIFSU,&DIFSH,&DAPAR);*/
+  
+   //SG20190212 (self->CO2A durch CO2A ersetzt)
+   pCbn->fGrossPhotosynR = (double)DailyCanopyGrossPhotosynthesis_GECROS(self,self->SC,self->SINLD,self->COSLD,self->DAYL,self->DSINBE,
+          DDTR,TMPA,HOUR,DVP,WNM,C3C4,LAIC,TLAI,HT,self->LWIDTH,RD,self->SD1,self->RSS,self->BLD,NLV,TNLV,self->SLNMIN,
+          DWSUP,CO2A,LS,self->EAJMAX,self->XVN,self->XJN,self->THETA,WCUL,FVPD, &PPCAN,&APCANS,&APCANN,&APCAN,
                  &PTCAN,&ATCAN,&PESOIL,&AESOIL,&DIFS,&DIFSU,&DIFSH,&DAPAR);
 
 /*
@@ -2923,6 +2935,7 @@ int   BiomassGrowth_GECROS(gecros *self)
       pPltN->fTotalCont       = (double)NTOT;
       pGPltN->fShootActConc   = (double)HNC;
       pGPltN->fStorageActConc = (double)ONC;
+      pPltN->fFruitActConc     = (double)ONC;
       pGPltN->fTotalActConc   = (double)PNC;
 
       //SG 20160704: wird für die Berechnung von pCP->fNLitterSurf benötigt (Siehe plant.c, "DevelopmentCheckAndPostHarvestManagement")
