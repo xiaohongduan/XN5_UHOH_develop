@@ -54,6 +54,10 @@ class agentL : public agent
 	int binv_anz;
 // Troost **********end block insert**********
 
+#ifdef MULTIPERIOD
+   multimap<pair<int,int>,mpmasPlotCell*> commonPropertyPlots; //first key commonPropertyGroup, second key soil type
+#endif
+
    public:
 
    //Constructor
@@ -147,6 +151,13 @@ class agentL : public agent
    void copyContent_PlotToLandscape(Content cont);
 #ifdef MULTIPERIOD
    void setAllPlotsToUnownedLandUse();
+#ifdef   LIVSIM_COUPLING
+   void setAllPlotsWithoutGrazingPressure();
+#endif
+   double calcAggregatedUserDefinedLandscapeParameterForCommonPropertyOfSoilType(int paramID, int agg, int soilType, vector<int> commonPropertyGroupList, int xForDist,int yForDist );
+   double getNumberPlotsOfCommonPropertyOfSoilType(int soilType, vector<int> commonPropertyGroupList);
+   vector<mpmasPlotCell*> getListOfPlotsOfCommonPropertyOfSoilType(int soilType, vector<int> commonPropertyGroupList);
+
 #endif
 };
 

@@ -330,8 +330,9 @@ public:
 	void removeOldestYearFromContractList();
 // Troost **********end block insert**********
 
-
+#ifndef MULTIPERIOD
 	virtual void facilitateWaterLandMarkets(int milpMode);//renamed from <boden_wasser_transferieren>
+#endif //ndef MULTIPERIOD
    virtual int getStillOpenBids(int*);//renamed from <get_interesse>
    virtual void transferRentalWater(int month);//renamed from <receiveNetInflows>
    virtual void resetRentalMarket();//renamed from <pachtmarkt_zuruecksetzen>

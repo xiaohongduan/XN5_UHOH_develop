@@ -60,6 +60,7 @@ private:
 	double* cropAreasArray;
 
 	xnmpmasDate startDate;
+	xnmpmasDate lastWeatherUpDate;
 
 protected:
 	//initialization
@@ -88,7 +89,7 @@ public:
 	void defineLuaforCellsFromArray(int year, int mpmasArraySize_,  int* cropActIds_,  double* cropAreas_);
 	void defineLuaForCellsFromMap(const Raster2D* luaMap);
 
-	STRUCT_mpmas_to_xn getManagementForCell(int cell, int mpmasYear);
+	STRUCT_mpmas_to_xn getManagementForCell(int cell, int mpmasYear, Raster2D* cropMapILMS = NULL, Raster2D* sowMapILMSearly =NULL, Raster2D* sowMapILMSlate = NULL, vector<int> * sowDateRepresentatives = NULL );
 	
 	void calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas, Raster2D* yieldMap1, Raster2D* yieldMap2, vector<Raster2D>& cropExtraAttrRasters, int overlapping, string fnAggXnOutput);
 	void calcYieldsToArray(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas,  double* yieldArray, double* stoverYieldArray, double** extraAttrsX, int numExtra, const int overlapping);

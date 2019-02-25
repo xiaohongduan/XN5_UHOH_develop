@@ -80,7 +80,7 @@ int mpmas_coupling_Load(mpmas_coupling *self)
 	self->coverCrop_sowDatecheck_done = 0;//added Troost 180615
 	self->sowDatecheck_done = 0;//added Troost 180615
 	
-	
+	self->nmin_measured = 0;
     self->simulation_days = 0;
     self->count = 0;
     self->restart = 1;
@@ -463,7 +463,15 @@ if (NewDay(pTi))
 								earliestPossibleCoverCropSowDateFromNow.month = 	 pTi->pSimTime->mon;
 								earliestPossibleCoverCropSowDateFromNow.day = 	 pTi->pSimTime->mday;
 
-					// add wating time after tillage that is scheduled before sowing
+
+
+					xpn_time_date_add_dt(&earliestPossibleCoverCropSowDateFromNow.year, 
+							&earliestPossibleCoverCropSowDateFromNow.month, &earliestPossibleCoverCropSowDateFromNow.day, 
+								1); //Since pmas_coupling is last, nothing will happen today anymore ???
+
+
+
+					// add waiting time after tillage that is scheduled before sowing
 						for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
 							if (self->mpmas_to_xn->tillage[i].typeAdaptiveTillage==adaptiveTillageBeforeCoverCrop);
 							{
@@ -476,7 +484,7 @@ if (NewDay(pTi))
 					if (xpn_time_compare_date(earliestPossibleCoverCropSowDateFromNow.year,earliestPossibleCoverCropSowDateFromNow.month,
 						earliestPossibleCoverCropSowDateFromNow.day ,
 						self->mpmas_to_xn->coverCropSowDate.year,self->mpmas_to_xn->coverCropSowDate.month,
-						self->mpmas_to_xn->coverCropSowDate.day ) > 0 )
+						self->mpmas_to_xn->coverCropSowDate.day ) >= 0 ) 
 					{
 						//check whether the earliest possible is later than the scheduled one + maximum delay
 
@@ -502,6 +510,10 @@ if (NewDay(pTi))
 								
 								self->new_plant = 0;
 								self->coverCrop_harvested=1;
+								self->internal_actualCoverCropSowDate.day = 0;
+								self->internal_actualCoverCropSowDate.month = 0;
+								self->internal_actualCoverCropSowDate.year = 0;
+
 							}
 							else { //later than planned, but before max delay
 									//adapt the sowing date
@@ -519,6 +531,12 @@ if (NewDay(pTi))
 								earliestPossibleSowDateFromNow.year = 	 pTi->pSimTime->iyear;
 								earliestPossibleSowDateFromNow.month = 	 pTi->pSimTime->mon;
 								earliestPossibleSowDateFromNow.day = 	 pTi->pSimTime->mday;
+
+
+					xpn_time_date_add_dt(&earliestPossibleSowDateFromNow.year, 
+							&earliestPossibleSowDateFromNow.month, &earliestPossibleSowDateFromNow.day, 
+								1); //Since pmas_coupling is last, nothing will happen today anymore ???
+
 
 					// add waiting time after tillage that is scheduled before sowing
 					for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
@@ -564,6 +582,10 @@ if (NewDay(pTi))
 							pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->harvestDate.month;
 							pPl->pModelParam->HarvestYear = self->mpmas_to_xn->harvestDate.year;
 							self->harvestAdaptive = 0;
+	
+							self->internal_actualSowDate.day = 0;
+							self->internal_actualSowDate.month = 0;
+							self->internal_actualSowDate.year = 0;
 							
 						}
 						else { //later than planned, but before max delay
@@ -579,6 +601,9 @@ if (NewDay(pTi))
 			        
 			    if (self->mpmas_to_xn->coverCropCode[0] == '\0') {
 					 self->coverCrop_harvested= 1;
+				 	 self->internal_actualCoverCropSowDate.day = 0;
+				     self->internal_actualCoverCropSowDate.month = 0;
+				     self->internal_actualCoverCropSowDate.year = 0;
 			    }    
 			      //1.1 read cover crop info if any
 				if ((self->mpmas_to_xn->coverCropCode[0] != '\0') && self->coverCrop_harvested==0 &&(xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,self->mpmas_to_xn->coverCropSowDate.year,self->mpmas_to_xn->coverCropSowDate.month,self->mpmas_to_xn->coverCropSowDate.day)<=0))         
@@ -598,9 +623,68 @@ if (NewDay(pTi))
                     pSI->fPlantDens = self->mpmas_to_xn->coverCropSowDens;
                     pSI->fRowWidth = self->mpmas_to_xn->coverCropRowDist;
                     pSI->fSowDepth = self->mpmas_to_xn->coverCropSowDepth;
-                    pPl->pModelParam->HarvestDay = self->mpmas_to_xn->coverCropPloughUnderDate.day;
-                    pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->coverCropPloughUnderDate.month;
-                    pPl->pModelParam->HarvestYear = self->mpmas_to_xn->coverCropPloughUnderDate.year;
+                    
+                    
+                    //adapt cover crop ploughing to potentially shifted sowing date:
+                    
+                    xnmpmasDate latestPossibleCoverCropPloughing;
+                    latestPossibleCoverCropPloughing.day = self->mpmas_to_xn->sowDate.day;
+                    latestPossibleCoverCropPloughing.month = self->mpmas_to_xn->sowDate.month;
+                    latestPossibleCoverCropPloughing.year = self->mpmas_to_xn->sowDate.year;
+
+					for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
+						if (self->mpmas_to_xn->tillage[i].typeAdaptiveTillage==adaptiveTillageBeforeSowing);
+						{
+							xpn_time_date_add_dt(&latestPossibleCoverCropPloughing.year, &latestPossibleCoverCropPloughing.month, &latestPossibleCoverCropPloughing.day, 
+							-self->mpmas_to_xn->tillage[i].daysBeforeAfter);
+							break;
+						}
+					}
+                    
+					xpn_time_date_add_dt(&latestPossibleCoverCropPloughing.year, 
+							&latestPossibleCoverCropPloughing.month, &latestPossibleCoverCropPloughing.day, 
+								-10); 
+
+                   if (xpn_time_compare_date(self->mpmas_to_xn->coverCropPloughUnderDate.year,self->mpmas_to_xn->coverCropPloughUnderDate.month,
+							self->mpmas_to_xn->coverCropPloughUnderDate.day,
+							latestPossibleCoverCropPloughing.year,latestPossibleCoverCropPloughing.month,
+							latestPossibleCoverCropPloughing.day) > 0 )
+					{
+							pPl->pModelParam->HarvestYear =  latestPossibleCoverCropPloughing.year; 
+							pPl->pModelParam->HarvestMonth = latestPossibleCoverCropPloughing.month;
+							pPl->pModelParam->HarvestDay =    latestPossibleCoverCropPloughing.day;
+                    
+							//check if tillage was scheduled on the cover crop sowing day and if yes, move it, too
+							
+							for ( i = 0; i < self->mpmas_to_xn->numTill; ++i) {
+								if (xpn_time_compare_date(self->mpmas_to_xn->coverCropPloughUnderDate.year,self->mpmas_to_xn->coverCropPloughUnderDate.month,
+									self->mpmas_to_xn->coverCropPloughUnderDate.day,  
+									self->mpmas_to_xn->tillage[i].tillDate.year, self->mpmas_to_xn->tillage[i].tillDate.month, 
+									self->mpmas_to_xn->tillage[i].tillDate.day) == 0 )
+								{
+									self->mpmas_to_xn->tillage[i].tillDate.year = latestPossibleCoverCropPloughing.year;
+									self->mpmas_to_xn->tillage[i].tillDate.month  = latestPossibleCoverCropPloughing.month;
+									self->mpmas_to_xn->tillage[i].tillDate.day =    latestPossibleCoverCropPloughing.day;
+									
+									self->tillage[i] = self->mpmas_to_xn->tillage[i];
+									
+								}
+							}
+                    
+					}
+					else {
+							pPl->pModelParam->HarvestDay = self->mpmas_to_xn->coverCropPloughUnderDate.day;
+							pPl->pModelParam->HarvestMonth = self->mpmas_to_xn->coverCropPloughUnderDate.month;
+							pPl->pModelParam->HarvestYear = self->mpmas_to_xn->coverCropPloughUnderDate.year;
+						
+						
+					}
+					
+                    
+                    
+
+                    
+ 
 					
 					self->internal_actualCoverCropSowDate = self->mpmas_to_xn->coverCropSowDate;		
 					
@@ -660,6 +744,7 @@ if (NewDay(pTi))
 					self->new_plant = 1;
 					self->harvest_done=0;
 					self->mainCrop_done=1;//Added by Hong on 20180524
+					self->coverCrop_harvested=1;//to avoid getting trapped in nirvana with mainCrop_done = 1 and coverCrop_harvested == 0
 					self->daysSinceBBCH1 = 0;
 					self->daysSinceBBCH2 = 0;										
 		
@@ -736,6 +821,8 @@ if (NewDay(pTi))
 		{
 			        self->new_management=1;
 				   PRINT_MESSAGE(xpn,1,"reached new_management==0");// for debug
+	
+					self->nmin_measured = 0;
 
 					self->nextMinFertAction = 0;
 					self->nextOrgFertAction = 0;
@@ -962,67 +1049,9 @@ if (NewDay(pTi))
 		
 		//Troost 180608 : moved here. Nmin should not be done after harvest, but in spring
 		if ( xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
-						 pTi->pSimTime->iyear, NMIN_MONTH, NMIN_DAY) ==  0 )					 {
-			PSPROFILE   pSo = xpn->pSo;
-			PSLAYER     pSL;
-			PCLAYER     pCL;
+						 pTi->pSimTime->iyear, NMIN_MONTH, NMIN_DAY) ==  0 && self->nmin_measured == 0)					 {
+			measureNmin(self);
 
-			double nmin0_30, nmin30_60, nmin60_90; // added Troost 180608
-
-			double depth0_30, depth30_60, depth60_90;
-			double actdepth;
-			//double EPSILON;
-
-			//EPSILON = 1e-9;
-
-			nmin0_30 = 0.0;
-			nmin30_60 = 0.0;
-			nmin60_90 = 0.0;
-
-			actdepth = 0.0;
-
-			/*depth0_30 = 0.0;
-			depth30_60 = 0.0;
-			depth60_90 = 0.0;*/
-			
-			//double cumulNO3N_30 = 0.0;
-			//double cumulNH4N_30 = 0.0;
-			
-					
-			for (pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext;  //start
-							pSL->pNext != NULL;                     //end
-								pSL = pSL->pNext,pCL=pCL->pNext)          //step
-			{
-					actdepth += pSL->fThickness; //mm
-					if (actdepth <= 300.0)
-						{
-						//depth0_30 += pSL->fThickness;
-						nmin0_30 += (pCL->fNO3N + pCL->fNH4N) ;//* pSL->fThickness;
-						//cumulNO3N_30 += pCL->fNO3N;
-						//cumulNH4N_30 += pCL->fNH4N;
-						
-						}
-					if ((actdepth > 300.0) && (actdepth <= 600.0))
-						{
-						//depth30_60 += pSL->fThickness;
-						nmin30_60 += (pCL->fNO3N + pCL->fNH4N) ;// * pSL->fThickness;
-						}
-					if ((actdepth > 600.0) && (actdepth <= 900.0))
-						{
-						//depth60_90 += pSL->fThickness;
-						nmin60_90 += (pCL->fNO3N + pCL->fNH4N) ;//* pSL->fThickness;
-						}
-					if (actdepth > 900.0)
-						break;
-			}
-
-			/*S = g_strdup_printf("Nmin date, 0-30cm NH3N: %.2f, NH4N: %.2f", cumulNO3N_30, cumulNH4N_30);
-			PRINT_MESSAGE(xpn,3,S);// for debug
-			g_free(S);*/
-
-            self->xn_to_mpmas->Nmin0_30 = nmin0_30  ;// / (depth0_30+EPSILON);
-            self->xn_to_mpmas->Nmin30_60 = nmin30_60; // / (depth30_60+EPSILON);
-            self->xn_to_mpmas->Nmin60_90 = nmin60_90 ; // / (depth60_90+EPSILON);
 		}
         if (checkIfMineralFertilization(self) == 1) 
         {
@@ -1043,9 +1072,20 @@ if (NewDay(pTi))
             if (self->mineralFertilization[self->nextMinFertAction].nminAdapt_factor > 0.0) 
             {
             
-				if ( xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
+				if (self->nmin_measured == 0) {
+					measureNmin(self);
+					S  = g_strdup_printf("NOTE: fertilization is supposed to adapt to Nmin, but Nmin not yet measured\n  "
+														 "Do early measurement of Nmin on %04d-%02d-%02d\n",									 
+														  pTi->pSimTime->iyear,
+														  pTi->pSimTime->mon,
+														  pTi->pSimTime->mday);
+					PRINT_ERROR(S);
+					g_free(S);	
+				}
+            
+				/*if ( xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
 						 pTi->pSimTime->iyear, NMIN_MONTH, NMIN_DAY) >  0 )
-				{
+				{*/
 					double nmin_considered, nmin_bal, adaptCoef;
 					
 					//consider Nmin up to required depth
@@ -1069,7 +1109,7 @@ if (NewDay(pTi))
 					fertil->fNH4N *= adaptCoef;
 					fertil->fUreaN *= adaptCoef;
 					
-				}
+				/*}
 				else 
 				{
 					S  = g_strdup_printf("ERROR: fertilization is supposed to adapt to Nmin, but Nmin not yet measured  "
@@ -1079,7 +1119,7 @@ if (NewDay(pTi))
 														  pTi->pSimTime->mday);
 					PRINT_ERROR(S);
 					g_free(S);		
-				}
+				}*/
             
 			}
             //end added Troost 180608
@@ -1145,7 +1185,8 @@ if (NewDay(pTi))
 
 		//start added Troost 180527
 		//check for harvest of cover crop
-		if ( (1 == self->new_plant)  && (self->coverCrop_harvested == 0)  && (self->mainCrop_done == 0)  && (self->harvest_done == 0) && (1 == checkIfHarvest(self)) )
+		if ( (1 == self->new_plant)  && (self->coverCrop_harvested == 0)  && (self->mainCrop_done == 0)  && 
+				(self->harvest_done == 0) && (1 == checkIfHarvest(self)) )
         {
 			self->new_plant= 0;
 			self->coverCrop_harvested = 1;
@@ -1515,12 +1556,12 @@ int checkIfHarvest(mpmas_coupling *self)
             //if we are > BBCH2, but not over the limit, increase the counter of days
             else {
                 self->daysSinceBBCH2 += 1;
-                return 0;
+                //no return here, to allow checking for absolute maximum harvest date
             }
         }
-        else if (currentDay == pPl->pModelParam->HarvestDay
-        && currentMonth == pPl->pModelParam->HarvestMonth
-        && currentYear == pPl->pModelParam->HarvestYear ) 
+        if (currentDay == pPl->pModelParam->HarvestDay
+			&& currentMonth == pPl->pModelParam->HarvestMonth
+			&& currentYear == pPl->pModelParam->HarvestYear ) 
             {
 				//Hong for debug:
 				printf("maximum harvest date reached, harvesting despite BBCH not being reached\n");
@@ -1684,9 +1725,9 @@ int checkIfMineralFertilization(mpmas_coupling *self)
     if (self->nextMinFertAction >= XNMPMASMINFERTSLOTS || self->nextMinFertAction >= self->numMinFert ) {
         return 0;
     }
-    //if timing of fertilization is adaptive, check whether indicated BBCH stage has been reached
+    //if timing of fertilization is adaptive, check whether indicated BBCH stage of MAIN crop has been reached
     else if ( self->mineralFertilization[self->nextMinFertAction].adaptive && self->mineralFertilization[self->nextMinFertAction].bbch > 0) {   
-        if (currentBBCH >= self->mineralFertilization[self->nextMinFertAction].bbch)
+        if ( self->mainCrop_done == 1 && self->harvest_done == 0 && currentBBCH >= self->mineralFertilization[self->nextMinFertAction].bbch)
             return 1;
         else
             return 0;
@@ -1727,7 +1768,7 @@ int checkIfOrganicFertilization(mpmas_coupling *self)
     }
     //if timing of fertilization is adaptive, check whether indicated BBCH stage has been reached
     else if ( self->organicFertilization[self->nextOrgFertAction].adaptive ) {   
-        if (currentBBCH >= self->organicFertilization[self->nextOrgFertAction].bbch)
+        if (self->mainCrop_done == 1 && self->harvest_done == 0 && currentBBCH >= self->organicFertilization[self->nextOrgFertAction].bbch)
             return 1;
         else
             return 0;
@@ -1844,7 +1885,8 @@ int get_daily_air_and_soil_temperatures(mpmas_coupling *self)
         self->__temperature.fTempSoil5cm = 0.0;
         self->simulation_days++;
         
-    } else {
+	} /*else {*/ //Not else, we need to do this also when the day starts, otherwise we get a wrong average!
+        
         if ((pWe->fTempAir > self->__temperature.fTempMax)&&(pTi->pSimTime->fTimeDay > 0.5)) {
             self->__temperature.fTempMax = pWe->fTempAir_daily_models;
         }
@@ -1858,17 +1900,17 @@ int get_daily_air_and_soil_temperatures(mpmas_coupling *self)
         act_depth = 0.0; //m
 
         for(i=0,pSL=pSo->pSLayer->pNext,pHL=pHe->pHLayer->pNext, pWL=pWa->pWLayer->pNext; pSL->pNext!=NULL; pSL=pSL->pNext, pHL=pHL->pNext, pWL=pWL->pNext, i++)
-            {
-            act_depth +=pSL->fThickness*1.0e-3; // mm -> m
-            if (act_depth >= depth)
-                {
-                self->__temperature.fTempSoil5cm += pHe->pHLayer->pNext->fSoilTemp * dt;
-                break;
-                }
-            }
+		{
+			act_depth +=pSL->fThickness*1.0e-3; // mm -> m
+			if (act_depth >= depth)
+			{
+				self->__temperature.fTempSoil5cm += pHe->pHLayer->pNext->fSoilTemp * dt;
+				break;
+			}
+		}
 
 
-    }
+    //}
 
     /*self->weather.fTempAve = *(self->TairMean);
     self->weather.fTempMin = *(self->TairMin);
@@ -1876,5 +1918,75 @@ int get_daily_air_and_soil_temperatures(mpmas_coupling *self)
     self->weather.fDaylySolRad = *(self->fSolRad);*/
     return RET_SUCCESS;
 }
+
+void measureNmin(mpmas_coupling *self)
+{
+		    expertn_modul_base *xpn = &(self->parent);
+
+	
+			PSPROFILE   pSo = xpn->pSo;
+			PSLAYER     pSL;
+			PCLAYER     pCL;
+
+			double nmin0_30, nmin30_60, nmin60_90; // added Troost 180608
+
+			double depth0_30, depth30_60, depth60_90;
+			double actdepth;
+			//double EPSILON;
+
+			//EPSILON = 1e-9;
+
+			nmin0_30 = 0.0;
+			nmin30_60 = 0.0;
+			nmin60_90 = 0.0;
+
+			actdepth = 0.0;
+
+			/*depth0_30 = 0.0;
+			depth30_60 = 0.0;
+			depth60_90 = 0.0;*/
+			
+			//double cumulNO3N_30 = 0.0;
+			//double cumulNH4N_30 = 0.0;
+			
+					
+			for (pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext;  //start
+							pSL->pNext != NULL;                     //end
+								pSL = pSL->pNext,pCL=pCL->pNext)          //step
+			{
+					actdepth += pSL->fThickness; //mm
+					if (actdepth <= 300.0)
+						{
+						//depth0_30 += pSL->fThickness;
+						nmin0_30 += (pCL->fNO3N + pCL->fNH4N) ;//* pSL->fThickness;
+						//cumulNO3N_30 += pCL->fNO3N;
+						//cumulNH4N_30 += pCL->fNH4N;
+						
+						}
+					if ((actdepth > 300.0) && (actdepth <= 600.0))
+						{
+						//depth30_60 += pSL->fThickness;
+						nmin30_60 += (pCL->fNO3N + pCL->fNH4N) ;// * pSL->fThickness;
+						}
+					if ((actdepth > 600.0) && (actdepth <= 900.0))
+						{
+						//depth60_90 += pSL->fThickness;
+						nmin60_90 += (pCL->fNO3N + pCL->fNH4N) ;//* pSL->fThickness;
+						}
+					if (actdepth > 900.0)
+						break;
+			}
+
+			/*S = g_strdup_printf("Nmin date, 0-30cm NH3N: %.2f, NH4N: %.2f", cumulNO3N_30, cumulNH4N_30);
+			PRINT_MESSAGE(xpn,3,S);// for debug
+			g_free(S);*/
+
+            self->xn_to_mpmas->Nmin0_30 = nmin0_30  ;// / (depth0_30+EPSILON);
+            self->xn_to_mpmas->Nmin30_60 = nmin30_60; // / (depth30_60+EPSILON);
+            self->xn_to_mpmas->Nmin60_90 = nmin60_90 ; // / (depth60_90+EPSILON);
+	
+			self->nmin_measured = 1;
+}
+
 
 //END NEW

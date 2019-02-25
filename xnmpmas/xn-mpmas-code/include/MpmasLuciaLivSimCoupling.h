@@ -49,12 +49,13 @@ inline int herdgroupIdFromLivSimHerdId(int herd_id) {return (int) ( herd_id % LI
 	   X(double, bw, 5) \
 	   X(int, gestating, 6) \
 	   X(int, lactating, 7) \
-	   X(int, pregind, 8) \
-	   X(int, calvind, 9) \
-	   X(int, lactind, 10) \
+	   X(double, pregind, 8) \
+	   X(double, calvind, 9) \
+	   X(double, lactind, 10) \
 	   X(int, damid, 11) \
-	   X(int, removed, 12) \
-	   Y(double, milk, 13)
+	   X(int, weeks_in_gestation, 12) \
+	   X(int, removed, 13) \
+	   Y(double, milk, 14)
 
 
 #define MACROLIST_LivSimGrazingTable_ATTRIBUTES \
@@ -99,7 +100,7 @@ namespace MpmasLuciaLivSim	 {
 		{
 			stringstream errmsg;
 			errmsg << "Error when receiving " << entityname
-					 << ": Error when trying to read column name for column " << columnname << "\n";
+					 << ": Error when trying to read column " << columnname << "\n";
 			throw runtime_error(errmsg.str());
 		}
 	}
@@ -1151,9 +1152,10 @@ class LivSimHerdCollection
 			herdOfAnimal[animalId] = whichHerd;
 
 		}
-		void addHerdsToTable(LivSimHerdTable& herds_table)
+		void addHerdsToTable(LivSimHerdTable& herds_table, int skip_zero)
 		{
-			for (int i = 0; i< LIVSIM_SUBHERD_MAX; ++i)
+
+			for (int i = skip_zero ? 1 : 0; i< LIVSIM_SUBHERD_MAX; ++i)
 			{
 				if (herds[i] != NULL)
 				{

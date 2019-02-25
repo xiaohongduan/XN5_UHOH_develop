@@ -1141,7 +1141,7 @@ void xn_mpmas_translator::defineLuaforCellsFromArray(int year, int mpmasArraySiz
 }
 
 
-STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmasYear)
+STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmasYear, Raster2D* cropMapILMS , Raster2D* sowMapILMSearly, Raster2D* sowMapILMSlate, vector<int>* sowDateRepresentatives)
 {	int ws = 1; // change to zero if not overlapping years
 	STRUCT_mpmas_to_xn management;
 	if (cell < 0 || cell >= xnGridSize)
@@ -1166,6 +1166,23 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 	}
 	management = (*managIt).second;
 
+
+	if (cropMapILMS != NULL) 
+	{
+		if (lua != 170 && strncmp( management.CropCode, "MZ",2) && strncmp( management.CropCode, "SB",2)   ) //Maize and sugar beet are not early removed crops
+		{
+			int col = cell / xnGridYdim; //integer division
+			int row = cell % xnGridYdim;
+			cropMapILMS->setValue(row, col, 1);
+		}
+		else //currently everything else is set to NOAH_MP cropland 
+		{
+			int col = cell / xnGridYdim; //integer division
+			int row = cell % xnGridYdim;
+			cropMapILMS->setValue(row, col, 0);
+		}
+		
+	}
 	//debugging
 	//printf("In <xn_mpmas_translator::getManagementForCell>: Cell: %d, LUA: %d, CropCode: %s\n",cell, lua,management.CropCode);
 	
@@ -1180,19 +1197,129 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 	}
 	if ( adaptIt->second.sowingDayFormula != notAdaptive ) 
 	{
-			int sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(adaptIt->second), xnGridWeatherHistory[cell], historyWeighting);
+			int sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(adaptIt->second), xnGridWeatherHistory[cell], historyWeighting, convertDateToDayOfYear(startDate) - 1);
 
 			int springCrop = 0;
 			if(ws)
 				springCrop = xnmpmas::adaptation::isSpringCrop(adaptIt->second.sowingDayFormula);
 				
 			management.sowDate = convertDayOfYearToDate( sowDoy, mpmasYear + springCrop);
+			
+/*			if (cropMapILMS !=  NULL && sowMapILMS != NULL) 
+			{
+				int col = cell / xnGridYdim; //integer division
+				int row = cell % xnGridYdim;
+			
+				if (cropMapILMS->getValue(row, col) > 0 )
+				{
+					sowMapILMS->setValue(row, col, sowDoy);
+				}
+			}*/
 	}
 	else 
 	{
 			management.sowDate.year = management.sowDate.year + mpmasYear - 1; // -1 because in management information years are stored as 01 and 02, respectively
+			
+	/*		if (cropMapILMS !=  NULL && sowMapILMS != NULL) 
+			{
+				int col = cell / xnGridYdim; //integer division
+				int row = cell % xnGridYdim;
+			
+				if (cropMapILMS->getValue(row, col) > 0 )
+				{
+					sowMapILMS->setValue(row, col, convertDateToDayOfYear( management.sowDate) );
+				}
+			}*/
 	}
 	
+	//sowing date for ILMS
+	//currently not the sow date of the actual crop is used, but the sow date for that cell of a representative growing activity for
+	//early resp. late crops
+	if (sowMapILMSearly != NULL  ) 
+	{
+
+		
+		if (sowDateRepresentatives != NULL && (*sowDateRepresentatives)[0]  > -1)
+		{
+			int col = cell / xnGridYdim; //integer division
+			int row = cell % xnGridYdim;
+			int repEarlyLua = (*sowDateRepresentatives)[0];
+			
+			map<int, STRUCT_mpmas_to_xn>::iterator repEarlyManagIt = LuaXnParameters.find(repEarlyLua); //Note: LuaXnParameters must contain something for empty cells under lua -1
+			if (repEarlyManagIt == LuaXnParameters.end())
+			{
+				std::stringstream errmsg;
+				errmsg << "Error in xn_mpmas_translator::getManagementForCell:  No Expert-N management defined for land use activity " 
+					   << repEarlyLua <<" representing early-removed land use in ILMS\n";
+					   
+				throw runtime_error(errmsg.str());
+			}
+			STRUCT_mpmas_to_xn repEarlyManagement = (*repEarlyManagIt).second;
+			
+			int sowDoy = -1;
+			
+			map<int, cropAdaptationParameters>::iterator repEarlyAdaptIt = LuaAdaptationParameters.find(repEarlyLua);
+			if (repEarlyAdaptIt == LuaAdaptationParameters.end())
+			{
+				std::stringstream errmsg;
+				errmsg << "Error in xn_mpmas_translator::getManagementForCell:  No Adaptation parameters defined for land use activity " 
+					   << repEarlyLua <<" representing early-removed land use in ILMS\n";
+				throw runtime_error(errmsg.str());
+			}
+			if ( repEarlyAdaptIt->second.sowingDayFormula != notAdaptive ) 
+			{
+					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repEarlyAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting, convertDateToDayOfYear(startDate) - 1 );
+			}
+			else 
+			{
+					sowDoy = convertDateToDayOfYear( repEarlyManagement.sowDate);
+			}		
+			sowMapILMSearly->setValue(row, col, sowDoy );
+		}
+		
+	}
+	if (sowMapILMSlate != NULL  ) 
+	{
+		if (sowDateRepresentatives != NULL && (*sowDateRepresentatives)[1]  > -1)
+		{
+			int col = cell / xnGridYdim; //integer division
+			int row = cell % xnGridYdim;
+		
+			
+			int repLateLua = (*sowDateRepresentatives)[1];
+			
+			map<int, STRUCT_mpmas_to_xn>::iterator repLateManagIt = LuaXnParameters.find(repLateLua); //Note: LuaXnParameters must contain something for empty cells under lua -1
+			if (repLateManagIt == LuaXnParameters.end())
+			{
+				std::stringstream errmsg;
+				errmsg << "Error in xn_mpmas_translator::getManagementForCell:  No Expert-N management defined for land use activity " 
+					   << repLateLua <<" representing late-covering land use in ILMS\n";
+				throw runtime_error(errmsg.str());
+			}
+			STRUCT_mpmas_to_xn repLateManagement = (*repLateManagIt).second;
+			
+			int sowDoy = -1;
+			
+			map<int, cropAdaptationParameters>::iterator repLateAdaptIt = LuaAdaptationParameters.find(repLateLua);
+			if (repLateAdaptIt == LuaAdaptationParameters.end())
+			{
+				std::stringstream errmsg;
+				errmsg << "Error in xn_mpmas_translator::getManagementForCell:  No Adaptation parameters defined for land use activity " 
+					   << repLateLua <<" representing late-covering land use in ILMS\n";
+				throw runtime_error(errmsg.str());
+			}
+			if ( repLateAdaptIt->second.sowingDayFormula != notAdaptive ) 
+			{
+					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repLateAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting, convertDateToDayOfYear(startDate) - 1);
+			}
+			else 
+			{
+					sowDoy = convertDateToDayOfYear( repLateManagement.sowDate);
+			}		
+			sowMapILMSlate->setValue(row, col, sowDoy );
+		}
+		
+	}
 	
 	//Adapt dates from relative to current year
 	//Note: input file should have year = 1 for everything done in the year when sowing of first crop takes place (i.e. sowing of winter crops in Germany)
@@ -1240,7 +1367,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 	FILE* dbgXnActualDates = fopen(fnAggXnOutput.c_str(), "w" );
 	fprintf(dbgXnActualDates, "x\ty\tgrid\tLUA\tCropCode\tVariety\tYieldMPMAS\t"
 							  "FruitDM\tStem+LeaveDM\tStemDM\tharvest_date\t"
-							  "minfert_date0\tminfert_N0\tminfert_date1\tminfert_N1\tminfert_date2\tminfert_N2\tminfert_date3\tminfert_N3\tNmin0_30\tNmin30_90\tNmin60_90\t"
+							  "minfert_date0\tminfert_N0\tminfert_date1\tminfert_N1\tminfert_date2\tminfert_N2\tminfert_date3\tminfert_N3\tNmin0_30\tNmin30_60\tNmin60_90\t"
 							  "sow_date\tcovercrop_sow_date"
 							  "\n"
 	);
@@ -1367,7 +1494,7 @@ void xn_mpmas_translator::calcYieldsToMaps(const STRUCT_xn_to_mpmas* grid_xn_to_
 
 		}
 	}
-	
+	fclose(dbgXnActualDates);
 }
 
 void xn_mpmas_translator::calcYieldsToArray(const STRUCT_xn_to_mpmas* grid_xn_to_mpmas,  double* yieldArray, double* stoverYieldArray, double** extraAttrsX,  int numExtra,  int overlapping)
@@ -1611,31 +1738,104 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 	}
 	else // weather not cell specific 
 	{ 	//first load raster map indicating weather station for each cell
-		Raster2D cellToStationMap = Raster2D(fnMap.c_str());
 		
-		if ( xnGridXdim != cellToStationMap.cols() || xnGridYdim != cellToStationMap.rows()  )
+		//Note not using Raster2D here, as we may need to cope with long integer IDs and Raster2D is double-based.
+		
+		//Raster2D cellToStationMap = Raster2D(fnMap.c_str());
+		
+		
+		FILE* cellToStationMapStream = fopen(fnMap.c_str(), "r");
+		if(NULL == cellToStationMapStream )
+		{
+			stringstream errmsg;
+			errmsg  <<  "Error when trying to open:" << fnMap <<  "\n";
+			throw runtime_error(errmsg.str());
+		}
+		int cellToStationMap_rows, cellToStationMap_cols; 
+		double xllC, yllC, noData,cellSize;
+
+		char varString [254];
+		
+		int rtcod = fscanf(cellToStationMapStream, "%253s %d", varString, &cellToStationMap_cols);
+		if (rtcod != 2)
+		{
+				stringstream errmsg;
+				errmsg  <<  "Error when reading NCOLS in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+			
+		}
+		
+		rtcod = fscanf(cellToStationMapStream, "%253s %d", varString, &cellToStationMap_rows);
+		if (rtcod != 2)
+		{
+			stringstream errmsg;
+				errmsg  <<  "Error when reading NROWS in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+		}
+		
+		
+		
+		if ( xnGridXdim != cellToStationMap_cols || xnGridYdim != cellToStationMap_rows  )
 		{	stringstream errmsg;
-			errmsg  << "Error: Dimensions ("<<cellToStationMap.cols() << ","<< cellToStationMap.rows() 
+			errmsg  << "Error: Dimensions ("<<cellToStationMap_cols << ","<< cellToStationMap_rows 
 					<<")  of cellWeatherRecordsLinkMap inconsistent with dimensions (" 
 					<< xnGridXdim << "," << xnGridYdim <<")  of XnCellRaster\n";
 			throw runtime_error(errmsg.str() );
 		}
-		multimap<int,int> cellsByStation;//key = station, value = cells associated to that station
-
-		for (int x = 0; x < xnGridXdim; ++x)
-		{	for (int y = 0; y < xnGridYdim; ++y)	
-			{
-				int s = (int) cellToStationMap.getValue(y,x);
-				cellsByStation.insert(pair<int,int>(s, x * xnGridYdim + y));
+		
+		rtcod = fscanf(cellToStationMapStream, "%253s %lf", varString, &xllC);
+		if (rtcod != 2)
+		{
+			stringstream errmsg;
+				errmsg  <<  "Error when reading XLLCORNER in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+		}
+		rtcod = fscanf(cellToStationMapStream, "%253s %lf", varString, &yllC);
+		if (rtcod != 2)
+		{
+			stringstream errmsg;
+				errmsg  <<  "Error when reading YLLCORNER in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+		}
+		rtcod = fscanf(cellToStationMapStream, "%253s %lf", varString, &cellSize);
+		if (rtcod != 2)
+		{
+			stringstream errmsg;
+				errmsg  <<  "Error when reading CELLSIZE in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+		}
+		rtcod = fscanf(cellToStationMapStream, "%253s %lf", varString, &noData);
+		if (rtcod != 2)
+		{
+			stringstream errmsg;
+				errmsg  <<  "Error when reading NODATA_VALUE in " << fnMap <<  "\n";
+				throw runtime_error(errmsg.str());
+		}
+		
+		multimap<long long,int> cellsByStation;//key = station, value = cells associated to that station
+		for (int y = xnGridYdim -1; y >= 0 ; --y)	
+		{	for (int x = 0; x < xnGridXdim; ++x)
+			{	
+				long long s;
+				rtcod = fscanf(cellToStationMapStream, "%lld", &s);
+				if (rtcod != 1)
+				{
+					stringstream errmsg;
+					errmsg  <<  "Error when reading station id for cell " << x << ", " << y << " in " << fnMap <<  "\n";
+					throw runtime_error(errmsg.str());
+				}				
+				cellsByStation.insert(pair<long long,int>(s, x * xnGridYdim + y));
 			}
 		}
-/*		cout << "cellsByStation:\n";
-		for (multimap<int,int>::iterator it =  cellsByStation.begin(); it != cellsByStation.end(); it++)
+		fclose(cellToStationMapStream);
+		
+		cout << "cellsByStation:\n";
+		for (multimap<long long,int>::iterator it =  cellsByStation.begin(); it != cellsByStation.end(); it++)
 		{
 			cout << it->first << "\t" << it->second << "\n";
 		}
 		cout.flush();
-*/
+
 		
 		ifstream infile(fnHistory.c_str());			
 		if (infile.fail())
@@ -1655,15 +1855,15 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 		}
 		//save iterators to avoid searching everytime
 		// initialize to first station's values in map
-		multimap<int,int>::iterator lastItLow = cellsByStation.begin();
-		multimap<int,int>::iterator lastItUpp = cellsByStation.upper_bound(lastItLow->first);
+		multimap<long long,int>::iterator lastItLow = cellsByStation.begin();
+		multimap<long long,int>::iterator lastItUpp = cellsByStation.upper_bound(lastItLow->first);
 
 		//loop over remaining lines	
 		while (	getline(infile, line) )
 		{
 			
 			stringstream lineS(line); //make stream from extracted line 
-			int year, dayofyear, station;
+			int year, dayofyear; long long station;
 			double airtemp, soiltemp;
 			
 			lineS >> year;
@@ -1686,14 +1886,14 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 			}
 			if (dayofyear < 1 || dayofyear > 366)
 			{
-				fprintf(stderr, "Error in %s: Invalid input %d %d %d %f %f\n", fnHistory.c_str(), year, dayofyear, station, airtemp, soiltemp );
+				fprintf(stderr, "Error in %s: Invalid input %d %d %lld %f %f\n", fnHistory.c_str(), year, dayofyear, station, airtemp, soiltemp );
 				std::stringstream errmsg;
 				errmsg << "Error in " << fnHistory << ":\n"
 				<< "Invalid input" << year <<" "<< dayofyear<<" "<< station <<" "<< airtemp <<" "<< soiltemp <<  "\n";
 				throw runtime_error(errmsg.str());
 			}
 			
-			multimap<int,int>::iterator itLow, itUpp;
+			multimap<long long,int>::iterator itLow, itUpp;
 			if (lastItLow->first  == station )
 			{	itLow =  lastItLow;
 				itUpp = lastItUpp;
@@ -1705,7 +1905,7 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 			}
 			
 			//loop over all cells associated to that station and insert the value into the corresponding record
-			for ( multimap<int,int>::iterator itStationCells = itLow;
+			for ( multimap<long long,int>::iterator itStationCells = itLow;
 						itStationCells != itUpp;
 						itStationCells++)
 			{
@@ -1727,6 +1927,7 @@ void xn_mpmas_translator::readAdaptationParametersAndWeatherHistory(std::string 
 		}
 	
 	}
+	lastWeatherUpDate = startDate;
 	//TODO: check completenes of weatherHistory (years should be historySize + 1 to account for the calendar year/season overlap
 }
 int xn_mpmas_translator::getStartDoy(int currentyear)
@@ -1736,6 +1937,142 @@ int xn_mpmas_translator::getStartDoy(int currentyear)
 	return convertDateToDayOfYear(thisStartDate);
 }
 
+void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_xn_to_mpmas2, int thisSeasonsStartyear, xnmpmasDate curDate)
+{   //copy information on cell-specific weather data from XN/MPMAS shared array into weatherHistory
+	
+	int startDoy, endDoy, year1, year2;
+	
+	startDoy = convertDateToDayOfYear(lastWeatherUpDate);
+	endDoy = convertDateToDayOfYear(curDate) -1;
+	
+	year1 = lastWeatherUpDate.year;
+	year2 = curDate.year;
+	
+	cout << "Updating weather " << startDoy << "/" << year1 << " to " << endDoy << "/" << year2 << "\n";
+	
+	int daysYear1 = isLeapYear(year1) ? 366 : 365;
+	//int daysYear2 = isLeapYear(year2) ? 366 : 365;
+	if (endDoy <= 0) {
+		year2 = year1;
+		endDoy =  daysYear1;
+		//daysYear2 = daysYear2;
+	}
+	
+			
+//	int startDoy1 = getStartDoy(thisSeasonsStartyear);
+//	int startDoy2 = getStartDoy(thisSeasonsStartyear + 1);
+	
+	for (int i = 0; i < xnGridSize; ++i)
+	{	
+		int lua = currentXnCropGrid.at(i);//TODO: switch correctly !!!
+		int gridId = LuaXnParameters.at(lua).currentGrid;
+		
+		if (year1 == year2 && startDoy <= endDoy) 
+		{	
+			if (xnGridWeatherHistory[i][0].year == year1)	
+			{
+				for (int j = startDoy-1; j < endDoy; ++j)
+				{	// -1 to convert from doy (>=1) to array position (>=0)
+					xnGridWeatherHistory[i][0].airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
+					xnGridWeatherHistory[i][0].topsoilTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
+				}
+				xnGridWeatherHistory[i][0].numDays = endDoy ;
+
+			}
+			else if (xnGridWeatherHistory[i][0].year == year1 - 1 )	
+			{
+				weatherRecord temp = weatherRecord(year1);
+				for (int j = startDoy-1; j < endDoy; ++j)
+				{
+					temp.airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
+					temp.topsoilTemp[ j]  = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
+				}
+				temp.numDays = endDoy ;
+				
+				//remove last record ??
+				xnGridWeatherHistory[i].pop_back();
+				//add new record at beginning
+				xnGridWeatherHistory[i].push_front(temp);				
+			}
+			else 
+			{
+				std::stringstream errmsg;
+					errmsg << "Error in <updateWeatherHistory>:\n"
+					<< "Gap in weather history: New year " << year1 << ", last existing year " << xnGridWeatherHistory[i][0].year <<"\n";
+					throw runtime_error(errmsg.str());
+			}
+		}
+		else if (year1 == year2 - 1 ) 
+		{	
+			if (xnGridWeatherHistory[i][0].year == year1)	
+			{
+				for (int j = startDoy-1; j < daysYear1; ++j)
+				{	// -1 to convert from doy (>=1) to array position (>=0)
+					xnGridWeatherHistory[i][0].airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
+					xnGridWeatherHistory[i][0].topsoilTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
+				}
+				xnGridWeatherHistory[i][0].numDays = daysYear1 ;
+			}
+			else if (xnGridWeatherHistory[i][0].year == year1 - 1 )	
+			{
+				weatherRecord temp = weatherRecord(year1);
+				for (int j = startDoy -1 ; j < daysYear1; ++j)
+				{
+					temp.airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
+					temp.topsoilTemp[ j]  = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
+				}
+				temp.numDays = daysYear1 ;
+				
+				//remove last record ??
+				xnGridWeatherHistory[i].pop_back();
+				//add new record at beginning
+				xnGridWeatherHistory[i].push_front(temp);				
+			}
+			else 
+			{
+				std::stringstream errmsg;
+					errmsg << "Error in <updateWeatherHistory>:\n"
+					<< "Gap in weather history: New year " << year1 << ", last existing year " << xnGridWeatherHistory[i][0].year <<"\n";
+					throw runtime_error(errmsg.str());
+			}
+		
+		
+			if (xnGridWeatherHistory[i][0].year == year2)	
+			{
+					std::stringstream errmsg;
+					errmsg << "Error in <updateWeatherHistory>:\n"
+					<< "Unexpected case: New year (second in recevied info) " << year2 << "already exists, last existing year " << xnGridWeatherHistory[i][0].year <<"\n";
+					throw runtime_error(errmsg.str());
+			}
+			else if (xnGridWeatherHistory[i][0].year == year2 - 1 )	
+			{
+				weatherRecord temp = weatherRecord(year2);
+				for (int j = 0 ; j < endDoy; ++j)
+				{
+					temp.airTemp[j] = grid_xn_to_mpmas2[gridId * xnGridSize + i].airTemp[j];
+					temp.topsoilTemp[ j]  = grid_xn_to_mpmas2[gridId * xnGridSize + i].topsoilTemp[j];
+				}
+				temp.numDays = endDoy ;
+				
+				//remove last record ??
+				xnGridWeatherHistory[i].pop_back();
+				//add new record at beginning
+				xnGridWeatherHistory[i].push_front(temp);				
+			}
+			else 
+			{
+				std::stringstream errmsg;
+					errmsg << "Error in <updateWeatherHistory>:\n"
+					<< "Gap in weather history: New year " << year2 << ", last existing year " << xnGridWeatherHistory[i][0].year <<"\n";
+					throw runtime_error(errmsg.str());
+			}		
+		}
+	}
+	lastWeatherUpDate = curDate;
+}
+
+
+/*
 void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_xn_to_mpmas2, int thisSeasonsStartyear, xnmpmasDate curDate)
 {   //copy information on cell-specific weather data from XN/MPMAS shared array into weatherHistory
 	
@@ -1776,6 +2113,12 @@ void xn_mpmas_translator::updateWeatherHistory(const STRUCT_xn_to_mpmas2* grid_x
 
 	}
 }
+
+*/
+
+
+
+
 #define tempNumIncorrect 1
 /*void xn_mpmas_translator::updateWeatherHistory(STRUCT_xn_to_mpmas2* grid_xn_to_mpmas2, int currentyear, xnmpmasDate curDate)
 {   //copy information on cell-specific weather data from XN/MPMAS shared array into weatherHistory

@@ -2481,12 +2481,13 @@ int Photosynthesis_GECROS(gecros *self)
       //SLNMIN Parameter (minimum leaf N content for Photosynthesis)
 
       //CO2A Parameter (ambient CO2 concentration)
+
       //SG20190212 - variable atmospheric CO2-concentrations from daily weather input
       CO2A = (pCl->pWeather->fAtmCO2ppm > 199.99?pCl->pWeather->fAtmCO2ppm:self->CO2A);
 
     //      LS   = INSW(self->LODGE,(double)0.,(double)AFGENERATOR(pPl->pDevelop->fStageSUCROS,VLS));//LS = (double)0.;
     // 20190116 Troost, for now (VLS pointer wrongly increased in AFGENERATOR), since no Lodging input possible:
-	LS = (double)0.;
+  	LS = (double)0.;
 
       //EAJMAX Parameter (Farquahar Photosynthesís model)
       //XVN Parameter (Farquhar Photosynthesis model)

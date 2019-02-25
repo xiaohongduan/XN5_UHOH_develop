@@ -187,6 +187,7 @@ enum Content
 	contDirectionFromHome,
 	contNRU,
 	contExtraCropActAttribute,
+	contCommonPropertyGroup,
 	//add new spatial content here !!!, not above if possible (exceptions for monthly/coupling content, otherwise -A flag numbers will be changed, and that would not be nice
 	contLastSpatial,
 	///Other formats, or special types, that are not gridded data
@@ -201,6 +202,7 @@ enum Content
 	fileTypeLanduseByCatchment, fileTypeTimeHandler, fileTypeIrrigationFactors, fileTypeSpatialExportInfo,
 	fileTypeSoilToNRU,fileTypeLandmarketParameters,fileTypeInvestmentsAttachedToLand,
 	fileTypeLivSimAssetTransformationInfo,fileTypeExternalScriptCalls,fileTypeExtraAgentCharInfo,fileTypeExtraAgentCharInit,
+	fileTypeAdvancedExpectationParameters,fileTypeCommonPropertyGroups,
 	fileTypeENDFILETYPE,
 
 	///Misc.
@@ -457,7 +459,8 @@ enum specialCountryModelTypes
 	countryModelGhana,
 	countryPepijnDiss,
 	countryModelGermany,
-	countryModelPeru
+	countryModelPeru,
+	countryModelTeaching
 };
 
 

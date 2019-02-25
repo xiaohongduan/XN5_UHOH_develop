@@ -112,6 +112,7 @@ class cluster
 	virtual void readAssetsFromFile();
 	virtual void writeAssetsToFile(char*);
 
+
    virtual int getCluNum();
    virtual int getNumAgents();
    virtual int getActAgents();
@@ -144,6 +145,9 @@ class cluster
 	virtual void printToScreen();
    virtual void writeLottoInFile(char*);
 	virtual void writeDistribInFile(char*);
+#ifdef MULTIPERIOD
+	expectationParameters getAdvancedExpectationsParametersFor(int fstID);
+#endif
 };
 
 

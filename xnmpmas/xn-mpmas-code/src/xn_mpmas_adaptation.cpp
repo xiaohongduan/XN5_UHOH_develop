@@ -83,7 +83,7 @@ namespace xnmpmas
 	}
 
 // 2) Main functions (declared in header)
-	int calculatePlantingDate(const cropAdaptationParameters* params, const deque<weatherRecord> cellHistory, const vector<double> historyWeighting)
+	int calculatePlantingDate(const cropAdaptationParameters* params, const deque<weatherRecord> cellHistory, const vector<double> historyWeighting, int maxDays)
 	{
 		int sowDoy = 0;
 		int day_soil_tgz = 0;
@@ -97,8 +97,8 @@ namespace xnmpmas
 			case springSoilGdd:
 				for (unsigned i = 0; i < historyWeighting.size(); ++i) 
 				{
-					day_soil_tgz += calculateDaySoilTgz(cellHistory[i].topsoilTemp, cellHistory[i].numDays, params->seed_tgzthr) 				 * historyWeighting[i]; 
-					day_air_gdd  += calculateDayGDDreached(cellHistory[i].airTemp, cellHistory[i].numDays, params->seed_gddthr, params->basetemp) * historyWeighting[i]; 
+					day_soil_tgz += calculateDaySoilTgz(cellHistory[i].topsoilTemp, cellHistory[i].numDays, params->seed_tgzthr, maxDays -6) 				 * historyWeighting[i]; 
+					day_air_gdd  += calculateDayGDDreached(cellHistory[i].airTemp, cellHistory[i].numDays, params->seed_gddthr, params->basetemp, maxDays) * historyWeighting[i]; 
 				}
 				expectedPlantdate = params->seed_cons  + params->seed_coef_tgz * day_soil_tgz + params->seed_coef_gdd * day_air_gdd;
 			   break;
@@ -106,7 +106,7 @@ namespace xnmpmas
 			case springSoil:
 				for (unsigned i = 0; i < historyWeighting.size(); ++i) 
 				{
-					day_soil_tgz += calculateDaySoilTgz(cellHistory[i].topsoilTemp, cellHistory[i].numDays, params->seed_tgzthr) * historyWeighting[i]; 
+					day_soil_tgz += calculateDaySoilTgz(cellHistory[i].topsoilTemp, cellHistory[i].numDays, params->seed_tgzthr, maxDays -6) * historyWeighting[i]; 
 				}
 				expectedPlantdate = params->seed_cons  + params->seed_coef_tgz * day_soil_tgz; 
 			  break;
@@ -114,7 +114,7 @@ namespace xnmpmas
 			case springGdd:
 				for (unsigned i = 0; i < historyWeighting.size(); ++i) 
 				{
-					day_air_gdd += calculateDayGDDreached(cellHistory[i].airTemp, cellHistory[i].numDays,params->seed_gddthr, params->basetemp) * historyWeighting[i]; 
+					day_air_gdd += calculateDayGDDreached(cellHistory[i].airTemp, cellHistory[i].numDays,params->seed_gddthr, params->basetemp, maxDays) * historyWeighting[i]; 
 				}
 				expectedPlantdate = params->seed_cons  +  params->seed_coef_gdd * day_air_gdd;
 			  break;
@@ -122,7 +122,7 @@ namespace xnmpmas
 			case winterGdd:
 				for (unsigned i = 0; i < historyWeighting.size(); ++i) 
 				{	//i + ws here, because autumn values are likely not yet available in the newest record
-					day_air_gdd += calculateDayRemGDD(cellHistory[i + ws].airTemp, cellHistory[i + ws].numDays, params->seed_gddthr, params->basetemp) * historyWeighting[i]; 
+					day_air_gdd += calculateDayRemGDD(cellHistory[i + ws].airTemp, cellHistory[i + ws].numDays, params->seed_gddthr, params->basetemp, maxDays +2) * historyWeighting[i]; 
 				}
 				expectedPlantdate = params->seed_cons  + params->seed_coef_gdd * day_air_gdd;
 				//cout << "WinterGdd, cons: " << params->seed_cons << ", coef: " << params->seed_coef_gdd << ", day_air_gdd: " << day_air_gdd << endl;

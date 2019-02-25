@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.io.File;
+import java.lang.Math;
 
 import javax.swing.JOptionPane;
 
@@ -1724,7 +1725,7 @@ class	XnDatabaseConnection {
 		}
 		return ok;
 	}
-	public boolean writeXnMpmasCouplingIni(String xn5FilePrefix, int projectId, String projectName, int projectType) {
+	public boolean writeXnMpmasCouplingIni(String xn5FilePrefix, int projectId, String projectName, int projectType, String projectDir) {
 		boolean ok = false;
 		try {
 			String s0 = "SELECT startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize " 
@@ -1741,8 +1742,8 @@ class	XnDatabaseConnection {
 			if (! couplingInfo.first()) {
 				throw new Exception("Error: Missing xnmpmas coupling content for simulation project.");
 			}
-			
-			
+			String[] temp = projectDir.split("/", 0);
+			String projectDirectory = temp[temp.length -1];
 			
 			int startYear = projectInfo.getInt("startYear");
 			int startMonth = projectInfo.getInt("startMonth");
@@ -1804,6 +1805,9 @@ class	XnDatabaseConnection {
 				case 2: 
 					out.println("couplingType = 2 " );
 					break;
+				case 3: 
+					out.println("couplingType = 2 " );
+					break;
 			
 			}
 					
@@ -1814,7 +1818,8 @@ class	XnDatabaseConnection {
 			out.println("[XPN]");
 			out.println("startYear = "+ startYear );
 			out.println("config-name = " +  projectName + ".xpn"  );
-			out.println("commandline = --base-dir=/home/ho/ho_mas/ho_trooscb9/XN5/built --config-file=/pfs/work2/workspace/scratch/ho_trooscb9-bems-0/RXNKRG_v6r9/"+projectName  + ".xpn"  ); 
+			out.println("commandline = --base-dir="+couplingInfo.getString("XN_basedir") +" --config-file="
+					+couplingInfo.getString("simulation_basedir")+"/"+projectDirectory +"/"+projectName  + ".xpn"  ); 
 			
 
 			out.println("cropGridFile = " +  projectName + "_XnCropCodeToGrid.dat");
@@ -1851,7 +1856,7 @@ class	XnDatabaseConnection {
 		return ok;
 	}
 	
-	public boolean writeXn5XpnFile(String xn5FilePrefix, int projectId, String projectName) {
+	public boolean writeXn5XpnFile(String xn5FilePrefix, int projectId, String projectName, String xn5_cells_table_name) {
 		boolean ok = false;
 		try {
 			String s0 = "SELECT startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize " 
@@ -1870,7 +1875,7 @@ class	XnDatabaseConnection {
 			}
 			
 			String s1 = "SELECT xn5_cell_x, xn5_cell_y "
-						+" FROM simulation_projects_xn5_cells t1"
+						+" FROM `"+ xn5_cells_table_name +"` t1"
 						+" WHERE simulation_project_id = " + projectId
 						+" ORDER BY xn5_cell_x, xn5_cell_y;";
 			ResultSet cellList = myConnection.query(s1);	
@@ -1956,7 +1961,7 @@ class	XnDatabaseConnection {
 		}
 		return ok;
 	}
-	public boolean writeXn5XpiFiles(String xn5FilePrefix, int projectId, String projectName, int project_type) {
+	public boolean writeXn5XpiFiles(String xn5FilePrefix, int projectId, String projectName, int project_type, String xn5_cells_table_name) {
 		boolean ok = false;
 		try {
 			int numGrids = 1;
@@ -1967,10 +1972,29 @@ class	XnDatabaseConnection {
 			Boolean everything_retrieved = false;
 			int repcount = 0;
 			
+			
+			String s0 = "SELECT startYear, endYear,  adaptive, max_daily_precip, elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells " //elevation correction class_size 
+					+ " FROM simulation_projects_general "
+					+ " WHERE simulation_project_id = "+ projectId + ";";
+			ResultSet projectInfo = myConnection.query(s0);	
+	
+			if (! projectInfo.first()) {
+				JOptionPane.showMessageDialog(null, "Error: Missing general information on simulation project.");
+
+				throw new Exception("Error: Missing general information on simulation project.");
+			}
+
+			
+			int elevationCorrectionType = projectInfo.getInt("elevationCorrectionType");
+			int elevCorrectionClassSize = projectInfo.getInt("elevationCorrectionClassSize");
+			
+			
+			
+			
 			while (! everything_retrieved)  { //RETRIEVING BATCH BY BATCH TO AVOID MEMORY PROBLEMS FOR LARGE MAPS
 			
-				String s1 = "SELECT xn5_cell_x, xn5_cell_y, climate_file, weather_table_name, weather_station_id "
-							+" FROM simulation_projects_xn5_cells t1"
+				String s1 = "SELECT xn5_cell_x, xn5_cell_y, climate_file, weather_table_name, weather_station_id,  ROUND(alt / " +elevCorrectionClassSize + " ) * "+ elevCorrectionClassSize+ " AS alt "
+							+" FROM `"+ xn5_cells_table_name +"` t1"
 							+" WHERE simulation_project_id = " + projectId
 							+" ORDER BY xn5_cell_x, xn5_cell_y"
 							+ " LIMIT " + (repcount * batchSize) + ",  " + batchSize+";";
@@ -2012,9 +2036,14 @@ class	XnDatabaseConnection {
 	
 						
 						String climfile; 
-						if ( cellList.getInt("weather_station_id") > -1 
+						if ( project_type != 3 && cellList.getInt("weather_station_id") > -1 
 								&& cellList.getString("weather_table_name").compareToIgnoreCase("") != 0)  {
-							climfile = "$<$PROJECT_PATH/"+ cellList.getString("weather_table_name") +"_"+ cellList.getInt("weather_station_id") +".csv$>";
+							
+							climfile = "$<$PROJECT_PATH/"+ cellList.getString("weather_table_name") +"_"+ cellList.getInt("weather_station_id");
+							if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
+								climfile += String.format("%04d", cellList.getInt("alt") );
+							}
+							climfile +=".csv$>";
 						}
 						else {
 	
@@ -2531,27 +2560,27 @@ class	XnDatabaseConnection {
 					}
 					if (adaptSowingList.getInt("process_id") == curProcId && adaptSowingList.getInt("sowingDayFormula") > -1 && ! adaptSowingList.wasNull() ) {
 						out.println("    adaptive  :");
+						out.println("      type: "+adaptSowingList.getInt("sowingDayFormula"));
 						switch(adaptSowingList.getInt("sowingDayFormula")) {
 							case 0: 				
-								out.println("      basetemp: "+adaptSowingList.getString("basetemp"));
 								out.println("      tgzthr: "+adaptSowingList.getString("tgzthr"));
-								out.println("      ggdthr: "+adaptSowingList.getString("gddthr"));
+								out.println("      gddthr: "+adaptSowingList.getString("gddthr"));
 								out.println("      const: "+adaptSowingList.getString("seed_cons"));
-								out.println("      coef_tgz: "+adaptSowingList.getString("seed_coef_tgz"));
-								out.println("      coef_gdd: "+adaptSowingList.getString("seed_coef_gdd"));
+								out.println("      coef-tgz: "+adaptSowingList.getString("seed_coef_tgz"));
+								out.println("      coef-gdd: "+adaptSowingList.getString("seed_coef_gdd"));
 								break;
 							case 1: 				
 								out.println("      basetemp: "+adaptSowingList.getString("basetemp"));
 								out.println("      tgzthr: "+adaptSowingList.getString("tgzthr"));
 								out.println("      const: "+adaptSowingList.getString("seed_cons"));
-								out.println("      coef_tgz: "+adaptSowingList.getString("seed_coef_tgz"));						
+								out.println("      coef-tgz: "+adaptSowingList.getString("seed_coef_tgz"));						
 								break;
 							case 2:
 							case 3: 				
 								out.println("      basetemp: "+adaptSowingList.getString("basetemp"));
-								out.println("      ggdthr: "+adaptSowingList.getString("gddthr"));
+								out.println("      gddthr: "+adaptSowingList.getString("gddthr"));
 								out.println("      const: "+adaptSowingList.getString("seed_cons"));
-								out.println("      coef_gdd: "+adaptSowingList.getString("seed_coef_gdd"));
+								out.println("      coef-gdd: "+adaptSowingList.getString("seed_coef_gdd"));
 							break;
 						}
 					}
@@ -2637,13 +2666,18 @@ class	XnDatabaseConnection {
 							case 1: typeString = "before-sowing"; break;
 							case 2: typeString = "before-cover"; break;
 							case 3: typeString = "after-harvest"; break;
+							case 4: typeString = "before-sowing"; break;
 							default:
 								throw new Exception("Error: invalid adapt_date_type");
 						}
 						out.println("      adaptive  : ");
 						out.println("        type      : "+typeString);
-						out.println("        days      : "+tillageList.getString("adapt_date_days"));
-
+						if ( tillageList.getInt("adapt_date_type") == 4) {
+							out.println("        days      : 1");
+						}
+						else {
+							out.println("        days      : "+tillageList.getString("adapt_date_days"));
+						}
 					}
 					tillageList.next();
 				}
@@ -2729,14 +2763,14 @@ class	XnDatabaseConnection {
 		}
 		return ok;
 	}
-	public boolean writeBEMSCropManagementMaps(String xn5FilePrefix, int projectID)
+	public boolean writeBEMSCropManagementMaps(String xn5FilePrefix, int projectID, String xn5_cells_table_name, String bemsManagTableName)
 	{
 		boolean ok = false;
 		try {
 			
 			
 			
-			String s7 = "SELECT MAX(xn5_cell_x) as maxX, MAX(xn5_cell_y) as maxY FROM for1695_expertN.simulation_projects_xn5_cells WHERE simulation_project_id = " +projectID+";";
+			String s7 = "SELECT MAX(xn5_cell_x) as maxX, MAX(xn5_cell_y) as maxY FROM `"+ xn5_cells_table_name +"` WHERE simulation_project_id = " +projectID+";";
 			ResultSet gridExtend = myConnection.query(s7);
 			
 			if (! gridExtend.first()) {
@@ -2770,7 +2804,7 @@ class	XnDatabaseConnection {
 				
 				
 				String s6 = "SELECT xn5_cell_x, xn5_cell_y, for1695_mpmas_process_id  " +
-						"		FROM `simulation_projects_bems_cells_management` t1" +
+						"		FROM `"+bemsManagTableName+"` t1" +
 						"					JOIN (SELECT crop_sequence_id, MAX(position) + 1 as N" +
 						"							FROM for1695_expertN.crop_sequence_bems" +
 						"								GROUP BY crop_sequence_id) s1" +
@@ -2866,7 +2900,7 @@ class	XnDatabaseConnection {
 						    + " JOIN simulation_projects_gecros_crops_included t4"
 						    + "   ON t1.crop_code = t4.crop_code"
 						    + " AND t1.variety = t4.variety "
-							+ " AND t1.simulation_project_id =t4.simulation_project_id"
+							+ " AND t1.simulation_project_id =t4.simulation_project_id AND t4.include = 1"
 							+ " JOIN plant_parameterization_gecros t5 ON"
 							+ " t1.crop_code = t5.crop_code"
 						    + "  AND t1.variety = t5.variety"
@@ -3033,7 +3067,7 @@ class	XnDatabaseConnection {
 
 	}
 	
-	public boolean writeXn5CropManagementFileDummies(String xn5FilePrefix, int projectID)
+	public boolean writeXn5CropManagementFileDummies(String xn5FilePrefix, int projectID, String xn5_cells_table_name)
 	{
 		boolean ok = false;
 		try {
@@ -3050,7 +3084,7 @@ class	XnDatabaseConnection {
 			
 			
 			String s6 = "SELECT  xn5_cell_x, xn5_cell_y "
-					+ " FROM simulation_projects_xn5_cells t1"
+					+ " FROM `"+xn5_cells_table_name+"` t1"
 					
 					+ "   WHERE simulation_project_id = "+ projectID +
 					
@@ -3143,7 +3177,7 @@ class	XnDatabaseConnection {
 
 	}
 	
-	public boolean writeXn5CellCfgFiles(String xn5FilePrefix, int projectID)
+	public boolean writeXn5CellCfgFiles(String xn5FilePrefix, int projectID, String xn5_cells_table_name)
 	{
 		boolean ok = false;
 		try {
@@ -3177,7 +3211,7 @@ class	XnDatabaseConnection {
 				String s1 = "SELECT xn5_cell_x, xn5_cell_y, t1.profileID, "
 							+ "lat, lon, alt, exposition, inclination, AveYearTemp, MonthTempAmp" 
 								+ ", SUM(layers) as layer_count, MAX(depth_per_layer) as layer_thickness "
-								+" FROM simulation_projects_xn5_cells t1"
+								+" FROM `"+xn5_cells_table_name+"` t1"
 								+ " JOIN soil_parameterization t2 " 
 								+ " ON t1.profileID = t2.profileID "
 	                            + " AND t1.soil_param_id = t2.soil_param_id "
@@ -3216,7 +3250,7 @@ class	XnDatabaseConnection {
 							+ " `t2`.`bulk_density`,    `t2`.`rock_fraction`,    `t2`.`ph`,    `t2`.`soil_type`,    `t2`.`wilting_point`,"
 							+ " `t2`.`field_capacity`,    `t2`.`porosity`,    `t2`.`cond_sat`,    `t2`.`res_water_cont`,    `t2`.`cont_sat`,"
 							+ " `t2`.`camp_a`,    `t2`.`camp_b`,    `t2`.`van_gen_a`,    `t2`.`van_gen_n`,    `t2`.`van_gen_m`" 
-							+ "	 FROM simulation_projects_xn5_cells t1	 "
+							+ "	 FROM `"+xn5_cells_table_name+"` t1	 "
 							+ " JOIN soil_parameterization t2	ON t1.profileID = t2.profileID	AND t1.soil_param_id = t2.soil_param_id "
 							+ "	WHERE simulation_project_id =   " + projectID
 							+ " AND (  (xn5_cell_x = "+batchMinX+" AND  xn5_cell_y >= "+batchMinY +")  OR (xn5_cell_x > "+batchMinX+"  )) "
@@ -3230,7 +3264,7 @@ class	XnDatabaseConnection {
 						" iTempCorr, AOM1Q10 as CAOM1Q10, AOM2Q10 as CAOM2Q10, BOM1Q10 as CBOM1Q10, BOM2Q10 as CBOM2Q10, SOM1Q10 as CSOM1Q10,"
 						+ "SOM2Q10 as CSOM2Q10, DBOM1Q10, DBOM2Q10, MBOM1Q10, MBOM2Q10,	"
 						+ "fBOM1, fSOM1, fSOM2, fEFF, fEFFAOM1 as fEff_AOM1, fEFFAOM2 as fEff_AOM2,fEFFBOM1 as fEff_BOM1, fEFFBOM2 as fEff_BOM2, fEFFSOM1 as fEff_SOM1,	fEFFSOM2 as fEff_SOM2 "
-						+ "	 FROM simulation_projects_xn5_cells t1	 "
+						+ "	 FROM `"+xn5_cells_table_name+"` t1	 "
 						+ " JOIN daisy_parameterization t2	ON t1.profileID = t2.profileID	" +
 						"		AND t1.daisy_param_id = t2.daisy_param_id "
 						+ "	WHERE simulation_project_id =   " + projectID
@@ -3242,7 +3276,7 @@ class	XnDatabaseConnection {
 				
 				String s6 = "SELECT xn5_cell_x, xn5_cell_y, t1.profileID, first_layer, "    
 						+ " layers, fom_slow, fom_fast, fom_veryfast, micbioms_slow, micbioms_fast, humus_slow, humus_fast"
-						+ " FROM simulation_projects_xn5_cells t1"
+						+ " FROM `"+xn5_cells_table_name+"` t1"
 	                    + "     JOIN daisy_parameterization_layers t3"
 	                    + "     	ON t1.profileID = t3.profileID"
 	                    + "         AND t1.daisy_param_id = t3.daisy_param_id"
@@ -3257,7 +3291,7 @@ class	XnDatabaseConnection {
 							+ " layers, AOM1_C, AOM2_C, AOM3_C,  BOM1_C,"
 							+ " BOM2_C, BOMD_C, SOM0_C, SOM1_C, SOM2_C, Csol,"
 							+ " AOM1_N, AOM2_N, AOM3_N, BOM1_N, BOM2_N, BOMD_N,SOM0_N, SOM1_N, SOM2_N"
-							+ " FROM simulation_projects_xn5_cells t1"
+							+ " FROM `"+xn5_cells_table_name+"` t1"
 	                        + "     JOIN sompools_initialization t3"
 	                        + "     	ON t1.profileID = t3.profileID"
 	                        + "         AND t1.sompools_param_id = t3.sompools_param_id"
@@ -3272,7 +3306,7 @@ class	XnDatabaseConnection {
 				String s4 = "SELECT xn5_cell_x, xn5_cell_y, t1.profileID, t2.first_layer,"    
 						+ " t2.layers, "
 						+ " IF(water_content >= porosity, 0.97* porosity, water_content) AS water_content, matrix_potential, soil_temperature, nh4_content, no3_content, root_density"
-						+ " FROM simulation_projects_xn5_cells t1"
+						+ " FROM `"+xn5_cells_table_name+"` t1"
 	                    + "     JOIN soil_initialization t2"
 	                    + "     	ON t1.profileID = t2.profileID"
 	                    + "         AND t1.soilinit_param_id = t2.soilinit_param_id"
@@ -3288,7 +3322,7 @@ class	XnDatabaseConnection {
 				
 				String s7 = "SELECT xn5_cell_x, xn5_cell_y, t1.profileID, first_layer,"    
 						+ " layers, c_litter, n_litter, c_manure, n_manure, c_humus, n_humus "					
-						+ " FROM simulation_projects_xn5_cells t1"
+						+ " FROM `"+xn5_cells_table_name+"` t1"
 	                    + "     JOIN soil_initialization t3"
 	                    + "     	ON t1.profileID = t3.profileID"
 	                    + "         AND t1.soilinit_param_id = t3.soilinit_param_id"
@@ -3303,7 +3337,7 @@ class	XnDatabaseConnection {
 				String s8 = "SELECT xn5_cell_x, xn5_cell_y, " +
 						" t2.effic, t2.humf, t2.min_cn, t2.temp0, t2.miner_q10, t2.theta0, t2.MinerSatActiv, t2.NitrifNO3NH4Ratio," +
 						" t3. `leachn_param_id`, t3.`fn2Fraction`, t3.`fn2oeduction`, t3.`irewet`, t3.`ino3kin` "
-						+ "	 FROM simulation_projects_xn5_cells t1	 "
+						+ "	 FROM `"+xn5_cells_table_name+"` t1	 "
 						+ " JOIN daisy_parameterization t2	ON t1.profileID = t2.profileID	" +
 						"		AND t1.daisy_param_id = t2.daisy_param_id "
 						+ " JOIN leachn_parameterization t3	ON t1.leachn_param_id = t3.leachn_param_id	" 
@@ -3317,7 +3351,7 @@ class	XnDatabaseConnection {
 				String s9 = "SELECT xn5_cell_x, xn5_cell_y, t3.leachn_param_id, t3.first_layer, " +
 						"		GREATEST(0,LEAST(layers,layers_cell -cum_layers_leachn)) as layers," +
 						" urea_hydrolysis , nitrification, denitrification, mineralisation_lit , mineralisation_man,  mineralisation_hum" +
-						"					FROM simulation_projects_xn5_cells t1" +
+						"					FROM `"+xn5_cells_table_name+"` t1" +
 						"                         JOIN leachn_parameterization_layers t3" +
 						"                         	ON t1.leachn_param_id = t3.leachn_param_id" +
 						"						 JOIN (SELECT profileID, soil_param_id, SUM(layers) as layers_cell FROM" +
@@ -3345,7 +3379,7 @@ class	XnDatabaseConnection {
 				String s10 = 		"SELECT xn5_cell_x, xn5_cell_y, t3.leachn_param_id, t3.first_layer, " +
 						"		GREATEST(0,LEAST(layers,layers_cell -cum_layers_leachn)) as layers," +
 						" nh4_to_n20" +
-						"					FROM simulation_projects_xn5_cells t1" +
+						"					FROM `"+xn5_cells_table_name+"` t1" +
 						"                         JOIN leachn_parameterization_layers t3" +
 						"                         	ON t1.leachn_param_id = t3.leachn_param_id" +
 						"						 JOIN (SELECT profileID, soil_param_id, SUM(layers) as layers_cell FROM" +
@@ -3373,7 +3407,7 @@ class	XnDatabaseConnection {
 				String s11 = 	"SELECT xn5_cell_x, xn5_cell_y, t3.leachn_param_id, t3.first_layer, " +
 						"		GREATEST(0,LEAST(layers,layers_cell -cum_layers_leachn)) as layers," +
 						"			ksno3, ksc, theta0, biogrowth, bio_mc" +
-						"					FROM simulation_projects_xn5_cells t1" +
+						"					FROM `"+xn5_cells_table_name+"` t1" +
 						"                         JOIN leachn_parameterization_layers t3" +
 						"                         	ON t1.leachn_param_id = t3.leachn_param_id" +
 						"						 JOIN (SELECT profileID, soil_param_id, SUM(layers) as layers_cell FROM" +
@@ -3401,7 +3435,7 @@ class	XnDatabaseConnection {
 				String s12 = "SELECT xn5_cell_x, xn5_cell_y, t3.leachn_param_id, t3.first_layer, " +
 						"		GREATEST(0,LEAST(layers,layers_cell -cum_layers_leachn)) as layers," +
 						"n2o_n2, freezing, thawing, rewet" + 
-						"					FROM simulation_projects_xn5_cells t1" +
+						"					FROM `"+xn5_cells_table_name+"` t1" +
 						"                         JOIN leachn_parameterization_layers t3" +
 						"                         	ON t1.leachn_param_id = t3.leachn_param_id" +
 						"						 JOIN (SELECT profileID, soil_param_id, SUM(layers) as layers_cell FROM" +
@@ -3896,9 +3930,10 @@ class	XnDatabaseConnection {
 	//SIMULATION PROJECTS
 	public ResultSet getListOfSimulationProjects () {
 		try {
-			String s = "SELECT simulation_project_id, simulation_project_code, simulation_project_description, t1.author_id, author_first_name, author_surname" +
-					" , type_of_project FROM info_simulation_projects t1 JOIN info_authors t2 on t1.author_id = t2.author_id "
-					+ " ORDER BY simulation_project_id";
+			String s = "SELECT t1.simulation_project_id, simulation_project_code, simulation_project_description, t1.author_id, author_first_name, author_surname" +
+					" , type_of_project, xn5_cells_table, bems_cells_management_table FROM info_simulation_projects t1 JOIN info_authors t2 on t1.author_id = t2.author_id " +
+					"	JOIN simulation_projects_general t3 on t1.simulation_project_id = t3.simulation_project_id "
+					+ " ORDER BY t1.simulation_project_id";
 			ResultSet rs = myConnection.query(s);
 			
 			return rs;
@@ -3911,9 +3946,10 @@ class	XnDatabaseConnection {
 	}
 	public ResultSet getSimulationProjectInfo (int id) {
 		try {
-			String s = "SELECT simulation_project_id, simulation_project_code, simulation_project_description, t1.author_id, author_first_name, author_surname, " +
-					" type_of_project FROM info_simulation_projects t1 JOIN info_authors t2 on t1.author_id = t2.author_id "
-					+ " WHERE simulation_project_id =" + id +";";
+			String s = "SELECT t1.simulation_project_id, simulation_project_code, simulation_project_description, t1.author_id, author_first_name, author_surname, " +
+					" type_of_project, xn5_cells_table, bems_cells_management_table FROM info_simulation_projects t1 JOIN info_authors t2 on t1.author_id = t2.author_id " +
+					" JOIN simulation_projects_general on t1.simulation_project_id = t2.simulation_project_id"
+					+ " WHERE t1.simulation_project_id =" + id +";";
 			ResultSet rs = myConnection.query(s);
 			
 			return rs;
@@ -3955,7 +3991,7 @@ class	XnDatabaseConnection {
 				return -1;
 			}
 
-			s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30);";
+			s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30,'simulation_projects_xn5_cells', 'simulation_projects_bems_cells_management',0,NULL,NULL);";
 			if(! myConnection.updateDb(s) ) {
 				myConnection.updateDb("ROLLBACK;");
 				return -1;
@@ -3983,7 +4019,10 @@ class	XnDatabaseConnection {
 				return false;
 			}
 			s= "REPLACE INTO simulation_projects_general " +
-			" SELECT " + toId + ", startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize, adaptive, max_daily_precip FROM simulation_projects_general WHERE simulation_project_id = " + fromId + ";";
+			" SELECT " + toId + ", startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize, adaptive, max_daily_precip " +
+					", xn5_cells_table, bems_cells_management_table, elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells,  " +
+					"co2_table " +
+					" FROM simulation_projects_general WHERE simulation_project_id = " + fromId + ";";
 			
 			if(!  myConnection.updateDb(s)) {
 				return false;
@@ -4054,7 +4093,7 @@ class	XnDatabaseConnection {
 			}
 			
 			s = "REPLACE INTO simulation_projects_xnmpmas_coupling " +
-					" SELECT " + toId + ",  `firstSowingDay`, `firstSowingMonth`, `firstSowingRelativeYear`, `lastHarvestDay`, `lastHarvestMonth`, `lastHarvestRelativeYear`, `MPMAS_commandline`"
+					" SELECT " + toId + ",  `firstSowingDay`, `firstSowingMonth`, `firstSowingRelativeYear`, `lastHarvestDay`, `lastHarvestMonth`, `lastHarvestRelativeYear`, `MPMAS_commandline`, XN_basedir, simulation_basedir, history_link_map_xllcorner,  history_link_map_yllcorner,  history_link_map_cellsize "
 					+" FROM simulation_projects_xnmpmas_coupling " +
 					"  WHERE simulation_project_id = " + fromId + ";";
 			if(!  myConnection.updateDb(s)) {
@@ -4394,7 +4433,8 @@ class	XnDatabaseConnection {
 	}
 	//PROJECT GENERAL INFO
 	public ResultSet getGeneralInfoForProject( int projectId ) {
-		String s = "SELECT startDay, startMonth, startYear, endDay, endMonth, endYear, plotSize, adaptive, max_daily_precip" +
+		String s = "SELECT startDay, startMonth, startYear, endDay, endMonth, endYear, plotSize, adaptive, max_daily_precip, xn5_cells_table, bems_cells_management_table" 
+				+ ", elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells , co2_table"	+
 				" FROM simulation_projects_general WHERE simulation_project_id = " + projectId + ";";
 				
 		return myConnection.query(s);
@@ -4404,17 +4444,21 @@ class	XnDatabaseConnection {
 			String startYear, String endYear , 
 			String startMonth, String startDay, 
 			String endMonth, String endDay,
-			String plotSize , String adaptive, String max_daily_precip) {
+			String plotSize , String adaptive, String max_daily_precip, String xn5cells, String bemsManag,
+			String elevationCorrectionType, String elevationCorrectionClassSize, 
+			String elevationInfoTableWeatherCells, String co2Table) {
 		String s = "REPLACE INTO simulation_projects_general " +
 				"VALUES ("+ projectId+", "+ startYear +", "+endYear+","+startMonth+","+startDay+","
-				+endMonth+","+endDay+","+plotSize+","+adaptive+","+max_daily_precip+");";	
+				+endMonth+","+endDay+","+plotSize+","+adaptive+","+max_daily_precip+",'"+xn5cells+"','"+ bemsManag
+				+"',"+ elevationCorrectionType+","+ elevationCorrectionClassSize+", '"+elevationInfoTableWeatherCells+"', '"+co2Table+"');";	
 		return myConnection.updateDb(s);
 	}
 	
 	
 	//PROJECT COUPLING INFO
 	public ResultSet getCouplingInfoForProject( int projectId ) {
-		String s = "SELECT firstSowingDay, firstSowingMonth, firstSowingRelativeYear, lastHarvestDay, lastHarvestMonth, lastHarvestRelativeYear, MPMAS_commandline" +
+		String s = "SELECT firstSowingDay, firstSowingMonth, firstSowingRelativeYear, lastHarvestDay, lastHarvestMonth, lastHarvestRelativeYear, MPMAS_commandline," +
+				"	XN_basedir, simulation_basedir, history_link_map_xllcorner, history_link_map_yllcorner, history_link_map_cellsize" +
 				" FROM simulation_projects_xnmpmas_coupling WHERE simulation_project_id = " + projectId + ";";
 				
 		return myConnection.query(s);
@@ -4422,10 +4466,16 @@ class	XnDatabaseConnection {
 	}
 	public boolean updateCouplingInfoForProject( int projectId,
 			String firstSowingDay, String firstSowingMonth,  String firstSowingRelativeYear, 
-			String lastHarvestDay, String lastHarvestMonth, String lastHarvestRelativeYear, String MPMAS_commandline) {
+			String lastHarvestDay, String lastHarvestMonth, String lastHarvestRelativeYear, String MPMAS_commandline,
+			String XN_basedir, String simulation_basedir, double xllcorner, double yllcorner, double cellsize
+			) {
 				String s = "REPLACE INTO simulation_projects_xnmpmas_coupling " +
 				"VALUES ("+ projectId+", "+ firstSowingDay +", "+firstSowingMonth+","+firstSowingRelativeYear+","
 				+lastHarvestDay+","+lastHarvestMonth+","+lastHarvestRelativeYear+", '"+MPMAS_commandline +"'"
+				+", '"+XN_basedir +"'" +	", '"+simulation_basedir +"'"
+				+","+xllcorner+","+yllcorner+","+cellsize
+				
+				
 						+");";	
 		return myConnection.updateDb(s);
 	}
@@ -4481,11 +4531,24 @@ class	XnDatabaseConnection {
 	}
 	
 	//CELLS
-	public ResultSet getSoilInfoForProject(int id) {
+	public ResultSet getPossibleLinkedDataInfo(int id, String type) {
+		
+		String s = "SELECT  `xn5_cell_x`, `xn5_cell_y`, `profileID`, `soil_param_id`, `daisy_param_id`, `sompools_param_id`,"
+				+ " `soilinit_param_id`, `lat`,`lon`, `alt`, `exposition`, `inclination`, `AveYearTemp`, `MonthTempAmp`, " +
+				"leachn_param_id, climate_file, weather_table_name, weather_station_id"
+				+ " FROM `simulation_projects_linked_data`"
+				+ " WHERE simulation_project_id = "+ id 
+				+ " AND active = 1"
+				+ " AND simulation_projects_data_type = '"+type +"';";
+		return  myConnection.query(s);
+	}
+	
+	
+	public ResultSet getSoilInfoForProject(int id, String cellsTableName) {
 		String s = "SELECT  `xn5_cell_x`, `xn5_cell_y`, `profileID`, `soil_param_id`, `daisy_param_id`, `sompools_param_id`,"
 					+ " `soilinit_param_id`, `lat`,`lon`, `alt`, `exposition`, `inclination`, `AveYearTemp`, `MonthTempAmp`, " +
 					"leachn_param_id, climate_file, weather_table_name, weather_station_id"
-					+ " FROM `simulation_projects_xn5_cells`"
+					+ " FROM `"+ cellsTableName +"`"
 					+ " WHERE simulation_project_id = "+ id +";";
 		return  myConnection.query(s);
 	}
@@ -4583,9 +4646,9 @@ class	XnDatabaseConnection {
 		return  myConnection.updateDb(s);
 	}
 	
-	public ResultSet getManagementInfoForProjectBEMS(int id) {
+	public ResultSet getManagementInfoForProjectBEMS(int id, String bemsManagTableName) {
 		String s = "SELECT  `xn5_cell_x`, `xn5_cell_y`, crop_sequence_id, start_position"
-				+ " FROM `simulation_projects_bems_cells_management`"
+				+ " FROM `"+bemsManagTableName+"`"
 				+ " WHERE simulation_project_id = "+ id +";";
 		return  myConnection.query(s);
 	}
@@ -4721,11 +4784,12 @@ class	XnDatabaseConnection {
 		return  myConnection.updateDb(s);
 	}
 	
-	public boolean writeWeatherFilesForProject(String directory, int projectId, String projectName, int projectType) {
+	public boolean writeWeatherFilesForProject(String directory, int projectId, String projectName, int projectType, String xn5_cells_table_name) {
 		boolean ok = false;
 		
 		try {
-			String s0 = "SELECT startYear, endYear,  adaptive, max_daily_precip " 
+			
+			String s0 = "SELECT startYear, endYear,  adaptive, max_daily_precip, elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells, co2_table "  
 					+ " FROM simulation_projects_general "
 					+ " WHERE simulation_project_id = "+ projectId + ";";
 			ResultSet projectInfo = myConnection.query(s0);	
@@ -4739,20 +4803,64 @@ class	XnDatabaseConnection {
 			int startYear = projectInfo.getInt("startYear");
 			int endYear = projectInfo.getInt("endYear");
 			double maxDailyPrecip = projectInfo.getDouble("max_daily_precip");
-			boolean writeHistory = false;
-			if ( projectType >= 1)
-				writeHistory = true;
+			
+			int elevationCorrectionType = projectInfo.getInt("elevationCorrectionType");
+			int elevCorrectionClassSize = projectInfo.getInt("elevationCorrectionClassSize");
+			String elevationInfoTableForWeatherCells = projectInfo.getString("elevationInfoTableWeatherCells");
+			String co2Table = projectInfo.getString("co2_table");
+
+			int writeHistory = 1;
+			if ( projectType == 0)
+				writeHistory = 0;
+			else if ( projectType == 3)
+				writeHistory = 2;
+			
 			
 			String s1 = "SELECT DISTINCT weather_table_name, weather_station_id "
-						+" FROM simulation_projects_xn5_cells t1"
+						+" FROM `"+xn5_cells_table_name+"` t1"
 						+" WHERE simulation_project_id = " + projectId
 						+ " AND weather_station_id > -1 ;"
 						;
+			if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
+				s1 = "SELECT DISTINCT weather_table_name, weather_station_id, ROUND(alt / " +elevCorrectionClassSize + " ) * "+ elevCorrectionClassSize+ " AS alt"
+						+" FROM `"+xn5_cells_table_name+"` t1"
+						+" WHERE simulation_project_id = " + projectId
+						+ " AND weather_station_id > -1 ;"
+						;
+			}
 			ResultSet cellList = myConnection.query(s1);	
 			
 			if (! cellList.first()) {
 				return true;
 			}
+			
+			boolean doCO2 = false;
+			ResultSet co2Series = null;
+			
+			if (co2Table != null && ! co2Table.isEmpty() && !co2Table.matches("^\\s*$") )
+			{
+				doCO2 = true;
+				
+				if (! co2Table.contains(".")) {
+					co2Table = "for1695_weather."+co2Table;
+				}
+				
+				String s2 = "SELECT year, month, day, co2_ppm "
+						+ " FROM " + co2Table 
+						+ " 	WHERE year BETWEEN "+ startYear +"  AND "+ endYear +
+						"			ORDER BY year, month, day;";
+				co2Series = myConnection.query(s2);
+				
+				if (! co2Series.first() ) {
+					JOptionPane.showMessageDialog(null, "Error: No CO2 time series found in table "+ co2Table + ".");
+					System.out.println("Error:  No CO2 time series found in table "+ co2Table + ".");
+					co2Series.close();
+					return false;
+				}
+					
+			}
+			
+			
 			
 			
 			cellList.beforeFirst();
@@ -4763,19 +4871,28 @@ class	XnDatabaseConnection {
 				
 				
 				String filename = directory +"/" + cellList.getString("weather_table_name") + "_" + cellList.getString("weather_station_id") ;
-				boolean rc = writeWeatherData(filename, cellList.getString("weather_table_name") , cellList.getInt("weather_station_id"), startYear, endYear, writeHistory, !is_first, directory + "/"+ projectName + "_init_weather_history.txt", maxDailyPrecip);
+				if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
+					filename += String.format("%04d", cellList.getInt("alt") );
+					
+				}
+				boolean rc = writeWeatherData(filename, cellList.getString("weather_table_name") , cellList.getInt("weather_station_id"), 
+														startYear, endYear, writeHistory, !is_first, 
+															directory + "/"+ projectName + "_init_weather_history.txt", maxDailyPrecip, 
+															elevationCorrectionType, 
+															elevationCorrectionType > 0 && elevCorrectionClassSize > -1 ?  	cellList.getDouble("alt") : 0, 
+														elevationInfoTableForWeatherCells, doCO2, co2Series);
 				
 				if (!rc) {
 					throw new Exception("Error when writing weather data and weather history for BEMS");
 				}
 				is_first = false;
 			}
-			if (writeHistory) {
+			if (writeHistory > 0) {
 				
 				String sc = " SELECT weather_station_id, COUNT(*) as N " +
 						"FROM " +
 						"  ( SELECT DISTINCT weather_table_name, weather_station_id" +
-						"		FROM simulation_projects_xn5_cells t1" +
+						"		FROM `"+xn5_cells_table_name+"` t1" +
 						"			WHERE simulation_project_id = " + projectId +
 						"   ) u1 GROUP BY weather_station_id " +
 						"	HAVING N > 1;";
@@ -4789,7 +4906,7 @@ class	XnDatabaseConnection {
 				
 				
 				String s3 = "SELECT xn5_cell_x, xn5_cell_y, weather_station_id "
-						+" FROM simulation_projects_xn5_cells t1"
+						+" FROM `"+xn5_cells_table_name+"` t1"
 						+" WHERE simulation_project_id = " + projectId
 						+" AND weather_station_id < 0"
 					;
@@ -4802,27 +4919,44 @@ class	XnDatabaseConnection {
 				
 				testAssoc.close();
 				String s4 = "SELECT MAX(xn5_cell_x) as maxX, MAX(xn5_cell_y) as maxY, MIN(xn5_cell_x) as minX, MIN(xn5_cell_y) as minY "
-						+" FROM simulation_projects_xn5_cells t1"
+						+" FROM `"+xn5_cells_table_name+"` t1"
 						+" WHERE simulation_project_id = " + projectId
 						+"  ;"
 					;
 				ResultSet xnDims = myConnection.query(s4);
 				
 				String s2 = "SELECT xn5_cell_x, xn5_cell_y, weather_station_id  "
-						+" FROM simulation_projects_xn5_cells t1"
+						+" FROM `"+xn5_cells_table_name+"` t1"
 						+" WHERE simulation_project_id = " + projectId
-						+" ORDER BY xn5_cell_y DESC, xn5_cell_x ;"
-					;
+						+" ORDER BY xn5_cell_y DESC, xn5_cell_x ;"				
+						;
+				
+				if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
+					s2 = "SELECT xn5_cell_x, xn5_cell_y, weather_station_id , ROUND(alt / "+ elevCorrectionClassSize+") * "+ elevCorrectionClassSize +" AS alt  "
+							+" FROM `"+xn5_cells_table_name+"` t1"
+							+" WHERE simulation_project_id = " + projectId
+							+" ORDER BY xn5_cell_y DESC, xn5_cell_x ;"				
+							;
+				}
+				
+				
 				ResultSet xn5cellList = myConnection.query(s2);
+				
+				ResultSet couplingInfo = getCouplingInfoForProject(projectId);
+				if(! couplingInfo.first() )
+				{
+					JOptionPane.showMessageDialog(null, "Error when writing weather history for BEMS: no coupling ini information for project\n");
+					throw new Exception("Error when writing weather history for BEMS: no coupling ini information for project\n");
+				}
 				
 				PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(directory + "/"+ projectName + "_xnCellStationMap.txt")));
 
 				xnDims.first();
 				out.println("NCOLS " + (xnDims.getInt("maxX") + 1));
 				out.println("NROWS " + (xnDims.getInt("maxY") + 1));
-				out.println("XLLCORNER 3513136");
-				out.println("YLLCORNER 5403903");
-				out.println("CELLSIZE 100");
+				out.println("XLLCORNER "+couplingInfo.getInt("history_link_map_xllcorner"));
+				out.println("YLLCORNER "+couplingInfo.getInt("history_link_map_yllcorner"));
+				out.println("CELLSIZE "+couplingInfo.getInt("history_link_map_cellsize"));
 				out.println("NODATA_VALUE -1");
 				
 				int xc = 0;
@@ -4852,7 +4986,12 @@ class	XnDatabaseConnection {
 						
 					}
 					else {
-						out.print(xn5cellList.getInt("weather_station_id"));
+						if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
+							out.print(xn5cellList.getString("weather_station_id")  +  String.format("%04d",xn5cellList.getInt("alt")));
+						}
+						else {
+							out.print(xn5cellList.getString("weather_station_id"));
+						}
 						xn5cellList.next();
 					}
 					++xc;
@@ -4872,6 +5011,7 @@ class	XnDatabaseConnection {
 			}
 			projectInfo.close();
 			cellList.close();
+			if (doCO2)	co2Series.close();
 		}	
 		catch(Exception e) {
 			e.printStackTrace();
@@ -4882,25 +5022,79 @@ class	XnDatabaseConnection {
 		return ok;
 	}
 	public boolean writeWeatherData(String filename, String tableName, int station_id, int first_year, int last_year, 
-					boolean write_init_history_file, boolean appendHistory, String history_filename, double maxDailyPrecip) {
+			int write_init_history_file, boolean appendHistory, String history_filename, double maxDailyPrecip,  
+			int elevationCorrectionType, double altitude, String elevationInfoTable, boolean doCO2, String co2Table) {
+		
+		boolean ok = false;
+		
+		try {
+			
+			ResultSet co2Series = null;
+			
+			if (doCO2 && co2Table != null && ! co2Table.isEmpty() && !co2Table.matches("^\\s*$") )
+			{
+				
+				if (! co2Table.contains(".")) {
+					co2Table = "for1695_weather."+co2Table;
+				}
+				
+				String s2 = "SELECT year, month, day, co2_ppm "
+						+ " FROM  " + co2Table 
+						+ " 	WHERE year BETWEEN "+ first_year +"  AND "+ last_year +
+						"			ORDER BY year, month, day;";
+				co2Series = myConnection.query(s2);
+				
+				if (! co2Series.first() ) {
+					JOptionPane.showMessageDialog(null, "Error: No CO2 time series found in table "+ co2Table + ".");
+					System.out.println("Error:  No CO2 time series found in table "+ co2Table + ".");
+					co2Series.close();
+					return false;
+				}
+					
+			}
+			else {
+				doCO2 = false;
+			}
+			writeWeatherData(filename, tableName, station_id, first_year, last_year, 
+					write_init_history_file, appendHistory, history_filename, maxDailyPrecip,  
+					elevationCorrectionType, altitude, elevationInfoTable,  doCO2,  co2Series);
+			
+		}	
+		catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		ok = true;	
+		
+		return ok;
+	}
+	
+	
+	public boolean writeWeatherData(String filename, String tableName, int station_id, int first_year, int last_year, 
+					int write_init_history_file, boolean appendHistory, String history_filename, double maxDailyPrecip,  
+					int elevationCorrectionType, double altitude, String elevationInfoTable, boolean doCO2, ResultSet co2Series) {
 
-
+//Note: write_init_history_file 0 = no, 1 = yes, 2 = only history no normal file
 		
 		if (checkTableExists("for1695_weather", tableName)) {
 			try {
 				int first_data_year = first_year;
-				if (write_init_history_file) {
+				int last_data_year = last_year;
+				if (write_init_history_file > 0) {
 					first_data_year = first_year - 6;
+				}
+				if (write_init_history_file == 2) {
+					last_data_year = first_year ;
 				}
 				
 				
-				String s = "SELECT year, month, day, day_year, avg_temp,maximum_temperature, minimum_temperature, IFNULL(soil_temp_5_cm, -99.9) as soil_temp_5_cm, IFNULL( soil_temp_10_cm, -99.9) as soil_temp_10_cm, IFNULL( soil_temp_20_cm, -99.9) as soil_temp_20_cm," 
-						+ " precipitation, avg_wind_speed, relative_humidity, IFNULL(global_radiation, 9999.9) as global_radiation, air_pressure, IFNULL(snow_depth, 9999.9) as snow_depth, IFNULL(sunshine_duration,99.9) as sunshine_duration, IFNULL(dewpoint, -99.9) as dewpoint, IFNULL(pan_evaporation, 9999.9) as pan_evaporation , IFNULL(saturation_deficit_air, 9999.9) as saturation_deficit_air"
+				String s = "SELECT year, month, day, dayofyear(STR_TO_DATE(CONCAT(day,'-',month,'-',year), '%d-%m-%y')) as day_year, avg_temp,maximum_temperature, minimum_temperature, IFNULL(soil_temp_5_cm, -99.9) as soil_temp_5_cm, IFNULL( soil_temp_10_cm, -99.9) as soil_temp_10_cm, IFNULL( soil_temp_20_cm, -99.9) as soil_temp_20_cm," 
+						+ " precipitation, avg_wind_speed, relative_humidity, IFNULL(global_radiation, 9999.9) as global_radiation, air_pressure, IFNULL(snow_depth, 9999.9) as snow_depth, IFNULL(sunshine_duration,99.9) as sunshine_duration, IFNULL(dewpoint, -99.9) as dewpoint, IFNULL(pan_evaporation, 9999.9) as pan_evaporation , IFNULL(saturation_deficit_air, 9999.9) as saturation_deficit_air, specific_humidity"
 						+ " FROM for1695_weather. " + tableName 
-						+ " 	WHERE station_id = "+station_id+" AND year BETWEEN "+ first_data_year +"  AND "+ last_year +
+						+ " 	WHERE station_id = "+station_id+" AND year BETWEEN "+ first_data_year +"  AND "+ last_data_year +
 						"			ORDER BY year, month, day;";
 				ResultSet rs = myConnection.query(s);
-				
+/*				
 				int doy_correct = 0;
 				
 				String sx = "SELECT MIN(day_year) as doyMin"
@@ -4912,61 +5106,174 @@ class	XnDatabaseConnection {
 				rs2.first();
 				if (rs2.getInt("doyMin") == 0) 
 						doy_correct = 1;
-			
+			*/
 
 				if (! rs.first() ) {
 					JOptionPane.showMessageDialog(null, "Error: No weather data found. ");
 					System.out.println("Error: No weather data found.");
-					rs.close(); rs2.close();
+					rs.close();// rs2.close();
 					return false;
 				}
-				if ( write_init_history_file && (rs.getInt("year") > first_data_year)  ) {
+				if ( write_init_history_file > 0 && (rs.getInt("year") > first_data_year)  ) {
 					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for initial BEMS history found. ");
 					System.out.println("Error: Not enough weather data for initial BEMS history found.");
-					rs.close(); rs2.close();
+					rs.close();// rs2.close();
 					return false;
 
 				}
 				rs.last();
-				if (  rs.getInt("year") < last_year  ) {
+				if (  write_init_history_file != 2 && rs.getInt("year") < last_data_year  ) {
 					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for simulation run time found. ");
 					System.out.println("Error: Not enough weather data for simulation run time found.");
-					rs.close(); rs2.close();
+					rs.close(); //rs2.close();
+					return false;
+				}
+				if (  write_init_history_file == 2 && rs.getInt("year") < last_data_year  ) {
+					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for history found. ");
+					System.out.println("Error: Not enough weather data for history found (end of history too short).");
+					rs.close(); //rs2.close();
 					return false;
 				}
 				
+				  
+				double weatherCellElevation = 0;
+				if (elevationCorrectionType > 0) {
+					 try {  
+						 weatherCellElevation = Integer.parseInt(elevationInfoTable);  
+					  } catch(NumberFormatException nfe) {  
+					      // Log exception.
+					     weatherCellElevation = -9999;
+					  }  
+					if (weatherCellElevation ==  -9999 ) { 
+						
+						if (! elevationInfoTable.contains(".")) {
+							elevationInfoTable = "for1695_weather."+elevationInfoTable;
+						}
+						String selev = "SELECT orog FROM " + elevationInfoTable + " WHERE station_id = "+station_id+";"; 
+						ResultSet rsElev = myConnection.query(selev);
+						
+						if (rsElev == null)
+						{
+							JOptionPane.showMessageDialog(null, "Error: When trying to query "+elevationInfoTable+".");
+							System.out.println("Error: When trying to query "+elevationInfoTable+".");
+							rsElev.close();
+						}
+						
+						if (! rsElev.first() ) {
+							JOptionPane.showMessageDialog(null, "Error: No elevation information found for "+station_id+ " in "+elevationInfoTable+".");
+							System.out.println("Error: No elevation information found for "+station_id+ " in "+elevationInfoTable+".");
+							rsElev.close();
+							return false;
+						}
+						
+						weatherCellElevation = rsElev.getDouble("orog");
+					}
+				}
+
+				String  co2string = "";
+				if (	doCO2		){
+					co2string = ",CO2 [ppm]";
+					co2Series.beforeFirst();
+
+				}
+
 				
-				
-				PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename+".csv")));
-				out.println("Date,global radiation [Mj/qm],max temp [°C],min temp [°C],precipitation [mm],sunshine duration [h],rel hum [%],wind speed [m/s],mean temp [°C],dew point [°C],Kesselverdunstung [mm],vapour saturation deficit [%],snow height [mm],par [mol/qm*d],temp soil at 2cm [°C],temp soil at 5cm [°C],temp soil at 10cm [°C],temp soil at 20cm [°C],temp soil at 50cm [°C]");
-				
+				PrintWriter out = null;
+				if (write_init_history_file != 2) {
+					out	= new PrintWriter(new BufferedWriter(new FileWriter(filename+".csv")));
+					out.println("Date,global radiation [Mj/qm],max temp [°C],min temp [°C],precipitation [mm],sunshine duration [h],rel hum [%],wind speed [m/s],mean temp [°C],dew point [°C],Kesselverdunstung [mm],vapour saturation deficit [%],snow height [mm],par [mol/qm*d],temp soil at 2cm [°C],temp soil at 5cm [°C],temp soil at 10cm [°C],temp soil at 20cm [°C],temp soil at 50cm [°C]" + co2string);
+				}
 				PrintWriter out2 = null;
-				if ( write_init_history_file && ! appendHistory && history_filename.compareToIgnoreCase("") != 0) {
+				if ( write_init_history_file > 0 && ! appendHistory && history_filename.compareToIgnoreCase("") != 0) {
 					out2 = new PrintWriter(new BufferedWriter(new FileWriter(history_filename)));
 					out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
 				}
-				else if ( write_init_history_file &&  appendHistory && history_filename.compareToIgnoreCase("") != 0) {
+				else if ( write_init_history_file >0 &&  appendHistory && history_filename.compareToIgnoreCase("") != 0) {
 					out2 = new PrintWriter(new BufferedWriter(new FileWriter(history_filename, true)));
 					
 				}
-				else {
+				else if ( write_init_history_file > 0 && ! appendHistory && history_filename.compareToIgnoreCase("") == 0 ) {
 					out2 = new PrintWriter(new BufferedWriter(new FileWriter(filename+"_init_history.txt")));
+					out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
+				}
+				else if ( write_init_history_file > 0 &&  appendHistory && history_filename.compareToIgnoreCase("") == 0 ) {
+					out2 = new PrintWriter(new BufferedWriter(new FileWriter(filename+"_init_history.txt", true)));
 					out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
 				}
 				
 				rs.beforeFirst();
-				
 				double precipStillToWrite = 0.0;
 				
 				while (rs.next()) {
-					if (rs.getInt("year") >= first_year) {
+					if (write_init_history_file != 2 && rs.getInt("year") >= first_year) {
 						out.write(String.format("%04d", rs.getInt("year"))+"-"+ String.format("%02d", rs.getInt("month"))+"-"+String.format("%02d", rs.getInt("day"))); //date
 						out.write(", ");
 						out.write(Double.toString( rs.getDouble("global_radiation")));
 						out.write(", ");
-						out.write(Double.toString( rs.getDouble("maximum_temperature")));
+						
+						
+						double tempMax = rs.getDouble("maximum_temperature");
+						double tempMin = rs.getDouble("minimum_temperature");
+						double relHum =  rs.getDouble("relative_humidity");
+						double tempAvg = rs.getDouble("avg_temp");
+						
+						switch (elevationCorrectionType) {
+						
+						
+							case 0:
+								break;
+							case 1: { 
+								
+								double obsSpecHum = rs.getDouble("specific_humidity");
+								double obsPressure = rs.getDouble("air_pressure");
+								if (obsSpecHum > 9998 || obsSpecHum < 0.0)
+								{
+									
+									System.out.println("Specific humidity not given, backcalculation from given RH: ");
+								
+									double tempAvgK1 = tempAvg + 273.16;
+									if (tempAvg >= 0) {
+										obsSpecHum = relHum / (100* 0.263 *  obsPressure * Math.pow( Math.exp(17.67 * (tempAvgK1 -273.16)/ (tempAvgK1 -29.65)),-1) );
+									}//Note: Multiplied by 100 because of unit of pressure  used
+									else { 
+										obsSpecHum = relHum/ (100* 0.263 * obsPressure * Math.pow(Math.exp( 22.46 * (tempAvgK1-273.16)/(tempAvgK1 -273.16+272.62)) ,-1.0));
+									}
+											
+								}
+								
+								
+								
+								double tempdiff = (weatherCellElevation - altitude)/100 * 0.7;
+								tempMax = tempMax + tempdiff;
+								tempMin = tempMin + tempdiff;
+								tempAvg = tempAvg + tempdiff;
+								
+								
+								
+								double corrPressure = obsPressure + (weatherCellElevation - altitude)/ 8 * 0.125;
+								
+								double tempAvgK = tempAvg + 273.16;
+								if (tempAvg >= 0) {
+									relHum = 100* 0.263 * obsSpecHum * corrPressure * Math.pow( Math.exp(17.67 * (tempAvgK -273.16)/ (tempAvgK -29.65)),-1);
+								}//Note: Multiplied by 100 because of unit of pressure  used
+								else { 
+									relHum = 100* 0.263 * obsSpecHum * corrPressure * Math.pow(Math.exp( 22.46 * (tempAvgK-273.16)/(tempAvgK -273.16+272.62)) ,-1.0);
+								}
+								relHum = (relHum >=  100.0) ? 100.0 : relHum;   
+								
+								
+							}
+							break;
+							
+							default:
+								break;
+						}
+						
+						
+						
+						out.write(Double.toString( tempMax));
 						out.write(", ");
-						out.write(Double.toString( rs.getDouble("minimum_temperature")));
+						out.write(Double.toString( tempMin));
 						out.write(", ");
 						
 						double precip = rs.getDouble("precipitation") + precipStillToWrite;
@@ -4981,11 +5288,11 @@ class	XnDatabaseConnection {
 						out.write(", ");
 						out.write(Double.toString( rs.getDouble("sunshine_duration")));
 						out.write(", ");
-						out.write(Double.toString( rs.getDouble("relative_humidity"))); 
+						out.write(Double.toString(relHum)); 
 						out.write(", ");
 						out.write(Double.toString( rs.getDouble("avg_wind_speed")));
 						out.write(", ");
-						out.write(Double.toString( rs.getDouble("avg_temp")));
+						out.write(Double.toString( tempAvg));
 						out.write(", ");
 						out.write(Double.toString( rs.getDouble("dewpoint"))); 
 						out.write(", ");
@@ -5006,18 +5313,72 @@ class	XnDatabaseConnection {
 						out.write(Double.toString( rs.getDouble("soil_temp_20_cm")));
 						out.write(", ");
 						out.write("-99.9");//soil_temp_50_cm
+						
+						if(doCO2) {
+							if ( !co2Series.next() ) {
+								JOptionPane.showMessageDialog(null, "Error: Not enough CO2 values found for weather time series.");
+								System.out.println("Error: Not enough CO2 values found for weather time series.");
+								co2Series.close();
+								rs.close();
+								return false;
+								
+								
+							}
+							while (co2Series.getInt("year") != rs.getInt("year")
+								|| co2Series.getInt("month") != rs.getInt("month")
+								|| co2Series.getInt("day") != rs.getInt("day")
+									
+								)
+							{
+								if ( !co2Series.next() ) {
+									JOptionPane.showMessageDialog(null, "Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
+									System.out.println("Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
+									co2Series.close();
+									rs.close();
+									return false;
+								}
+							}
+							out.write(", ");
+							out.write(Double.toString( co2Series.getDouble("co2_ppm")));// CO2 ppm
+						}
+						
 						out.write("\n");
 					}
-					if ( write_init_history_file &&  rs.getInt("year") <= first_year) {
-						out2.write(String.format("%04d", rs.getInt("year"))+"\t"+ String.format("%d", rs.getInt("day_year") + doy_correct));
+					if ( (write_init_history_file > 0)  &&  (rs.getInt("year") <= first_year) ) {
+						
+						double tempAvg = rs.getDouble("avg_temp");
+
+						switch (elevationCorrectionType) {
+							case 0:
+								break;
+							case 1: { 
+								double tempdiff = (weatherCellElevation - altitude)/100 * 0.7;
+								tempAvg = tempAvg + tempdiff;
+							}
+								break;
+	
+							default:
+								break;
+						
+						}
+							
+						out2.write(String.format("%04d", rs.getInt("year"))+"\t"+ String.format("%d", rs.getInt("day_year") ));
 						out2.write(tab);
-						out2.write(String.valueOf(station_id));
+						
+						if (elevationCorrectionType > 0 ) {
+							out2.write(String.valueOf(station_id) + String.format("%04d", Math.round( altitude) ) );
+						}
+						else {
+							out2.write(String.valueOf(station_id) );
+						}
+				
+						
 						out2.write(tab);
-						out2.write(Double.toString( rs.getDouble("avg_temp")));
+						out2.write(Double.toString( tempAvg));
 						out2.write(tab);
 						double soiltemp = rs.getDouble("soil_temp_5_cm");
 						if ( soiltemp < -98.9)
-							soiltemp =rs.getDouble("avg_temp");
+							soiltemp = tempAvg;
 						
 						out2.write(Double.toString(soiltemp ));
 
@@ -5026,9 +5387,11 @@ class	XnDatabaseConnection {
 					}
 					
 				}
-				rs.close(); rs2.close();
-				out.close();
-				if ( write_init_history_file) {
+				rs.close(); //rs2.close();
+				if ( write_init_history_file != 2) {
+					out.close();
+				}
+				if ( write_init_history_file > 0) {
 					out2.close();
 				}
 				

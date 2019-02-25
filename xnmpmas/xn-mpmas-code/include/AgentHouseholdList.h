@@ -118,7 +118,9 @@ class hh_list
 
 
 	virtual void matchMarried();
+#ifdef RNGSTREAM
 	virtual void matchMarriedAndChildren();
+#endif
 	virtual bool checkHHsize();
 
 	virtual hhmember* identifyNewHHead(int popID, int flag);
@@ -190,7 +192,9 @@ class hh_list
 	virtual double get_userMark_PotentialSuccessor(int popID);
 
 	virtual double get_userDefinedCharacteristic(int popID, int attribute2);
+#ifdef RNGSTREAM
 	double get_householdMemberInfoForLP(int popID, int career, int ageMin, int ageMax, int which, int what, int ahead, int whoelse);
+#endif
 	double get_memberInfoFromCareer(int popID, int what, hhmember* hhp, int ahead);
  	virtual int getNumMembers(void);
    virtual int getNumAdults(void);

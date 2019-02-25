@@ -110,12 +110,22 @@ typedef struct caYld
 
 #ifdef MULTIPERIOD
    std::vector<double>extraAttributes;
+   char origin; //o - own yield observation, e - estimated/inferred, u - unknown, n - slot not in use on this NRU
 #endif
 }  caYld;
-
+#ifdef MULTIPERIOD
+	typedef struct caYldExp
+	{  double yld;    //grain yield
+		double ysm;    //stover energy yield
+		double yldTrend;    //grain yield trend
+		double ysmTrend;    //stover energy yield trend
+		std::vector<double>extraAttributes;
+		std::vector<double>extraAttributesTrend;
+	}  caYldExp;
+#endif
 
 class inCrA
-{  //auxiliary class, everthing public
+{  //auxiliary class, everything public
    public:
 
    //input data per cropping activity

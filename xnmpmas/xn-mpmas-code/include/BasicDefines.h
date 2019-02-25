@@ -54,11 +54,11 @@ OPTIMALSPEED ???
 #endif
 
 //version info
-#define BUILT_DATE 180808
+#define BUILT_DATE 190116
 #define MAJOR_VERSION 3
 #define MINOR_VERSION 3
-#define BUILD_NUMBER 435
-#define REVISION 2
+#define BUILD_NUMBER 439
+#define REVISION 0
 
 #ifndef NOT_ODB
 	#define ODB

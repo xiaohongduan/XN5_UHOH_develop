@@ -128,6 +128,7 @@ struct _mpmas_coupling
     STRUCT_xn_to_mpmas *xn_to_mpmas;
     STRUCT_xn_to_mpmas2 *xn_to_mpmas2; 
 	
+	int nmin_measured;
 };
 
 
@@ -144,6 +145,8 @@ int get_daily_air_and_soil_temperatures(mpmas_coupling *self);
 int checkIfIrrigation(mpmas_coupling *self);
 int checkIfTillage(mpmas_coupling *self);
 //End of Hong
+
+void measureNmin(mpmas_coupling *self);
 
 struct _mpmas_couplingClass
 {

@@ -92,11 +92,13 @@ class bwmarkt
 
    //die folgenden Elementfunktionen wickeln den Pachtmarkt ab.
    virtual int teilnehmer_vorhanden(int typ);//ja/nein?
+#ifndef MULTIPERIOD
    virtual void makeAuctionForThisSoil(int typ, int milpMode);//renamed from <auktionsrunde_durchfuehren>
    virtual void findAgentOfRentInBid(gebot*, int milpMode);//renamed from <paechter_ermitteln>
    virtual void unvermittelbare_loeschen();
    virtual int renewBidsForThisSoil(int typ, int milpMode);//renamed from <gebote_erneuern>
    virtual void makeUpfrontRentalPayments(int milpMode);//renamed from <pacht_abschliessen>
+#endif //ndef MULTIPERIOD
    virtual void wassertransfers_pruefen(int);//korrigiert unerfuellbare Transfers
    virtual void alles_zuruecksetzen();//Pachtmarktdaten auf Null setzen
 

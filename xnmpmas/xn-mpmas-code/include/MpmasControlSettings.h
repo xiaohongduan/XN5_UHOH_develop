@@ -516,8 +516,8 @@ public:
 	int get_extraAgentCharacteristicsIdForString(string s);
 	string get_extraAgentCharacteristicsStringForId(size_t i);
 #endif
-
-
+	int yearsToSkipExpectationUpdating() { return numYearsToSkipExpectationUpdating;}
+	void setYearsToSkipExpectationUpdating(int n) { numYearsToSkipExpectationUpdating = n;}
 private:
 		#pragma db id
 		unsigned long settingsID;
@@ -719,11 +719,14 @@ private:
 		string externalScriptCall_CropModel;
 		string externalScriptCall_InYear;
 		vector<int> externalScript_InYear_ChangedMaps;
+
+
 #ifdef MULTIPERIOD
 		vector<string> namesExtraAgentCharacteristics;
 		map<string,size_t> idsExtraAgentCharacteristics;
 #endif
 
+		int numYearsToSkipExpectationUpdating;
 };
 
 

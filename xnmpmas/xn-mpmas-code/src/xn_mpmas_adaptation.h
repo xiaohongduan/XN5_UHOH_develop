@@ -68,7 +68,7 @@ namespace xnmpmas
 	//Allows different types of formulae to be used.
 	int calculatePlantingDate(	const cropAdaptationParameters* params, 
 								const std::deque<weatherRecord> cellHistory, 
-								const std::vector<double> historyWeighting );
+								const std::vector<double> historyWeighting, int maxDays );
 
 	void calculateFertilizerQuantity (	const cropAdaptationParameters* params, 
 										const double expectedYield,  

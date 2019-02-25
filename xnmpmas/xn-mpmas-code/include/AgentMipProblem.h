@@ -79,6 +79,7 @@
 // Troost 20120312 - advanced MilpCheck tuning
 // Troost **********begin block insert**********
 #include <exception>
+#include <stdexcept>
 // Troost **********end block insert**********
 // Troost 20130118 Catch segmentation faults
 // Troost **********begin block insert**********
@@ -230,29 +231,130 @@ struct cbcArgumentArray {
 #endif
 
 #ifdef USE_CPLEX
-struct cplexOption
+class cplexOption
 {
 		int refNumber;
 		string name;
-		bool isDouble;
+		int type;
+
 		union
 		{	int as_int;
 			double as_double;
+			string* as_string;
 		} value;
-		cplexOption(string s_, int refNum_, bool i_, int v_ )
+
+public:
+		string get_name()
+		{
+			return name;
+		};
+		int get_refNumber() {
+			return refNumber;
+		};
+
+		cplexOption(string s_, int refNum_,  int v_ )
 		{
 			refNumber = refNum_;
 			name = s_;
-			isDouble = i_;
+			type = 0;
 			value.as_int = v_;
 		};
-		cplexOption(string s_, int refNum_, bool i_, double v_ )
+		cplexOption(string s_, int refNum_,  double v_ )
 		{
 			name = s_;
 			refNumber = refNum_;
-			isDouble = i_;
+			type = 1;
 			value.as_double = v_;
 		};
+		cplexOption(string s_, int refNum_, string v_ )
+		{
+			name = s_;
+			refNumber = refNum_;
+			type = 2;
+
+
+			value.as_string = new string(v_);
+		};
+		~cplexOption()
+		{
+			if (type == 2)
+				delete value.as_string;
+		}
+
+		cplexOption(cplexOption const& other)
+		 {
+			 *this = other;// redirect to the copy assignment
+		  }
+		cplexOption& operator = (const cplexOption& other){
+          if(this != &other)
+          {
+              if(2 == type){
+                  delete value.as_string;
+              }
+
+              name = other.name;
+              refNumber = other.refNumber;
+              type = other.type;
+
+
+              switch(other.type){
+              case 2:{
+            	  	  	  value.as_string = new std::string(*(other.value.as_string));
+                       break;
+                  }
+              case 1:{
+                      value.as_double = other.value.as_double;
+                      break;
+                                }
+              case 0:{
+                      value.as_int = other.value.as_int;
+                      break;
+                                }
+              default:{
+
+                  }
+              }
+          }
+          return *this;
+      }
+
+		int get_int()
+		{
+			if (type != 0)
+			{
+				throw logic_error("Invalid integer union call in cplexOption\n");
+			}
+			return value.as_int;
+		};
+		double get_double()
+		{
+			if (type != 1)
+			{
+				throw logic_error("Invalid double union call in cplexOption\n");
+			}
+			return value.as_double;
+		};
+		string get_string()
+		{
+			if (type !=2)
+			{
+				throw logic_error("Invalid union call in cplexOption\n");
+			}
+			return *(value.as_string);
+		};
+		bool is_int()
+		{
+			return type == 0;
+		};
+		bool is_double()
+		{
+			return type == 1;
+		};
+		bool is_string()
+		{
+			return type == 2;
+		};
+
 };
 #endif //USE_CPLEX
 
@@ -402,6 +504,7 @@ class mpPrbl
    vector<MultiperiodMipVariableValue*> rentalPaymentsToBeUpdated;
    vector<MultiperiodMipVariableValue*> minConsToBeUpdated;
    vector<MultiperiodMipVariableValue*> agentsYieldExpectationsToBeUpdated;
+   vector<MultiperiodMipVariableValue*> agentsYieldTrendedExpectationsToBeUpdated;
    vector<MultiperiodMipVariableValue*> agentsYieldsToBeUpdated;
    vector<MultiperiodMipVariableValue*> userDefinedHouseholdAttributes;
    vector<MultiperiodMipVariableValue*> agentsLivSimMilkYieldToBeUpdated;
@@ -411,16 +514,26 @@ class mpPrbl
    vector<MultiperiodMipVariableValue*>stageSpecificDataToBeUpdated;
 
    vector<MultiperiodMipVariableValue*> agentCharacteristicsToBeUpdated;
+
    vector<MultiperiodMipVariableValue*> nruAttributesToBeUpdated;
    vector<MultiperiodMipVariableValue*> nruAttributesRangeTestToBeUpdated;
    vector<MultiperiodMipVariableValue*> nruDistanceToBeUpdated;
    vector<MultiperiodMipVariableValue*> nruDistanceRangeTestToBeUpdated;
 
+   vector<MultiperiodMipVariableValue*> sharedPlotAreasToBeUpdated;
+   vector<MultiperiodMipVariableValue*> sharedNruAttributesToBeUpdated;
+   vector<MultiperiodMipVariableValue*> sharedNruAttributesRangeTestToBeUpdated;
+   vector<MultiperiodMipVariableValue*> sharedNruDistanceToBeUpdated;
+   vector<MultiperiodMipVariableValue*> sharedNruDistanceRangeTestToBeUpdated;
+
+
+
    vector<MultiperiodMipVariableValue*> cropActAttributesToBeUpdated;
    vector<MultiperiodMipVariableValue*> cropActAttributesRangeTestToBeUpdated;
    vector<MultiperiodMipVariableValue*> cropActAttributesExpectationsToBeUpdated;
    vector<MultiperiodMipVariableValue*> cropActAttributesExpectationsRangeTestToBeUpdated;
-
+   vector<MultiperiodMipVariableValue*> cropActAttributesTrendedExpectationsToBeUpdated;
+	vector<MultiperiodMipVariableValue*> cropActAttributesTrendedExpectationsRangeTestToBeUpdated;
 
    vector<vector<vector<MultiperiodMipVariableValue*> > > assetCapacitiesToBeUpdated;
    vector<vector<vector<MultiperiodMipVariableValue*> > > assetVintagesToBeUpdated;
@@ -449,6 +562,7 @@ class mpPrbl
 
    MultiperiodSolutionReaderByArgs readerLivestockAssetsToLivSimHerdGroups;
    MultiperiodSolutionReaderByArgs readerLivSimHerdGroupsToNRU;
+   MultiperiodSolutionReaderByArgs readerLivSimHerdGroupsToSharedNRU;
    MultiperiodSolutionReaderByArgs readerLivSimHerdGroupFeeding;
 
    MultiperiodSolutionReaderByArgs readerAgentCharacteristicSet;
@@ -1138,12 +1252,12 @@ public:
 
 	void updateAgentYields(caYld** inputArray, int inputArraySize0, int inputArraySize1, double* varsRHS, double* zrow);
 	void updateAgentYields(caYld** inputArray, int inputArraySize0, int inputArraySize1);
-	void updateAgentYieldExpectations(caYld** inputArray, int inputArraySize0, int inputArraySize1, double* varsRHS, double* zrow);
-	void updateAgentYieldExpectations(caYld** inputArray, int inputArraySize0, int inputArraySize1);
+	void updateAgentYieldExpectations(caYldExp** inputArray, int inputArraySize0, int inputArraySize1, double* varsRHS, double* zrow);
+	void updateAgentYieldExpectations(caYldExp** inputArray, int inputArraySize0, int inputArraySize1);
 
-	void updateAgentCropActAttributeExpectations(caYld** inputArray, int inputArraySize0, int inputArraySize1 );
+	void updateAgentCropActAttributeExpectations(caYldExp** inputArray, int inputArraySize0, int inputArraySize1 );
 	void updateAgentCropActAttribute(caYld** inputArray, int inputArraySize0, int inputArraySize1 );
-	void updateAgentCropActAttributeRangeExpectations(caYld** inputArray, int inputArraySize0, int inputArraySize1 );
+	void updateAgentCropActAttributeRangeExpectations(caYldExp** inputArray, int inputArraySize0, int inputArraySize1 );
 	void updateAgentCropActAttributeRange( caYld** inputArray, int inputArraySize0, int inputArraySize1 );
 
 
@@ -1153,7 +1267,11 @@ public:
    void updatePlotAttributesAggregatedByNRU(agentF* afp, double* varsRHS, double* zrow);
    void updatePlotAttributesAggregatedByNRU(agentF* afp);
 
-
+// Troost 201801207 Common property
+// Troost **********begin block insert**********
+	void updateSharedPlotAttributesAggregatedByNRU(agentF* afp);
+	void updateSharedPlots(agentF* afp);
+// Troost **********end block insert**********
 
 	void applyDiscountRateToObjCoeff(double dRate);
 //gutsOf updating functions
@@ -1216,6 +1334,7 @@ public:
 
 #ifdef LIVSIM_COUPLING
 	MapOfVectorIndexedDoubles  getHerdGroupPlacementsOnNRUs(double* sol, double* zrow)  { return readerLivSimHerdGroupsToNRU.calculateResultMap(sol, zrow);}
+	MapOfVectorIndexedDoubles  getHerdGroupPlacementsOnSharedNRUs(double* sol, double* zrow)  { return readerLivSimHerdGroupsToSharedNRU.calculateResultMap(sol, zrow);}
 	MapOfSubindexedVectorIndexedDoubles  getLivsimFeedingStrategies(double* sol, double* zrow)  { return readerLivSimHerdGroupFeeding.calculateSubindexedResultMap(sol, zrow,3);}
 	MapOfSubindexedVectorIndexedDoubles  getFeedGroupMembers(double* sol, double* zrow)  { return readerLivestockAssetsToLivSimHerdGroups.calculateSubindexedResultMap(sol, zrow,2);}
 
@@ -1389,6 +1508,7 @@ protected:
 public:
    static void setCplexOptionsFile(string filename);
    static void readCplexOptionsFile();
+   static unsigned getCplexVersion();
 #endif //USE_CPLEX
 public:
    static void readSolverOptionsFile();

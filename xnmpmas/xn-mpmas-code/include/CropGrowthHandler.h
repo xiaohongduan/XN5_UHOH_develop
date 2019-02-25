@@ -28,8 +28,12 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
-#include "tree.hh"
-#include "tree_util.hh"
+#ifdef MULTIPERIOD
+	#include <map>
+#else
+	#include "tree.hh"
+	#include "tree_util.hh"
+#endif
 
 using namespace std;
 
@@ -59,8 +63,7 @@ class CropGrowthHandler
 		///Basic info
 		virtual int getNumberOfCropActivitiesForSimilarity();
 		virtual int getLevelsOfSimilarity();
-		virtual int getPriceLpColumn(int cropActID);
-		virtual int getLpColumn(int cropActID);
+
 
 		virtual int getNumberOfCropActivities();
 		virtual int getNumberCommunicatedYieldMapsPerPeriod();
@@ -72,16 +75,21 @@ class CropGrowthHandler
 		int getYldArrayIndexForCropActivityID(int cropActID);
 		int getCropManagementIdForYldArrayIndex(int YldIndex);
 		int getNumberExtraCropActAttributes();
+		int cropModelWantsManagementID();
 		const vector<int>* getPointerToLandUseForUnownedLandVector();
 
 #endif //MULTIPERIOD
+
+#ifndef MULTIPERIOD
+		virtual int getPriceLpColumn(int cropActID);
+		virtual int getLpColumn(int cropActID);
 
 		///prepares questionnaire for farm survey
 		virtual void prepareFarmProducerSurvey(MatrixDouble& questionnaire, int& firstLpColumn);
 		virtual void insertCropActivityLpColumnsAndActIDs(MatrixDouble& tableLpColsAndActIDs);
 		virtual const MatrixDouble* getTableLpColsAndActIDs();
 		//@}
-
+#endif //ndef MULTIPERIOD
 		//---------------------------------------------------------------------------
 
 		///@name Data input functions
@@ -100,6 +108,9 @@ class CropGrowthHandler
 		///read and write data for initialization of knowledge base
 		virtual void readDataKnowledgeBase();
 		virtual void writeDataKnowledgeBase(char* filename);
+#ifdef MULTIPERIOD
+		virtual void multiperiod_completeByEstimatingMissingCropYields(caYld** actYlds, caYldExp** expYlds);
+#else
 		virtual void print_tree(const tree<string>& tr, tree<string>::pre_order_iterator it, tree<string>::pre_order_iterator end);
 
 		///estimate yields for crops that were not grown by agent
@@ -108,7 +119,7 @@ class CropGrowthHandler
 		virtual void estimateYieldsForMissingCrops(int agentID, const MatrixDouble& expectedYields,
 				MatrixDouble& actualYields);
 		//@}
-
+#endif //ndef MULTIPERIOD
 		//---------------------------------------------------------------------------
 		///@name Constructors and destructors
 		//@{
@@ -138,9 +149,13 @@ class CropGrowthHandler
 			cropFloodFactorModule = NULL;
 
 			inputCropSimilarities.deallocate();
+
+#ifndef MULTIPERIOD
+			tableLpColsAndActIDs.deallocate();
+
+
 			numberOfClustersPerLevel.deallocate();
 			clusterIndices.deallocate();
-			tableLpColsAndActIDs.deallocate();
 
 			delete [] iterLevels;
 			for(int lvl = 0; lvl < levelsOfSimilarity; lvl++)
@@ -149,6 +164,7 @@ class CropGrowthHandler
 			iterLevels = NULL;
 			delete [] iterClusters;
 			iterClusters = NULL;
+#endif //ndef MULTIPERIOD
 		}
 		//@}
 
@@ -173,10 +189,17 @@ class CropGrowthHandler
 		
 		MatrixDouble numberOfClustersPerLevel;//vector, needed to create tree
 		MatrixDouble clusterIndices;//matrix contains cluster indices for all cropping activities (rows) and levels (cols)
-
+#ifndef MULTIPERIOD
 		int checkedSequenceInLp;
 		MatrixDouble tableLpColsAndActIDs;//LpCol in col0, ActID in col1
+#endif //ndef MULTIPERIOD
 
+#ifdef MULTIPERIOD
+		std::vector<vector<vector< int > > >  levelActNruToSimilarityCluster;
+		std::vector< multimap<int, pair<int,int> > >	levelClusterToActNrus;
+
+		virtual void multiperiod_createCropSimilarityTree();
+#else
 	   ///Crop similarities organized in n-ary tree
 		tree<string> tr;
 		tree<string>::iterator top, loc; //default tree iterators
@@ -186,6 +209,7 @@ class CropGrowthHandler
 
 		///@name Protected member functions
 		//@{
+
 		virtual void countClustersPerLevel();
 		virtual void createCropSimilarityTree();
 		virtual void createClusterIndices();
@@ -203,7 +227,7 @@ class CropGrowthHandler
 			double& expectedYieldOfSimilarCrops, double& actualYieldOfSimilarCrops,
 			MatrixDouble*& expectedAverageYieldsInCLuster, MatrixDouble*& actualAverageYieldsInCLuster,
 			const MatrixDouble& expectedYields,	const MatrixDouble& actualYields);
-
+#endif
 		virtual void returnFscan(int retVal, char* strVar);
 		//@}
 

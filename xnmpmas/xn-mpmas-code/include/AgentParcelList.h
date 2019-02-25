@@ -198,7 +198,7 @@ class p_liste
 	int identifyPlotsForRedistribution();
 
 	virtual double getAreaOfNRUWithRemainingDurationOfAtLeast(int soilType, int minDur);
-	virtual double getValueForPlot(mpmasPlotCell* p, int paramID);
+	virtual double getValueForPlot(mpmasPlotCell* p, int paramID, int xForDist = -1, int yForDist = -1);
 #ifdef MULTIPERIOD
 	void updateMatrixAreaOfNRUbyPeriods(int numPeriods);
 	vector<vector<double> >* getMatrixAreaOfNRUbyPeriods ();

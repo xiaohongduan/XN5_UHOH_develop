@@ -31,6 +31,7 @@ import de.uhoh.for1695.XnDatabaseConnection;
 import de.uhoh.for1695.ImportXn3Dialog.xn3ImportType;
 
 import java.io.*;
+import java.rmi.activation.ActivateFailedException;
 import java.sql.*;
 import javax.sql.rowset.RowSetProvider;
 import javax.sql.rowset.CachedRowSet;
@@ -445,7 +446,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     		String prefix = dir + "/"+ getCurrentProjectName();
     		
     		if (currentProject.project_type >= 1) { 
-    			createXnmpmasCouplingIni(prefix,getCurrentProjectName(), currentProject.project_type); 
+    			createXnmpmasCouplingIni(prefix,getCurrentProjectName(), currentProject.project_type, dir); 
     			// includes check for consistency of XN and coupling timing
     		}
     		
@@ -700,7 +701,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     	}
     }
     private void createSoilCells (String xn5FilePrefix) {
-    	myConnection.writeXn5CellCfgFiles(xn5FilePrefix, myConfig.currentProjectId);
+    	myConnection.writeXn5CellCfgFiles(xn5FilePrefix, myConfig.currentProjectId, currentProject.xn5_cells_table);
     }
     private void createManagementFiles (String xn5FilePrefix) {
     	if (currentProject.project_type == 0) {
@@ -719,18 +720,18 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     		}
     		
         	myConnection.writeBemsCropManagementInfo(xn5FilePrefix, myConfig.currentProjectId, adaptive);
-        	myConnection.writeXn5CropManagementFileDummies(xn5FilePrefix, myConfig.currentProjectId);
+        	myConnection.writeXn5CropManagementFileDummies(xn5FilePrefix, myConfig.currentProjectId, currentProject.xn5_cells_table);
         	
         	if (currentProject.project_type == 1) {
-        		myConnection.writeBEMSCropManagementMaps(xn5FilePrefix, myConfig.currentProjectId);
+        		myConnection.writeBEMSCropManagementMaps(xn5FilePrefix, myConfig.currentProjectId, currentProject.xn5_cells_table, currentProject.bems_cells_management_table);
         	}
     	}
     }
     private void createXpn (String xn5FilePrefix, String projectName) {
-    	myConnection.writeXn5XpnFile(xn5FilePrefix, myConfig.currentProjectId, projectName);
+    	myConnection.writeXn5XpnFile(xn5FilePrefix, myConfig.currentProjectId, projectName, currentProject.xn5_cells_table);
     }
     private void createXpis (String xn5FilePrefix, String projectName) {
-    	myConnection.writeXn5XpiFiles(xn5FilePrefix, myConfig.currentProjectId, projectName, currentProject.project_type);
+    	myConnection.writeXn5XpiFiles(xn5FilePrefix, myConfig.currentProjectId, projectName, currentProject.project_type, currentProject.xn5_cells_table);
     }
     private void createOutputVarlist (String xn5FilePrefix, String projectName) {
     	myConnection.writeXn5GenericContentFile(xn5FilePrefix, myConfig.currentProjectId, projectName, panelOutputVarlist.table, panelOutputVarlist.contentColumn, panelOutputVarlist.title);
@@ -738,11 +739,11 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     private void createSpecialOutputDef (String xn5FilePrefix, String projectName) {
     	myConnection.writeXn5GenericContentFile(xn5FilePrefix, myConfig.currentProjectId, projectName, panelSpecialOutputDef.table, panelSpecialOutputDef.contentColumn, panelSpecialOutputDef.title);
     }
-    private void createXnmpmasCouplingIni (String xn5FilePrefix, String projectName, int projectType) {
-    	myConnection.writeXnMpmasCouplingIni(xn5FilePrefix, myConfig.currentProjectId, projectName, projectType);
+    private void createXnmpmasCouplingIni (String xn5FilePrefix, String projectName, int projectType, String projectDir) {
+    	myConnection.writeXnMpmasCouplingIni(xn5FilePrefix, myConfig.currentProjectId, projectName, projectType, projectDir);
     }
     private void createWeatherFilesForProject(String directory,  String projectName, int projectType) {
-    	myConnection.writeWeatherFilesForProject(directory, myConfig.currentProjectId, projectName, projectType);
+    	myConnection.writeWeatherFilesForProject(directory, myConfig.currentProjectId, projectName, projectType, currentProject.xn5_cells_table);
     }
 	/*private List<cropToExport> selectCropsToExport() {
 		List<cropToExport> list = ;
@@ -1018,8 +1019,9 @@ class XnParameterProjectPanel extends JPanel implements ActionListener, RowSetLi
 
 	    JScrollPane tableViewScrollPaneLeft = new JScrollPane (projectGeneralTable, 
 	            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
+	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		Dimension preferredSize = new Dimension(800,400);
+		tableViewScrollPaneLeft.setPreferredSize(preferredSize);
 	    panel.add(tableViewScrollPaneLeft, java.awt.BorderLayout.CENTER);
 
 	    this.add(panel);
@@ -1184,10 +1186,15 @@ class ProjectGeneralTableModel implements TableModel {
 
 	  public Class getColumnClass(int column) {
 		  
-		switch (column) {
+		switch (column) {	
 			case 6:
 			case 8:
 					return Double.class;
+			case 9:
+			case 10:
+			case 13:
+			case 14:
+					return String.class;
 			default:
 					return Integer.class;
 		}
@@ -1205,6 +1212,12 @@ class ProjectGeneralTableModel implements TableModel {
 	  	  {
 	  		   Double objD = myRowSet.getDouble(columnIndex + 1);
 	  		   return objD;
+	  		   
+	  	  }
+	  	  else if ((columnIndex == 9) || (columnIndex == 10) || (columnIndex == 13)  || (columnIndex == 14))
+	  	  {
+	  		   String objS = myRowSet.getString(columnIndex + 1);
+	  		   return objS;
 	  		   
 	  	  }
 	  	  else
@@ -1239,10 +1252,14 @@ class ProjectGeneralTableModel implements TableModel {
 							myRowSet.getString("startYear"), myRowSet.getString("endYear"), 
 							myRowSet.getString("startMonth"), myRowSet.getString("startDay"), 
 							myRowSet.getString("endMonth"), myRowSet.getString("endDay"),
-							myRowSet.getString("plotSize"), myRowSet.getString("adaptive"), myRowSet.getString("max_daily_precip")
+							myRowSet.getString("plotSize"), myRowSet.getString("adaptive"), myRowSet.getString("max_daily_precip"),
+							myRowSet.getString("xn5_cells_table"), myRowSet.getString("bems_cells_management_table"),
+							myRowSet.getString("elevationCorrectionType"),	myRowSet.getString("elevationCorrectionClassSize"),
+							myRowSet.getString("elevationInfoTableWeatherCells")
+							,myRowSet.getString("co2_table")
 							)) {
 	
-		    			JOptionPane.showMessageDialog(null, "Error: Changing GECROS crop selection failed.");
+		    			JOptionPane.showMessageDialog(null, "Error: Changing general simulation project info failed.");
 		    			//rollback changes in view if database failed
 						myRowSet.absolute(row + 1);
 						myRowSet.updateString(col +1, oldV);
@@ -1685,6 +1702,9 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	private JTextField  tNewX;
 	private JTextField  tNewY;
 	
+	
+
+	
 	public XnParameterSoilPanel(XnParameterToolMainWindow mainWindow) {
 		super();
 		
@@ -1693,15 +1713,9 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 		JPanel panel = new JPanel();
 		panel.setLayout( new java.awt.BorderLayout() );
 
-	    try {
-	    	soils =  RowSetProvider.newFactory().createCachedRowSet();
-	    	
-	    	soilTable = new JTable();
-	    	refreshTableInfo();
-	    }
-	    catch(Exception e) {
-	    	e.printStackTrace();
-	    }
+		soilTable = new JTable();
+		
+
 
 
 	    JScrollPane tableViewScrollPaneLeft = new JScrollPane (soilTable, 
@@ -1745,6 +1759,19 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	    
 	    panel.add(lpanel, java.awt.BorderLayout.WEST);
 		
+	    
+	    
+	    try {
+	    	soils =  RowSetProvider.newFactory().createCachedRowSet();
+	    	
+	    	
+	    	refreshTableInfo();
+	    }
+	    catch(Exception e) {
+	    	e.printStackTrace();
+	    }
+	    
+	    
 	    this.add(panel);
 	    
 	}
@@ -1754,11 +1781,27 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	    	if (myMainWindow.myConfig.currentProjectId > -1) { 
 	    	
 	    		soils.close();
-		    	ResultSet rs2 = myMainWindow.myConnection.getSoilInfoForProject(myMainWindow.myConfig.currentProjectId);
+	    		
+	    		boolean editable = true;
+	    	
+	    		String cellsTableName = myMainWindow.currentProject.xn5_cells_table;
+	    		if ( ! cellsTableName.equals("simulation_projects_xn5_cells"))  {
+	    			editable = false;
+	    			buttonAddRow.setEnabled(false);
+	    			buttonDeleteRow.setEnabled(false);
+	    		}
+	    		else {
+	    			buttonAddRow.setEnabled(true);
+	    			buttonDeleteRow.setEnabled(true);
+	    		}
+	    		
+		    	ResultSet rs2 = myMainWindow.myConnection.getSoilInfoForProject(myMainWindow.myConfig.currentProjectId, cellsTableName);
+		    
+		    	
 		    	soils.populate(rs2);
 	    		
 	
-		    	soilsTM = new SoilsTableModel (soils,  myMainWindow.myConnection, myMainWindow.myConfig );
+		    	soilsTM = new SoilsTableModel (soils,  myMainWindow.myConnection, myMainWindow.myConfig, editable );
 		    	soilsTM.addEventHandlersToRowSet(this);
 		    	soilTable.setModel(soilsTM);
 				
@@ -1782,6 +1825,8 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 			}*/
 			refreshTableInfo();
 			soilTable.setModel(soilsTM);
+			
+ 
 		}
 		catch (Exception e) {
 	    	  e.printStackTrace();
@@ -1820,7 +1865,7 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
         try {
           currentRowSet.moveToCurrentRow();
           soilsTM =
-            new SoilsTableModel(soilsTM.getRowSet(), myMainWindow.myConnection, myMainWindow.myConfig);
+            new SoilsTableModel(soilsTM.getRowSet(), myMainWindow.myConnection, myMainWindow.myConfig, true);
           soilTable.setModel(soilsTM);
 
         } 
@@ -1836,7 +1881,7 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
       try {
         currentRowSet.moveToCurrentRow();
         soilsTM =
-          new SoilsTableModel(soilsTM.getRowSet(), myMainWindow.myConnection, myMainWindow.myConfig);
+          new SoilsTableModel(soilsTM.getRowSet(), myMainWindow.myConnection, myMainWindow.myConfig, true);
         soilTable.setModel(soilsTM);
 
       } 
@@ -1856,6 +1901,7 @@ class SoilsTableModel implements TableModel {
 	  CachedRowSet myRowSet; 
 	  ResultSetMetaData metadata;
 	  int numcols, numrows;
+	  boolean editable;
 
 	  public CachedRowSet getRowSet() {
 	    return myRowSet;
@@ -1866,18 +1912,18 @@ class SoilsTableModel implements TableModel {
 		    metadata = null;
 		    numcols = 0;
 		    numrows = 0;
-		    
+		    editable = true;
 		  }
 
 
-	  public SoilsTableModel(CachedRowSet _rowSet, XnDatabaseConnection conn, XnParameterToolConfig config) throws SQLException {
+	  public SoilsTableModel(CachedRowSet _rowSet, XnDatabaseConnection conn, XnParameterToolConfig config, boolean editable_) throws SQLException {
 
 	    myRowSet = _rowSet;
 	    metadata = myRowSet.getMetaData();
 	    numcols = metadata.getColumnCount();
 	    myConnection = conn;
 	    myConfig = config;
-	    
+	    editable = editable_;
 	    
 	    // Retrieve the number of rows.
 	    myRowSet.beforeFirst();
@@ -1972,10 +2018,17 @@ class SoilsTableModel implements TableModel {
 	  }
 
 	  public boolean isCellEditable(int rowIndex, int columnIndex) {
+		  
+		  if (editable) {
 		  		if (columnIndex < 2)
 		  			return false;
 		  		else
 					return true;
+		  }
+		  else
+		  {
+			  return false;
+		  }
 	  }
 	
 	  public void setValueAt(Object value, int row, int col) {
@@ -2054,7 +2107,7 @@ class XnParameterCouplingPanel extends JPanel implements ActionListener, RowSetL
 
 	    JScrollPane tableViewScrollPaneLeft = new JScrollPane (projectCouplingTable, 
 	            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 
 	    panel.add(tableViewScrollPaneLeft, java.awt.BorderLayout.CENTER);
 
@@ -2077,7 +2130,7 @@ class XnParameterCouplingPanel extends JPanel implements ActionListener, RowSetL
 		    	projectCouplingTable.setModel(projectCouplingTM);
 				
 		    	projectCouplingTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		    	projectCouplingTable.setPreferredScrollableViewportSize(new Dimension(600,600));
+		    	projectCouplingTable.setPreferredScrollableViewportSize(new Dimension(1000,600));
 		    	//projectGeneralTable.setPreferredSize(new Dimension(600,600));
 
 		    	XnParameterToolMainWindow.initColumnSizes(projectCouplingTable);
@@ -2222,7 +2275,13 @@ class ProjectCouplingTableModel implements TableModel {
 		  
 		switch (column) {
 			case 6:
+			case 7:
+			case 8:
 					return String.class;
+			case 9:
+			case 10:
+			case 11:
+					return Double.class;
 			default:
 					return Integer.class;
 		}
@@ -2236,9 +2295,13 @@ class ProjectCouplingTableModel implements TableModel {
 	    try {
 	      myRowSet.absolute(rowIndex + 1);
 	      
-	  	  if (columnIndex == 6)
+	  	  if (columnIndex >= 6 &&  columnIndex <= 8 )
 	  	  {
 	  		  return myRowSet.getString(columnIndex + 1);
+	  	  }
+	  	  else if (columnIndex >= 9 &&  columnIndex <= 11 )
+	  	  {
+	  		  return myRowSet.getDouble(columnIndex + 1);
 	  	  }
 	  	  else
 	  	  {	  Integer objI = myRowSet.getInt(columnIndex + 1);	  
@@ -2272,7 +2335,9 @@ class ProjectCouplingTableModel implements TableModel {
 							myRowSet.getString("firstSowingDay"), myRowSet.getString("firstSowingMonth"), 
 							myRowSet.getString("firstSowingRelativeYear"), myRowSet.getString("lastHarvestDay"), 
 							myRowSet.getString("lastHarvestMonth"), myRowSet.getString("lastHarvestRelativeYear"),
-							myRowSet.getString("MPMAS_commandline")
+							myRowSet.getString("MPMAS_commandline"), myRowSet.getString("XN_basedir"), 
+							myRowSet.getString("simulation_basedir"), myRowSet.getDouble("history_link_map_xllcorner"),
+							myRowSet.getDouble("history_link_map_yllcorner"), myRowSet.getDouble("history_link_map_cellsize")
 							)) {
 	
 		    			JOptionPane.showMessageDialog(null, "Error: Changing Coupling info failed.");
@@ -2417,13 +2482,29 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 	    		
 		    		managements.close();
 		    		ResultSet rs2;
-		    		
+		    		boolean editable = true;
 		    		if (myMainWindow.currentProject.project_type == 1) {
-		    			rs2 = myMainWindow.myConnection.getManagementInfoForProjectBEMS(myMainWindow.myConfig.currentProjectId);
+		    			rs2 = myMainWindow.myConnection.getManagementInfoForProjectBEMS(myMainWindow.myConfig.currentProjectId, myMainWindow.currentProject.bems_cells_management_table);
 		    			l3rdFieldLabel.setEnabled(false);
 		    			l4thFieldLabel.setEnabled(false);
+		    			
 		    			tNewYear.setEnabled(false);
 		    			tNewPosition.setEnabled(false);
+		    			if (! myMainWindow.currentProject.bems_cells_management_table.equals("simulation_projects_bems_cells_management"))
+		    			{
+		    				buttonAddRow.setEnabled(false);
+		    				buttonDeleteRow.setEnabled(false);
+			    			tNewX.setEnabled(false);
+			    			tNewY.setEnabled(false);
+		    				editable = false;
+		    			}
+		    			else {
+		    				buttonAddRow.setEnabled(true);
+		    				buttonDeleteRow.setEnabled(true);
+		    				tNewX.setEnabled(true);
+			    			tNewY.setEnabled(true);
+		    			}
+		    			
 		    		}
 		    		else {
 		    			rs2 = myMainWindow.myConnection.getManagementInfoForProject(myMainWindow.myConfig.currentProjectId);
@@ -2436,7 +2517,7 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 			    	managements.populate(rs2);
 		    		
 			    	managementsTM =
-			                  new ManagementsTableModel (managements,  myMainWindow.myConnection, myMainWindow.myConfig , myMainWindow.currentProject.project_type);
+			                  new ManagementsTableModel (managements,  myMainWindow.myConnection, myMainWindow.myConfig , myMainWindow.currentProject.project_type, editable);
 			    	managementsTM.addEventHandlersToRowSet(this);
 			    	managementTable.setModel(managementsTM);
 					
@@ -2524,7 +2605,7 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
         try {
           currentRowSet.moveToCurrentRow();
           managementsTM =
-            new ManagementsTableModel(managementsTM.getRowSet(), myMainWindow.myConnection, myMainWindow.myConfig, managementsTM.getProjectType());
+            new ManagementsTableModel(managementsTM.getRowSet(), myMainWindow.myConnection, myMainWindow.myConfig, managementsTM.getProjectType(),true);
           managementTable.setModel(managementsTM);
 
         } 
@@ -2540,7 +2621,7 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
       try {
         currentRowSet.moveToCurrentRow();
         managementsTM =
-          new ManagementsTableModel(managementsTM.getRowSet(), myMainWindow.myConnection, myMainWindow.myConfig, managementsTM.getProjectType());
+          new ManagementsTableModel(managementsTM.getRowSet(), myMainWindow.myConnection, myMainWindow.myConfig, managementsTM.getProjectType(), true);
         managementTable.setModel(managementsTM);
 
       } 
@@ -2560,6 +2641,7 @@ class ManagementsTableModel implements TableModel {
 	  CachedRowSet myRowSet; 
 	  ResultSetMetaData metadata;
 	  int numcols, numrows, projectType;
+	  boolean editable;
 
 	  public CachedRowSet getRowSet() {
 		  	return myRowSet;
@@ -2574,11 +2656,12 @@ class ManagementsTableModel implements TableModel {
 		    numcols = 0;
 		    numrows = 0;
 		    projectType = 0;
+		    editable = true;
 		    
 	  }
 
 
-	  public ManagementsTableModel(CachedRowSet _rowSet, XnDatabaseConnection conn, XnParameterToolConfig config, int project_type_) throws SQLException {
+	  public ManagementsTableModel(CachedRowSet _rowSet, XnDatabaseConnection conn, XnParameterToolConfig config, int project_type_, boolean editable_) throws SQLException {
 
 	    myRowSet = _rowSet;
 	    metadata = myRowSet.getMetaData();
@@ -2586,6 +2669,7 @@ class ManagementsTableModel implements TableModel {
 	    myConnection = conn;
 	    myConfig = config;
 	    projectType = project_type_;
+	    editable = editable_;
 	    
 	    // Retrieve the number of rows.
 	    myRowSet.beforeFirst();
@@ -2662,10 +2746,15 @@ class ManagementsTableModel implements TableModel {
 	  }
 
 	  public boolean isCellEditable(int rowIndex, int columnIndex) {
+		  	if (editable) {
 		  		if ( columnIndex < 2)
 		  			return false;
 		  		else
 					return true;
+		  	}
+		  	else {
+		  		return false;
+		  	}
 	  }
 	
 	  public void setValueAt(Object value, int row, int col) {
@@ -3314,6 +3403,7 @@ class  createNewProjectDialog extends JDialog  implements ActionListener {
 	    lfTypeModel.addElement("XN5 standalone");
 	    lfTypeModel.addElement("BEMS with fixed maps (no MPMAS)");
 	    lfTypeModel.addElement("BEMS  (with MPMAS)");
+	    lfTypeModel.addElement("BEMS  (within ILMS)");
 	
        	
        	lfType = new JList(lfTypeModel);
@@ -3816,8 +3906,16 @@ class ExportWeatherDialog extends JDialog implements ActionListener {
 	private JTextField tfLastYear;
 	private JTextField tfMaxDailyPrecip;
 	
+	private JCheckBox cbCO2;
+	private JTextField tfCO2Table;
 	
 	private JCheckBox cbInits;
+	private JCheckBox cbElevationCorr;
+	private JTextField tfTableWithElevationOrigHeight;
+	private JTextField tfElevationNewHeight;
+
+	
+
 	
 	
 	private JButton buttonExportOk;
@@ -3838,7 +3936,7 @@ class ExportWeatherDialog extends JDialog implements ActionListener {
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         JPanel panel = new JPanel();
-        panel.setLayout( new java.awt.GridLayout(8, 2, 1,30) );
+        panel.setLayout( new java.awt.GridLayout(13, 2, 1,30) );
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
         
         JLabel fileLabel = new JLabel("Filename:");
@@ -3866,6 +3964,29 @@ class ExportWeatherDialog extends JDialog implements ActionListener {
         panel.add(new JLabel("Max. limit daily precip. : "));
         tfMaxDailyPrecip = new JTextField("30", 4);
         panel.add(tfMaxDailyPrecip); 
+        
+        
+        panel.add(new JLabel("Correct for elevation?"));
+        cbElevationCorr = new JCheckBox();
+        panel.add(cbElevationCorr);
+        panel.add(new JLabel("Original altitude (enter the value or a table name): "));
+        tfTableWithElevationOrigHeight = new JTextField("", 30);
+        panel.add(tfTableWithElevationOrigHeight);
+        panel.add(new JLabel("New altitude: "));
+        tfElevationNewHeight = new JTextField("", 4);
+        panel.add(tfElevationNewHeight);
+        
+        
+        panel.add(new JLabel("Add CO2 concentration?"));
+        cbCO2 = new JCheckBox();
+        panel.add(cbCO2);
+        
+        panel.add(new JLabel("Table with CO2 concentration time series: "));
+        tfCO2Table = new JTextField("for1695_weather.", 50);
+        panel.add(tfCO2Table);
+        
+        
+        
         
         panel.add(new JLabel("Generate BEMS initial history?"));
         cbInits = new JCheckBox();
@@ -3912,11 +4033,21 @@ class ExportWeatherDialog extends JDialog implements ActionListener {
     		 String first_year = tfFirstYear.getText();
     		 String last_year = tfLastYear.getText();
     		 Double maxDailyPrecip = Double.valueOf(tfMaxDailyPrecip.getText());
-
+    		 
+    		 String co2Table = tfCO2Table.getText();
+    		 
     		 String prefix = myMainWindow.askForOutputDirectory();
+    		 
+    		 String origAltitudeInfo = tfTableWithElevationOrigHeight.getText();
+    		 int newAltitude = 0;
+    		 if (cbElevationCorr.isSelected()) { 
+    			 newAltitude = Integer.valueOf(tfElevationNewHeight.getText());
+    		 }
+    		 
 
      		 prefix += "/"+ filename;
-     		 boolean ret = myMainWindow.myConnection.writeWeatherData(prefix, tablename, Integer.valueOf(stationid), Integer.valueOf(first_year), Integer.valueOf(last_year), cbInits.isSelected(), false, "", maxDailyPrecip);
+     		 boolean ret = myMainWindow.myConnection.writeWeatherData(prefix, tablename, Integer.valueOf(stationid), Integer.valueOf(first_year), Integer.valueOf(last_year), cbInits.isSelected() ? 1 : 0, false, "", maxDailyPrecip, cbElevationCorr.isSelected() ? 1:0, newAltitude, origAltitudeInfo
+     				, cbCO2.isSelected(), co2Table );
     		     			
     		 if(ret)
     		 {	rc = 0;
@@ -5379,6 +5510,10 @@ class simProject {
 	String simulation_project_description;
 	String author_id;
 	int project_type;
+	
+	String xn5_cells_table;
+	String bems_cells_management_table;
+	
 	public simProject (ResultSet rs)
 	{
 		try {
@@ -5387,7 +5522,10 @@ class simProject {
 			simulation_project_description = rs.getString("simulation_project_description");
 			author_id = rs.getString("author_id");
 			project_type = rs.getInt("type_of_project");
-
+			
+			xn5_cells_table = rs.getString("xn5_cells_table");
+			bems_cells_management_table  = rs.getString("bems_cells_management_table");
+			
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -5401,6 +5539,8 @@ class simProject {
 			simulation_project_description = description;
 			author_id = author;		
 			project_type = type;
+			xn5_cells_table = "simulation_projects_xn5_cells";
+			bems_cells_management_table = "simulation_projects_bems_cells_management";
 	}
 }
 class plantParam {

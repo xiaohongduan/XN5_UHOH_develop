@@ -49,7 +49,7 @@ enum modeRaster {
 // -------------------------------
 // CLASS DEFINITION
 // -------------------------------
-// Function  contains all infrmation normally written in a binary ascii GIS file,
+// Function  contains all information normally written in a binary ascii GIS file,
 // as it is exported by Geographical Information Systems (GIS), including ArcInfo, GRASS,
 // It is also a standard for many models in hydrology and land use.
 // Thus, this class is

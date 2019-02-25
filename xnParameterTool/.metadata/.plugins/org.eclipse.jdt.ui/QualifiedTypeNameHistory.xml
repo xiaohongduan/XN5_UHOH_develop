@@ -43,4 +43,6 @@
 <fullyQualifiedTypeName name="java.lang.Exception"/>
 <fullyQualifiedTypeName name="de.uhoh.for1695.XnParameterContentEditorPanel"/>
 <fullyQualifiedTypeName name="java.lang.System"/>
+<fullyQualifiedTypeName name="java.rmi.activation.ActivateFailedException"/>
+<fullyQualifiedTypeName name="javax.swing.JCheckBox"/>
 </qualifiedTypeNameHistroy>

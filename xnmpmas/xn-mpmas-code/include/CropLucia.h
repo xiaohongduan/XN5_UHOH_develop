@@ -232,10 +232,10 @@ class CropLucia
 	///searches in InfoLuciaCrop
 	virtual int getLuciaArrayIndexForCropActivityID(int cropActID);//cropActID = unique ID in crop input file
 	virtual int getCropActivityIdForLuciaArrayIndex(int arrayIndex);//arrayIndex = index in data structure
-
+#ifndef MULTIPERIOD
 	virtual int getLuciaCropActivityIdForCropAndSoilType(int actIdx, int soilType);//index within soil type
 	virtual int getLuciaArrayIndexForCropAndSoilType(int actIdx, int soilType);//index within soil type
-
+#endif //ndef MULTIPERIOD
 #ifdef MULTIPERIOD
 	int getCropManagementIdForCropActivityID(int cropActId);
 	int getCropManagementIdForLuciaArrayIndex(int arrayIndex);
@@ -244,13 +244,14 @@ class CropLucia
 	vector<assetRequiredForCrop> getAssetsRequiredForLuciaArrayIndex(int arrayIndex);
 	int getCropManagementIdForYldArrayIndex(int YldIndex);
 	int getLuciaArrayIndexForCropManagementIdAndSoilType(int managId, int soilType);//index within soil type
+	int getLuciaArrayIndexForYieldArrayIndexAndSoilType(int yldArrayIdx, int soilType);
 #endif
-
 
 	virtual InfoLuciaCrops getInfoOnCropActivity(int arrayIndex);
 	const InfoLuciaCrops* getPointerToInfoOnCropActivity(int arrayIndex);
 	InfoLuciaCrops* getMutablePointerToInfoOnCropActivity(int arrayIndex);
 
+#ifndef MULTIPERIOD
 	///searches in InfoLuciaNRUs
 	virtual int getLuciaNruIndexForLpColumn(int colLP, int& crA, int& nru);//returns if found
 
@@ -260,10 +261,6 @@ class CropLucia
 	///Note: array index in Lucia soil and Lucia NRUs must match
 	virtual int getLuciaInternalIndexForZeroLaborActivity(int soil);
 	virtual int getLuciaArrayIndexForZeroLaborActivity(int soil);
-#ifdef MULTIPERIOD
-	int getCropActivityForUnownedLand(int type) { return landUseForUnownedLand[type] ;}
-	const vector<int>* getPointerToLandUseForUnownedLandVector() { return &landUseForUnownedLand ;}
-#endif
 
 
 	///Functions related to farm surveys
@@ -272,7 +269,14 @@ class CropLucia
 	virtual int checkSequenceOfCropActivitiesInLp();
 	virtual void insertCropActivityLpColumnsAndActIDs(MatrixDouble& tableLpColsAndActIDs);
 	//@}
-  
+#endif //ndef MULTIPERIOD
+
+
+#ifdef MULTIPERIOD
+	int getCropActivityForUnownedLand(int type) { return landUseForUnownedLand[type] ;}
+	const vector<int>* getPointerToLandUseForUnownedLandVector() { return &landUseForUnownedLand ;}
+#endif
+
 	//---------------------------------------------------------------------------
 	
 	///@name Data input functions
@@ -299,6 +303,7 @@ class CropLucia
 	int getYldArrayIndexForCropActivityID(int cropActID);
 
 	size_t getNumberExtraCropActAttributes(){return numExtraCropActAttributes;}
+	int cropModelWantsManagementID() { return exportManagementID;}
 
 #endif //MULTIPERIOD
 	//@}
@@ -343,9 +348,10 @@ protected:
 
 	///data for all crop activities
 	InfoLuciaCrops* cropActivities;
-	
+#ifndef MULTIPERIOD
 	///LP indices for crop activities in each nutrient response units (NRU)
 	InfoLuciaNRUs** lpIndicesForNRU;
+#endif
 
 #ifdef MULTIPERIOD
 	vector<int> CropManagementIDs; //map from first dimension array index of cropManagement/NRU arrays (e.g. actYlds, expYlds) to CropManagementID
@@ -356,6 +362,7 @@ protected:
 	vector<int> landUseForUnownedLand;
 
 	size_t numExtraCropActAttributes;
+	int exportManagementID;
 #endif
 	//@}
 
