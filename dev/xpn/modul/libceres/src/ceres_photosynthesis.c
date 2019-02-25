@@ -78,7 +78,10 @@ int ceres_DailyCanopyPhotosynthesis_WH_BA(ceres *self)
                 {
                 PAR     =0.47*(double)self->weather.fDaylySolRad;
                 IPAR=PAR*(1.0-exp(-0.85*(double)pCan->fLAI));
-                self->fPotBiomGrowRate=(double)(3.5*IPAR)*(double)10.0;                        //Kg/ha
+//              self->fPotBiomGrowRate=(double)(3.5*IPAR)*(double)10.0;                        //Kg/ha
+                //SG 20190225: CO2 effect 
+                LUEw = (9.0*xpn->pCl->pWeather->fAtmCO2ppm)/(500.0 + xpn->pCl->pWeather->fAtmCO2ppm); //LUEw(280 ppm) =3.25, LUEw(400 ppm) = 4.0, LUEw(720 ppm) = 5.3
+                self->fPotBiomGrowRate=(double)(LUEw*IPAR)*(double)10.0;                        //Kg/ha
                 }
         //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
