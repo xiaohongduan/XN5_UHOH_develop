@@ -5324,17 +5324,19 @@ class	XnDatabaseConnection {
 								
 								
 							}
-							if (co2Series.getInt("year") != rs.getInt("year")
+							while (co2Series.getInt("year") != rs.getInt("year")
 								|| co2Series.getInt("month") != rs.getInt("month")
 								|| co2Series.getInt("day") != rs.getInt("day")
 									
 								)
 							{
-								JOptionPane.showMessageDialog(null, "Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
-								System.out.println("Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
-								co2Series.close();
-								rs.close();
-								return false;
+								if ( !co2Series.next() ) {
+									JOptionPane.showMessageDialog(null, "Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
+									System.out.println("Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
+									co2Series.close();
+									rs.close();
+									return false;
+								}
 							}
 							out.write(", ");
 							out.write(Double.toString( co2Series.getDouble("co2_ppm")));// CO2 ppm
