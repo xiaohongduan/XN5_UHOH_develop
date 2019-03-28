@@ -149,6 +149,15 @@ struct _expertn_standard_ini
 	double Tairmax;
 	double Tairmin;
 	double meantemp;
+    
+    //double SoilT02;
+    //double SoilT05;
+    //double SoilT10;
+    //double SoilT20;
+    //double SoilT50;
+    double AtmCO2ppm; //SG20190211
+    //double CnpyDrn;
+    //double WatTbl;
 
 
 	// run weather small time step:
