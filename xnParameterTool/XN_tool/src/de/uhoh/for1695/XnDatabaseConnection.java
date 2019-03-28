@@ -2667,12 +2667,13 @@ class	XnDatabaseConnection {
 							case 2: typeString = "before-cover"; break;
 							case 3: typeString = "after-harvest"; break;
 							case 4: typeString = "before-sowing"; break;
+							case 5: typeString = "before-cover"; break;
 							default:
 								throw new Exception("Error: invalid adapt_date_type");
 						}
 						out.println("      adaptive  : ");
 						out.println("        type      : "+typeString);
-						if ( tillageList.getInt("adapt_date_type") == 4) {
+						if ( tillageList.getInt("adapt_date_type") == 4 || tillageList.getInt("adapt_date_type") == 5) {
 							out.println("        days      : 1");
 						}
 						else {
@@ -3991,7 +3992,7 @@ class	XnDatabaseConnection {
 				return -1;
 			}
 
-			s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30,'simulation_projects_xn5_cells', 'simulation_projects_bems_cells_management',0,NULL,NULL);";
+			s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30,'simulation_projects_xn5_cells', 'simulation_projects_bems_cells_management',0,NULL,NULL,NULL);";
 			if(! myConnection.updateDb(s) ) {
 				myConnection.updateDb("ROLLBACK;");
 				return -1;
