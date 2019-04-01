@@ -1141,7 +1141,8 @@ void xn_mpmas_translator::defineLuaforCellsFromArray(int year, int mpmasArraySiz
 }
 
 
-STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmasYear, Raster2D* cropMapILMS , Raster2D* sowMapILMSearly, Raster2D* sowMapILMSlate, vector<int>* sowDateRepresentatives)
+STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmasYear, Raster2D* cropMapILMS , Raster2D* sowMapILMSearly, 
+			Raster2D* sowMapILMSlate, vector<int>* sowDateRepresentatives)
 {	int ws = 1; // change to zero if not overlapping years
 	STRUCT_mpmas_to_xn management;
 	if (cell < 0 || cell >= xnGridSize)
@@ -1195,9 +1196,10 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 			   << lua <<"\n";
 		throw runtime_error(errmsg.str());
 	}
+	
 	if ( adaptIt->second.sowingDayFormula != notAdaptive ) 
 	{
-			int sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(adaptIt->second), xnGridWeatherHistory[cell], historyWeighting, convertDateToDayOfYear(startDate) - 1);
+			int sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(adaptIt->second), xnGridWeatherHistory[cell], historyWeighting, getStartDoy(mpmasYear) - 1);
 
 			int springCrop = 0;
 			if(ws)
@@ -1268,7 +1270,7 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 			}
 			if ( repEarlyAdaptIt->second.sowingDayFormula != notAdaptive ) 
 			{
-					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repEarlyAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting, convertDateToDayOfYear(startDate) - 1 );
+					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repEarlyAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting, getStartDoy(mpmasYear) - 1 );
 			}
 			else 
 			{
@@ -1310,7 +1312,7 @@ STRUCT_mpmas_to_xn xn_mpmas_translator::getManagementForCell(int cell, int mpmas
 			}
 			if ( repLateAdaptIt->second.sowingDayFormula != notAdaptive ) 
 			{
-					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repLateAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting, convertDateToDayOfYear(startDate) - 1);
+					sowDoy = xnmpmas::adaptation::calculatePlantingDate(&(repLateAdaptIt->second), xnGridWeatherHistory[cell], historyWeighting, getStartDoy(mpmasYear) - 1);
 			}
 			else 
 			{
