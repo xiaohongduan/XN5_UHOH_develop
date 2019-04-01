@@ -459,6 +459,8 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     		createSpecialOutputDef(prefix,getCurrentProjectName());
 
     		createWeatherFilesForProject(dir, getCurrentProjectName(), currentProject.project_type );
+    		System.out.println("Finished.");
+
     	}  
     	else if (e.getSource() == menuItemExportGecrosIni)
     	{
