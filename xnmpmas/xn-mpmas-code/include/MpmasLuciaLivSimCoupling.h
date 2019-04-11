@@ -393,7 +393,7 @@ class LivSimHerd
 			{
 				if (!it->get_removed() )
 				{	(it)->set_age((it)->get_age() + years) ;
-					(it)->set_bw((it)->get_bw() * (1+perc/100)) ;
+					(it)->set_bw((it)->get_bw() * (1 + perc/100)) ;
 				}
 			}
 		}

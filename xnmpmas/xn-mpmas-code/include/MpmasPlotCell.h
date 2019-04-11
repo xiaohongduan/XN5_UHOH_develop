@@ -266,7 +266,7 @@ public:
 	static int plotCapacitySlots();//plot
 	static void setPlotCapacitySlots(int);//plot
 
-	virtual bool attachAsset( int ownerAgentId, int ownerInventoryId, int code, int plotCapacitySlot, double plotCapacityUsed);//plot
+	virtual void attachAsset( int ownerAgentId, int ownerInventoryId, int code, int plotCapacitySlot, double plotCapacityUsed);//plot
 	virtual void detachAsset(int userAgentId, int userInventoryId);//plot
 	virtual void partlyDetachAsset(int userAgentId, int userInventoryId, double reduction);
 	virtual void detachAllAssets();//plot

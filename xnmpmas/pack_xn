@@ -1,6 +1,6 @@
-DIR="xn5_for_installation"
-
-cp -r ../built $HOME/$DIR/
+DIR="expertn50"
+mkdir $HOME/$DIR -p
+cp -r ../built $HOME/$DIR
 
 tar czf $HOME/xn5_for_bwUniCluster.tar.gz -C $HOME $DIR
 

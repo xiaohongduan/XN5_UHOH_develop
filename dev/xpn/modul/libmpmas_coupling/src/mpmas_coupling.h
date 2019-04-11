@@ -146,7 +146,7 @@ int checkIfIrrigation(mpmas_coupling *self);
 int checkIfTillage(mpmas_coupling *self);
 //End of Hong
 
-void measureNmin(mpmas_coupling *self);
+void measureNmin(mpmas_coupling *self, int store_measures);
 
 struct _mpmas_couplingClass
 {

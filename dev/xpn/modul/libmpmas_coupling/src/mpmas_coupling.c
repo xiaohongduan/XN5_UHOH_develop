@@ -614,7 +614,7 @@ if (NewDay(pTi))
 					self->daysSinceBBCH1 = 0;
 					self->daysSinceBBCH2 = 0;
 										
-					pPl->pGenotype->acCropCode = self->mpmas_to_xn->coverCropCode;
+		pPl->pGenotype->acCropCode = self->mpmas_to_xn->coverCropCode;
                     pPl->pGenotype->acCropName = self->mpmas_to_xn->coverCropName;
                     pSI->Day = self->mpmas_to_xn->coverCropSowDate.day;
                     pSI->Month = self->mpmas_to_xn->coverCropSowDate.month;
@@ -623,7 +623,8 @@ if (NewDay(pTi))
                     pSI->fPlantDens = self->mpmas_to_xn->coverCropSowDens;
                     pSI->fRowWidth = self->mpmas_to_xn->coverCropRowDist;
                     pSI->fSowDepth = self->mpmas_to_xn->coverCropSowDepth;
-                    
+           
+	         //pPl->pGenotype->fPlantHeight = (strcmp(self->mpmas_to_xn->coverCropCode, "MZ") == 0) ? 300 : 150;
                     
                     //adapt cover crop ploughing to potentially shifted sowing date:
                     
@@ -706,6 +707,7 @@ if (NewDay(pTi))
 								read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
 								g_free(S);
 								if (read_filename==NULL)
+
 									{
 										S  = g_strdup_printf("Entry 'ceres.%s' or 'global.%s' is missing in your options!",pPl->pGenotype->acCropName,pPl->pGenotype->acCropName);
 										PRINT_ERROR(S);
@@ -768,6 +770,10 @@ if (NewDay(pTi))
 					self->internal_actualSowDate = 			self->mpmas_to_xn->sowDate;
 				
 					 pPl->pModelParam->cResidueCarryOff = self->mpmas_to_xn->biom_remove;
+
+     //               pPl->pGenotype->fPlantHeight = (strcmp(self->mpmas_to_xn->coverCropCode, "MZ") == 0) ? 300 : 150;
+
+
                     // maybe needs to read the plant model
 		
 					// read plant ini file:
@@ -1050,8 +1056,11 @@ if (NewDay(pTi))
 		//Troost 180608 : moved here. Nmin should not be done after harvest, but in spring
 		if ( xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
 						 pTi->pSimTime->iyear, NMIN_MONTH, NMIN_DAY) ==  0 && self->nmin_measured == 0)					 {
-			measureNmin(self);
+			measureNmin(self, 1);
 
+		}
+		else {
+                        //measureNmin(self, 0);
 		}
         if (checkIfMineralFertilization(self) == 1) 
         {
@@ -1073,7 +1082,7 @@ if (NewDay(pTi))
             {
             
 				if (self->nmin_measured == 0) {
-					measureNmin(self);
+					measureNmin(self, 1);
 					S  = g_strdup_printf("NOTE: fertilization is supposed to adapt to Nmin, but Nmin not yet measured\n  "
 														 "Do early measurement of Nmin on %04d-%02d-%02d\n",									 
 														  pTi->pSimTime->iyear,
@@ -1919,10 +1928,10 @@ int get_daily_air_and_soil_temperatures(mpmas_coupling *self)
     return RET_SUCCESS;
 }
 
-void measureNmin(mpmas_coupling *self)
+void measureNmin(mpmas_coupling *self, int store_measures)
 {
 		    expertn_modul_base *xpn = &(self->parent);
-
+			    gchar *S;
 	
 			PSPROFILE   pSo = xpn->pSo;
 			PSLAYER     pSL;
@@ -1946,8 +1955,13 @@ void measureNmin(mpmas_coupling *self)
 			depth30_60 = 0.0;
 			depth60_90 = 0.0;*/
 			
-			//double cumulNO3N_30 = 0.0;
-			//double cumulNH4N_30 = 0.0;
+			double cumulNO3N_30 = 0.0;
+			double cumulNH4N_30 = 0.0;
+                        double cumulNO3N_60 = 0.0;
+                        double cumulNH4N_60 = 0.0;
+                        double cumulNO3N_90 = 0.0;
+                        double cumulNH4N_90 = 0.0;
+
 			
 					
 			for (pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext;  //start
@@ -1959,33 +1973,46 @@ void measureNmin(mpmas_coupling *self)
 						{
 						//depth0_30 += pSL->fThickness;
 						nmin0_30 += (pCL->fNO3N + pCL->fNH4N) ;//* pSL->fThickness;
-						//cumulNO3N_30 += pCL->fNO3N;
-						//cumulNH4N_30 += pCL->fNH4N;
+						cumulNO3N_30 += pCL->fNO3N;
+						cumulNH4N_30 += pCL->fNH4N;
 						
 						}
 					if ((actdepth > 300.0) && (actdepth <= 600.0))
 						{
 						//depth30_60 += pSL->fThickness;
 						nmin30_60 += (pCL->fNO3N + pCL->fNH4N) ;// * pSL->fThickness;
+                                                cumulNO3N_60 += pCL->fNO3N;
+                                                cumulNH4N_60 += pCL->fNH4N;
 						}
 					if ((actdepth > 600.0) && (actdepth <= 900.0))
 						{
 						//depth60_90 += pSL->fThickness;
 						nmin60_90 += (pCL->fNO3N + pCL->fNH4N) ;//* pSL->fThickness;
+                                                cumulNO3N_90 += pCL->fNO3N;
+                                                cumulNH4N_90 += pCL->fNH4N;
 						}
 					if (actdepth > 900.0)
 						break;
 			}
 
-			/*S = g_strdup_printf("Nmin date, 0-30cm NH3N: %.2f, NH4N: %.2f", cumulNO3N_30, cumulNH4N_30);
+			S = g_strdup_printf("Current Nmin measures:  0-30cm NH3N: %.2f, NH4N: %.2f, NMin: %.2f\n"
+					    "                       30-60cm NH3N: %.2f, NH4N: %.2f, Nmin: %.2f\n"
+                                            "                       60-90cm NH3N: %.2f, NH4N: %.2f, Nmin: %.2f\n"
+					    "                       Total Nmin: %.2f\n"
+ 
+						, cumulNO3N_30, cumulNH4N_30, nmin0_30, cumulNO3N_60, cumulNH4N_60, nmin30_60
+						, cumulNO3N_90, cumulNH4N_90, nmin60_90, nmin0_30 +nmin30_60 + nmin60_90
+					);
 			PRINT_MESSAGE(xpn,3,S);// for debug
-			g_free(S);*/
+			g_free(S);
 
-            self->xn_to_mpmas->Nmin0_30 = nmin0_30  ;// / (depth0_30+EPSILON);
-            self->xn_to_mpmas->Nmin30_60 = nmin30_60; // / (depth30_60+EPSILON);
-            self->xn_to_mpmas->Nmin60_90 = nmin60_90 ; // / (depth60_90+EPSILON);
-	
+	    if (store_measures > 0) {
+	            self->xn_to_mpmas->Nmin0_30 = nmin0_30  ;// / (depth0_30+EPSILON);
+        	    self->xn_to_mpmas->Nmin30_60 = nmin30_60; // / (depth30_60+EPSILON);
+            	    self->xn_to_mpmas->Nmin60_90 = nmin60_90 ; // / (depth60_90+EPSILON);
+	    
 			self->nmin_measured = 1;
+            }
 }
 
 

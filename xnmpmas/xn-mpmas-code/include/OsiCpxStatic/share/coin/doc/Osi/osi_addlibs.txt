@@ -1,0 +1,1 @@
+-L/home/ho/ho_mas/ho_trooscb9/code/libraries/cplexOsi/OsiCpxStatic//lib -lOsi -lCoinUtils -lm  

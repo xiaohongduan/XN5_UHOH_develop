@@ -5,3 +5,4 @@ done
 
 cp -r $HOME/code/utilities/include/* ./
 cp -r $HOME/code/libraries/RngStream/include/* ./
+cp -r $HOME/code/libraries/cplexOsi/OsiCpxStatic ./

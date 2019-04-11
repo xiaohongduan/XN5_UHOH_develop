@@ -1,0 +1,12 @@
+prefix=/home/ho/ho_mas/ho_trooscb9/code/libraries/cplexOsi/OsiCpxStatic/
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include/coin
+
+Name: OsiCplex
+Description: COIN-OR Open Solver Interface for CPLEX
+URL: https://projects.coin-or.org/Osi
+Version: 0.107
+Libs: -L${libdir} -lOsiCpx -L/home/ho/ho_mas/ho_trooscb9/ILOG/CPLEX_Studio122/cplex/bin/x86-64_sles10_4.1/ -lcplex122
+Cflags: -I${includedir} -I/home/ho/ho_mas/ho_trooscb9/ILOG/CPLEX_Studio122/cplex/include/ilcplex
+Requires: osi

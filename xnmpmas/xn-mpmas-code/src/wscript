@@ -59,8 +59,12 @@ def check_MPmas(conf,add_includes,add_flags):
                         return 0;
                         }
                        '''
+	if conf.options.cplex:
+            conf.check_cxx(msg=Mpmas_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib=["MpmasCplexMP_MPI","Cbc","OsiSym","Sym","OsiClp","Clp","Cgl","Osi","CoinUtils","CbcSolver"], fragment=Mpmas_fragment,uselib='M OPEN_MPI', uselib_store='MPMAS')
+        else:	
+            conf.check_cxx(msg=Mpmas_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib=["MpmasMP_MPI","Cbc","OsiSym","Sym","OsiClp","Clp","Cgl","Osi","CoinUtils","CbcSolver"], fragment=Mpmas_fragment,uselib='M OPEN_MPI', uselib_store='MPMAS')
 
-        conf.check_cxx(msg=Mpmas_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib=["MpmasMP_MPI","Cbc","OsiSym","Sym","OsiClp","Clp","Cgl","Osi","CoinUtils","CbcSolver"], fragment=Mpmas_fragment,uselib='M OPEN_MPI', uselib_store='MPMAS')
+
 
      else:
         Mpmas_fragment=''' 
@@ -158,9 +162,9 @@ def options(opt):
     opt.add_option('--without_database', action='store_true', default=False, help='Compiling without libgda! Expert-N has no Database!')
     opt.add_option('--max_optimize', action='store_true', default=False, help='maximal optimization (speed)')
     opt.add_option('--USE_OPENMP', action='store_true', default=False,help='Compile Expert-N with OPENMP')
-    opt.add_option('--USE_MPI', action='store_true', default=False,help='Compile Expert-N with Open MPI')
-    opt.add_option('--mas32', action='store_true', default=False,help='Compile Expert-N with Mpmas 32bit library')
-    
+    opt.add_option('--USE_MPI', action='store_true', default=False,help='Compile MPMAS_XN with Open MPI')
+    opt.add_option('--mas32', action='store_true', default=False,help='Compile MPMAS_XN with Mpmas 32bit library')
+    opt.add_option('--cplex', action='store_true', default=False,help='Complie MPMAS_XN with MpmasCplex library (only with MPI)')
 
 def configure(conf):
     # Compiler Flags:
@@ -169,6 +173,9 @@ def configure(conf):
     
 
     conf.env['APPNAME'] = APPNAME
+
+    if conf.options.cplex:
+        conf.options.USE_MPI=True
 
     # Libraries Check for XPN:
     conf.check_cfg (package='glib-2.0', uselib_store='GLIB', atleast_version='2.22.5',
@@ -293,7 +300,10 @@ def configure(conf):
         conf.env['INCLUDES_STD']
         conf.define('USE_MPI',1)
         conf.define('PAR2',1)
-        conf.env['APPNAME'] = 'expertn_mpmas_mpi'
+	if conf.options.cplex:
+            conf.env['APPNAME'] = 'expertn_mpmasCplex_mpi'  
+        else:
+            conf.env['APPNAME'] = 'expertn_mpmas_mpi'
 
     if conf.options.USE_MPI:
         try:
