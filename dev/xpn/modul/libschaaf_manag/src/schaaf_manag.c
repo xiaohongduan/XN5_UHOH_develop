@@ -800,7 +800,7 @@ int LagerungNeu(schaaf_manag *self)
 		pSL->fCHumus    += (pCP->fCHumusSurf - restMenge);
 		pCP->fCHumusSurf = restMenge;
 		
-		//Begion of Hong: change in XN3
+		//Begin of Hong: change in XN3
 		//SG 20161009: For DAISY model - 100% of fCorgManure that is partitioned to "fCHumusSurf" are SOM2 (see TSFertilizer, manage.c line 334-349)
 		pCL->fCHumusFast   += (pCP->fCHumusSurf - restMenge);
 

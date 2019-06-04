@@ -255,7 +255,7 @@ int spass_phenological_development(spass *self)
                 pDev->fDevR = fSprGrwRate*pPl->pDevelop->fThermEffect/fSeedDepth;
 			}
 
-		//SG/24/05/05: Maize (outcommented by Ch. Klein?)  --> activated again SG 20190531
+		//SG/24/05/05: Maize (outcommented by Ch. Klein/F. Heinlein?)  --> activated again SG 20190531
 		if (strcmp(pPl->pGenotype->acCropCode,"MZ")==0)
 			pDev->fDevR =max(0.0,0.5*(fTemp-10.0)/(15.0+6.0*fSeedDepth));
 			//pDev->fDevR = (double)max(0.0,(double)0.5*((double)0.5*(fTempMax+fTempMin)-(double)10.0)/((double)15.0+((double)6.0)*fSeedDepth));
