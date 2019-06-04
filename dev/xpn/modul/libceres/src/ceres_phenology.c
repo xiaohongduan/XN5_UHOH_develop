@@ -1115,16 +1115,22 @@ int ceres_phenological_development_run(ceres *self)
 		iStage = iCurrentStage-1;
 
 		if(iStage ==0) { //Wechsel von 9 auf 1
-			if ((strcmp(pPl->pGenotype->acCropCode,"WH")==0))
-				self->fPHINT=(double)103.0; //(double)84.0 //(double)95.0 //(double)103.0 (INRA?)
-			else if ((strcmp(pPl->pGenotype->acCropCode,"BA")==0))
-				self->fPHINT=(double)77.5-(double)232.6*CHGDL;//(double)95.0 (INRA?)
-			else if ((strcmp(pPl->pGenotype->acCropCode,"MZ")==0))
-				self->fPHINT=pPl->pGenotype->pStageParam->afThermalTime[0];
-			else if ((strcmp(pPl->pGenotype->acCropCode,"SF")==0))
-				self->fPHINT=pPl->pGenotype->pStageParam->afThermalTime[0];
-			else
-				self->fPHINT=pPl->pGenotype->pStageParam->afThermalTime[0];
+            //SG 20190531: fPHINT now from ini-file (as in XN3!)
+            if(pPl->pGenotype->fPhyllochronInterval <= 10)
+           {
+                if ((strcmp(pPl->pGenotype->acCropCode,"WH")==0))
+                    self->fPHINT=(double)103.0; //(double)84.0 //(double)95.0 //(double)103.0 (INRA?)
+                else if ((strcmp(pPl->pGenotype->acCropCode,"BA")==0))
+                    self->fPHINT=(double)77.5-(double)232.6*CHGDL;//(double)95.0 (INRA?)
+                else if ((strcmp(pPl->pGenotype->acCropCode,"MZ")==0))
+                    self->fPHINT=pPl->pGenotype->pStageParam->afThermalTime[0];
+                else if ((strcmp(pPl->pGenotype->acCropCode,"SF")==0))
+                    self->fPHINT=pPl->pGenotype->pStageParam->afThermalTime[0];
+                else
+                    self->fPHINT=pPl->pGenotype->pStageParam->afThermalTime[0];
+           }
+           else
+                    self->fPHINT =  pPl->pGenotype->fPhyllochronInterval;
 
 			//Thermal time of stages 2 + 3
 

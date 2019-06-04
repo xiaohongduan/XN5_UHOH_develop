@@ -1193,6 +1193,10 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 	GET_INI_INT_ARRAY(dummy_int,dummy_int_size,"phenology","VernCoeff");
 	pGe->iVernCoeff = dummy_int[i];
 	g_free(dummy_int);
+	//SG 20190531: read PHINT from ini file
+    GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,-99,"phenology","PHINT");
+	pGe->fPhyllochronInterval = dummy_in[i];
+	g_free(dummy_in);
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(pSt->afTempMax,pSt->afTempMaxLen,1,-99.9,"phenology","TempMax");
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(pSt->afTempOpt,pSt->afTempOptLen,1,-99.9,"phenology","TempOpt");
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(pSt->afTempBase,pSt->afTempBaseLen,1,-99.9,"phenology","TempBas");
@@ -1951,7 +1955,7 @@ int expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(expertn_modul_ba
 				
 			fStaFak = fCut / fHeight;
 			// Falls ohne Standing Pool gerechnet werden soll
-			 //if(!iStandingResidues) fStaFak = (double)0; 
+			// if(!iStandingResidues) fStaFak = (double)0; 
 			/* Berechnen stehender und liegender Anteil */
 			//fCResidue = (pPl->pBiomass->fBiomassAbvGround - pPl->pBiomass->fGrainWeight) * (double)0.4;
 			fCResidue = pPl->pBiomass->fStovWeight * (double)0.4;

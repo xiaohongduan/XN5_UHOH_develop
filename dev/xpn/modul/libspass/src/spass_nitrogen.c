@@ -654,8 +654,7 @@ int spass_PlantNitrogenStress(spass *self)
 	
 	}
 
-	
-   
+	   pPltN->fFruitActConc     = pPltN->fGrainConc; //SG 20190310
 
 	//		alter SPASS-Code
 /*

@@ -222,7 +222,7 @@ int evapotranspiration_haude_run(evapotranspiration *self)
 				fHaudeFac = (double)0.11;
 		}
 
-		if (strcmp(pPl->pGenotype->acCropCode,"BS")==0) //Zuckerruebe
+		if (strcmp(pPl->pGenotype->acCropCode,"SB")==0) //Zuckerruebe
 		{
 		    if((pTi->pSimTime->fTimeY > 0)&&(pTi->pSimTime->fTimeY <= 31))
 				fHaudeFac = (double)0.11;
