@@ -176,7 +176,7 @@ typedef struct stgenotype
 	//int		iVarietyCode;
 	//int		iBYSKID;
 	//int		iC_Pathway;
-	//double	fPhyllochronInterval;
+	double	fPhyllochronInterval; //SG 20190531
 	//double	fCriticalDaylength;
 	//int		iDaylengthTyp;
 	int		iVernCoeff;

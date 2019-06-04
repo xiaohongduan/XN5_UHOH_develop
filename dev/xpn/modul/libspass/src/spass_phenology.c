@@ -117,7 +117,7 @@ int spass_phenological_development(spass *self)
 		}
 
 		fTemp = pWth->fTempAir;
-		//fTempMax = pWth->fTempMax;	    
+		//fTempMax = pWth->fTempMax;	   
 		//fTempMin = pWth->fTempMin;	
 
 
@@ -238,27 +238,28 @@ int spass_phenological_development(spass *self)
 		//SG/19/05/99: Potato
 		if (strcmp(pPl->pGenotype->acCropCode,"PT")==0)	
 			{
-			fSprGrwRate= (double)0.4;//Agria=0.4; Christa=0.45
-			if (strcmp(pPl->pGenotype->acVarietyName,"Agria")==0)	
-				fSprGrwRate= (double)0.4;
-			if (strcmp(pPl->pGenotype->acVarietyName,"Christa")==0)	
-				fSprGrwRate= (double)0.45;
-            if (strcmp(pPl->pGenotype->acVarietyName,"Krone")==0)	
-				fSprGrwRate= (double)0.2;
-            if (strcmp(pPl->pGenotype->acVarietyName,"Nicola")==0)	
-				fSprGrwRate= (double)0.45;
-            if (strcmp(pPl->pGenotype->acVarietyName,"Cilena")==0)	
-				fSprGrwRate= (double)0.45;
-            if (strcmp(pPl->pGenotype->acVarietyName,"Burana")==0)	
-				fSprGrwRate= (double)0.45;
+                fSprGrwRate= (double)0.4;//Agria=0.4; Christa=0.45
+                if (strcmp(pPl->pGenotype->acVarietyName,"Agria")==0)	
+                    fSprGrwRate= (double)0.4;
+                if (strcmp(pPl->pGenotype->acVarietyName,"Christa")==0)	
+                    fSprGrwRate= (double)0.45;
+                if (strcmp(pPl->pGenotype->acVarietyName,"Krone")==0)	
+                    fSprGrwRate= (double)0.2;
+                if (strcmp(pPl->pGenotype->acVarietyName,"Nicola")==0)	
+                    fSprGrwRate= (double)0.45;
+                if (strcmp(pPl->pGenotype->acVarietyName,"Cilena")==0)	
+                    fSprGrwRate= (double)0.45;
+                if (strcmp(pPl->pGenotype->acVarietyName,"Burana")==0)	
+                    fSprGrwRate= (double)0.45;
 
-			pDev->fDevR = fSprGrwRate*pPl->pDevelop->fThermEffect/fSeedDepth;
+                pDev->fDevR = fSprGrwRate*pPl->pDevelop->fThermEffect/fSeedDepth;
 			}
 
-		//SG/24/05/05: Maize
-	/*	if (!strcmp((LPSTR)pPl->pGenotype->acCropCode,(LPSTR)"MZ"))
-			pDev->fDevR = (double)max(0.0,(double)0.5*((double)0.5*(fTempMax+fTempMin)-(double)10.0)/((double)15.0+((double)6.0)*fSeedDepth));
-*/
+		//SG/24/05/05: Maize (outcommented by Ch. Klein?)  --> activated again SG 20190531
+		if (strcmp(pPl->pGenotype->acCropCode,"MZ")==0)
+			pDev->fDevR =max(0.0,0.5*(fTemp-10.0)/(15.0+6.0*fSeedDepth));
+			//pDev->fDevR = (double)max(0.0,(double)0.5*((double)0.5*(fTempMax+fTempMin)-(double)10.0)/((double)15.0+((double)6.0)*fSeedDepth));
+
 		if (pDev->fStageSUCROS+pDev->fDevR*pTi->pTimeStep->fAct>(double)0.0)
 					pDev->fDevR = -pDev->fStageSUCROS/pTi->pTimeStep->fAct;
 
