@@ -1,0 +1,15 @@
+*.bak
+*.o
+built/bin/expertn_bin*
+built/bin/lib*
+built/models/
+built/cfg/
+built/doc/
+dev/.codelite/
+dev/build/
+dev/expertn50.workspace
+dev/logfile.txt
+dev/.lock*
+dev/*.project
+dev/waf-*
+gui/
