@@ -39,7 +39,7 @@ G_MODULE_EXPORT int hydraulic_functions_set_Hutson_and_Cass(hydraulic_functions 
 G_MODULE_EXPORT int hydraulic_functions_set_van_Genuchten_and_Mualem(hydraulic_functions *self);
 G_MODULE_EXPORT int hydraulic_functions_set_Brooks_and_Corey(hydraulic_functions *self);
 G_MODULE_EXPORT int hydraulic_functions_set_Brutsaert_and_Gardner(hydraulic_functions *self);
-G_MODULE_EXPORT int hydraulic_functions_set_Biomodal_van_Genuchten(hydraulic_functions *self);
+G_MODULE_EXPORT int hydraulic_functions_set_Bimodal_van_Genuchten(hydraulic_functions *self);
 
 struct _hydraulic_functionsClass
 {

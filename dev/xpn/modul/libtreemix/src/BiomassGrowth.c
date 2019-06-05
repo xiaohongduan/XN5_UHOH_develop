@@ -406,11 +406,11 @@ int libtreemix_CalcLeafRenewalDemand(libtreemix *self, int i, double* LeafDemand
 	}
 	else if((self->conf.Phenology == 2)||(self->conf.Phenology == 3))
 	{
-		if((self->silv[i].Dormancy == FALSE)&&(Day <= self->plant[i].LfFallStart))
+		if((self->silv[i].Dormancy == FALSE)&&(Day <= self->plant[i].LfFallStart)&&(Day >= self->plant[i].LfFallEnd))
 		{
-			if(!strcmp(self->plant[i].type, "decidous"))	//coniferous stand
+			if(!strcmp(self->plant[i].type, "deciduous"))	//deciduous stand
 			{ 				
-				self->plant[i].LeafDeathRate = 0.0;
+                self->plant[i].LeafDeathRate = 0.0;
 			}
 			else
 			{
@@ -420,9 +420,9 @@ int libtreemix_CalcLeafRenewalDemand(libtreemix *self, int i, double* LeafDemand
 		}
 		else
 		{
-			if(!strcmp(self->plant[i].type, "decidous"))	//coniferous stand
+			if(!strcmp(self->plant[i].type, "deciduous"))	//deciduous stand
 			{ 				
-				self->plant[i].LeafDeathRate = (self->plant[i].CLfMass/1000.0)*self->plant[i].LfFall*(1.0+self->plant[i].DamageLf);
+                self->plant[i].LeafDeathRate = (self->plant[i].CLfMass/1000.0)*self->plant[i].LfFall*(1.0+self->plant[i].DamageLf);
 			}
 			else
 			{
@@ -829,7 +829,7 @@ int libtreemix_CalcBiomassGrowth(libtreemix *self, int i)
 	/* calc. amount of increased nitrogen due to uptake, [tN/ha*yr] */
 	self->plant[i].NIncrLeaf = self->plant[i].LeafDemandRate*self->plant[i].kNLfRt;
 	self->plant[i].NIncrRoot = self->plant[i].RootDemandRate; //*self->plant[i].kNLfRt; this is the original formulation as in eq. 89 (not nitrogen affected)
-	
+
 	/* calc. actual leaf and root renewal rate [tC/ha*yr] */
 	if(self->plant[i].CAss > 0.0)
 	{
@@ -988,6 +988,7 @@ int libtreemix_CalcBiomassGrowth(libtreemix *self, int i)
 			self->plant[i].kN = 0.0;
 		}
 		pPlN->fNStressPhoto = (float)self->plant[i].kN;
+		
 	}
 
 	self->plant[i].CGrTot = CLfRtConstr + CFrConstr + CIncrConstr;		// [tc/ha*yr]

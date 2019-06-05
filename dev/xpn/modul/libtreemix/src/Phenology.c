@@ -118,6 +118,7 @@ int libtreemix_ThinningScenario(libtreemix *self)
     PSLAYER         pSL     = xpn->pSo->pSLayer;
     PLAYERROOT      pLR     = xpn->pPl->pRoot->pLayerRoot;
     PCLAYER         pChL    = xpn->pCh->pCLayer;
+	PCBALANCE	    pCB     = xpn->pCh->pCBalance; //Added by Hong on 20180731
 	
 	/* Variables */
 	//double dt = xpn->pTi->pTimeStep->fAct;	// timestep
@@ -143,7 +144,8 @@ int libtreemix_ThinningScenario(libtreemix *self)
 				//if(((xpn->pTi->pSimTime->iyear - xpn->pTi->pSimTime->iStart_year) + 1.0e-8) >= (self->silv[i].ThinningInterval[self->silv[i].ThinningCounter]))
 				
 				// new formulation for thinning events in specific years:
-				if((xpn->pTi->pSimTime->iyear + 1.0e-8) >= (self->silv[i].ThinningInterval[self->silv[i].ThinningCounter]))
+				if((xpn->pTi->pSimTime->iyear + 1.0e-8) >= (xpn->pTi->pSimTime->iStart_year+self->silv[i].ThinningInterval[self->silv[i].ThinningCounter])) //Changed by Hong on 20180620
+					//if((xpn->pTi->pSimTime->iyear + 1.0e-8) >= (self->silv[i].ThinningInterval[self->silv[i].ThinningCounter]))
 				{
 					CutTreeFrac = (self->silv[i].ThinningFraction[self->silv[i].ThinningCounter]);
 					self->silv[i].ThinningCounter++;
@@ -170,8 +172,16 @@ int libtreemix_ThinningScenario(libtreemix *self)
 
 				self->silv[i].NLit += Cut*(self->plant[i].NLf + self->plant[i].NFRt + self->plant[i].NFr +
 					(self->plant[i].NWd*self->plant[i].UgWdFr));
+			
+			//Hong added on 20180731 for C-balance			
+		pCB->dCInputCum += Cut*(self->plant[i].CLfMass + self->plant[i].CFRtMass + self->plant[i].CFrMass +
+					(self->plant[i].UgWdFr*(self->plant[i].CWdWeight + self->plant[i].CAss))); 
+			//xpn->pCh->pCProfile->fCLitterSurf =xpn->pCh->pCProfile->fCLeafLitterSurf+ xpn->pCh->pCProfile->fCBranchLitterSurf + xpn->pCh->pCProfile->fCStemLitterSurf;//20181016, notwendig			
+					
 			}
-			else if(self->conf.Soil_Processes == 2)
+			
+			
+			else if(self->conf.Soil_Processes == 2) //Hong on 20180620:for agroforst
 			{
 				pSL		= pSL->pNext;	
 				pLR		= pLR->pNext;
@@ -182,21 +192,26 @@ int libtreemix_ThinningScenario(libtreemix *self)
 				// Leaves and Fruits in Litter
 				self->plant[i].FOCLfFr += (0.05 * Cut * self->plant[i].CLfMass);
 				self->plant[i].FONLfFr += (0.05 * Cut * self->plant[i].CLfMass * self->plant[i].NLf);
-				//pChL->fCLitter += (float)((0.05 * Cut * self->plant[i].CLfMass)*self->plant[i].TreeDistr);
-				//pChL->fNLitter += (float)((0.05 * Cut * self->plant[i].CLfMass * self->plant[i].NLf)*self->plant[i].TreeDistr);	    
+				pChL->fCLitter += (float)((0.05 * Cut * self->plant[i].CLfMass)*self->plant[i].TreeDistr);
+				pChL->fNLitter += (float)((0.05 * Cut * self->plant[i].CLfMass * self->plant[i].NLf)*self->plant[i].TreeDistr);	    
 
 				self->plant[i].FOCBrSt += (double)(0.01 * Cut * self->plant[i].CWdWeight *(1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr);
 				self->plant[i].FONBrSt += (double)(0.01 * Cut * self->plant[i].CWdWeight *(1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr * self->plant[i].NWdResp);
-				//pChL->fCLitter += (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr)*self->plant[i].TreeDistr);
-				//pChL->fNLitter += (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr * self->plant[i].NWdResp)*self->plant[i].TreeDistr);
-
+				pChL->fCLitter += (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr)*self->plant[i].TreeDistr);
+				pChL->fNLitter += (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr * self->plant[i].NWdResp)*self->plant[i].TreeDistr);
+				
 				// CENTURY model variables:
 				xpn->pCh->pCProfile->fCLeafLitterSurf += (float)((0.05 * Cut * self->plant[i].CLfMass)*self->plant[i].TreeDistr);
 				xpn->pCh->pCProfile->fNLeafLitterSurf += (float)((0.05 * Cut * self->plant[i].CLfMass * self->plant[i].NLf)*self->plant[i].TreeDistr);
 
 				xpn->pCh->pCProfile->fCBranchLitterSurf += (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr)*self->plant[i].TreeDistr);
 				xpn->pCh->pCProfile->fNBranchLitterSurf += (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr * self->plant[i].NWdResp)*self->plant[i].TreeDistr);
-
+				
+				//Hong added on 20180731 for C-balance			
+				pCB->dCInputCum +=(float)((0.05 * Cut * self->plant[i].CLfMass)*self->plant[i].TreeDistr)+ (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr)*self->plant[i].TreeDistr); //notwendig
+                 
+				//xpn->pCh->pCProfile->fCLitterSurf =xpn->pCh->pCProfile->fCLeafLitterSurf+ xpn->pCh->pCProfile->fCBranchLitterSurf + xpn->pCh->pCProfile->fCStemLitterSurf;//20181016, notwendig	 
+				 
 				// Cutted roots
 				for(z=1; z <= xpn->pSo->iLayers-2; z++)
 				{
@@ -209,8 +224,8 @@ int libtreemix_ThinningScenario(libtreemix *self)
 					//Expert-N/Century - Variables:
 					pChL->fCFineRootLitter += (float)((Cut * self->plant[i].CFRtMass * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
 					pChL->fNFineRootLitter += (float)((Cut * self->plant[i].CFRtMass * self->plant[i].NFRt * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
-					//pChL->fCLitter += (float)((Cut * self->plant[i].CFRtMass * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
-					//pChL->fNLitter += (float)((Cut * self->plant[i].CFRtMass * self->plant[i].NFRt * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
+					pChL->fCLitter += (float)((Cut * self->plant[i].CFRtMass * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
+					pChL->fNLitter += (float)((Cut * self->plant[i].CFRtMass * self->plant[i].NFRt * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
 
 					/* gross roots litter in soil litter [i] */
 					self->plant[i].FOCGrRt[z] += (float)(Cut * self->plant[i].CWdWeight *self->plant[i].UgWdFr * self->plant[i].LyFc[z]);
@@ -219,8 +234,11 @@ int libtreemix_ThinningScenario(libtreemix *self)
 					//Expert-N/Century - Variables:
 					pChL->fCGrossRootLitter += (float)((Cut * self->plant[i].CWdWeight * self->plant[i].UgWdFr * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
 					pChL->fNGrossRootLitter += (float)((Cut * self->plant[i].CWdWeight *self->plant[i].UgWdFr * self->plant[i].NConcWd * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
-					//pChL->fCLitter	+= (float)((Cut * self->plant[i].CWdWeight * self->plant[i].UgWdFr * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
-					//pChL->fNLitter	+= (float)((Cut * self->plant[i].CWdWeight *self->plant[i].UgWdFr * self->plant[i].NConcWd * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
+					pChL->fCLitter	+= (float)((Cut * self->plant[i].CWdWeight * self->plant[i].UgWdFr * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
+					pChL->fNLitter	+= (float)((Cut * self->plant[i].CWdWeight *self->plant[i].UgWdFr * self->plant[i].NConcWd * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
+					
+					//Hong added on 20180731 for C-balance			
+				pCB->dCInputCum += (float)((Cut * self->plant[i].CFRtMass * self->plant[i].LyFc[z])*self->plant[i].TreeDistr) + (float)((Cut * self->plant[i].CWdWeight * self->plant[i].UgWdFr * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
 
 					pChL = pChL->pNext;
 				}
@@ -231,7 +249,9 @@ int libtreemix_ThinningScenario(libtreemix *self)
 				self->silv[i].CWdHarv = self->silv[i].CWdHarv + (Cut*(self->plant[i].CWdWeight/1000.0));
 				self->silv[i].CTotWd = (self->plant[i].CWdWeight/1000.0)+self->silv[i].CWdHarv;
 			
-				self->plant[i].density	= (1.0-CutTreeFrac)*self->plant[i].density;
+			    if (self->conf.Operating==1)//for forst, added by Hong
+				{
+			    self->plant[i].density	= (1.0-CutTreeFrac)*self->plant[i].density;
 				
 				self->plant[i].CWdWeight	= (1.0-Cut)*self->plant[i].CWdWeight;
 				self->plant[i].CLfMass		= (1.0-Cut)*self->plant[i].CLfMass;
@@ -240,7 +260,21 @@ int libtreemix_ThinningScenario(libtreemix *self)
 				
 				self->plant[i].CAss		= (1.0-Cut)*self->plant[i].CAss;			
 				self->plant[i].NWd		= (1.0-Cut)*self->plant[i].NWd;
-
+				}
+				
+				else if (self->conf.Operating==2)//for agroforst, Added by Hong
+				{
+				self->plant[i].H=self->silv[i].heightAfterCut; //re-initialize height			
+				self->plant[i].D=self->silv[i].diameterAfterCut; // re-initialize diameter
+				//self->plant[i].density	= self->plant[i].density; //density remains								
+				self->plant[i].CWdWeight	= (1.0-Cut)*self->plant[i].CWdWeight;
+				self->plant[i].CLfMass		= (1.0-Cut)*self->plant[i].CLfMass;
+				//self->plant[i].CFRtMass		= self->plant[i].CFRtMass; // roots remain				
+				self->plant[i].CFrMass		= (1.0-Cut)*self->plant[i].CFrMass;
+				self->plant[i].CAss		= (1.0-Cut)*self->plant[i].CAss;
+				
+				self->plant[i].NWd		= (1.0-Cut)*self->plant[i].NWd;
+				}
 
 				TmpWd += self->plant[i].CWdWeight*self->plant[i].TreeDistr;
 				TmpLf += self->plant[i].CLfMass*self->plant[i].TreeDistr;

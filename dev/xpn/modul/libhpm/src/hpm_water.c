@@ -410,7 +410,7 @@ double calculateWaterRootPool(hpm *self,double *IWso_rt,double *OWrt_sh, double 
 			if (pWL->fContAct- (*IWso_rt*xpn->pTi->pTimeStep->fAct / (1000.0*(double)pSL->fThickness*1.0e-3)) > pSW->fContPWP) {
 				//maxflux = (pSL->fPorosity - pWL->fContAct);
 
-
+                
 				pWL->fContAct-=  (*IWso_rt*xpn->pTi->pTimeStep->fAct / (1000.0*(double)pSL->fThickness*1.0e-3));
 
 				// Falls Wasser zurückfließt --> aufpassen, dass Sättigung nicht überschritten wird
@@ -519,10 +519,14 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	double fDepth,fRootDepth;
 	double pot_water_uptake;
 	PSLAYER pSL;
-	PWLAYER       pWL;
+	PWLAYER       pWL = xpn->pWa->pWLayer;
 	PLAYERROOT    pLR;
-
-
+	//Added by Hong on 20181212
+    PSWATER                         pSWL    =xpn->pSo->pSWater; 
+	PSPROFILE		pSo		=xpn->pSo;
+	pSL		=pSo->pSLayer;
+	double fContAct;
+    //End of Hong 
 
 	rWrt_sh = roWpl20 / self->Water.Wsh + roWpl20/self->Water.Wrt;
 
@@ -557,6 +561,13 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	}
 	
 	pot_water_uptake = self->Water.Wrt0-self->Water.Wrt;//-*OWrt_sh*xpn->pTi->pTimeStep->fAct;
+	
+	//Added by Hong 
+	//if (pWL->fContAct<=pSWL->fContPWP)
+        	//pot_water_uptake=(double)0.0;			
+	//pot_water_uptake = MIN(pot_water_uptake,(pWL->fContAct<=pSWL->fContPWP));		
+	//End of Hong
+	
 	if (pot_water_uptake <= 0.0)
 		{
 			*IWso_rt=0.0;
@@ -569,6 +580,8 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	*IWso_rt=0.0;
 	for (SOIL2_LAYERS1(pWL, xpn->pWa->pWLayer->pNext, pLR, xpn->pPl->pRoot->pLayerRoot)) {
 		fEffectPot[iLayer] = min(0.0,pWL->fMatPotOld);
+		
+		
 		fRootDensTotal += pLR->fLengthDens;
 	}  /* for */
 
@@ -579,24 +592,38 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	}
 	rRoot = pot_water_uptake;
 
-	/*if (xpn->pPl->pPltWater->fPotTranspdt>pot_water_uptake)
-		{
-			rRoot = pot_water_uptake;
-		} else
-		{
-			rRoot = xpn->pPl->pPltWater->fPotTranspdt;
-		}*/
-	
+	//End of Hong
 	for (SOIL2_LAYERS1(pWL, xpn->pWa->pWLayer->pNext, pLR, xpn->pPl->pRoot->pLayerRoot)) {
 		if (pLR->fLengthDens > 0.0) {
 			dxM  = xpn->pSo->fDeltaZ;
-			Alfa = hpm_water_FAlfa(self,rRoot,fEffectPot[iLayer]);
+			
+			Alfa = hpm_water_FAlfa(self,rRoot,fEffectPot[iLayer]); 
+			
 			Sink = Alfa * pLR->fLengthDens / fRootDensTotal * rRoot/dxM;
+			
+            //Added by Hong after SPASS on 20181212
+		    fContAct  = pWL->fContAct; 
+			fContAct -= Sink; 
+
+		    if (fContAct<=1.01*pSWL->fContPWP)
+			   {
+			    Sink *= fContAct/pSWL->fContPWP*xpn->pTi->pTimeStep->fAct/pSL->fThickness;
+				//Sink=0;
+			   }
+		    //End of Hong
+			
 			*IWso_rt +=  Sink/xpn->pTi->pTimeStep->fAct*(1000.0*(double)dxM*1.0e-3);
 			pWL->fContAct       -= Sink;
 			pLR->fPotLayWatUpt   = Sink * dxM / DeltaT;
+			
+	//Added by Hong	
+		    pSWL =pSWL->pNext;
+		    pSL=pSL->pNext;
+	//End of Hong
 		} //if
 		else pLR->fPotLayWatUpt = 0.0;
+		
+		
 	} //for
 
 	// hp 221002: fPotUptakedt wird in CERES zur Berechnung der Stressfaktoren
@@ -606,11 +633,17 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	pLR	=xpn->pPl->pRoot->pLayerRoot;
 	xpn->pPl->pPltWater->fPotUptakedt = 0.0;
 
+	
 	while (((pLR->fLengthDens!=0.0)||(pLR->pNext->fLengthDens !=0.0))
 	       &&(L<xpn->pSo->iLayers-2)) {
 		xpn->pPl->pPltWater->fPotUptakedt += pLR->fPotLayWatUpt*DeltaT;
 		L 	 ++;
+		
+		
+	
 		pLR =pLR ->pNext;
+		
+		
 	}
 
 
@@ -633,7 +666,7 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 double hpm_water_FAlfa(hpm *self,double rRoot,double h)
 {
 	double afRSPar[8] = {	9999.0,
-	                        -120000.0,		//Par1 --- h3
+	                        -120000.0,		//Par1 --- h3 
 	                        -8000.0,			//Par2 \__ h2
 	                        -2000.0,			//Par3 /
 	                        -250.0,			//Par4 --- h1
@@ -655,10 +688,11 @@ double hpm_water_FAlfa(hpm *self,double rRoot,double h)
 		                               afRSPar[3]*(rRoot - afRSPar[6]))  /  (afRSPar[7] - afRSPar[6]);
 	res = 0.0;
 
+    
 	if      (h >  p3  &&  h < p2) res = (h-p3)/(p2-p3);
 	else if	(h >= p2  &&  h < p1) res = 1.0;
 	else if (h >= p1  &&  h < p0) res = (h-p0)/(p1-p0);
-
+		
 	return res;
 }
 
@@ -800,13 +834,13 @@ double calculateWaterShootPool(hpm *self,double IWrt_sh, double Psirt, double Ps
 		// fPotTrans <= pET - aktEvap
 		//OWsh_atm = MIN(OWsh_atm,xpn->pWa->fPotETR - xpn->pWa->pEvap->fActR);
 
+
 		// ck20120204:
 		C_DEBUG(OWsh_atm);
 		if (OWsh_atm>xpn->pPl->pPltWater->fPotTranspR) {
 			OWsh_atm=xpn->pPl->pPltWater->fPotTranspR;
 		}
-		OWsh_atm=xpn->pPl->pPltWater->fPotTranspR;
-		
+		//OWsh_atm=xpn->pPl->pPltWater->fPotTranspR;
 
 		xpn->pPl->pPltWater->fActTranspR = OWsh_atm; // kg water / (m2 day) = mm / (m2 day)
 

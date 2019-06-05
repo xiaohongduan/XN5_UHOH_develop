@@ -447,7 +447,8 @@ int StandingPoolDecrease(stickstoff *self)
  {
     expertn_modul_base *xpn = &(self->parent);
 	PTIME 			pTi = xpn->pTi;	 
-	PCPROFILE pCP = xpn->pCh->pCProfile;
+	PCPROFILE       pCP = xpn->pCh->pCProfile;
+	PCBALANCE	    pCB = xpn->pCh->pCBalance; //Added by Hong on 20180731
     /*Hilfsvariablen*/
     double fCDecrease,fNDecrease;
 	  
@@ -466,9 +467,12 @@ int StandingPoolDecrease(stickstoff *self)
 
 	pCP->fNStandCropRes -= fNDecrease;
 	pCP->fNLitterSurf += fNDecrease;
-	if (pCP->fCLitterSurf>699.4)
-		printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
-	printf("pCP->fCLitterSurf:%f\n",pCP->fCLitterSurf);
+//	if (pCP->fCLitterSurf>699.4)
+//		printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
+//	printf("pCP->fCLitterSurf:%f\n",pCP->fCLitterSurf);
+	
+	//Hong added on 20180807 for C-balance
+	pCB->dCInputCum += fCDecrease;
    }
   }
  
@@ -768,11 +772,11 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   pCL->fCO2C        += pCL->fCO2ProdR * DeltaT;
   
   //Added by Hong on 20180731
-  if (pCL->fCO2C>0.0)
+  //if (pCL->fCO2C>0.0)
     {
-	  pCP->dCO2SurfEmisCum +=pCL->fCO2C;
-     }
-	 
+	  pCP->dCO2SurfEmisCum +=pCL->fCO2ProdR * DeltaT;
+     }   	 
+//End of Hong	 
   /* Veränderungen im C-Pool Ende */
 
 

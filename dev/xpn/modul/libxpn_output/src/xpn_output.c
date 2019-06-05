@@ -519,6 +519,7 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->LeafMass,"output.Plant.Biomass.Leaves [kg ha-1]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->FruitMass,"output.Plant.Biomass.Fruits [kg ha-1]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->WoodMass,"output.Plant.Biomass.Wood [kg ha-1]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->StrawMass,"output.Plant.Biomass.Straw [kg ha-1]",0.0);
 
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->AboveMass,"output.Plant.Total Biomass.Above Ground [kg ha-1]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->RootMass,"output.Plant.Total Biomass.Roots [kg ha-1]",0.0);
@@ -564,43 +565,60 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->intfPar,"OUTPUT.intfPar",0.0);
 
 	// cumulative Evapotranspiration
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potET_Sum,"output.Balance.Evapotranspiration Cum.Potential ET [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actET_Sum,"output.Balance.Evapotranspiration Cum.Actual ET [mm]",0.0);
+	//Out-noted by hong on 20181220
+	/*
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potET_Sum,"output.System Balance.Evapotranspiration Cum.Potential ET [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actET_Sum,"output.System Balance.Evapotranspiration Cum.Actual ET [mm]",0.0);
 
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potE_Sum,"output.Balance.Evapotranspiration Cum.Potential Evaporation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Sum,"output.Balance.Evapotranspiration Cum.Actual Evaporation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potT_Sum,"output.Balance.Evapotranspiration Cum.Potential Transpiration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Sum,"output.Balance.Evapotranspiration Cum.Actual Transpiration [mm]",0.0);
-
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potE_Sum,"output.System Balance.Evapotranspiration Cum.Potential Evaporation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Sum,"output.System Balance.Evapotranspiration Cum.Actual Evaporation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potT_Sum,"output.System Balance.Evapotranspiration Cum.Potential Transpiration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Sum,"output.System Balance.Evapotranspiration Cum.Actual Transpiration [mm]",0.0);
+*/
 	// cumulative water flows
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_sum,"output.Balance.Water Cum.Precipitation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Sum,"output.Balance.Water Cum.Actual Evaporation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Sum,"output.Balance.Water Cum.Actual Transpiration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Sum,"output.Balance.Water Cum.Interception Loss [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Sum,"output.Balance.Water Cum.Runoff [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Sum,"output.Balance.Water Cum.Infiltration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Sum,"output.Balance.Water Cum.Drainage [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_sum,"output.System Balance.Water Cum.Precipitation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Sum,"output.System Balance.Water Cum.Actual Evaporation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Sum,"output.System Balance.Water Cum.Actual Transpiration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Sum,"output.System Balance.Water Cum.Interception Loss [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Sum,"output.System Balance.Water Cum.Runoff [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Sum,"output.System Balance.Water Cum.Infiltration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Sum,"output.System Balance.Water Cum.Drainage [mm]",0.0);
 
 	// cumulative water flows (day)
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.Balance.Water Daily.Precipitation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Day,"output.Balance.Water Daily.Actual Evaporation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Balance.Water Daily.Actual Transpiration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Day,"output.Balance.Water Daily.Interception Loss [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Day,"output.Balance.Water Daily.Runoff [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Day,"output.Balance.Water Daily.Infiltration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Day,"output.Balance.Water Daily.Drainage [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.System Balance.Water Daily.Precipitation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Day,"output.System Balance.Water Daily.Actual Evaporation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.System Balance.Water Daily.Actual Transpiration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Day,"output.System Balance.Water Daily.Interception Loss [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Day,"output.System Balance.Water Daily.Runoff [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Day,"output.System Balance.Water Daily.Infiltration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Day,"output.System Balance.Water Daily.Drainage [mm]",0.0);
 
 	// soil water balance
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Balance,"output.Balance.Soil Water.Balance [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Input,"output.Balance.Soil Water.Input [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Output,"output.Balance.Soil Water.Output [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Balance,"output.Water.Soil Water Change in Profile.WC Change in Profile[mm]",0.0); //reloacted to output.Water. by Hong on 20181218
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Input,"output.Water.Soil Water Change in Profile.Input [mm]",0.0);//reloacted to output.Water. by Hong on 20181218
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Output,"output.Water.Soil Water Change in Profile.Output [mm]",0.0);//reloacted to output.Water. by Hong on 20181218
 	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.WaterIce_Profile,"output.Water.Soil_Water_Balance.Water_Ice_in_Profile [mm]",0.0);
 	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.BalanceXN,"output.Water.Soil_Water_Balance.Balance_XN [mm]",0.0);
 
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Balance.Nitrogen.Cum NO3 Leaching [kg ha-1]",&(xpn->pCh->pCProfile->fNO3LeachDay),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Balance.Nitrogen.Cum NH4 Leaching [kg ha-1]",&(xpn->pCh->pCProfile->fNH4LeachDay),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Balance.Nitrogen.Cum Urea Leaching [kg ha-1]",&(xpn->pCh->pCProfile->fUreaLeachDay),-1,TRUE,TRUE);
-
+//Added by Hong on 20181220
+//N Balance
+    //cumulative
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Mineral N Input [kg N ha-1]",&(xpn->pCh->pCBalance->dNInputCum),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Mineral N in Profile [kg N ha-1]",&(xpn->pCh->pCBalance->dNProfile),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Mineral N Uptake [kg N ha-1]",&(xpn->pCh->pCProfile->dNUptakeCum),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.N2O Emission [kg N ha-1]",&(xpn->pCh->pCProfile->dN2OEmisCum),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.NO Emission [kg N ha-1]",&(xpn->pCh->pCProfile->dNOEmisCum),-1,TRUE,TRUE);//Added by Hong on 20190109
+xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.N2 Emission [kg N ha-1]",&(xpn->pCh->pCProfile->dN2EmisCum),-1,TRUE,TRUE);//Added by Hong on 20190109		
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.N Leaching [kg N ha-1]",&(xpn->pCh->pCProfile->dNTotalLeachCum),-1,TRUE,TRUE);	
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Mineral N Balance [kg N ha-1]",&(xpn->pCh->pCBalance->dNBalance),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Cum NO3 Leaching [kg ha-1]",&(xpn->pCh->pCProfile->fNO3LeachDay),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Cum NH4 Leaching [kg ha-1]",&(xpn->pCh->pCProfile->fNH4LeachDay),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Cum Urea Leaching [kg ha-1]",&(xpn->pCh->pCProfile->fUreaLeachDay),-1,TRUE,TRUE);
+	
+	//daily
+	// xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.System Balance.Nitrogen Daily.N Leaching [kg N ha-1]",0.0);
+			
+//End of Hong
 
 //	self->timesave_output_Year = 0;
 //	self->timesave_output_TimeY = 0.0;
@@ -1190,6 +1208,8 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 	// soil temperature profile:
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"heat","soil_temperature_profile");
 	WRITE_TO_PROFILE_VAR(pHL->fSoilTemp,"output.Heat.Soil Temperature Profile.T [grad C] %d-%d cm",count);
+	
+//############################# NITROGEN ######################################	
 
 	// Nitrogen profile no3:	
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"nitrogen","no3_profile");
@@ -1212,7 +1232,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 	
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"nitrogen","n_humus_profile");
 	WRITE_TO_PROFILE_VAR(pSL->fNHumus,"output.Nitrogen.N Pools.N Humus Profile[kg ha-1] %d-%d cm",1.0);
-	
+//###################################### CARBON ######################################	
 	// carbon:
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"carbon","c_litter_profile");
 	WRITE_TO_PROFILE_VAR(pCL->fCLitter,"output.Carbon Profile.C Pools.C Litter Profile [kg ha-1] %d-%d cm",1.0);
@@ -1232,7 +1252,6 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 	
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"carbon","c_n_ratio_humus_profile");
 	WRITE_TO_PROFILE_VAR(self->c_n_ratio_humus[iLayer],"output.Carbon.C N Ratio.Humus Profile[kg ha-1] %d-%d cm",count);
-	
 
     // Hong: added for Scott Demyan:
 	//[DAISY mineralisation]
@@ -1300,8 +1319,6 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
     //N in HumusStable (SOM0) [kg ha-1]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","N_SOM0_profile");
 	WRITE_TO_PROFILE_VAR(pCL->fNHumusStable,"output.DAISY mineralisation.N in HumusStable.N_SOM0_profile [kg ha-1] %d-%d cm",1.0);
-	
-	
 
 	//End of Hong
 	
@@ -1972,8 +1989,13 @@ int xpn_output_calc_var(xpn_output *self)
 	self->FruitMass = xpn->pPl->pBiomass->fFruitWeight;
 	self->WoodMass = xpn->pPl->pBiomass->fWoodWeight;
 	self->AssimilatePool = xpn->pPl->pPltCarbon->fCAssimilatePool;
-
-	self->AboveMass = self->LeafMass + self->StemMass + self->BranchMass + self->FruitMass + self->WoodMass;
+    
+	self->StrawMass = self->LeafMass + self->StemMass; //Added by Hong on 20190206
+	
+	//self->AboveMass = self->LeafMass + self->StemMass + self->BranchMass + 
+	//self->FruitMass + self->WoodMass;
+	self->AboveMass = self->LeafMass + self->StemMass + self->BranchMass + 
+	self->FruitMass; //Changed by EP and Hong on 20180705, self->WoodMass = self->StemMass + self->BranchMass + GroßßRoot;
 	self->TotalMass = self->AboveMass + self->RootMass;
 
 	self->LAI = xpn->pPl->pCanopy->fLAI;

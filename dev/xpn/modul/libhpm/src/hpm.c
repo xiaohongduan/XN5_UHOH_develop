@@ -73,7 +73,7 @@ expertn_modul_base *xpn = &(self->parent);
 
 		vars->Namm += (double)pCL->fNH4N*ha_TO_mq_1; //0.0007;
 		vars->Nnit += (double)pCL->fNO3N*ha_TO_mq_1; //0.0003;
-		
+	
 		//if (vars->theta_soil>pSW->fContPWP)
 		{
 		vars->theta_soil += (double)pWL->fContAct;
@@ -124,7 +124,9 @@ void create_output(hpm *self)
 	
 	// MSsh:
 	self->Output.MSsh = self->Plant.MCSsh * self->parameter.photosynthesis.rmmCS/12.0 + self->Plant.MNSsh * self->parameter.photosynthesis.rmmNS/14.0 + self->Plant.MNph_ul * 100.0 / 14.0;
-	
+	//printf("%f %f %f %f %f %f %f\n",xpn->pTi->pSimTime->fTimeDay, self->Output.MSsh,  self->Plant.MCSsh, self->parameter.photosynthesis.rmmCS,  self->Plant.MNSsh, self->parameter.photosynthesis.rmmNS, self->Plant.MNph_ul);
+    
+    
 	// MSrt:
 	self->Output.MSrt = self->Plant.MCSrt * self->parameter.photosynthesis.rmmCS/12.0 + self->Plant.MNSrt*self->parameter.photosynthesis.rmmNS/14.0;
 	

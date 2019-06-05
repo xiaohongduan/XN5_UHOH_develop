@@ -7,7 +7,7 @@ LIBNAME='hydraulic_functions'
 
 
 SOURCE_FILES=  [
-                 'Biomodal_van_Genuchten.c',
+                 'Bimodal_van_Genuchten.c',
                  'Brooks_and_Corey.c',
                  'Brutsaert_and_Gardner.c',
                  'Hutson_and_Cass.c',

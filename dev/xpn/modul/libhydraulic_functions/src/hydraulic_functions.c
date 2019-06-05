@@ -7,7 +7,7 @@
 #include "hydraulic_functions.h"
 #include "VanGenuchten.h"
 #include "Hutson_and_Cass.h"
-#include "Biomodal_van_Genuchten.h"
+#include "Bimodal_van_Genuchten.h"
 #include "Brutsaert_and_Gardner.h"
 #include "Brooks_and_Corey.h"
 
@@ -79,10 +79,10 @@ int hydraulic_functions_set_Brutsaert_and_Gardner(hydraulic_functions *self)
 	 return RET_SUCCESS;
   }
   
-int hydraulic_functions_set_Biomodal_van_Genuchten(hydraulic_functions *self)
+int hydraulic_functions_set_Bimodal_van_Genuchten(hydraulic_functions *self)
   {
 	 expertn_modul_base *xpn = &(self->parent);
-	 PRINT_MESSAGE(xpn,5,"Hydraulic Function set to Biomodal van Genuchten") ;
+	 PRINT_MESSAGE(xpn,5,"Hydraulic Function set to Bimodal van Genuchten") ;
 	 hydraulic_functions_set(self,&C2_WCont,&C2_HCond,&C2_DWCap,&C2_MPotl); 
 	 return RET_SUCCESS;	 
   }

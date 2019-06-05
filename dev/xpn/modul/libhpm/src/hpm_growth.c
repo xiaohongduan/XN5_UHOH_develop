@@ -15,6 +15,8 @@
 int hpm_biomass_growth(hpm *self)
 {
     expertn_modul_base *xpn = &(self->parent);
+	PCHEMISTRY pCh = xpn->pCh; //Added by Hong
+	PCBALANCE	pCB = pCh->pCBalance; //Added by Hong on 20181030
     double kdegsh; // Degration [day-^1]
     double kturnss; // day-1.   Rate parameters for Sheath and Stem turnover
     double kturnlam; // day-1.   Rate parameters for lamina turnover
@@ -81,8 +83,10 @@ int hpm_biomass_growth(hpm *self)
     //PHLAYER *pSLayerH;
     //PSWATER *pSWL;
 //  PWLAYER pWLayer;
-
-
+     
+	// fWrt =1.0; //Test of Hong
+	// fTrt =1.0; //Test of Hong
+    
     dt = (double)xpn->pTi->pTimeStep->fAct;
     // Alle Fluxes werden auf 0 gesetzt und es werden alle fluesse pro Zeiteinheit zusammengebaut:
     clear_all_fluxes(self);
@@ -96,9 +100,10 @@ int hpm_biomass_growth(hpm *self)
     fTrt = calculatePlantTemperatureProcesses_getf_HPM(self,soil_vars.TSoil);
 
     // Effect of Water: (3.11d / 6.7b)
+	fWrt =1.0; //Test of Hong
     fWrt = pow(self->Water.aWrt,qWpl);
-    fWrt = MAX(fWrt,1e-34);
-
+    //fWrt = MAX(fWrt,1e-34);
+    fWrt = MAX(fWrt,1e-6); //Test of Hong
 
     fTsh = calculatePlantTemperatureProcesses_getf_HPM(self,(double)self->Environment.Tair); // 3.11b Temperatureinfluss
 
@@ -165,8 +170,12 @@ int hpm_biomass_growth(hpm *self)
 
     //Massendegenerationsrate,  beschreibt im Grunde den Verfall durch Krankheiten, ...
     kdegrt=kdegrt20 * fTrt; // 3.5a  // Degration, die durch Die Tempereratur beieinflusst wird
-
+	
+    //if (fWrt <=0.01)
+	 //  fWrt= 0.1;//Test of Hong	
+		
     CHECK_0 (fWrt)
+	
     kturnrt = kturnrt20 * fTrt/ fWrt; // 3.5a [day-1] turnover rate: Rate mit der Massenaustausch von einer Altersschicht zur nächsten erfolgt: ist abhängig vom Termperatur Wasserverhältnis
 
     
@@ -210,13 +219,18 @@ int hpm_biomass_growth(hpm *self)
     self->Litter.MXli += (self->Litter.OXsh_li + self->Litter.OXrt_li) * dt;
     self->Litter.MXrt += self->Litter.OXrt_li*dt;
     self->Litter.MXsh += self->Litter.OXsh_li*dt;
+	
+	//Added by Hong
+	pCh->pCProfile->fCLitterSurf += self->Litter.OXsh_li*dt * mq_TO_ha_1;
+	pCh->pCProfile->fCLitterSurf += self->Litter.OCSsh_so*dt * mq_TO_ha_1;
+	pCB->dCInputCum += (self->Litter.OXsh_li + self->Litter.OCSsh_so)*dt * mq_TO_ha_1;
+	
+	//End of Hong
 
     self->Litter.Nammrt_so+=self->Litter.INammrt_so *dt;
     self->Litter.Nitrt_so+=self->Litter.INitrt_so *dt;
 
     //calculateTotalMasses(exp_p);
-
-
 
 
     // Diffgleichungen:
@@ -269,6 +283,7 @@ int hpm_biomass_growth(hpm *self)
 
 // Set all vars of Animal, Harvest, Soil and litter to ziro
 void clear_all_fluxes(hpm *self) {
+	 //expertn_modul_base *xpn = &(self->parent);
     // Animal:
     /*set4(Animal.OXLam_an4,0.0);
     set4(Animal.OXss_an4,0.0);
@@ -295,7 +310,7 @@ void clear_all_fluxes(hpm *self) {
 //  Litter.OCXsh_so = 0.0; Litter.ONXsh_so = 0.0; Litter.OCXrt_so = 0.0; Litter.ONXrt_so = 0.0;
     self->Litter.OXsh_li  = 0.0;
     self->Litter.OXrt_li  = 0.0;
-
+    
 }
 
 /*
@@ -337,6 +352,8 @@ double calculatePlantTemperatureProcesses_getf_HPM(hpm *self, double T) { //3.11
         f = 1.0e-10; // eigentlich 0.0, allerdings tritt dann /0 Fehler auf
     }
 
+    //Test of Hong 
+	f = MAX(f, 1.0e-6);
 
     return f;
 }

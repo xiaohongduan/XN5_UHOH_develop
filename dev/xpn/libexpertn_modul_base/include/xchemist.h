@@ -275,6 +275,12 @@ typedef struct cBalance
 	double	fCProfileStart;
 	double	dCProfile;
 	double	dCBalance;
+	//Added by Hong on 20180731, for C-balance
+	double  fDOCProfile;
+	double  fCLitterProfile;
+    double  fCManureProfile;
+	double  fCHumusProfile;
+	double  dCBalCorrect; 
 
 
 	double	dCInputCum;
@@ -394,10 +400,12 @@ typedef struct cProfile
 	double	dN2ODenitCum;
 	double	dN2OEmisCum;
 	double  dNOEmisCum;
+	double  dNEmisCum; //Added by Hong for N-Balance on 20190109
 	double	dN2EmisCum;
 	double	dNH3VolatCum;
 	double	dCO2EmisCum;
 	double	dCO2SurfEmisCum;
+	double	dCO2EmisCumSum; //Added by Hong for C-Balance on 20181112
 	double	dCH4ImisCum;
 	double  dN2ODrainCum;
 	double	dUreaLeachCum;

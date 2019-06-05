@@ -842,6 +842,7 @@ int hydrus_water_flow_run(hydrus *self)
 	pWa->pEvap->fActR = min(-min(self->vTop,(double)0)+f1,pWa->pEvap->fPotR);
 //pWa->pEvap->fActR = -min(vTop,(double)0)+f1;
 	pWa->fInfiltR     =  max(self->vTop,(double)0)+f1;
+	
 	pWa->fPercolR     =  max(self->vBot,(double)0);
 	self->fCapillRiseR      = -min(self->vBot,(double)0);
 //Maximal actual evaporation rate
@@ -927,8 +928,6 @@ void hydrus_rain_limit_infiltration(hydrus *self)
 
 	fWaterStorageRate = xpn->pCl->pWeather->fWaterPond/xpn->pTi->pTimeStep->fAct;
 
-
-
 	xpn->pCl->pWeather->fLiquPreciRate+=fWaterStorageRate;
 	fWaterStorageRate=0.0;
 
@@ -943,6 +942,7 @@ void hydrus_rain_limit_infiltration(hydrus *self)
 		{
 			fWaterStorageRate=(fPrecdt-max_infiltration)/xpn->pTi->pTimeStep->fAct;
 			xpn->pCl->pWeather->fLiquPreciRate-=fWaterStorageRate;
+			
 		}
 	if (self->use_infiltration_limit==1)
 		{
@@ -952,6 +952,7 @@ void hydrus_rain_limit_infiltration(hydrus *self)
 		{
 			xpn->pWa->fRunOffR = fWaterStorageRate;
 		}
+		
 }
 
 void hydrus_rain_limit_infiltration_layer(hydrus *self)

@@ -299,8 +299,9 @@ int Reduce_C_Via_Denit(stickstoff *self,double fDenitrifCC, double DeltaT, PSLAY
 
     /** Manure-C Abbau  */
     fManureDenitrifCC = fDenitrifCC * RelAnteil(pCL->fCManure, pCL->fCLitter + pSL->fCHumus);
+			
     pCL->fCManure    -= fManureDenitrifCC * DeltaT;
-
+	
     /** Humus-C Abbau  */
     fHumusDenitrifCC  = fDenitrifCC  * RelAnteil(pSL->fCHumus, pCL->fCManure + pCL->fCLitter);
     pSL->fCHumus      -= fHumusDenitrifCC * DeltaT;
@@ -605,7 +606,9 @@ int leachn_denit_run(stickstoff *self, double fN2Fraction, double fN2OReduction,
             /**** results ***/
 
             pCL->fNO3N -= pCL->fNO3DenitR * DeltaT;
+		
 			CHECK_VALID(pCL->fNO3N)
+		
             pCL->fN2ON += pCL->fNO3DenitR * DeltaT;
             C_DEBUG_LOC_IN_ARRAY(pCL->fN2ON,iLayer);
 

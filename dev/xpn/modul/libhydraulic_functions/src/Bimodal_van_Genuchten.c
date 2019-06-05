@@ -1,4 +1,4 @@
-#include "Biomodal_van_Genuchten.h"
+#include "Bimodal_van_Genuchten.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

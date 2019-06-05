@@ -110,6 +110,8 @@ int century_n_Mineralisation_run(century_n *self) // returns total daily NNM [g/
 	PSLAYER		pSL;
 	PWLAYER		pWL;
 	PHLAYER		pHL;
+	PCBALANCE	    pCB     = pCh->pCBalance; //Added by Hong on 20180731
+	
 	//int const TimeStepsPerDay=(int)(1.0/(pTi->pTimeStep->fAct));
 	//double dtDecompDC=(double)1.0/365./TimeStepsPerDay;	//fraction of year per timestep
 	double dtDecompDC=(double)1.0/365.0*(pTi->pTimeStep->fAct);	//fraction of year per timestep
@@ -202,6 +204,9 @@ frNO3=0.0;
 					pCh->pCProfile->fLignFracStrLitSurf = newlig;
 					pCh->pCProfile->fCMtbLitterSurf += mC * gpm2TOkgpha;
 					pCh->pCProfile->fNMtbLitterSurf += mN * gpm2TOkgpha;
+					
+					//Hong added on 20180807 for C-balance
+			        pCB->dCInputCum += sC * gpm2TOkgpha+ mC * gpm2TOkgpha;
 				}
 
 // b) soil litter (fine roots)
@@ -245,7 +250,9 @@ frNO3=0.0;
 							pCL->fCMtbLitter += mC * gpm2TOkgpha;
 							pCL->fNMtbLitter += mN * gpm2TOkgpha;
 						}
-
+//Hong added on 20180807 for C-balance
+			        pCB->dCInputCum += sC * gpm2TOkgpha+ mC * gpm2TOkgpha;
+				
 				}//loop over soil layers
 
 //************************************************************************************************
@@ -530,6 +537,9 @@ frNO3=0.0;
 																}
 														}
 												}//if(CtoSOM1 > 10e-7)
+										//Added by Hong
+										
+										
 										}//if Candecompose
 								}//C >= 10e-7
 						}//loop over all layer

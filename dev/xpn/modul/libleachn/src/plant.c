@@ -592,8 +592,6 @@ int leachn_plant_LeafMaizeLeach(leachn_plant *self) //CH
 	double    f1;
 	double timetomeasure;
 
-
-
 	if(self->iIsConstRootDens)
 		{
 			/*
@@ -695,7 +693,7 @@ int leachn_plant_LeafMaizeLeach(leachn_plant *self) //CH
                             xpn->pPl->pDevelop->fStageSUCROS = xpn->pPl->pDevelop->fStageWang / 4.6;
                             
                             //pPC->fCropCoverFrac = min((double)1,pPM->fCropCoverFrac);
-							
+						
 							xpn->pPl->pBiomass->fBiomassAbvGround=pPM->fAboveBiomass  + (pPM->pNext->fAboveBiomass - pPM->fAboveBiomass) / ((double)1.0 + (double)exp(f1));
 							xpn->pPl->pBiomass->fStemWeight=pPM->fStemWeight  + (pPM->pNext->fStemWeight - pPM->fStemWeight) / ((double)1.0 + (double)exp(f1));
 							xpn->pPl->pBiomass->fLeafWeight=pPM->fLeafWeight  + (pPM->pNext->fLeafWeight - pPM->fLeafWeight) / ((double)1.0 + (double)exp(f1));
@@ -703,7 +701,27 @@ int leachn_plant_LeafMaizeLeach(leachn_plant *self) //CH
 							xpn->pPl->pBiomass->fFruitWeight =xpn->pPl->pBiomass->fGrainWeight;
 							
 							xpn->pPl->pBiomass->fRootWeight=pPM->fRootWeight  + (pPM->pNext->fRootWeight - pPM->fRootWeight) / ((double)1.0 + (double)exp(f1));
-						
+
+							// FH 2018-01-30 Für Biomasseverlust von Bäumen
+							xpn->pPl->pBiomass->fDeadLeafWeight = 0.0;
+							xpn->pPl->pBiomass->fDeadStemWeight = 0.0;
+							xpn->pPl->pBiomass->fDeadRootWeight = 0.0;
+							if (pPM->pNext->fLeafWeight < pPM->fLeafWeight)
+								{
+								xpn->pPl->pBiomass->fDeadLeafWeight += (pPM->pNext->fLeafWeight - pPM->fLeafWeight) / ((double)1.0 + (double)exp(f1));
+								}						
+							if (pPM->pNext->fStemWeight < pPM->fStemWeight)
+								{
+								xpn->pPl->pBiomass->fDeadStemWeight += (pPM->pNext->fStemWeight - pPM->fStemWeight) / ((double)1.0 + (double)exp(f1));
+								}
+							if (pPM->pNext->fRootWeight < pPM->fRootWeight)
+								{
+								xpn->pPl->pBiomass->fDeadRootWeight += (pPM->pNext->fRootWeight - pPM->fRootWeight) / ((double)1.0 + (double)exp(f1));
+								}
+									
+							//FH 2018-01-26 Pflanzenhöhe eingefügt: Umrechnung in m (pPC->fPlantHeight)
+							pPC->fPlantHeight = pPM->fHeight + (pPM->pNext->fHeight - pPM->fHeight) / ((double)1.0 + (double)exp(f1));
+							pPC->fPlantHeight /= 1000.;
 
 						} // Growing Time
 					else

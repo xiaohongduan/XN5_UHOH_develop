@@ -70,9 +70,6 @@ int stickstoff_load_config(stickstoff *self)
 			return -1;
 		}
 
-
-
-
 	//TRANSFORMATION RATES MODEL PARAMETERS
 	//20002
 	//[transformation]

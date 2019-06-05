@@ -114,7 +114,7 @@ int libtreemix_load(libtreemix *self)
     {
         self->silv[i].PlantGrowth = 1;
         self->silv[i].Maturity = 0;
-        self->silv[i].Dormancy = 1;
+        self->silv[i].Dormancy = 0;
     }   
     
     /* calling the macro for the model output */
@@ -159,7 +159,8 @@ int load_config(libtreemix *self,const char* configfile)
     // get [Configuration Variables]
     GET_INI_DOUBLE(self->conf.Species_Count,"Configuration","species_count");
     GET_INI_STRING_LIST(self->conf.Parameter_Files, "Configuration", "parameter_files", &(count));
-    //self->conf.Species_Count = (int)count;
+    GET_INI_DOUBLE(self->conf.Operating,"Configuration","operating");//Added by Hong on 20180621
+	//self->conf.Species_Count = (int)count;
     GET_INI_DOUBLE(self->conf.Photosynthesis,"Configuration","photosynthesis");
     GET_INI_DOUBLE(self->conf.Light_Interception,"Configuration","light_interception");
     GET_INI_DOUBLE(self->conf.PhotoRad,"Configuration","photosynthesis_radiation");
@@ -168,6 +169,7 @@ int load_config(libtreemix *self,const char* configfile)
     GET_INI_DOUBLE(self->conf.Phenology,"Configuration","phenology");
     GET_INI_DOUBLE(self->conf.Respiration,"Configuration","respiration");
     GET_INI_DOUBLE(self->conf.Tree_Geometry,"Configuration","tree_geometry");
+	GET_INI_DOUBLE(self->conf.Tree_fast_growing,"Configuration","geo_incr_fast_growing_tree");//added by Hong on 20180627
     GET_INI_DOUBLE(self->conf.Weather_Input,"Configuration","weather_input");
     GET_INI_DOUBLE(self->conf.Radiation,"Configuration","radiation");
     GET_INI_DOUBLE(self->conf.AirPressure,"Configuration","air_pressure");
@@ -274,7 +276,7 @@ int load_parameter(libtreemix *self,const char* paramfile, int i)
 	{
 		char S[128];
 		sprintf(S,"%f\n", self->plant[i].SaturationCap);
-		PRINT_MESSAGE(xpn,3,S);
+		PRINT_MESSAGE(xpn,5,S);
 	}
     GET_INI_DOUBLE(self->plant[i].CanopyReflection,"Morphology","canopy_reflection");
     GET_INI_DOUBLE(self->plant[i].b_Drain,"Morphology","b_drainage");
@@ -289,6 +291,7 @@ int load_parameter(libtreemix *self,const char* paramfile, int i)
     GET_INI_DOUBLE(self->plant[i].LfFlush,"Phenology","leaf_flush");
     GET_INI_DOUBLE(self->plant[i].LfBudBurst,"Phenology","bud_burst_const");
     GET_INI_DOUBLE(self->plant[i].LfFallStart,"Phenology","leaf_fall_start");   
+    GET_INI_DOUBLE(self->plant[i].LfFallEnd,"Phenology","leaf_fall_end");   
     
     // [Root]
     GET_INI_DOUBLE(self->plant[i].RtLengthSpec,"Root","specific_root_length");
@@ -347,12 +350,15 @@ int load_parameter(libtreemix *self,const char* paramfile, int i)
             char S[128];
 			for (i2=0;i2<self->silv[i].ThinningEvents;i2++)
             {
-                sprintf(S,"%d: %f\n",i2,self->silv[i].ThinningInterval[i2]);
+                sprintf(S,"%d. thinning: in %.1f years \n",i2+1,self->silv[i].ThinningInterval[i2]);
                 PRINT_MESSAGE(xpn,3,S);
             }
         }
         GET_INI_DOUBLE(self->silv[i].LitterRemoval,"Silviculture","litter_removal");
         GET_INI_DOUBLE(self->silv[i].ThinningMethod,"Silviculture","thinning_method");
+		//Added by Hong on 20180716:
+		GET_INI_DOUBLE(self->silv[i].heightAfterCut,"Silviculture","height_after_cut");
+		GET_INI_DOUBLE(self->silv[i].diameterAfterCut,"Silviculture","diameter_after_cut");
     }
     
     // [Photosynthesis]
@@ -777,6 +783,7 @@ int libtreemix_set_tree_geometry(libtreemix *self, int i)
         
         
     }
+	
     else
     {
         // Here is space left for another tree geometry module (e.g.the PGM module)
@@ -927,6 +934,7 @@ int libtreemix_set_litter_pools(libtreemix *self)
     PCLAYER         pSLN    = xpn->pCh->pCLayer;
     PSLAYER         pSL     = xpn->pSo->pSLayer;
     PLAYERROOT      pLR     = xpn->pPl->pRoot->pLayerRoot;
+	PCBALANCE	    pCB     = xpn->pCh->pCBalance; //Added by Hong on 20180731
 
     /* variables */
     int i;
@@ -957,9 +965,17 @@ int libtreemix_set_litter_pools(libtreemix *self)
         double TempCFineRootLitter, TempNFineRootLitter;
         double TempCGrossRootLitter, TempNGrossRootLitter;
         double TempCLitter, TempNLitter;
-
+		
         double Biom, LfFrac, LfNorm;
         
+		//added by EP on 20160629. Local varaibles have to be initialized!!!
+		TempCFineRootLitter =0.0;
+        TempNFineRootLitter=0.0;
+        TempCGrossRootLitter=0.0;
+        TempNGrossRootLitter=0.0;
+        TempCLitter=0.0;
+        TempNLitter=0.0;
+		
         //==================================================================================================================
         /* Distribution of Roots Litter to Soil Layers */
         //==================================================================================================================
@@ -969,6 +985,7 @@ int libtreemix_set_litter_pools(libtreemix *self)
 
         for(i=1; i<=xpn->pSo->iLayers-2; i++)
         {
+			
             /* Setting Up Fresh Organic Matter Pools for each Species and summing them up at the end */
             for(j=0; j<self->conf.Species_Count; j++)
             {
@@ -1077,6 +1094,15 @@ int libtreemix_set_litter_pools(libtreemix *self)
             xpn->pCh->pCProfile->fCStemLitterSurf += ((self->plant[j].FOCBrSt*(1.0-self->plant[j].FiBrWdFr))*self->plant[j].TreeDistr);
             xpn->pCh->pCProfile->fNStemLitterSurf += (float)((self->plant[j].FONBrSt*(1.0-self->plant[j].FiBrWdFr))*self->plant[j].TreeDistr);
             
+			//Hong added on 20180807 for C-balance
+			pCB->dCInputCum += self->plant[j].FOCLfFr*self->plant[j].TreeDistr+
+							((self->plant[j].FOCBrSt*self->plant[j].FiBrWdFr)*self->plant[j].TreeDistr)+ 
+							((self->plant[j].FOCBrSt*(1.0-self->plant[j].FiBrWdFr))*self->plant[j].TreeDistr); 
+							
+			//xpn->pCh->pCProfile->fCLitterSurf =xpn->pCh->pCProfile->fCLeafLitterSurf+ xpn->pCh->pCProfile->fCBranchLitterSurf + xpn->pCh->pCProfile->fCStemLitterSurf;//20181016				
+			//End of Hong
+			
+			
             // The litter fractions of branches, leaves and stems are given to the surface litter layer
             pSLN->fCLitter += ((self->plant[j].FOCLfFr + self->plant[j].FOCBrSt)*self->plant[j].TreeDistr);
             pSLN->fNLitter += ((self->plant[j].FONLfFr + self->plant[j].FONBrSt)*self->plant[j].TreeDistr);

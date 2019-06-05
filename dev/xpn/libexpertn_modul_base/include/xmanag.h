@@ -163,6 +163,12 @@ typedef struct stmanagement
 	PNFERTILIZER	pNFertilizer;
 	PTILLAGE        pTillage;
 	//PSTARTVALUE	Startvalue;
+	
+	//Begin of Hong on 20180604, for xn-mpmas
+	int lastActionDay;
+	int lastActionMonth;
+	int lastActionYear;
+	//End of Hong
 }	STMANAGEMENT;
 
 #endif // #ifndef _INC_EXPERTN_XMANAG_H

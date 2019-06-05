@@ -234,6 +234,7 @@ int schaaf_organic_fertilization(schaaf* self) //Hong = LAFertilizer()
     PMANAGEMENT pMa = xpn->pMa;
     PCHEMISTRY pCh = xpn->pCh;
     PTIME pTi = xpn->pTi;
+	PCBALANCE	pCB = pCh->pCBalance; //Added by Hong on 20181016
 
     char acdummy3[80];
     double fumFacC;
@@ -292,6 +293,8 @@ int schaaf_organic_fertilization(schaaf* self) //Hong = LAFertilizer()
 
     pCh->pCProfile->fNHumusSurf += fHumusPart * pMa->pNFertilizer->fNorgManure;
     pCh->pCProfile->fCHumusSurf += fHumusPart * pMa->pNFertilizer->fCorgManure;
+
+    pCB->dCInputCum += (double)pMa->pNFertilizer->fCorgManure; //Hong added on 20181016 for C-balance
 
     /* 19.8.97 unnötig:
     if (pCh->pCProfile->fNManureSurf > EPSILON)
@@ -1248,12 +1251,17 @@ int read_fertilizers(schaaf* self)
             PNFERTILIZER pNF = xpn->pMa->pNFertilizer;
 
             if ((pNF != NULL) && (pNF->Day > 0)) {
-                while ((pNF == NULL) || (xpn_time_compare_date(xpn->pTi->pSimTime->year,
+                while ((pNF == NULL) || ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
                                          xpn->pTi->pSimTime->mon,
                                          xpn->pTi->pSimTime->mday,
                                          pNF->Year,
                                          pNF->Month,
-                                         pNF->Day) > 0)) {
+                                         pNF->Day) > 0)&& (xpn_time_compare_date(xpn->pTi->pSimTime->year,
+                                         xpn->pTi->pSimTime->mon,
+                                         xpn->pTi->pSimTime->mday,
+                                         pNF->pNext->Year,
+                                         pNF->pNext->Month,
+                                         pNF->pNext->Day) < 0))) {
                     xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext;
                     pNF = xpn->pMa->pNFertilizer;
                 }

@@ -41,11 +41,11 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           // mosaic run Function
 													    NULL,	                                  // run Funktion
 													    NULL),                                    // done Function														
-								        register_modul_new("Biomodal van Genuchten",  // Bezeichnung
+								        register_modul_new("Bimodal van Genuchten",  // Bezeichnung
 													   "water",				   // Modul
 													   "hydraulic functions",	   // Sub Modul
 													   "hydraulic_functions",	   // Klasse
-													   "hydraulic_functions_set_Biomodal_van_Genuchten",    // load/init Function
+													   "hydraulic_functions_set_Bimodal_van_Genuchten",    // load/init Function
 													    NULL,				          // global run Function
 														NULL,						           // mosaic run Function
 													    NULL,	                                  // run Funktion

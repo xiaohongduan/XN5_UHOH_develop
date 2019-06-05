@@ -4,7 +4,19 @@
 
 G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 {
-	return register_modul_list_new(10,  // Anzahl der Modelle
+	return register_modul_list_new(11,  // Anzahl der Modelle
+	
+	//added by Hong on 20180320: to distinguish crop model choice for adaptive crop rotation of mpmas
+									register_modul_new("CERES",						// Bezeichnung
+													   "plant",									// Modul
+													   "model choice",					// Sub Modul
+													   "gecros",					// Klasse
+														NULL,			// load/init Function
+														NULL,									// global run Function
+														NULL,						           // mosaic run Function
+														NULL,					// run Funktion
+														NULL),
+//End of Hong							
 	                               register_modul_new("CERES",  // Bezeichnung
 	                                       "plant",						                   // Modul
 	                                       "potential transpiration",				           // Sub Modul

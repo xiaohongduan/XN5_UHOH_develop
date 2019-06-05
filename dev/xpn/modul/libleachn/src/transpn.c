@@ -952,9 +952,9 @@ int transpn_NTransp(transpn *self, int N2O_IN_SOLUTION)
 			pSL->fCHumus  += (pCL->fDONToHumusR*pCL->fDOC - pCL->fHumusToDONR*pSL->fCHumus)*DeltaT;
 			pCL->fNLitter += (pCL->fDONToLitterR*pCL->fDON - pCL->fLitterToDONR*pCL->fNLitter)*DeltaT;
 			pCL->fCLitter += (pCL->fDONToLitterR*pCL->fDOC - pCL->fLitterToDONR*pCL->fCLitter)*DeltaT;
-			pCL->fNManure -= pCL->fManureToDONR*pCL->fNManure*DeltaT;
+			pCL->fNManure -= pCL->fManureToDONR*pCL->fNManure*DeltaT;										
 			pCL->fCManure -= pCL->fManureToDONR*pCL->fCManure*DeltaT;
-
+				
 			pCL->fUreaNSoilConc = pCL->fUreaN * (kgPhaTomgPsqm / (DeltaZ*
 			                                     (pWL->fContOld + pSL->fBulkDens * pCh->pCParam->afKd[0])));
 			/*[kg N /ha /100 /mm] = kg N /m^2 10^-4 /100 /m 1000] */
@@ -1028,7 +1028,7 @@ int transpn_NTransp(transpn *self, int N2O_IN_SOLUTION)
 			              (pWL->fContAct + pSL->fBulkDens * pCh->pCParam->afKd[1])/(double)100.0;
 			pCL->fNO3N  = pCL->fNO3NSoilConc  * DeltaZ *
 			              (pWL->fContAct + pSL->fBulkDens * pCh->pCParam->afKd[2])/(double)100.0;
-						  
+	  
 			/*if (CHECK_DOUBLE_INVALID(pCL->fNO3N))
 				{
 					printf("gf");

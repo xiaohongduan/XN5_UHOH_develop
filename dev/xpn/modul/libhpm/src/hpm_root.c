@@ -35,11 +35,14 @@ int hpm_root_length_growth(hpm *self)
 
 
 // Temperaturabhängigkeit: 3.11b
+    fTrt =1.0; //Test of Hong
 	fTrt = calculatePlantTemperatureProcesses_getf_HPM(self,soil_vars.TSoil);
 
 // Effect of Water: (3.11d / 6.7b)
+    fWrt =1.0; //Test of Hong
 	fWrt = pow(self->Water.aWrt,self->parameter.plant.qWpl);
-
+    fWrt= MAX(fWrt, 1e-6);//Test of Hong
+	
 // Substrate C konzentration 3.3b
 	CHECK_0(self->Plant.MXrt)
 	Crt = self->Plant.MCSrt / self->Plant.MXrt;
@@ -58,6 +61,8 @@ int hpm_root_length_growth(hpm *self)
 
 	xpn->pPl->pRoot->fDepth = MAX(0.02, (self->Plant.MXrt/(self->Plant.rort*1.0e-3)));
 
+	//Added by Hong on 20180806
+	xpn->pPl->pRoot->fDepth =MIN(xpn->pPl->pRoot->fDepth, 120);
 	
 	return self->__ERROR;	
 }

@@ -60,7 +60,28 @@ x1=(y1);\
 PRINT_ERROR("No pedotransfer functions defined!");\
 }\
 }
-
+//Added by Hong
+/* #define WATER_CONTENT(x) (*self->WCont)((double)x,\
+        (double)pWL->fContAct,\
+        (double)pSW->fCondSat,\
+        (double)pSW->fContSat,\
+        (double)pSW->fContRes,\
+        (double)pSW->fVanGenA,\
+        (double)pSW->fVanGenN,\
+        (double)pSW->fVanGenM,\
+        (double)pSW->fCampA,\
+        (double)pSW->fCampB,\
+        (double)pSW->fPotInflec,\
+        (double)pSW->fContInflec,\
+        (double)pSW->fMinPot,\
+        (double)pWL->fMatPotOld,\
+        (double)pWL->fContOld,\
+        (double)pSW->fVanGenA2,\
+        (double)pSW->fVanGenN2,\
+        (double)pSW->fVanGenM2,\
+        (double)pSW->fBiModWeight1,\
+        (double)pSW->fBiModWeight2) */
+//End of Hong
 #define WATER_CONTENT_H(x) (*self->WCont)((double)x,\
                                         (double)pWL->fContAct,\
                                         (double)pSW->fCondSat,\

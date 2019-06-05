@@ -115,6 +115,7 @@ int daisy_miner_run(daisy_miner *self)
   /* 7. Variablen für die Massenbilanz*/
   double fCTotal0,fNTotal0;                     /* Summe: AOM + BOM + SOM zu Beginn des Zeitschritts */
   double fCTotal1,fNTotal1;		       		   /* Summe: AOM + BOM + SOM zum Ende des Zeitschritts */
+  
   double fCDiff,fNDiff;                         /* Differenz zwischen momentaner und anfaenglicher Summe*/
   //static double fCDiffSum  = (double)0.0; //Out-noted by Hong 20170517: no static variable!
   //static double fNDiffSum  = (double)0.0;
@@ -712,6 +713,7 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 
     fNDiff = fNTotal1 - fNTotal0;
     self->fNDiffSum += fNDiff;
+	
   }
 
 	return RET_SUCCESS;
@@ -1011,11 +1013,11 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   pCL->fCO2C        += pCL->fCO2ProdR * DeltaT;
   
   //Added by Hong on 20180731
-/*  if (pCL->fCO2C>0.0)
+  //if (pCL->fCO2C>0.0)
     {
-	  pCP->dCO2SurfEmisCum +=pCL->fCO2C;
+	  pCP->dCO2SurfEmisCum +=pCL->fCO2ProdR * DeltaT;
      }
-*/
+
   /* Veränderungen im C-Pool Ende */
 
 

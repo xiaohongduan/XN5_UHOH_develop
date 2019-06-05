@@ -44,18 +44,37 @@ static void balance_init(balance *self)
 
 int balance_load(balance *self)
 {	
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumRain,"output.Water.Water Balance.Cum Rain [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumLeaching,"output.Water.Water Balance.Cum Leaching [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fActETCum,"output.Water.Water Balance.Cum Evapotranspiration [mm]",0.0);	
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fBalance,"output.Water.Water Balance.Balance [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumBalance,"output.Water.Water Balance.Cum_Balance [mm]",0.0);
+	//Added by Hong on 20181204 for WC-balance
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fProfil,"output.Water.Soil Water Balance.WC in Profile [mm]",0.0);	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumInfilt,"output.Water.Soil Water Balance.Cum Infiltration [mm]",0.0);	
+	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumIntercept,"output.Water.Soil Water Balance.Cum Interception [mm]",0.0);
+	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumRunOff,"output.Water.Soil Water Balance.Cum Run Off [mm]",0.0);
+	//End of Hong
+	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumRain,"output.Water.Soil Water Balance.Cum Rain [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumLeaching,"output.Water.Soil Water Balance.Cum Leaching [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fActETCum,"output.Water.Soil Water Balance.Cum Evapotranspiration [mm]",0.0);	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fBalance,"output.Water.Soil Water Balance.Balance [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumBalance,"output.Water.Soil Water Balance.Cum_Balance [mm]",0.0);
 	
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCBalance->dNProfile,"output.Nitrogen.N Balance.Mineral N in Profile [kg N ha-1]",0.0);			
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCBalance->dNInputCum,"output.Nitrogen.N Balance.Mineral N Input [kg N ha-1]",0.0);			
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCProfile->dNUptakeCum,"output.Nitrogen.N Balance.Mineral N Uptake [kg N ha-1]",0.0);			
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCProfile->dN2OEmisCum,"output.Nitrogen.N Balance.Gaseous N Emission [kg N ha-1]",0.0);			
+	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCProfile->dN2OEmisCum,"output.Nitrogen.N Balance.Gaseous N Emission [kg N ha-1]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCProfile->dNEmisCum,"output.Nitrogen.N Balance.Gaseous N Emission [kg N ha-1]",0.0);	//Changed by Hong on 20190109		
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCProfile->dNTotalLeachCum,"output.Nitrogen.N Balance.N Leaching [kg N ha-1]",0.0);			
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCBalance->dNBalance,"output.Nitrogen.N Balance.Mineral N Balance [kg N ha-1]",0.0);		
+	
+	//Added by Hong on 20180807 for C-balance
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCBalance->dCProfile,"output.Carbon.C Balance.C in Profile [kg C ha-1]",0.0);			
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCBalance->dCInputCum,"output.Carbon.C Balance.C Input [kg C ha-1]",0.0);			
+	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCProfile->dCUptakeCum,"output.Nitrogen.N Balance.Mineral N Uptake [kg N ha-1]",0.0);			
+	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCProfile->dCO2EmisCum,"output.Carbon.C Balance.Gaseous C Emission [kg C ha-1]",0.0);
+	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCProfile->dCO2EmisCumSum,"output.Carbon.C Balance.Gaseous C Emission of soil surface and profile [kg C ha-1]",0.0);
+			
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCProfile->dDOCLeachCum,"output.Carbon.C Balance.DOC Leaching [kg C ha-1]",0.0);			
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->parent.pCh->pCBalance->dCBalance,"output.Carbon.C Balance.C Balance [kg C ha-1]",0.0);		
+	//End of Hong
 	
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fWaterStorage,"output.Water.Temporal Changes.Storage [mm]",0.0);
 	
@@ -89,6 +108,9 @@ int balance_run(balance *self)
 	PSLAYER		pSL;
 	PWLAYER		pWL;
 	PSWATER  pSW;
+	PPLTWATER	pPltW=pPl->pPltWater;
+	
+	PSWATER pSWater; //Added by Hong
 	
 	double dt;
 	int iLayer;
@@ -115,18 +137,37 @@ int balance_run(balance *self)
 
 	dt= pTi->pTimeStep->fAct;
 
-	self->fCumRain += pCl->pWeather->fPreciRate*dt;
+	self->fCumRain += pCl->pWeather->fPreciRate*dt; 
+	//self->fCumRain += pCl->pWeather->fLiquPreciRate*dt; 
+	
+	
+	//Added by Hong: PreciRate*dt-> InfiltR+fInterceptR + fRunOffR	
+	self->fCumInfilt += pWa->fInfiltR*dt;
+	self->fCumIntercept += pPltW->fInterceptR*dt;
+	self->fCumRunOff += pWa->fRunOffR*dt;
+	//End of Hong
 	
 	//Water Output
 	//pWa->fLeaching    += pWa->fPercolR * DeltaT;
 	self->fCumLeaching += pWa->fPercolR * dt;
-	self->fActETCum += pWa->fActETR*dt;
+	//self->fActETCum += pWa->fActETR*dt; // Hong: pWa->fActETR ist inklusiv fInterceptR. 
+	//self->fActETCum +=(xpn->pPl->pPltWater->fActTranspR + xpn->pWa->pEvap->fActR+pPltW->fInterceptR)*dt; //Hong:wenn nur Bodenprofil bilanziert, soll man fInterceptR ausschliessen.  
+	self->fActETCum +=(xpn->pPl->pPltWater->fActTranspR + xpn->pWa->pEvap->fActR)*dt;
+	
+	//Hong: fActETR = fActTranspR +fActR +fInterceptR
 	self->fWaterOutput = self->fActETCum + self->fCumLeaching;	
 	
 	//Water Input
 	if (pWa->fInfiltR > (double)0.0)
-		self->fWaterInput += pWa->fInfiltR*dt;
+		self->fWaterInput += pWa->fInfiltR*dt;//Hong: nur Bodenprofil bilanziert 
+/*	
+	if (xpn->pPl->pPltWater->fInterceptR>(double)0.0)
+	    self->fWaterInput += xpn->pPl->pPltWater->fInterceptR*dt;
+*/
+	//self->fWaterInput = self->fCumInfilt+self->fCumIntercept+self->fCumRunOff;	
 	
+	//self->fWaterInput = self->fCumRain;
+		
 	//Water Storage
 	self->fWaterStorage = 0.0;
 	self->fProfil = 0.0;
@@ -143,10 +184,11 @@ int balance_run(balance *self)
 
 	self->fWaterStoragedt = self->fWaterStorage*dt;
 
-	self->fBalance = self->fWaterStorage - self->waterstorage_init  + pWa->fPercolR - pCl->pWeather->fPreciRate;
+	// corrected by Hong on 20181204 self->fBalance = self->fWaterStorage - self->waterstorage_init  + pWa->fPercolR* - pCl->pWeather->fPreciRate;
+	self->fBalance = self->fWaterStorage - self->waterstorage_init  + pWa->fPercolR*dt - pCl->pWeather->fPreciRate*dt;
 
 	self->fCumBalance = self->fWaterOutput-self->fWaterInput+self->fProfil-self->fProfilStart;
-
+	
 	fProfile = 0.0;
 	fProfileIce = 0.0;
 	fFluxDay = 0.0;
@@ -179,7 +221,8 @@ int balance_run(balance *self)
 
 //Added by Hong on 20180124, for consistence in daisy_miner.c
       //pCP->dNMinerCum  += (pCL->fLitterMinerR + pCL->fManureMinerR + pCL->fHumusMinerR) * dt;     
-     pCP->dNMinerCum  += (pCL->fMinerR) * dt;   
+     pCP->dNMinerCum  += (pCL->fMinerR) * dt;   // to take the pCL->fMinerR
+    
 //End of Hong    
 
       pCP->dNImmobCum  += pCL->fNImmobR * dt;
@@ -197,6 +240,18 @@ int balance_run(balance *self)
      {
       pCP->dN2OEmisCum += pCP->fN2OEmisR  * (float)24e-5 * dt;
 	 }
+	 
+	 //Added by Hong on 20190109 for CENTURY N
+	 if (pCP->fNOEmisR > 0)	   
+     {
+      pCP->dNOEmisCum += pCP->fNOEmisR  * (float)24e-5 * dt;
+	 }
+	 
+	 if (pCP->fN2EmisR > 0)	   
+     {
+      pCP->dN2EmisCum += pCP->fN2EmisR  * (float)24e-5 * dt;
+	 }
+	 //End of Hong
 
 	pCP->dNTotalLeachCum = pCP->dUreaLeachCum + pCP->dNH4LeachCum + pCP->dNO3LeachCum + pCP->dN2ODrainCum;      
 //  fN2ODrainCum wird im Transport-Modell berechnet.
@@ -207,7 +262,8 @@ int balance_run(balance *self)
 	{
 	pCP->dNUptakeCum += pPl->pPltNitrogen->fActNUptR * dt;
 	}
-
+	
+	
 	/****************************** Bilanzierung *************************************/
   
 	// Profilsumme Null setzen
@@ -243,9 +299,12 @@ int balance_run(balance *self)
 			pCB->fNProfileStart = pCB->dNProfile;
 		}
 
-	pCB->dNOutputCum = pCP->dN2OEmisCum + pCP->dNH3VolatCum + pCP->dNUptakeCum + pCP->dNImmobCum - pCP->dNMinerCum + pCP->dNTotalLeachCum;
+	//pCB->dNOutputCum = pCP->dN2OEmisCum + pCP->dNH3VolatCum + pCP->dNUptakeCum + pCP->dNImmobCum - pCP->dNMinerCum + pCP->dNTotalLeachCum;
+	
+	pCB->dNOutputCum = pCP->dN2OEmisCum +pCP->dNOEmisCum +pCP->dN2EmisCum + pCP->dNH3VolatCum + pCP->dNUptakeCum + pCP->dNImmobCum - pCP->dNMinerCum + pCP->dNTotalLeachCum; //Changed by Hong on 20190109
 
-	pCB->dNBalCorrect = -pCP->dN2OEmisCum;
+	//pCB->dNBalCorrect = -pCP->dN2OEmisCum; //removed by Hong on 20190109
+	pCP->dNEmisCum = pCP->dN2OEmisCum + pCP->dNOEmisCum +pCP->dN2EmisCum; //added by Hong on 20190109
 
 	pCB->dNBalance = pCB->dNProfile + pCB->dNOutputCum - pCB->fNProfileStart - pCB->dNInputCum - pCB->dNBalCorrect;// Was ist das? - pCB->dNBalCorrect;
 	
@@ -259,5 +318,86 @@ int balance_run(balance *self)
 	// Energy Balance:
 	xpn->pHe->pHEBalance->fRes = xpn->pHe->pHEBalance->fNetRad - xpn->pHe->pHEBalance->fHeatLatent + xpn->pHe->pHEBalance->fGroundHeat - xpn->pHe->pHEBalance->fHeatSens;	
 	
+	
+	/*********************************************************************************/
+	/*                                                                               */
+	/*                                Kohlenstoffbilanz                               */
+	/*                                                                               */
+	/*********************************************************************************/
+	
+	// Profilsumme Null setzen
+	pCB->fDOCProfile  =  (double)0.0;
+	pCB->fCLitterProfile  = (double)0.0;
+	pCB->fCManureProfile  = (double)0.0;
+	pCB->fCHumusProfile   = (double)0.0;	
+	pCB->dCProfile  = (double)0.0;
+	pCP->dCO2EmisCum =(double)0.0;
+
+	pCL = pCh->pCLayer; //eingefügt, da sonst Programm nicht läuft (warum?)
+	
+	for (SOIL_LAYERS1(pCL,pCL->pNext))
+	{
+      pCB->fDOCProfile 	+= pCL->fDOC;
+      pCB->fCLitterProfile 	+= pCL->fCLitter;
+      pCB->fCManureProfile 	+= pCL->fCManure;
+     }
+	 
+	 pSL = xpn->pSo->pSLayer;
+	 for (SOIL_LAYERS1(pSL,pSL->pNext))
+	{
+      pCB->fCHumusProfile  	+= pSL->fCHumus;
+     }
+
+	//Gesamtkohlenstoff im Profil:  pCB->fCsolC = pCB->fDOC?
+	pCB->dCProfile = pCP->fDOCSurf +pCP->fCLitterSurf+ pCP->fCManureSurf+ pCP->fCHumusSurf+pCB->fDOCProfile + pCB->fCLitterProfile + pCB->fCManureProfile + pCB->fCHumusProfile; 
+	
+	//in daisy_miner.c: pCL->fCMicBiomSlow + pCL->fCMicBiomFast + pCL->fCHumusSlow + pCL->fCHumusFast =fCHumus
+    if (pTi->pSimTime->bFirstRound==1)
+		{
+			pCB->fCProfileStart = pCB->dCProfile;
+		}
+	
+	/******************************* CO2-Emission ************************************/
+	pCL = pCh->pCLayer; //eingefügt, da sonst Programm nicht läuft (warum?)
+			
+
+	for (SOIL_LAYERS1(pCL,pCL->pNext))
+	{
+      //pCP->dCO2EmisCum 	+= pCL->fCO2ProdR * dt;
+	  pCP->dCO2EmisCum 	+= pCL->fCO2C;
+      
+     }
+	
+	pCP->dCO2EmisCumSum=pCP->dCO2EmisCum+pCP->dCO2SurfEmisCum;
+	
+	//pCB->dNOutputCum = pCP->dN2OEmisCum + pCP->dNH3VolatCum + pCP->dNUptakeCum + pCP->dNImmobCum - pCP->dNMinerCum + pCP->dNTotalLeachCum;
+	pCB->dCOutputCum = pCP->dCO2SurfEmisCum + pCP->dCO2EmisCum + pCP->dDOCLeachCum;
+	
+	//pCB->dCInputCum = ; 
+	
+	//pCB->dCBalCorrect = pCP->dCO2EmisCum;
+	
+	//Added by Hong
+	
+	//End of Hong
+	
+	pCB->dCBalance = pCB->dCProfile + pCB->dCOutputCum - pCB->fCProfileStart - pCB->dCInputCum - pCB->dCBalCorrect; 
+	
+	
+	/*********************************************************************************/
+	/*                                                                               */
+	/*                        Wasserbilanz                               */
+	/*                                                                               */
+	/*********************************************************************************/
+/*	
+	self->fActETCum += pWa->fActETR*dt;
+	self->fCumLeaching += pWa->fPercolR * dt;
+	pCB->dCOutputCum = pCP->dCO2SurfEmisCum + pCP->dCO2EmisCum + pCP->dDOCLeachCum;
+	
+	pCB->dWCBalance = pCB->dWCProfile + pCB->dWCOutputCum - pCB->fWCProfileStart - pCB->dWCInputCum - pCB->dWCBalCorrect; 
+	
+*/	
 	return RET_SUCCESS;
 }
+
+

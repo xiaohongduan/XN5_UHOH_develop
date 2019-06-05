@@ -1070,9 +1070,6 @@ void expertn_database_runWetterTageswerte(expertn_database *self) {
 	xpn->pCl->pWeather->fPreciRate = self->precipitation;		// open land precip. until interception model is executed!
 	xpn->pCl->pWeather->fLiquPreciRate = self->precipitation;	// open land precip. until interception model is executed!
 	xpn->pCl->pWeather->fBulkPreciRate = self->precipitation;	// open land precip.
-	
-
-
 
 	xpn->pCl->pWeather->fSolRad = get_SolRad(self->global_radiation,xpn->pTi->pSimTime->fTimeY , xpn->pLo->pFarm->fLatitude, xpn->pTi->pSimTime->fTimeDay, xpn->pTi->pTimeStep->fAct);
 
@@ -1084,7 +1081,7 @@ void expertn_database_runWetterTageswerte(expertn_database *self) {
 	//xpn->pCl->pWeather->fTempAir=db_get_double(data_model,9); // mittlere Lufttemperatur
 
 	xpn->pCl->pWeather->fTempAir = calculateAirTemperature(xpn->pTi->pSimTime->fTimeDay,self->Tairmin,self->Tairmax,self->TairLastDayMax,self->TairNextDayMin,(double)xpn->pLo->pFarm->fLatitude,xpn->pTi->pSimTime->fTimeY);
-
+	
 	xpn->pCl->pWeather->fTempAir_zlvl = xpn->pCl->pWeather->fTempAir;
 
 	if (xpn->pCl->fTempMeasHeight==0.0) {
