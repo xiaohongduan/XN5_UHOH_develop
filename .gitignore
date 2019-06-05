@@ -13,3 +13,5 @@ dev/.lock*
 dev/*.project
 dev/waf-*
 gui/
+xnmpmas/
+xnParameterTool/
