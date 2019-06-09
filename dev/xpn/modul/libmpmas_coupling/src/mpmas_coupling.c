@@ -1075,7 +1075,7 @@ if (NewDay(pTi))
             fertil->fNH4N = self->mineralFertilization[self->nextMinFertAction].nh4n;
             fertil->fUreaN = self->mineralFertilization[self->nextMinFertAction].urea;
             fertil->fTotalN = fertil->fNO3N + fertil->fNH4N + fertil->fUreaN;
-            fertil->acCode =  self->mineralFertilization[self->nextMinFertAction].code;
+            fertil->acCode = g_strdup_printf( "%s",  self->mineralFertilization[self->nextMinFertAction].code );
             
             //added Troost 180608 -- adapt fertilization amount to Nmin
             if (self->mineralFertilization[self->nextMinFertAction].nminAdapt_factor > 0.0) 
@@ -1171,16 +1171,17 @@ if (NewDay(pTi))
 			xpn_time_date_add_dt(&fertil->Year,&fertil->Month, &fertil->Day, 1);//added by Hong on 20180516
             fertil->fDryMatter = self->organicFertilization[self->nextOrgFertAction].drymatter;
             fertil->fNH4N = self->organicFertilization[self->nextOrgFertAction].nh4n;
-            fertil->fNorgManure = self->organicFertilization[self->nextOrgFertAction].org_subst;
+            fertil->fNorgManure = self->organicFertilization[self->nextOrgFertAction].n_tot_org;
             fertil->fTotalN = fertil->fNO3N + fertil->fNH4N + fertil->fUreaN;
-            fertil->acCode =  self->organicFertilization[self->nextOrgFertAction].code;
+            fertil->acCode =  g_strdup_printf( "%s",self->organicFertilization[self->nextOrgFertAction].code);
             fertil->pNext = fertil_first;
             fertil_first->pBack = fertil;                                           
             //pMa->pNFertilizer = NULL; //Out-noted by hong on 20180515
             //pMa->pNFertilizer = fertil;
 			pMa->pNFertilizer->pNext = NULL;
             pMa->pNFertilizer->pNext = fertil;//Added by Hong on 20180515
-			
+            PRINT_MESSAGE(xpn,1,"triggered organic fertilization");// for debug
+	
 /*			//Added by Hong on 20180524
             if (self->nextOrgFertAction==(self->numOrgFert-1))
 			   {

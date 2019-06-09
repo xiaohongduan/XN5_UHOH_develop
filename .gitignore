@@ -12,4 +12,8 @@ dev/logfile.txt
 dev/.lock*
 dev/*.project
 dev/waf-*
+dev/.waf-*
 gui/
+xnmpmas/expertn_mpmasCplex_mpi
+xnmpmas/expertn_mpmas_mpi
+

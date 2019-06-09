@@ -54,6 +54,7 @@ int schaaf_fertilizer(schaaf* self)
     if ((pNF != NULL) && (pNF->Day > 0)) {
 		//Annotated by Hong on 20180515
 		//1. first action of fertilization:
+
 		if (self->first_fertil_done == 0){
 			//1.1 for regular XN:
 			if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
@@ -77,13 +78,20 @@ int schaaf_fertilizer(schaaf* self)
 									pNF->pNext->Year,
 									pNF->pNext->Month,
 									pNF->pNext->Day) == 0)){
-										
+			
 				xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext;// XN-MPMAS assigns fertilization data to  xpn->pMa->pNFertilizer->pNext (mpmas_coupling.c line 596, line627) Otherwise xpn->pMa->pNFertilizer->pNext remains empty and it won't switch to the 2. step for the next fetilization action.    						
+				pNF = xpn->pMa->pNFertilizer;
+
 				self->first_fertil_done += 1;
 				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
 					schaaf_mineral_fertilization(self);
-				if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+				else if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
 					schaaf_organic_fertilization(self);
+				else {
+					char* S =  g_strdup_printf("Error in schaaf.c:schaaf_fertilizer\nUnknown fertilizer code: %s\n", pNF->acCode);
+					PRINT_ERROR(S);// for debug
+					g_free(S);
+				}
 					
 			}
 		}
@@ -96,12 +104,19 @@ int schaaf_fertilizer(schaaf* self)
 									pNF->pNext->Year,
 									pNF->pNext->Month,
 									pNF->pNext->Day) == 0)) {
+
 					xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext; //The data in xpn->pMa->pNFertilizer is required by InfiltrationOrgDuenger(self) and InfiltrationOrgDuengerRegen(self). Therefore xpn->pMa->pNFertilizer should not be switched to the next struc before the date of next fertilization action.   
 					pNF = xpn->pMa->pNFertilizer;
 					if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
 						schaaf_mineral_fertilization(self);
-					if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+					else if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
 						schaaf_organic_fertilization(self);
+                	                else {
+        	                              	char* S =  g_strdup_printf("Error in schaaf.c:schaaf_fertilizer\nUnknown fertilizer code: %s\n", pNF->acCode);
+
+	                                        PRINT_ERROR(S);// for debug
+	                                        g_free(S);
+	                                }
 						
 				}
 		}
@@ -123,6 +138,7 @@ int schaaf_fertilizer(schaaf* self)
 	{
         InfiltrationOrgDuenger(self);
         InfiltrationOrgDuengerRegen(self);
+
         //MinerOrgDuengHoff(self);
         //NitrOrgNH4Hoff(self);
 	}
@@ -139,6 +155,7 @@ int schaaf_mineral_fertilization(schaaf* self) //Hong: =TSFertilizer()?
 	PCBALANCE	pCB = pCh->pCBalance; //Added by Hong on 20180731
     double fumFacC;
     gchar* S, *S2;
+
 
     fumFacC = 0.4; // 40 % der org. Substanz im Duenger ist Kohlenstoff
 
@@ -356,133 +373,133 @@ int InitOrgDuenger(schaaf* self)
         pFE->afInfParam[1] = (double)-0.25;
         pFE->afInfParam[2] = (double)0.50;
     }
-    if (!strcmp(pFE->acCode, "RE006\0")) {
+    else if (!strcmp(pFE->acCode, "RE006\0")) {
         // Rindergülle 10% TS
         pFE->afInfParam[0] = (double)0.43;
         pFE->afInfParam[1] = (double)0.46;
         pFE->afInfParam[2] = (double)0.185;
     }
-    if (!strcmp(pFE->acCode, "RE007\0")) {
+    else if (!strcmp(pFE->acCode, "RE007\0")) {
         // Rindergülle 15% TS
         pFE->afInfParam[0] = (double)0.53;
         pFE->afInfParam[1] = (double)0.56;
         pFE->afInfParam[2] = (double)0.185;
     }
-    if (!strcmp(pFE->acCode, "RE008\0")) {
+    else if (!strcmp(pFE->acCode, "RE008\0")) {
         // Scheineguelle 3.5% TS
         pFE->afInfParam[0] = (double)0.33;
         pFE->afInfParam[1] = (double)-0.15;
         pFE->afInfParam[2] = (double)0.38;
     }
-    if (!strcmp(pFE->acCode, "RE009\0")) {
+    else if (!strcmp(pFE->acCode, "RE009\0")) {
         // Scheineguelle 7% TS
         pFE->afInfParam[0] = (double)0.43;
         pFE->afInfParam[1] = (double)0.22;
         pFE->afInfParam[2] = (double)0.135;
     }
-    if (!strcmp(pFE->acCode, "RE010\0")) {
+    else if (!strcmp(pFE->acCode, "RE010\0")) {
         // Scheineguelle 10.5% TS
         pFE->afInfParam[0] = (double)0.50;
         pFE->afInfParam[1] = (double)0.35;
         pFE->afInfParam[2] = (double)0.155;
     }
-    if (!strcmp(pFE->acCode, "RE011\0")) {
+    else if (!strcmp(pFE->acCode, "RE011\0")) {
         // Scheineguelle 14% TS
         pFE->afInfParam[0] = (double)0.6;
         pFE->afInfParam[1] = (double)0.55;
         pFE->afInfParam[2] = (double)0.185;
     }
-    if (!strcmp(pFE->acCode, "RE012\0")) {
+    else if (!strcmp(pFE->acCode, "RE012\0")) {
         // Gefluegelguelle 7% TS
         pFE->afInfParam[0] = (double)0.15;
         pFE->afInfParam[1] = (double)-0.15;
         pFE->afInfParam[2] = (double)0.38;
     }
-    if (!strcmp(pFE->acCode, "RE013\0")) {
+    else if (!strcmp(pFE->acCode, "RE013\0")) {
         // Gefluegelguelle 14% TS
         pFE->afInfParam[0] = (double)0.35;
         pFE->afInfParam[1] = (double)0.35;
         pFE->afInfParam[2] = (double)0.125;
     }
-    if (!strcmp(pFE->acCode, "RE014\0")) {
+    else if (!strcmp(pFE->acCode, "RE014\0")) {
         // Gefluegelguelle 21% TS
         pFE->afInfParam[0] = (double)0.55;
         pFE->afInfParam[1] = (double)0.55;
         pFE->afInfParam[2] = (double)0.185;
     }
-    if (!strcmp(pFE->acCode, "RE015\0")) {
+    else if (!strcmp(pFE->acCode, "RE015\0")) {
         // Rindermist
         pFE->afInfParam[0] = (double)0.0;
         pFE->afInfParam[1] = (double)0.0;
         pFE->afInfParam[2] = (double)0.0;
     }
-    if (!strcmp(pFE->acCode, "RE016\0")) {
+    else if (!strcmp(pFE->acCode, "RE016\0")) {
         // Schweinemist
         pFE->afInfParam[0] = (double)0.0;
         pFE->afInfParam[1] = (double)0.0;
         pFE->afInfParam[2] = (double)0.0;
     }
-    if (!strcmp(pFE->acCode, "RE017\0")) {
+    else if (!strcmp(pFE->acCode, "RE017\0")) {
         // Haehnchenmist
         pFE->afInfParam[0] = (double)0.0;
         pFE->afInfParam[1] = (double)0.0;
         pFE->afInfParam[2] = (double)0.0;
     }
-    if (!strcmp(pFE->acCode, "RE018\0")) {
+    else if (!strcmp(pFE->acCode, "RE018\0")) {
         // Putenmist
         pFE->afInfParam[0] = (double)0.0;
         pFE->afInfParam[1] = (double)0.0;
         pFE->afInfParam[2] = (double)0.0;
     }
-    if (!strcmp(pFE->acCode, "RE019\0")) {
+    else if (!strcmp(pFE->acCode, "RE019\0")) {
         // Pferdemist
         pFE->afInfParam[0] = (double)0.0;
         pFE->afInfParam[1] = (double)0.0;
         pFE->afInfParam[2] = (double)0.0;
     }
-    if (!strcmp(pFE->acCode, "RE020\0")) {
+    else if (!strcmp(pFE->acCode, "RE020\0")) {
         // Schafmist
         pFE->afInfParam[0] = (double)0.0;
         pFE->afInfParam[1] = (double)0.0;
         pFE->afInfParam[2] = (double)0.0;
     }
-    if (!strcmp(pFE->acCode, "RE021\0")) {
+    else if (!strcmp(pFE->acCode, "RE021\0")) {
         // Huehnerfrischkot
         pFE->afInfParam[0] = (double)0.1;
         pFE->afInfParam[1] = (double)-0.1;
         pFE->afInfParam[2] = (double)0.3;
     }
-    if (!strcmp(pFE->acCode, "RE022\0")) {
+    else if (!strcmp(pFE->acCode, "RE022\0")) {
         // Huehnertrockenkot
         pFE->afInfParam[0] = (double)0.0;
         pFE->afInfParam[1] = (double)0.0;
         pFE->afInfParam[2] = (double)0.0;
     }
-    if (!strcmp(pFE->acCode, "RE023\0")) {
+    else if (!strcmp(pFE->acCode, "RE023\0")) {
         // Rinderjauche
         pFE->afInfParam[0] = (double)0.85;
         pFE->afInfParam[1] = (double)0.65;
         pFE->afInfParam[2] = (double)0.10;
     }
-    if (!strcmp(pFE->acCode, "RE024\0")) {
+    else if (!strcmp(pFE->acCode, "RE024\0")) {
         // Schweinjauche
         pFE->afInfParam[0] = (double)0.23;
         pFE->afInfParam[1] = (double)-0.25;
         pFE->afInfParam[2] = (double)0.50;
     }
-    if (!strcmp(pFE->acCode, "RE025\0")) {
+    else if (!strcmp(pFE->acCode, "RE025\0")) {
         // Klaerschlamm 5% TS
         pFE->afInfParam[0] = (double)0.15;
         pFE->afInfParam[1] = (double)-0.15;
         pFE->afInfParam[2] = (double)0.38;
     }
-    if (!strcmp(pFE->acCode, "RE026\0")) {
+    else if (!strcmp(pFE->acCode, "RE026\0")) {
         // Klaerschlamm 35% TS
         pFE->afInfParam[0] = (double)0.55;
         pFE->afInfParam[1] = (double)0.65;
         pFE->afInfParam[2] = (double)0.175;
     }
-    if (!strcmp(pFE->acCode, "RE027\0")) {
+    else if (!strcmp(pFE->acCode, "RE027\0")) {
         // Gruengutkompost
         pFE->afInfParam[0] = (double)0.0;
         pFE->afInfParam[1] = (double)0.0;
@@ -490,8 +507,9 @@ int InitOrgDuenger(schaaf* self)
     }
     /* Wenn fuer das gewaehlte Geraet keine Zuordnung stattgefunden
      hat wird es hier mit Standarwerten belegt. */
-    if ((pFE->afInfParam[0] == (double)0.0) && (pFE->afInfParam[1] == (double)0.0) &&
-        (pFE->afInfParam[2] == (double)0.0)) {
+    //if ((pFE->afInfParam[0] == (double)0.0) && (pFE->afInfParam[1] == (double)0.0) &&
+    //    (pFE->afInfParam[2] == (double)0.0)) {
+     else {
         pFE->afInfParam[0] = (double)0.1;
         pFE->afInfParam[1] = (double)0.1;
         pFE->afInfParam[2] = (double)0.1;
