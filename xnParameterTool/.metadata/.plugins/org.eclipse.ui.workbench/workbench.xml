@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<workbench progressCount="21" version="2.0">
+<workbench progressCount="16" version="2.0">
 <workbenchAdvisor/>
 <window height="410" maximized="true" width="976" x="242" y="274">
 <fastViewData fastViewLocation="1024"/>
@@ -45,7 +45,7 @@
 </editor>
 <editor activePart="true" focus="true" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="XnDatabaseConnection.java" partName="XnDatabaseConnection.java" path="/home/troost/490d/XN5/xnParameterTool/XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java" title="XnDatabaseConnection.java" tooltip="XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="61596" selectionTopPixel="34243"/>
+<editorState selectionHorizontalPixel="4" selectionLength="32" selectionOffset="142536" selectionTopPixel="65833"/>
 </editor>
 <editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="MySQLConnection.java" partName="MySQLConnection.java" path="/home/troost/490d/XN5/xnParameterTool/XN_tool/src/de/uhoh/for1695/MySQLConnection.java" title="MySQLConnection.java" tooltip="XN_tool/src/de/uhoh/for1695/MySQLConnection.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/XN_tool/src/de/uhoh/for1695/MySQLConnection.java"/>
@@ -53,21 +53,29 @@
 </editor>
 </editors>
 <views>
-<view id="org.eclipse.jdt.ui.JavadocView" partName="Javadoc">
-<viewState/>
+<view id="org.eclipse.ui.navigator.ProjectExplorer" partName="Project Explorer">
+<viewState CommonNavigator.LINKING_ENABLED="0" org.eclipse.ui.navigator.resources.workingSets.showTopLevelWorkingSets="0"/>
 </view>
 <view id="org.eclipse.jdt.ui.MembersView" partName="Members">
 <viewState hidefields="false" hidelocaltypes="false" hidenonpublic="false" hidestatic="false" org.eclipse.jdt.ui.browsing.memberstoeditor="1">
-<customFilters userDefinedPatternsEnabled="false">
-<xmlDefinedFilters>
-<child filterId="org.eclipse.jdt.ui.MembersView.SyntheticMembersFilter" isEnabled="true"/>
+<customFilters userDefinedPatternsEnabled="false">&#x0A;<xmlDefinedFilters>&#x0A;<child filterId="org.eclipse.jdt.ui.MembersView.SyntheticMembersFilter" isEnabled="true"/>
 <child filterId="org.eclipse.jdt.ui.MembersView.ImportDeclarationFilter" isEnabled="false"/>
 </xmlDefinedFilters>
 </customFilters>
-<selectedElements>
-<selectedElement selectedElementPath="=XN_tool/src&lt;de.uhoh.for1695{XnDatabaseConnection.java[XnDatabaseConnection~writeWeatherData~QString;~QString;~I~I~I~I~Z~QString;~D~I~D~QString;~Z~QResultSet;"/>
+<selectedElements>&#x0A;<selectedElement selectedElementPath="=XN_tool/src&lt;de.uhoh.for1695{XnDatabaseConnection.java[XnDatabaseConnection~writeWeatherData~QString;~QString;~I~I~I~I~Z~QString;~D~I~D~QString;~Z~QResultSet;"/>
 </selectedElements>
 </viewState>
+</view>
+<view id="org.eclipse.search.ui.views.SearchView" partName="Search">
+<viewState isPinned="false">
+<view IMemento.internal.id="" org.eclipse.search.lastActivation="0"/>
+</viewState>
+</view>
+<view id="org.eclipse.jdt.callhierarchy.view" partName="Call Hierarchy">
+<viewState search_scope_type="1"/>
+</view>
+<view id="org.eclipse.debug.ui.DebugView" partName="Debug">
+<viewState/>
 </view>
 <view id="org.eclipse.jdt.ui.PackageExplorer" partName="Package Explorer">
 <viewState group_libraries="1" layout="2" linkWithEditor="1" rootMode="1" workingSetName="Aggregate for window 1271237787859">
@@ -99,23 +107,6 @@
 <view id="org.eclipse.ui.console.ConsoleView" partName="Console">
 <viewState/>
 </view>
-<view id="org.eclipse.jdt.callhierarchy.view" partName="Call Hierarchy">
-<viewState search_scope_type="1"/>
-</view>
-<view id="org.eclipse.jdt.ui.SourceView" partName="Declaration">
-<viewState/>
-</view>
-<view id="org.eclipse.search.ui.views.SearchView" partName="Search">
-<viewState isPinned="false">
-<view IMemento.internal.id="" org.eclipse.search.lastActivation="0"/>
-</viewState>
-</view>
-<view id="org.eclipse.ui.views.ContentOutline" partName="Outline">
-<viewState/>
-</view>
-<view id="org.eclipse.debug.ui.DebugView" partName="Debug">
-<viewState/>
-</view>
 <view id="org.eclipse.ui.views.TaskList" partName="Tasks">
 <viewState PRIMARY_SORT_FIELD="org.eclipse.ui.ide.completionField" categoryGroup="none" markerContentGenerator="org.eclipse.ui.ide.tasksGenerator" partName="Tasks">
 <columnWidths org.eclipse.ui.ide.completionField="40" org.eclipse.ui.ide.descriptionField="350" org.eclipse.ui.ide.locationField="105" org.eclipse.ui.ide.markerType="218" org.eclipse.ui.ide.pathField="140" org.eclipse.ui.ide.priorityField="35" org.eclipse.ui.ide.resourceField="105"/>
@@ -128,11 +119,17 @@
 <visible IMemento.internal.id="org.eclipse.ui.ide.markerType"/>
 </viewState>
 </view>
-<view id="org.eclipse.ui.navigator.ProjectExplorer" partName="Project Explorer">
-<viewState CommonNavigator.LINKING_ENABLED="0" org.eclipse.ui.navigator.resources.workingSets.showTopLevelWorkingSets="0"/>
+<view id="org.eclipse.ui.views.ContentOutline" partName="Outline">
+<viewState/>
+</view>
+<view id="org.eclipse.jdt.ui.SourceView" partName="Declaration">
+<viewState/>
+</view>
+<view id="org.eclipse.jdt.ui.JavadocView" partName="Javadoc">
+<viewState/>
 </view>
 </views>
-<perspectives activePart="org.eclipse.ui.console.ConsoleView" activePerspective="org.eclipse.debug.ui.DebugPerspective">
+<perspectives activePart="org.eclipse.jdt.ui.CompilationUnitEditor" activePerspective="org.eclipse.debug.ui.DebugPerspective">
 <perspective editorAreaTrimState="4" editorAreaVisible="1" fixed="0" version="0.016">
 <descriptor class="org.eclipse.jdt.internal.ui.JavaPerspectiveFactory" id="org.eclipse.jdt.ui.JavaPerspective" label="Java"/>
 <alwaysOnActionSet id="org.eclipse.ui.cheatsheets.actionSet"/>
@@ -282,7 +279,7 @@
 </presentation>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.debug.internal.ui.NavigatorFolderView" ratio="0.18043478" ratioLeft="249" ratioRight="1131" relationship="2" relative="org.eclipse.ui.internal.ViewStack@16e822e">
+<info folder="true" part="org.eclipse.debug.internal.ui.NavigatorFolderView" ratio="0.1789855" ratioLeft="247" ratioRight="1133" relationship="2" relative="org.eclipse.ui.internal.ViewStack@16e822e">
 <folder activePageID="org.eclipse.debug.ui.DebugView" appearance="2" expanded="2">
 <page content="org.eclipse.debug.ui.DebugView" label="Debug"/>
 <page content="org.eclipse.ui.views.ResourceNavigator" label="LabelNotFound"/>
@@ -398,42 +395,31 @@
 <view id="org.eclipse.search.ui.views.SearchView"/>
 <view id="org.eclipse.jdt.callhierarchy.view"/>
 <fastViewBars/>
-<layout>
-<mainWindow>
-<info folder="true" part="org.eclipse.ui.internal.ViewStack@1c9acf1">
-<folder appearance="2" expanded="2">
-<page content="org.eclipse.jdt.ui.PackagesView" label="LabelNotFound"/>
+<layout>&#x0A;<mainWindow>&#x0A;<info folder="true" part="org.eclipse.ui.internal.ViewStack@1c9acf1">&#x0A;<folder appearance="2" expanded="2">&#x0A;<page content="org.eclipse.jdt.ui.PackagesView" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.ui.ProjectsView" label="LabelNotFound"/>
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
 </folder>
 </info>
-<info folder="true" part="stickyFolderRight" ratio="0.7495895" ratioLeft="913" ratioRight="305" relationship="2" relative="org.eclipse.ui.internal.ViewStack@1c9acf1">
-<folder appearance="2" expanded="2">
-<page content="org.eclipse.help.ui.HelpView" label="LabelNotFound"/>
+<info folder="true" part="stickyFolderRight" ratio="0.7495895" ratioLeft="913" ratioRight="305" relationship="2" relative="org.eclipse.ui.internal.ViewStack@1c9acf1">&#x0A;<folder appearance="2" expanded="2">&#x0A;<page content="org.eclipse.help.ui.HelpView" label="LabelNotFound"/>
 <page content="org.eclipse.ui.internal.introview" label="LabelNotFound"/>
 <page content="org.eclipse.ui.cheatsheets.views.CheatSheetView" label="LabelNotFound"/>
 </folder>
 </info>
-<info folder="true" part="left" ratio="0.24036281" ratioLeft="212" ratioRight="670" relationship="4" relative="org.eclipse.ui.internal.ViewStack@1c9acf1">
-<folder activePageID="org.eclipse.jdt.ui.MembersView" appearance="2" expanded="2">
-<page content="org.eclipse.jdt.ui.PackageExplorer" label="Package Explorer"/>
+<info folder="true" part="left" ratio="0.24036281" ratioLeft="212" ratioRight="670" relationship="4" relative="org.eclipse.ui.internal.ViewStack@1c9acf1">&#x0A;<folder activePageID="org.eclipse.jdt.ui.MembersView" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.jdt.ui.PackageExplorer" label="Package Explorer"/>
 <page content="org.eclipse.ui.navigator.ProjectExplorer" label="Project Explorer"/>
 <page content="org.eclipse.jdt.ui.MembersView" label="Members"/>
 <page content="org.eclipse.jdt.ui.TypeHierarchy" label="LabelNotFound"/>
 <page content="org.eclipse.ui.views.ContentOutline" label="LabelNotFound"/>
 <page content="org.eclipse.ui.views.ResourceNavigator" label="LabelNotFound"/>
 <page content="org.eclipse.ant.ui.views.AntView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
-<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
 <part id="2"/>
 <part id="1"/>
 </presentation>
 </folder>
 </info>
 <info part="org.eclipse.ui.editorss" ratio="0.19836065" ratioLeft="242" ratioRight="978" relationship="2" relative="left"/>
-<info folder="true" part="bottom" ratio="0.6017964" ratioLeft="402" ratioRight="266" relationship="4" relative="org.eclipse.ui.editorss">
-<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">
-<page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
+<info folder="true" part="bottom" ratio="0.6017964" ratioLeft="402" ratioRight="266" relationship="4" relative="org.eclipse.ui.editorss">&#x0A;<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
 <page content="org.eclipse.search.ui.views.SearchView" label="Search"/>
 <page content="org.eclipse.jdt.callhierarchy.view" label="Call Hierarchy"/>
 <page content="org.eclipse.ui.views.ProblemView" label="LabelNotFound"/>
@@ -441,16 +427,13 @@
 <page content="org.eclipse.jdt.ui.SourceView" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.ui.JavadocView" label="LabelNotFound"/>
 <page content="org.eclipse.ui.views.ProgressView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
-<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
 <part id="1"/>
 <part id="2"/>
 </presentation>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.ui.internal.ViewStack@f769c1" ratio="0.24958949" ratioLeft="304" ratioRight="914" relationship="2" relative="org.eclipse.ui.internal.ViewStack@1c9acf1">
-<folder appearance="2" expanded="2">
-<page content="org.eclipse.jdt.ui.TypesView" label="LabelNotFound"/>
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@f769c1" ratio="0.24958949" ratioLeft="304" ratioRight="914" relationship="2" relative="org.eclipse.ui.internal.ViewStack@1c9acf1">&#x0A;<folder appearance="2" expanded="2">&#x0A;<page content="org.eclipse.jdt.ui.TypesView" label="LabelNotFound"/>
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
 </folder>
 </info>
@@ -468,18 +451,6 @@
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/XN_tool/src/de/uhoh/for1695/MySQLConnection.java"/>
 </editors>
-<item historyLabel="XnParameterTool.java" index="0">
-<position info="not_deleted" x="32464" y="19"/>
-</item>
-<item historyLabel="XnParameterTool.java" index="0">
-<position info="not_deleted" x="32099" y="19"/>
-</item>
-<item historyLabel="XnParameterTool.java" index="0">
-<position info="not_deleted" x="32192" y="16"/>
-</item>
-<item historyLabel="XnParameterTool.java" index="0">
-<position info="not_deleted" x="32167" y="24"/>
-</item>
 <item historyLabel="XnParameterTool.java" index="0">
 <position info="not_deleted" x="35396" y="24"/>
 </item>
@@ -615,8 +586,20 @@
 <item historyLabel="XnDatabaseConnection.java" index="4">
 <position info="not_deleted" x="58606" y="16"/>
 </item>
-<item active="true" historyLabel="XnDatabaseConnection.java" index="4">
+<item historyLabel="XnDatabaseConnection.java" index="4">
 <position info="not_deleted" x="61595" y="0"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="4">
+<position info="not_deleted" x="61378" y="0"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="4">
+<position info="not_deleted" x="97955" y="27"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="4">
+<position info="not_deleted" x="104744" y="32"/>
+</item>
+<item active="true" historyLabel="XnDatabaseConnection.java" index="4">
+<position info="not_deleted" x="142536" y="32"/>
 </item>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>

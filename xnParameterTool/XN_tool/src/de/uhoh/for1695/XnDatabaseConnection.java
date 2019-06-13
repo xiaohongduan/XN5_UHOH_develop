@@ -2890,9 +2890,14 @@ class	XnDatabaseConnection {
 			
 			String s1 = "SELECT  xn5_cell_x, xn5_cell_y, year, position, " 
 							+ " t1.crop_management_id, t1.crop_code as CropCode, t1.variety,"
-							+ " sow_depth, row_dist, sow_dens, sow_date, IF(emerg_date = -99, sow_date, emerg_date) AS emerg_date, harvest_date,"
-							+ " IF(max_biom_date = -99, harvest_date, max_biom_date) AS max_biom_date, IF(max_ro_date = -99, harvest_date, max_ro_date) AS max_ro_date, max_root_depth AS max_root, biom_remove, t3.crop_name as CropName"
-							+ ", sow_date_year, IFNULL(emerg_date_year, sow_date_year) AS emerg_date_year, harvest_date_year, IFNULL(max_biom_date_year, harvest_date_year) AS max_biom_date_year , IFNULL(max_ro_date_year, harvest_date_year) AS max_ro_date_year,  HTMX * 100 as max_plant_height "
+							+ " sow_depth, row_dist, sow_dens, sow_date, IF(emerg_date = -99 OR emerg_date IS NULL, sow_date, emerg_date) AS emerg_date, harvest_date,"
+							+ " IF(max_biom_date = -99 OR max_biom_date IS NULL, harvest_date, max_biom_date) AS max_biom_date, " +
+							 "IF(max_ro_date = -99 OR max_ro_date IS NULL, harvest_date, max_ro_date) AS max_ro_date, " +
+							 "max_root_depth AS max_root, biom_remove, t3.crop_name as CropName"
+							+ ", sow_date_year, IF(emerg_date_year = -99 OR emerg_date_year IS NULL, sow_date_year, emerg_date_year) AS emerg_date_year, " +
+							"harvest_date_year, IF(max_biom_date_year = -99 OR max_biom_date_year IS NULL, harvest_date_year," +
+							"max_biom_date_year) AS max_biom_date_year , IF(max_ro_date_year = -99 OR max_ro_date_year IS NULL, harvest_date_year,max_ro_date_year) AS max_ro_date_year,  " +
+							"HTMX * 100 as max_plant_height "
 							+ " FROM simulation_projects_xn5_cells_management t1"
 							+ " JOIN crop_management_planting t2"
 							+ "  ON t1.crop_management_id = t2.crop_management_id"
@@ -5083,10 +5088,10 @@ class	XnDatabaseConnection {
 		String[] tables =tableName.split(";");
 
 		for (int i = 0; i < tables.length; ++i) {
-			if (checkTableExists("for1695_weather", tableName)) {
+			if (! checkTableExists("for1695_weather", tables[i])) {
 				
-				JOptionPane.showMessageDialog(null, "Error: Table '"+tableName+"' does not exist in for1695_weather. ");
-				System.out.println("Error: Table '"+tableName+"' does not exist in for1695_weather. ");
+				JOptionPane.showMessageDialog(null, "Error: Table '"+tables[i]+"' does not exist in for1695_weather. ");
+				System.out.println("Error: Table '"+tables[i]+"' does not exist in for1695_weather. ");
 				return false;
 				
 			}
