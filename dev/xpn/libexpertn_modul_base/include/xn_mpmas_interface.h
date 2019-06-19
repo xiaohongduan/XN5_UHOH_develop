@@ -47,7 +47,7 @@ typedef struct {
     char code [XNORGFERTCODELENGTH + 1];
     double drymatter; //kg
     double nh4n; // kg N
-    double org_subst;//kg 
+    double n_tot_org;//kg 
     int adaptive;
     int bbch;
 } xnmpmasOrgFert;

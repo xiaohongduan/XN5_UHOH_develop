@@ -118,22 +118,7 @@ static void gecros_init(gecros *self)
 {
  self->_init_done=0;
  self->_done_done=0;
- 
 }
-
-//Added by Hong on 20180321
-
-void load_model_cfg_gecros(gecros *self)
-{
-	expertn_modul_base *xpn = &(self->parent);
-	char *S;
-	//xpn_register_var_set_pointer(xpn->pXSys->var_list, "Config.plant.biomass growth", "GECROS BiomassGrowth test"); //hat keinen Einfluss auf Simualtion
-	S= xpn_register_var_get_pointer(xpn->pXSys->var_list, "Config.plant.biomass growth");
-	
-	//PRINT_MESSAGE(xpn,1,S);
-}
-
-//End of Hong
 
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -145,7 +130,6 @@ int gecros_Init_and_AllocMemory(gecros *self)
 	if (self->_init_done!=0) return RET_SUCCESS;
 	self->_init_done++;
 
-    load_model_cfg_gecros(self);//Added by Hong
 	gecros_alloc_allocateGECROSVariables(self);	
 	gecros_Init_Vars(self); //Hong: only read once  
 	
@@ -300,10 +284,13 @@ int gecros_CropSenescence(gecros *self)
     PCHEMISTRY pCh = xpn->pCh;
 	PPLANT pPl = xpn->pPl;
 	PSPROFILE pSo = xpn->pSo;
-
+	
+    PCBALANCE	pCB = pCh->pCBalance; //Added by Hong on 20180731
 	PSLAYER    pSL  = pSo->pSLayer;//->pNext;
 	PCLAYER    pCL = pCh->pCLayer;//->pNext;
     PLAYERROOT pLR = pPl->pRoot->pLayerRoot;
+	
+	
 
     PGECROSCARBON     pGPltC = self->pGecrosPlant->pGecrosCarbon;
     PGECROSNITROGEN   pGPltN = self->pGecrosPlant->pGecrosNitrogen;
@@ -333,7 +320,9 @@ int gecros_CropSenescence(gecros *self)
 			
 			pCh->pCProfile->fCLitterSurf += pGPltC->fCLeafLossR*DELT; //Hong
 			pCh->pCProfile->fNLitterSurf += pGPltN->fNLeafLossR*DELT; //Hong
-
+            
+			pCB->dCInputCum += pGPltC->fCLeafLossR*DELT; //Hong added on 20180731 for C-balance
+			
 			//roots
 			//if(pPl->pDevelop->fStageSUCROS>=pPl->pGenotype->fBeginSenesDvs)
 			{
@@ -377,6 +366,8 @@ int gecros_CropSenescence(gecros *self)
 						//Changed *DELT by Hong on 20171124
 						pCL->fCLitter += fDeadRootC * pLR->fLengthDensFac/TRLDF*DELT;
 						pCL->fNLitter += fDeadRootN * pLR->fLengthDensFac/TRLDF*DELT;
+						
+						pCB->dCInputCum += fDeadRootC * pLR->fLengthDensFac/TRLDF*DELT; //Hong added on 20180731 for C-balance
 					}
 
 					pSL = pSL->pNext;
@@ -583,8 +574,7 @@ int gecros_Init_Vars(gecros *self)
 	char *ini_filename;	
 	char *S;	
 //End of Hong
-
-	
+		
 //######## initiatlisierung der Variablen, nur einmal #############################
 	//for Astronmy
 	self->SC=0.0;

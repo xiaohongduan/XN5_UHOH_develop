@@ -158,7 +158,7 @@ struct _xpn_output
 	// Plant
 	double Nuptake, H2Ouptake;
 	double DevStage, LAI, TotRLD, Diameter, PlantDens,Height;	// Height
-	double RootMass, StemMass, BranchMass, LeafMass, FruitMass, WoodMass;
+	double RootMass, StemMass, BranchMass, LeafMass, FruitMass, WoodMass, StrawMass; //StrawMass added by Hong
 	double AboveMass,TotalMass;
 	double AssimilatePool;
 	double RootWaterUp;

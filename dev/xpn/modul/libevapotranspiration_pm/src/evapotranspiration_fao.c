@@ -165,9 +165,7 @@ int evapotranspiration_FAO_run(evapotranspiration *self)
 		self->fcumtrad += fETrad; //Cumulative radiation term
 
 		pWa->fPotETDay = pWE->fPanEvap;
-	//Hong:
-//		pWa->fPotETDay = 100.0*pWa->fPotETDay;
-	//end of Hong not pot. but the act.needed to be changed
+	
 	}//NewDay
 
 

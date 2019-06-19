@@ -873,11 +873,31 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 	PSLAYER pSLayer;
 	PSWATER pSWater;
 	PSHEAT pSHeat;
+	//Added by Hong
+	PWLAYER pWL;
+	PSWATER      pSW;
+    pWL= xpn->pWa->pWLayer; //Added by Hong
+	pSW = xpn->pSo->pSWater;
+	//End of Hong
 	pSo = xpn->pSo;
 	pSo->fDepth=0.0;
 	fDepth_all =0.0;
 	i3 = 0;
 	i2 = 0;
+	
+	//Added by Hong
+	// Hydraulische Funktionen laden:
+	self->WCont = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.WCont");
+	self->HCond = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.HCond");
+	self->DWCap = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.DWCap");
+	self->MPotl = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.MPotl");
+	if ((self->WCont==NULL) || (self->HCond==NULL) || (self->DWCap==NULL) || (self->MPotl==NULL))
+		{
+			PRINT_ERROR("Problem with hydraulic functions!");
+		}
+	//End of Hong
+	
+	
 	for (pSLayer=xpn->pSo->pSLayer,pSHeat = xpn->pSo->pSHeat,pSWater=xpn->pSo->pSWater,i=0; pSLayer!=NULL; pSLayer=pSLayer->pNext,pSWater=pSWater->pNext,pSHeat = pSHeat->pNext,i++)
 		{
 			pSLayer->fClay = self->cfg->clay[i2];
@@ -900,6 +920,13 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 			pSWater->fCampB = self->cfg->camp_b[i2];
 			pSWater->fVanGenA = self->cfg->van_gen_a[i2];
 			pSWater->fVanGenN = self->cfg->van_gen_n[i2];
+			//Added by Hong Dec.2018
+			//int f1, f2;
+			//f1= (double)-150000;
+			//f2=(double)-3300;
+			//pSWater->fContPWP = WATER_CONTENT(f1);
+			//pSWater->fContFK = WATER_CONTENT(f2);
+			//End of Hong
 			pSWater->fMinPot = self->cfg->max_pot[i2];
 			pSWater->fCondSat = self->cfg->cond_sat[i2];
 			pSWater->fContInflec = self->cfg->cont_inflec[i2];
@@ -1072,8 +1099,6 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 	//xpn->pCl->pWeather->fSolNet = expertn_database_help_func_get_Rn(xpn);
 	/*laenge = calculateDayLength(xpn->pLo->pFarm->fLatitude,xpn->pTi->pSimTime->iJulianDay );
 	C_DEBUG(laenge);*/
-	
-	
 	
 	// Get values for daily models for one day later
 	if(is_leap_year(self->parent.pTi->pSimTime->iyear) == 0)

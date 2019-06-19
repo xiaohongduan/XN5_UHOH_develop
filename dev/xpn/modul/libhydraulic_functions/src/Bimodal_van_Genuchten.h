@@ -1,5 +1,5 @@
-#ifndef __BIOMODAL_VAN_GENUCHTEN_H__
-#define __BIOMODAL_VAN_GENUCHTEN_H__
+#ifndef __BIMODAL_VAN_GENUCHTEN_H__
+#define __BIMODAL_VAN_GENUCHTEN_H__
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *  Name     : C2_MPotl()

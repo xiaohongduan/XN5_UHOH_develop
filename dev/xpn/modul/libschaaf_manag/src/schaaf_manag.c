@@ -273,8 +273,8 @@ int TSIrrigation(schaaf_manag *self)
 		 pCh->pCProfile->fCManureSurf += pMa->pIrrigation->fCorgManure;
 		 
 		              
-		 xpn->pCl->pWeather->fPreciRate += self->irrigation_actual->fAmount; // Hong: Übernommen von shaaf.c line 1182
-         xpn->pCl->pWeather->fLiquPreciRate += self->irrigation_actual->fAmount; // Hong: Übernommen von shaaf.c line 1183
+		 xpn->pCl->pWeather->fPreciRate += self->irrigation_actual->fAmount; // Hong: Übernommen von shaaf.c-XN3 line 1182
+         xpn->pCl->pWeather->fLiquPreciRate += self->irrigation_actual->fAmount; // Hong: Übernommen von shaaf.c-XN3 line 1183
 		 
 		 		 		 
 		 // point to the next irrigation date:
@@ -681,9 +681,10 @@ int LagerungNeu(schaaf_manag *self)
  {
 	expertn_modul_base *xpn = EXPERTN_MODUL_BASE(self);
 	 
-	PMANAGEMENT pMa = xpn->pMa;
-	PCHEMISTRY pCh =xpn->pCh;
-	PCPROFILE pCP = pCh->pCProfile;
+	PMANAGEMENT     pMa = xpn->pMa;
+	PCHEMISTRY      pCh = xpn->pCh;
+	PCPROFILE       pCP     = pCh->pCProfile;
+	PCBALANCE	    pCB     = pCh->pCBalance; //Added by Hong on 20180731
 // orig.:  PCLAYER   pCL = pCh->pCLayer;
 
 	PCLAYER   pCL = xpn->pCh->pCLayer->pNext;
@@ -742,6 +743,9 @@ int LagerungNeu(schaaf_manag *self)
 		pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge);
 		pCP->fCStandCropRes = restMenge;
 		
+		//Hong added on 20180807 for C-balance
+		pCB->dCInputCum +=(pCP->fCStandCropRes - restMenge);
+		
 	}
 
 
@@ -785,7 +789,7 @@ int LagerungNeu(schaaf_manag *self)
 						 * (effektEinarbeitung * effektEinarbeitung));
 		pSL->fNHumus    += (pCP->fNHumusSurf - restMenge);
 		
-		//Begin of Hong: change in XN3
+		//Begin of Hong: change in XN3 
 		//SG 20161009: For DAISY model - 100% of fNorgManure that is partitioned to "fNHumusSurf" are SOM2 (see TSFertilizer, manage.c line 334-349)
 		pCL->fNHumusFast   += (pCP->fNHumusSurf - restMenge);
 		//End of Hong
@@ -800,7 +804,7 @@ int LagerungNeu(schaaf_manag *self)
 		pSL->fCHumus    += (pCP->fCHumusSurf - restMenge);
 		pCP->fCHumusSurf = restMenge;
 		
-		//Begin of Hong: change in XN3
+		//Begion of Hong: change in XN3
 		//SG 20161009: For DAISY model - 100% of fCorgManure that is partitioned to "fCHumusSurf" are SOM2 (see TSFertilizer, manage.c line 334-349)
 		pCL->fCHumusFast   += (pCP->fCHumusSurf - restMenge);
 

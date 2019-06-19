@@ -271,6 +271,9 @@ expertnclass *expertnclass_new(int DEBUG_LEVEL, struct_register_modul_list *modu
 	
 	PRINT_MESSAGE(self,2,"Init!");
 	
+	//PRINT_MESSAGE(self,1,self->ini_file_name);//Hong:self->ini_file_name refers to .xpi
+                   
+	
     expertnclass_load_INI(self);
     
     expertnclass_loadModuls(self);
@@ -606,9 +609,7 @@ void expertnclass_load_INI(expertnclass *self)
     /* Load the GKeyFile from keyfile.conf or return. */
     if (!g_key_file_load_from_file (keyfile, self->ini_file_name, flags, &error))
         {
-         //   PRINT_ERROR_ID(self,error->message);
-	fprintf(stderr,"ERROR  %s\t%d\t%s\n",__FILE__,__LINE__,error->message);fflush(stderr);
-
+            PRINT_ERROR_ID(self,error->message);
             exit(1);
         }
         

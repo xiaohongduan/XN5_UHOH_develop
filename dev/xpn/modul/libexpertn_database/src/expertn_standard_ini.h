@@ -170,6 +170,26 @@ struct _expertn_standard_ini
 	
 	int no_rain;
 	
+	//Added by Hong on 20181212
+	// Hydraulic Functions:
+	double (*WCont)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+                    double Alpha, double N, double M, double Ca, double Cb,
+                    double Hc, double Tc, double Hmin, double Hvor, double Tvor,
+                    double Alpha2, double N2, double M2, double W1, double W2);
+	double (*HCond)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+                    double Alpha, double N, double M, double Ca, double Cb,
+                    double Hc, double Tc, double Hmin, double Hvor, double Tvor,
+                    double Alpha2, double N2, double M2, double W1, double W2);
+	double (*DWCap)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+                    double Alpha, double N, double M, double Ca, double Cb,
+                    double Hc, double Tc, double Hmin, double Hvor, double Tvor,
+                    double Alpha2, double N2, double M2, double W1, double W2);
+    double (*MPotl)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+                    double Alpha, double N, double M, double Ca, double Cb,
+                    double Hc, double Tc, double Hmin, double Hvor, double Tvor,
+                    double Alpha2, double N2, double M2, double W1, double W2);
+	
+	//End of Hong
 	
 	STRUCT_CFG_FILE *cfg;
 };

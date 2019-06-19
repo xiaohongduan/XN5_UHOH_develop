@@ -421,6 +421,7 @@ if ((strcmp(pPl->pGenotype->acCropCode,"WH")==0)||
 	//Dry weight of different organs	                          
 	pBiom->fLeafWeight 		+= pBiom->fLeafGrowR*pTi->fAct; 
 	pBiom->fStemWeight  	+= pBiom->fStemGrowR*pTi->fAct;
+	
 	pBiom->fRootWeight  	+= pBiom->fRootGrowR*pTi->fAct;
 	pBiom->fGrainWeight 	+= pBiom->fGrainGrowR*pTi->fAct;
 

@@ -510,7 +510,7 @@ int xn_mpmas_translator::readLuaProps(const char* fnLuaProps )
 				
 				temp.organicFertilization[j].drymatter = getValueFromYamlNode<double>(luaProps[i]["organic-fertilization"][j]["dry-matter"], fnLuaProps,"organic-fertilization->?->dry-matter of luaID ", luaID);
 				temp.organicFertilization[j].nh4n = getValueFromYamlNode<double>(luaProps[i]["organic-fertilization"][j]["nh4n"], fnLuaProps,"organic-fertilization->?->nh4n of luaID ", luaID);
-				temp.organicFertilization[j].org_subst = getValueFromYamlNode<double>(luaProps[i]["organic-fertilization"][j]["organic-substance"], fnLuaProps,"organic-fertilization->?->organic-substance of luaID ", luaID);
+				temp.organicFertilization[j].n_tot_org = getValueFromYamlNode<double>(luaProps[i]["organic-fertilization"][j]["n-tot-org"], fnLuaProps,"organic-fertilization->?->n-tot-org of luaID ", luaID);
 				
 				if (luaProps[i]["organic-fertilization"][j]["adaptive"])
 				{
@@ -819,7 +819,7 @@ int xn_mpmas_translator::readLuaProps(const char* fnLuaProps )
 							&rc,
 							&temp.organicFertilization[i].drymatter,
 							&temp.organicFertilization[i].nh4n,
-							&temp.organicFertilization[i].org_subst
+							&temp.organicFertilization[i].n_tot_org
 							);
 			sprintf(message," organic fertilizer application %d for land use activity %d", i, lua);
 			checkFscanfSuccess(rtcod, 7, fnLuaProps, message);

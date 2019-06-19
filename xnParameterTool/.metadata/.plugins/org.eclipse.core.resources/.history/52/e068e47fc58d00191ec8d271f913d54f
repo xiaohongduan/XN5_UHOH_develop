@@ -2039,7 +2039,8 @@ class	XnDatabaseConnection {
 						if ( project_type != 3 && cellList.getInt("weather_station_id") > -1 
 								&& cellList.getString("weather_table_name").compareToIgnoreCase("") != 0)  {
 							
-							climfile = "$<$PROJECT_PATH/"+ cellList.getString("weather_table_name") +"_"+ cellList.getInt("weather_station_id");
+							String[] tables =cellList.getString("weather_table_name").split(";");
+							climfile = "$<$PROJECT_PATH/"+ tables[0] +"_"+ cellList.getInt("weather_station_id");
 							if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
 								climfile += String.format("%04d", cellList.getInt("alt") );
 							}
@@ -2889,9 +2890,9 @@ class	XnDatabaseConnection {
 			
 			String s1 = "SELECT  xn5_cell_x, xn5_cell_y, year, position, " 
 							+ " t1.crop_management_id, t1.crop_code as CropCode, t1.variety,"
-							+ " sow_depth, row_dist, sow_dens, sow_date, IF(emerg_date = -99, sow_date, emerg_date) AS emerg_date, harvest_date,"
-							+ " IF(max_biom_date = -99, harvest_date, max_biom_date) AS max_biom_date, IF(max_ro_date = -99, harvest_date, max_ro_date) AS max_ro_date, max_root_depth AS max_root, biom_remove, t3.crop_name as CropName"
-							+ ", sow_date_year, IFNULL(emerg_date_year, sow_date_year) AS emerg_date_year, harvest_date_year, IFNULL(max_biom_date_year, harvest_date_year) AS max_biom_date_year , IFNULL(max_ro_date_year, harvest_date_year) AS max_ro_date_year,  HTMX * 100 as max_plant_height "
+							+ " sow_depth, row_dist, sow_dens, sow_date, IF(emerg_date = -99 OR emerg_date IS NULL, sow_date, emerg_date) AS emerg_date, harvest_date,"
+							+ " IF(max_biom_date = -99 OR max_biom_date IS NULL, harvest_date, max_biom_date) AS max_biom_date, IF(max_ro_date = -99 OR IS NULL, harvest_date, max_ro_date) AS max_ro_date, max_root_depth AS max_root, biom_remove, t3.crop_name as CropName"
+							+ ", sow_date_year, IF(emerg_date_year = -99 OR emerg_date_year IS NULL, sow_date_year) AS emerg_date_year, harvest_date_year, IF(max_biom_date_year = -99 OR max_biom_date_year IS NULL, harvest_date_year) AS max_biom_date_year , IFNULL(max_ro_date_year, harvest_date_year) AS max_ro_date_year,  HTMX * 100 as max_plant_height "
 							+ " FROM simulation_projects_xn5_cells_management t1"
 							+ " JOIN crop_management_planting t2"
 							+ "  ON t1.crop_management_id = t2.crop_management_id"
@@ -5076,7 +5077,8 @@ class	XnDatabaseConnection {
 					int elevationCorrectionType, double altitude, String elevationInfoTable, boolean doCO2, ResultSet co2Series) {
 
 //Note: write_init_history_file 0 = no, 1 = yes, 2 = only history no normal file
-		
+		System.out.println("Writing "+filename+"...");
+
 		
 		String[] tables =tableName.split(";");
 

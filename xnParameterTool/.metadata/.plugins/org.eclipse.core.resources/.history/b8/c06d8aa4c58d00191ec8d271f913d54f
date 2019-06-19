@@ -2039,7 +2039,8 @@ class	XnDatabaseConnection {
 						if ( project_type != 3 && cellList.getInt("weather_station_id") > -1 
 								&& cellList.getString("weather_table_name").compareToIgnoreCase("") != 0)  {
 							
-							climfile = "$<$PROJECT_PATH/"+ cellList.getString("weather_table_name") +"_"+ cellList.getInt("weather_station_id");
+							String[] tables =cellList.getString("weather_table_name").split(";");
+							climfile = "$<$PROJECT_PATH/"+ tables[0] +"_"+ cellList.getInt("weather_station_id");
 							if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
 								climfile += String.format("%04d", cellList.getInt("alt") );
 							}
@@ -2889,9 +2890,9 @@ class	XnDatabaseConnection {
 			
 			String s1 = "SELECT  xn5_cell_x, xn5_cell_y, year, position, " 
 							+ " t1.crop_management_id, t1.crop_code as CropCode, t1.variety,"
-							+ " sow_depth, row_dist, sow_dens, sow_date, IF(emerg_date = -99, sow_date, emerg_date) AS emerg_date, harvest_date,"
-							+ " IF(max_biom_date = -99, harvest_date, max_biom_date) AS max_biom_date, IF(max_ro_date = -99, harvest_date, max_ro_date) AS max_ro_date, max_root_depth AS max_root, biom_remove, t3.crop_name as CropName"
-							+ ", sow_date_year, IFNULL(emerg_date_year, sow_date_year) AS emerg_date_year, harvest_date_year, IFNULL(max_biom_date_year, harvest_date_year) AS max_biom_date_year , IFNULL(max_ro_date_year, harvest_date_year) AS max_ro_date_year,  HTMX * 100 as max_plant_height "
+							+ " sow_depth, row_dist, sow_dens, sow_date, IF(emerg_date = -99 OR emerg_date IS NULL, sow_date, emerg_date) AS emerg_date, harvest_date,"
+							+ " IF(max_biom_date = -99 OR max_biom_date IS NULL, harvest_date, max_biom_date) AS max_biom_date, IF(max_ro_date = -99 OR IS NULL, harvest_date, max_ro_date) AS max_ro_date, max_root_depth AS max_root, biom_remove, t3.crop_name as CropName"
+							+ ", sow_date_year, IF(emerg_date_year = -99 OR emerg_date_year IS NULL, sow_date_year) AS emerg_date_year, harvest_date_year, IF(max_biom_date_year = -99 OR max_biom_date_year IS NULL, harvest_date_year) AS max_biom_date_year , IF(max_ro_date_year = -99 OR max_ro_date_year IS NULL, harvest_date_year) AS max_ro_date_year,  HTMX * 100 as max_plant_height "
 							+ " FROM simulation_projects_xn5_cells_management t1"
 							+ " JOIN crop_management_planting t2"
 							+ "  ON t1.crop_management_id = t2.crop_management_id"
@@ -5076,25 +5077,46 @@ class	XnDatabaseConnection {
 					int elevationCorrectionType, double altitude, String elevationInfoTable, boolean doCO2, ResultSet co2Series) {
 
 //Note: write_init_history_file 0 = no, 1 = yes, 2 = only history no normal file
+		System.out.println("Writing "+filename+"...");
+
 		
-		if (checkTableExists("for1695_weather", tableName)) {
-			try {
-				int first_data_year = first_year;
-				int last_data_year = last_year;
-				if (write_init_history_file > 0) {
-					first_data_year = first_year - 6;
-				}
-				if (write_init_history_file == 2) {
-					last_data_year = first_year ;
-				}
+		String[] tables =tableName.split(";");
+
+		for (int i = 0; i < tables.length; ++i) {
+			if (checkTableExists("for1695_weather", tableName)) {
 				
+				JOptionPane.showMessageDialog(null, "Error: Table '"+tableName+"' does not exist in for1695_weather. ");
+				System.out.println("Error: Table '"+tableName+"' does not exist in for1695_weather. ");
+				return false;
 				
-				String s = "SELECT year, month, day, dayofyear(STR_TO_DATE(CONCAT(day,'-',month,'-',year), '%d-%m-%y')) as day_year, avg_temp,maximum_temperature, minimum_temperature, IFNULL(soil_temp_5_cm, -99.9) as soil_temp_5_cm, IFNULL( soil_temp_10_cm, -99.9) as soil_temp_10_cm, IFNULL( soil_temp_20_cm, -99.9) as soil_temp_20_cm," 
+			}
+		}
+		try {
+			int first_data_year = first_year;
+			int last_data_year = last_year;
+			if (write_init_history_file > 0) {
+				first_data_year = first_year - 6;
+			}
+			if (write_init_history_file == 2) {
+				last_data_year = first_year ;
+			}
+			
+			String s = "";
+			
+			for (int i = 0; i < tables.length; ++i) {
+				
+				if (i > 0)
+					s+= " UNION ";
+				
+				s += "SELECT year, month, day, dayofyear(STR_TO_DATE(CONCAT(day,'-',month,'-',year), '%d-%m-%y')) as day_year, avg_temp,maximum_temperature, minimum_temperature, IFNULL(soil_temp_5_cm, -99.9) as soil_temp_5_cm, IFNULL( soil_temp_10_cm, -99.9) as soil_temp_10_cm, IFNULL( soil_temp_20_cm, -99.9) as soil_temp_20_cm," 
 						+ " precipitation, avg_wind_speed, relative_humidity, IFNULL(global_radiation, 9999.9) as global_radiation, air_pressure, IFNULL(snow_depth, 9999.9) as snow_depth, IFNULL(sunshine_duration,99.9) as sunshine_duration, IFNULL(dewpoint, -99.9) as dewpoint, IFNULL(pan_evaporation, 9999.9) as pan_evaporation , IFNULL(saturation_deficit_air, 9999.9) as saturation_deficit_air, specific_humidity"
-						+ " FROM for1695_weather. " + tableName 
-						+ " 	WHERE station_id = "+station_id+" AND year BETWEEN "+ first_data_year +"  AND "+ last_data_year +
-						"			ORDER BY year, month, day;";
-				ResultSet rs = myConnection.query(s);
+						+ " FROM for1695_weather. " + tables[i]
+						+ " 	WHERE station_id = "+station_id+" AND year BETWEEN "+ first_data_year +"  AND "+ last_data_year ;
+						
+			 
+			}
+			s+="			ORDER BY year, month, day;";
+			ResultSet rs = myConnection.query(s);
 /*				
 				int doy_correct = 0;
 				
@@ -5109,304 +5131,301 @@ class	XnDatabaseConnection {
 						doy_correct = 1;
 			*/
 
-				if (! rs.first() ) {
-					JOptionPane.showMessageDialog(null, "Error: No weather data found. ");
-					System.out.println("Error: No weather data found.");
-					rs.close();// rs2.close();
-					return false;
-				}
-				if ( write_init_history_file > 0 && (rs.getInt("year") > first_data_year)  ) {
-					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for initial BEMS history found. ");
-					System.out.println("Error: Not enough weather data for initial BEMS history found.");
-					rs.close();// rs2.close();
-					return false;
+			if (! rs.first() ) {
+				JOptionPane.showMessageDialog(null, "Error: No weather data found. ");
+				System.out.println("Error: No weather data found.");
+				rs.close();// rs2.close();
+				return false;
+			}
+			if ( write_init_history_file > 0 && (rs.getInt("year") > first_data_year)  ) {
+				JOptionPane.showMessageDialog(null, "Error: Not enough weather data for initial BEMS history found. ");
+				System.out.println("Error: Not enough weather data for initial BEMS history found.");
+				rs.close();// rs2.close();
+				return false;
 
-				}
-				rs.last();
-				if (  write_init_history_file != 2 && rs.getInt("year") < last_data_year  ) {
-					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for simulation run time found. ");
-					System.out.println("Error: Not enough weather data for simulation run time found.");
-					rs.close(); //rs2.close();
-					return false;
-				}
-				if (  write_init_history_file == 2 && rs.getInt("year") < last_data_year  ) {
-					JOptionPane.showMessageDialog(null, "Error: Not enough weather data for history found. ");
-					System.out.println("Error: Not enough weather data for history found (end of history too short).");
-					rs.close(); //rs2.close();
-					return false;
-				}
-				
-				  
-				double weatherCellElevation = 0;
-				if (elevationCorrectionType > 0) {
-					 try {  
-						 weatherCellElevation = Integer.parseInt(elevationInfoTable);  
-					  } catch(NumberFormatException nfe) {  
-					      // Log exception.
-					     weatherCellElevation = -9999;
-					  }  
-					if (weatherCellElevation ==  -9999 ) { 
-						
-						if (! elevationInfoTable.contains(".")) {
-							elevationInfoTable = "for1695_weather."+elevationInfoTable;
-						}
-						String selev = "SELECT orog FROM " + elevationInfoTable + " WHERE station_id = "+station_id+";"; 
-						ResultSet rsElev = myConnection.query(selev);
-						
-						if (rsElev == null)
-						{
-							JOptionPane.showMessageDialog(null, "Error: When trying to query "+elevationInfoTable+".");
-							System.out.println("Error: When trying to query "+elevationInfoTable+".");
-							rsElev.close();
-						}
-						
-						if (! rsElev.first() ) {
-							JOptionPane.showMessageDialog(null, "Error: No elevation information found for "+station_id+ " in "+elevationInfoTable+".");
-							System.out.println("Error: No elevation information found for "+station_id+ " in "+elevationInfoTable+".");
-							rsElev.close();
-							return false;
-						}
-						
-						weatherCellElevation = rsElev.getDouble("orog");
-					}
-				}
-
-				String  co2string = "";
-				if (	doCO2		){
-					co2string = ",CO2 [ppm]";
-					co2Series.beforeFirst();
-
-				}
-
-				
-				PrintWriter out = null;
-				if (write_init_history_file != 2) {
-					out	= new PrintWriter(new BufferedWriter(new FileWriter(filename+".csv")));
-					out.println("Date,global radiation [Mj/qm],max temp [°C],min temp [°C],precipitation [mm],sunshine duration [h],rel hum [%],wind speed [m/s],mean temp [°C],dew point [°C],Kesselverdunstung [mm],vapour saturation deficit [%],snow height [mm],par [mol/qm*d],temp soil at 2cm [°C],temp soil at 5cm [°C],temp soil at 10cm [°C],temp soil at 20cm [°C],temp soil at 50cm [°C]" + co2string);
-				}
-				PrintWriter out2 = null;
-				if ( write_init_history_file > 0 && ! appendHistory && history_filename.compareToIgnoreCase("") != 0) {
-					out2 = new PrintWriter(new BufferedWriter(new FileWriter(history_filename)));
-					out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
-				}
-				else if ( write_init_history_file >0 &&  appendHistory && history_filename.compareToIgnoreCase("") != 0) {
-					out2 = new PrintWriter(new BufferedWriter(new FileWriter(history_filename, true)));
+			}
+			rs.last();
+			if (  write_init_history_file != 2 && rs.getInt("year") < last_data_year  ) {
+				JOptionPane.showMessageDialog(null, "Error: Not enough weather data for simulation run time found. ");
+				System.out.println("Error: Not enough weather data for simulation run time found.");
+				rs.close(); //rs2.close();
+				return false;
+			}
+			if (  write_init_history_file == 2 && rs.getInt("year") < last_data_year  ) {
+				JOptionPane.showMessageDialog(null, "Error: Not enough weather data for history found. ");
+				System.out.println("Error: Not enough weather data for history found (end of history too short).");
+				rs.close(); //rs2.close();
+				return false;
+			}
+			
+			  
+			double weatherCellElevation = 0;
+			if (elevationCorrectionType > 0) {
+				 try {  
+					 weatherCellElevation = Integer.parseInt(elevationInfoTable);  
+				  } catch(NumberFormatException nfe) {  
+				      // Log exception.
+				     weatherCellElevation = -9999;
+				  }  
+				if (weatherCellElevation ==  -9999 ) { 
 					
+					if (! elevationInfoTable.contains(".")) {
+						elevationInfoTable = "for1695_weather."+elevationInfoTable;
+					}
+					String selev = "SELECT orog FROM " + elevationInfoTable + " WHERE station_id = "+station_id+";"; 
+					ResultSet rsElev = myConnection.query(selev);
+					
+					if (rsElev == null)
+					{
+						JOptionPane.showMessageDialog(null, "Error: When trying to query "+elevationInfoTable+".");
+						System.out.println("Error: When trying to query "+elevationInfoTable+".");
+						rsElev.close();
+					}
+					
+					if (! rsElev.first() ) {
+						JOptionPane.showMessageDialog(null, "Error: No elevation information found for "+station_id+ " in "+elevationInfoTable+".");
+						System.out.println("Error: No elevation information found for "+station_id+ " in "+elevationInfoTable+".");
+						rsElev.close();
+						return false;
+					}
+					
+					weatherCellElevation = rsElev.getDouble("orog");
 				}
-				else if ( write_init_history_file > 0 && ! appendHistory && history_filename.compareToIgnoreCase("") == 0 ) {
-					out2 = new PrintWriter(new BufferedWriter(new FileWriter(filename+"_init_history.txt")));
-					out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
-				}
-				else if ( write_init_history_file > 0 &&  appendHistory && history_filename.compareToIgnoreCase("") == 0 ) {
-					out2 = new PrintWriter(new BufferedWriter(new FileWriter(filename+"_init_history.txt", true)));
-					out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
-				}
+			}
+
+			String  co2string = "";
+			if (	doCO2		){
+				co2string = ",CO2 [ppm]";
+				co2Series.beforeFirst();
+
+			}
+
+			
+			PrintWriter out = null;
+			if (write_init_history_file != 2) {
+				out	= new PrintWriter(new BufferedWriter(new FileWriter(filename+".csv")));
+				out.println("Date,global radiation [Mj/qm],max temp [°C],min temp [°C],precipitation [mm],sunshine duration [h],rel hum [%],wind speed [m/s],mean temp [°C],dew point [°C],Kesselverdunstung [mm],vapour saturation deficit [%],snow height [mm],par [mol/qm*d],temp soil at 2cm [°C],temp soil at 5cm [°C],temp soil at 10cm [°C],temp soil at 20cm [°C],temp soil at 50cm [°C]" + co2string);
+			}
+			PrintWriter out2 = null;
+			if ( write_init_history_file > 0 && ! appendHistory && history_filename.compareToIgnoreCase("") != 0) {
+				out2 = new PrintWriter(new BufferedWriter(new FileWriter(history_filename)));
+				out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
+			}
+			else if ( write_init_history_file >0 &&  appendHistory && history_filename.compareToIgnoreCase("") != 0) {
+				out2 = new PrintWriter(new BufferedWriter(new FileWriter(history_filename, true)));
 				
-				rs.beforeFirst();
-				double precipStillToWrite = 0.0;
-				
-				while (rs.next()) {
-					if (write_init_history_file != 2 && rs.getInt("year") >= first_year) {
-						out.write(String.format("%04d", rs.getInt("year"))+"-"+ String.format("%02d", rs.getInt("month"))+"-"+String.format("%02d", rs.getInt("day"))); //date
-						out.write(", ");
-						out.write(Double.toString( rs.getDouble("global_radiation")));
-						out.write(", ");
-						
-						
-						double tempMax = rs.getDouble("maximum_temperature");
-						double tempMin = rs.getDouble("minimum_temperature");
-						double relHum =  rs.getDouble("relative_humidity");
-						double tempAvg = rs.getDouble("avg_temp");
-						
-						switch (elevationCorrectionType) {
-						
-						
-							case 0:
-								break;
-							case 1: { 
+			}
+			else if ( write_init_history_file > 0 && ! appendHistory && history_filename.compareToIgnoreCase("") == 0 ) {
+				out2 = new PrintWriter(new BufferedWriter(new FileWriter(filename+"_init_history.txt")));
+				out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
+			}
+			else if ( write_init_history_file > 0 &&  appendHistory && history_filename.compareToIgnoreCase("") == 0 ) {
+				out2 = new PrintWriter(new BufferedWriter(new FileWriter(filename+"_init_history.txt", true)));
+				out2.println("year\tdayofyear\tstation\tairtemp\tsoiltemp");
+			}
+			
+			rs.beforeFirst();
+			double precipStillToWrite = 0.0;
+			
+			while (rs.next()) {
+				if (write_init_history_file != 2 && rs.getInt("year") >= first_year) {
+					out.write(String.format("%04d", rs.getInt("year"))+"-"+ String.format("%02d", rs.getInt("month"))+"-"+String.format("%02d", rs.getInt("day"))); //date
+					out.write(", ");
+					out.write(Double.toString( rs.getDouble("global_radiation")));
+					out.write(", ");
+					
+					
+					double tempMax = rs.getDouble("maximum_temperature");
+					double tempMin = rs.getDouble("minimum_temperature");
+					double relHum =  rs.getDouble("relative_humidity");
+					double tempAvg = rs.getDouble("avg_temp");
+					
+					switch (elevationCorrectionType) {
+					
+					
+						case 0:
+							break;
+						case 1: { 
+							
+							double obsSpecHum = rs.getDouble("specific_humidity");
+							double obsPressure = rs.getDouble("air_pressure");
+							if (obsSpecHum > 9998 || obsSpecHum < 0.0)
+							{
 								
-								double obsSpecHum = rs.getDouble("specific_humidity");
-								double obsPressure = rs.getDouble("air_pressure");
-								if (obsSpecHum > 9998 || obsSpecHum < 0.0)
-								{
-									
-									System.out.println("Specific humidity not given, backcalculation from given RH: ");
-								
-									double tempAvgK1 = tempAvg + 273.16;
-									if (tempAvg >= 0) {
-										obsSpecHum = relHum / (100* 0.263 *  obsPressure * Math.pow( Math.exp(17.67 * (tempAvgK1 -273.16)/ (tempAvgK1 -29.65)),-1) );
-									}//Note: Multiplied by 100 because of unit of pressure  used
-									else { 
-										obsSpecHum = relHum/ (100* 0.263 * obsPressure * Math.pow(Math.exp( 22.46 * (tempAvgK1-273.16)/(tempAvgK1 -273.16+272.62)) ,-1.0));
-									}
-											
-								}
-								
-								
-								
-								double tempdiff = (weatherCellElevation - altitude)/100 * 0.7;
-								tempMax = tempMax + tempdiff;
-								tempMin = tempMin + tempdiff;
-								tempAvg = tempAvg + tempdiff;
-								
-								
-								
-								double corrPressure = obsPressure + (weatherCellElevation - altitude)/ 8 * 0.125;
-								
-								double tempAvgK = tempAvg + 273.16;
+								System.out.println("Specific humidity not given, backcalculation from given RH: ");
+							
+								double tempAvgK1 = tempAvg + 273.16;
 								if (tempAvg >= 0) {
-									relHum = 100* 0.263 * obsSpecHum * corrPressure * Math.pow( Math.exp(17.67 * (tempAvgK -273.16)/ (tempAvgK -29.65)),-1);
+									obsSpecHum = relHum / (100* 0.263 *  obsPressure * Math.pow( Math.exp(17.67 * (tempAvgK1 -273.16)/ (tempAvgK1 -29.65)),-1) );
 								}//Note: Multiplied by 100 because of unit of pressure  used
 								else { 
-									relHum = 100* 0.263 * obsSpecHum * corrPressure * Math.pow(Math.exp( 22.46 * (tempAvgK-273.16)/(tempAvgK -273.16+272.62)) ,-1.0);
+									obsSpecHum = relHum/ (100* 0.263 * obsPressure * Math.pow(Math.exp( 22.46 * (tempAvgK1-273.16)/(tempAvgK1 -273.16+272.62)) ,-1.0));
 								}
-								relHum = (relHum >=  100.0) ? 100.0 : relHum;   
-								
-								
+										
 							}
-							break;
 							
-							default:
-								break;
+							
+							
+							double tempdiff = (weatherCellElevation - altitude)/100 * 0.7;
+							tempMax = tempMax + tempdiff;
+							tempMin = tempMin + tempdiff;
+							tempAvg = tempAvg + tempdiff;
+							
+							
+							
+							double corrPressure = obsPressure + (weatherCellElevation - altitude)/ 8 * 0.125;
+							
+							double tempAvgK = tempAvg + 273.16;
+							if (tempAvg >= 0) {
+								relHum = 100* 0.263 * obsSpecHum * corrPressure * Math.pow( Math.exp(17.67 * (tempAvgK -273.16)/ (tempAvgK -29.65)),-1);
+							}//Note: Multiplied by 100 because of unit of pressure  used
+							else { 
+								relHum = 100* 0.263 * obsSpecHum * corrPressure * Math.pow(Math.exp( 22.46 * (tempAvgK-273.16)/(tempAvgK -273.16+272.62)) ,-1.0);
+							}
+							relHum = (relHum >=  100.0) ? 100.0 : relHum;   
+							
+							
 						}
+						break;
 						
-						
-						
-						out.write(Double.toString( tempMax));
-						out.write(", ");
-						out.write(Double.toString( tempMin));
-						out.write(", ");
-						
-						double precip = rs.getDouble("precipitation") + precipStillToWrite;
-						if ( precip <= maxDailyPrecip) {
-							precipStillToWrite = 0.0;
+						default:
+							break;
+					}
+					
+					
+					
+					out.write(Double.toString( tempMax));
+					out.write(", ");
+					out.write(Double.toString( tempMin));
+					out.write(", ");
+					
+					double precip = rs.getDouble("precipitation") + precipStillToWrite;
+					if ( precip <= maxDailyPrecip) {
+						precipStillToWrite = 0.0;
+					}
+					else {
+						precipStillToWrite = precip - maxDailyPrecip;
+						precip = maxDailyPrecip;
+					}
+					out.write(Double.toString( precip));
+					out.write(", ");
+					out.write(Double.toString( rs.getDouble("sunshine_duration")));
+					out.write(", ");
+					out.write(Double.toString(relHum)); 
+					out.write(", ");
+					out.write(Double.toString( rs.getDouble("avg_wind_speed")));
+					out.write(", ");
+					out.write(Double.toString( tempAvg));
+					out.write(", ");
+					out.write(Double.toString( rs.getDouble("dewpoint"))); 
+					out.write(", ");
+					out.write(Double.toString( rs.getDouble("pan_evaporation")));
+					out.write(", ");
+					out.write(Double.toString( rs.getDouble("saturation_deficit_air")));
+					out.write(", ");
+					out.write(Double.toString( rs.getDouble("snow_depth")));
+					out.write(", ");
+					out.write("99.9");//par
+					out.write(", ");
+					out.write("-99.9");//soil_temp_2_cm
+					out.write(", ");
+					out.write(Double.toString( rs.getDouble("soil_temp_5_cm")));
+					out.write(", ");
+					out.write(Double.toString( rs.getDouble("soil_temp_10_cm")));
+					out.write(", ");
+					out.write(Double.toString( rs.getDouble("soil_temp_20_cm")));
+					out.write(", ");
+					out.write("-99.9");//soil_temp_50_cm
+					
+					if(doCO2) {
+						if ( !co2Series.next() ) {
+							JOptionPane.showMessageDialog(null, "Error: Not enough CO2 values found for weather time series.");
+							System.out.println("Error: Not enough CO2 values found for weather time series.");
+							co2Series.close();
+							rs.close();
+							return false;
+							
+							
 						}
-						else {
-							precipStillToWrite = precip - maxDailyPrecip;
-							precip = maxDailyPrecip;
-						}
-						out.write(Double.toString( precip));
-						out.write(", ");
-						out.write(Double.toString( rs.getDouble("sunshine_duration")));
-						out.write(", ");
-						out.write(Double.toString(relHum)); 
-						out.write(", ");
-						out.write(Double.toString( rs.getDouble("avg_wind_speed")));
-						out.write(", ");
-						out.write(Double.toString( tempAvg));
-						out.write(", ");
-						out.write(Double.toString( rs.getDouble("dewpoint"))); 
-						out.write(", ");
-						out.write(Double.toString( rs.getDouble("pan_evaporation")));
-						out.write(", ");
-						out.write(Double.toString( rs.getDouble("saturation_deficit_air")));
-						out.write(", ");
-						out.write(Double.toString( rs.getDouble("snow_depth")));
-						out.write(", ");
-						out.write("99.9");//par
-						out.write(", ");
-						out.write("-99.9");//soil_temp_2_cm
-						out.write(", ");
-						out.write(Double.toString( rs.getDouble("soil_temp_5_cm")));
-						out.write(", ");
-						out.write(Double.toString( rs.getDouble("soil_temp_10_cm")));
-						out.write(", ");
-						out.write(Double.toString( rs.getDouble("soil_temp_20_cm")));
-						out.write(", ");
-						out.write("-99.9");//soil_temp_50_cm
-						
-						if(doCO2) {
+						while (co2Series.getInt("year") != rs.getInt("year")
+							|| co2Series.getInt("month") != rs.getInt("month")
+							|| co2Series.getInt("day") != rs.getInt("day")
+								
+							)
+						{
 							if ( !co2Series.next() ) {
-								JOptionPane.showMessageDialog(null, "Error: Not enough CO2 values found for weather time series.");
-								System.out.println("Error: Not enough CO2 values found for weather time series.");
+								JOptionPane.showMessageDialog(null, "Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
+								System.out.println("Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
 								co2Series.close();
 								rs.close();
 								return false;
-								
-								
 							}
-							while (co2Series.getInt("year") != rs.getInt("year")
-								|| co2Series.getInt("month") != rs.getInt("month")
-								|| co2Series.getInt("day") != rs.getInt("day")
-									
-								)
-							{
-								if ( !co2Series.next() ) {
-									JOptionPane.showMessageDialog(null, "Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
-									System.out.println("Error: Missing CO2 value for "+rs.getString("year")+"-"+rs.getString("month")+"-"+rs.getString("day")+".");
-									co2Series.close();
-									rs.close();
-									return false;
-								}
-							}
-							out.write(", ");
-							out.write(Double.toString( co2Series.getDouble("co2_ppm")));// CO2 ppm
 						}
-						
-						out.write("\n");
-					}
-					if ( (write_init_history_file > 0)  &&  (rs.getInt("year") <= first_year) ) {
-						
-						double tempAvg = rs.getDouble("avg_temp");
-
-						switch (elevationCorrectionType) {
-							case 0:
-								break;
-							case 1: { 
-								double tempdiff = (weatherCellElevation - altitude)/100 * 0.7;
-								tempAvg = tempAvg + tempdiff;
-							}
-								break;
-	
-							default:
-								break;
-						
-						}
-							
-						out2.write(String.format("%04d", rs.getInt("year"))+"\t"+ String.format("%d", rs.getInt("day_year") ));
-						out2.write(tab);
-						
-						if (elevationCorrectionType > 0 ) {
-							out2.write(String.valueOf(station_id) + String.format("%04d", Math.round( altitude) ) );
-						}
-						else {
-							out2.write(String.valueOf(station_id) );
-						}
-				
-						
-						out2.write(tab);
-						out2.write(Double.toString( tempAvg));
-						out2.write(tab);
-						double soiltemp = rs.getDouble("soil_temp_5_cm");
-						if ( soiltemp < -98.9)
-							soiltemp = tempAvg;
-						
-						out2.write(Double.toString(soiltemp ));
-
-						out2.write("\n");
-
+						out.write(", ");
+						out.write(Double.toString( co2Series.getDouble("co2_ppm")));// CO2 ppm
 					}
 					
+					out.write("\n");
 				}
-				rs.close(); //rs2.close();
-				if ( write_init_history_file != 2) {
-					out.close();
-				}
-				if ( write_init_history_file > 0) {
-					out2.close();
+				if ( (write_init_history_file > 0)  &&  (rs.getInt("year") <= first_year) ) {
+					
+					double tempAvg = rs.getDouble("avg_temp");
+
+					switch (elevationCorrectionType) {
+						case 0:
+							break;
+						case 1: { 
+							double tempdiff = (weatherCellElevation - altitude)/100 * 0.7;
+							tempAvg = tempAvg + tempdiff;
+						}
+							break;
+
+						default:
+							break;
+					
+					}
+						
+					out2.write(String.format("%04d", rs.getInt("year"))+"\t"+ String.format("%d", rs.getInt("day_year") ));
+					out2.write(tab);
+					
+					if (elevationCorrectionType > 0 ) {
+						out2.write(String.valueOf(station_id) + String.format("%04d", Math.round( altitude) ) );
+					}
+					else {
+						out2.write(String.valueOf(station_id) );
+					}
+			
+					
+					out2.write(tab);
+					out2.write(Double.toString( tempAvg));
+					out2.write(tab);
+					double soiltemp = rs.getDouble("soil_temp_5_cm");
+					if ( soiltemp < -98.9)
+						soiltemp = tempAvg;
+					
+					out2.write(Double.toString(soiltemp ));
+
+					out2.write("\n");
+
 				}
 				
-				
 			}
-			catch(Exception e) {
-				e.printStackTrace();
-				return false;
+			rs.close(); //rs2.close();
+			if ( write_init_history_file != 2) {
+				out.close();
 			}
-			return true;	
+			if ( write_init_history_file > 0) {
+				out2.close();
+			}
+			
+			
 		}
-		JOptionPane.showMessageDialog(null, "Error: Table '"+tableName+"' does not exist in for1695_weather. ");
-		System.out.println("Error: Table '"+tableName+"' does not exist in for1695_weather. ");
-		return false;
+		catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;	
+
 	}
 	public boolean checkTableExists(String db, String tableName) {
 		try {	

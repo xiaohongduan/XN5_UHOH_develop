@@ -32,7 +32,8 @@ int libtreemix_Senescence(libtreemix *self)
 	PSLAYER		pSL		= xpn->pSo->pSLayer;
 	PLAYERROOT	pLRt	= xpn->pPl->pRoot->pLayerRoot;
 	PTIME		pTi		= xpn->pTi;
-	
+	PCBALANCE	    pCB = xpn->pCh->pCBalance; //Added by Hong on 20180731
+	PPLANT      pPl = xpn->pPl;//Added by Hong on 20181126
 	/* Variables */
 	int i; // soil layer looping variable
 	double dt = xpn->pTi->pTimeStep->fAct;	// timestep
@@ -72,7 +73,16 @@ int libtreemix_Senescence(libtreemix *self)
 		/* eq. 111: Litter Fall, BOSSEL, 1996, ch 3.14, [kgC/ha*yr] */
 		self->plant[j].LitLf = 1000.0*((1.0-self->plant[j].CReloc)*self->plant[j].LeafDeathRate+self->plant[j].CLossLf);
 		self->plant[j].LitRt = 1000.0*((1.0-self->plant[j].CReloc)*self->plant[j].RootDeathRate+self->plant[j].CLossRt);
-
+		//Test of Hong
+		if ((xpn_time_compare_date(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,
+		    2014,11,15) ==0 ))
+//if (xpn->pTi->pSimTime->fTimeDay>0.555&&xpn->pTi->pSimTime->fTimeDay<0.56)
+{	
+//printf("xpn->pPl->pBiomass->fLeafWeight: %f\n", xpn->pPl->pBiomass->fLeafWeight);
+//printf("self->plant[j].LitLf: %f\n", self->plant[j].LitLf);
+//printf("self->plant[j].LeafDeathRate: %f\n",self->plant[j].LeafDeathRate);
+}
+//End of Hong
 		/* eq. 96: death of individual trees plus deadwood losses of all trees (dieback and losses of branches etc.) */
 		self->plant[j].TotDeadWdLoss = 1000.0*(self->plant[j].DeadTree*self->plant[j].CTrMass)+(self->plant[j].DeadWdLoss*self->plant[j].CWdWeight);
 		
@@ -144,10 +154,24 @@ int libtreemix_Senescence(libtreemix *self)
 				xpn->pCh->pCProfile->fCStemLitterSurf += (self->plant[j].TreeDistr * self->plant[j].LitSt/365.25*dt);
 				xpn->pCh->pCProfile->fNStemLitterSurf += (self->plant[j].TreeDistr * self->plant[j].NLossSt/365.25*dt);
 				
+				//Hong added on 20180731 for C-balance, not needed		
+				pCB->dCInputCum += (self->plant[j].TreeDistr * self->plant[j].LitLf/365.25*dt) + (self->plant[j].TreeDistr * self->plant[j].LitBr/365.25*dt) + (self->plant[j].TreeDistr * self->plant[j].LitSt/365.25*dt); 
+                 
+				//xpn->pCh->pCProfile->fCLitterSurf =xpn->pCh->pCProfile->fCLeafLitterSurf+ xpn->pCh->pCProfile->fCBranchLitterSurf + xpn->pCh->pCProfile->fCStemLitterSurf;//20181016	
+				xpn->pCh->pCProfile->fCLitterSurf += (self->plant[j].TreeDistr * self->plant[j].LitLf/365.25*dt) + (self->plant[j].TreeDistr * self->plant[j].LitBr/365.25*dt) + (self->plant[j].TreeDistr * self->plant[j].LitSt/365.25*dt); 
+                 
 				// XN output [tC/ha]:
 				self->plant[j].CLitLf_Sum += (self->plant[j].TreeDistr * self->plant[j].LitLf/1000.0/365.25*dt);
 				self->plant[j].CLitBr_Sum += (self->plant[j].TreeDistr * self->plant[j].LitBr/1000.0/365.25*dt);
 				self->plant[j].CLitSt_Sum += (self->plant[j].TreeDistr * self->plant[j].LitSt/1000.0/365.25*dt);
+				
+				//Added by Hong on 20181126
+				pPl->pBiomass->fDeadLeafWeight_dt =(self->plant[j].TreeDistr * self->plant[j].LitLf/365.25*dt); //for agroforest
+				pPl->pBiomass->fDeadLeafWeight +=pPl->pBiomass->fDeadLeafWeight_dt;//[kg/ha]
+				
+				pPl->pBiomass->fDeadStemWeight_dt =(self->plant[j].TreeDistr * self->plant[j].LitSt/365.25*dt)+ (self->plant[j].TreeDistr * self->plant[j].LitBr/365.25*dt);
+				pPl->pBiomass->fDeadStemWeight +=pPl->pBiomass->fDeadStemWeight_dt;//[kg/ha]
+				//End of Hong
 				
 				self->plant[j].CSurfaceLitterInputCENTURY += 	(self->plant[j].TreeDistr * self->plant[j].LitLf/365.25*dt) + 
 																(self->plant[j].TreeDistr * self->plant[j].LitBr/365.25*dt) + 
@@ -158,8 +182,17 @@ int libtreemix_Senescence(libtreemix *self)
 			if(self->plant[j].RtLengthDens[i-1] > 0.0)
 			{
 				// Litter, depends on Species Distribution
-				//pChL->fCLitter  += (self->plant[j].TreeDistr * (self->plant[j].LitRt+self->plant[j].LitGrRt)*self->plant[j].LyFc[i]/365.0*dt);
-				//pChL->fNLitter  += (self->plant[j].TreeDistr * (self->plant[j].NLossRt+self->plant[j].NLossGrRt)*self->plant[j].LyFc[i]/365.0*dt);
+				pChL->fCLitter  += (self->plant[j].TreeDistr * (self->plant[j].LitRt+self->plant[j].LitGrRt)*self->plant[j].LyFc[i]/365.0*dt);
+				pChL->fNLitter  += (self->plant[j].TreeDistr * (self->plant[j].NLossRt+self->plant[j].NLossGrRt)*self->plant[j].LyFc[i]/365.0*dt);
+
+                //Added by Hong
+				pLRt->fDeadRootWeight_dt = (self->plant[j].TreeDistr * (self->plant[j].LitRt+self->plant[j].LitGrRt)*self->plant[j].LyFc[i]/365.0*dt);//for agroforest
+				
+				pLRt->fDeadRootWeight_Layer +=pLRt->fDeadRootWeight_dt;
+				
+				xpn->pPl->pBiomass->fDeadRootWeight += pLRt->fDeadRootWeight_dt;
+				//Ended by Hong
+
 
 				// for the CENTURY model:
 				pChL->fCFineRootLitter += (self->plant[j].TreeDistr * (self->plant[j].LitRt*self->plant[j].LyFc[i])/365.25*dt);
@@ -174,6 +207,14 @@ int libtreemix_Senescence(libtreemix *self)
 
 				self->plant[j].FOCGrRt[i] += (self->plant[j].LitGrRt*self->plant[j].LyFc[i]/365.25*dt);
 				self->plant[j].FONGrRt[i] += (self->plant[j].NLossGrRt*self->plant[j].LyFc[i]/365.25*dt);
+				
+			     //Hong added on 20180731 for C-balance			
+				pCB->dCInputCum += (self->plant[j].TreeDistr * (self->plant[j].LitRt*self->plant[j].LyFc[i])/365.25*dt)+ (self->plant[j].TreeDistr * self->plant[j].LitGrRt*self->plant[j].LyFc[i]/365.25*dt);
+				
+				//pPl->pBiomass->fDeadRootWeightdt = (self->plant[j].TreeDistr * (self->plant[j].LitRt+self->plant[j].LitGrRt)*self->plant[j].LyFc[i]/365.0*dt);//for agroforest
+				
+				//pPl->pBiomass->fDeadRootWeight += (self->plant[j].TreeDistr * (self->plant[j].LitRt+self->plant[j].LitGrRt)*self->plant[j].LyFc[i]/365.0*dt); //removed by Hong
+			    //End of Hong
 			}
 
 			pChL = pChL->pNext;
@@ -277,7 +318,11 @@ int libtreemix_IntegrateModelEquations(libtreemix *self)
 		if(pBio->fWoodWeight < 0.0){
 			pBio->fWoodWeight = 0.0;
 		}
-
+		
+		//Added by Hong on 20180705: fStemWeight and fBranchWeight added for output graphics
+        xpn->pPl->pBiomass->fStemWeight=pBio->fWoodWeight*((1.0-self->plant[i].UgWdFr)*(1.0-self->plant[i].BrWdFr));
+		xpn->pPl->pBiomass->fBranchWeight=pBio->fWoodWeight*((1.0-self->plant[i].UgWdFr)*self->plant[i].BrWdFr);
+		
 		/* Assimilate Pool */		
 		//pPlC->fCAssimilatePool += (1000.0*(PTREEVAR->PhCanopyNlim+PRATES->CRelocGain -	pPlC->fMaintRespR-PRATES->CGrowthTot-PRATES->CLossDeadTrees)*dt);
 		
@@ -305,18 +350,22 @@ int libtreemix_IntegrateModelEquations(libtreemix *self)
 		//pCan->fPlantHeight += (PRATES->IncrH*dt);
 		self->plant[i].H				+= (self->plant[i].IncrH/365.25*dt);		
 		self->plant[i].D				+= (self->plant[i].IncrD/365.25*dt);
+       //FH 20180221 Write height to XN-structure variable
+        xpn->pPl->pCanopy->fPlantHeight = self->plant[i].H;
 		
+//Out-noted by Hong, not necessary		
 		//calculate new dbh for pinyon pine (used for spruce)
 		/* for different calculations, the diameter at breast height is needed 
 		* here the equation of Chojnacky (1999, technical note)
 		* western journal of applied forestry, vol 14, no 1, january 1999 */
-		self->plant[i].DBH = -6.818+(1.022*self->plant[i].D)+1.8879+1.8971+(-0.0339*self->plant[i].D);	//[cm]
+/*		self->plant[i].DBH = -6.818+(1.022*self->plant[i].D)+1.8879+1.8971+(-0.0339*self->plant[i].D);	//[cm]
 		self->plant[i].DBH = self->plant[i].DBH/100.0;
 		if(self->plant[i].DBH <= 0.0)
 		{
 			self->plant[i].DBH = 0.01;
 		}
-		
+*/
+//End of Hong	
 		//calculate new form factor
 		/* for spruce: form factor is being calculated from HD-ratio 
 		 * according to Forschungszentrum Waldökosysteme, 1995 */	

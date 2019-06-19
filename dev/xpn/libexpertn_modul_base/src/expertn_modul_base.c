@@ -843,6 +843,7 @@ int expertn_modul_base_PlantManagementRead(expertn_modul_base *self,const char* 
 			PRINT_ERROR(error->message);
 			return -1;
 		}
+		
 // plant management
 	GET_INI_STRING_ARRAY(CropCode,CC_len,"plant_management","CropCode");
 	GET_INI_STRING_ARRAY(CropName,CN_len,"plant_management","CropName");
@@ -1839,6 +1840,8 @@ int expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(expertn_modul_ba
 	PPLANT			pPl = self->pPl;
 	PTIME			pTi = self->pTi;
 	PMANAGEMENT	pMa = self->pMa;
+	PCBALANCE	pCB = self->pCh->pCBalance; //Added by Hong on 20180731
+	
 	double		EPSILON;
 	int day,month,year;
 	char *S;
@@ -2073,6 +2076,8 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 					
 				    pCP->fCManureSurf    += ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac); 
 
+                    pCB->dCInputCum += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac)+ ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac);//Hong added on 20180731 for C-balance
+
 				    pCP->fNStandCropRes  += fNStandR; 
 					
 				    pCP->fNLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac); 
@@ -2131,6 +2136,10 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 					amount = pMa->pLitter->fRootC * factor;
 					pCL->fCLitter += amount*pTi->pTimeStep->fAct;
 					pCL->fNLitter += amount*pTi->pTimeStep->fAct / pMa->pLitter->fRootCN;
+					
+					//Hong added on 20180731 for C-balance			
+				    pCB->dCInputCum +=amount*pTi->pTimeStep->fAct;
+					
 					if((pCL->fCLitter>EPSILON)&&(pCL->fNLitter>EPSILON))
 						{
 							pCL->fLitterCN = pCL->fCLitter / pCL->fNLitter;

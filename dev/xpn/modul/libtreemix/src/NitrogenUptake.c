@@ -131,6 +131,9 @@ int libtreemix_NitrogenUptake(libtreemix *self)
 		self->plant[i].ActNO3Up_Sum += (self->plant[i].ActNO3Up*dt);
 		self->plant[i].ActNH4Up_Sum += (self->plant[i].ActNH4Up*dt);
 		
+		//added by Hong on 20180608 (pPlN->fActNUptR was missed): 
+		pPlN->fActNUptR = (((self->plant[i].ActNO3Up+self->plant[i].ActNH4Up))*self->plant[i].TreeDistr);
+		//End of Hong
 		pPlN->fCumActNUpt += (((self->plant[i].ActNO3Up+self->plant[i].ActNH4Up)*dt)*self->plant[i].TreeDistr);
 	}
 	
@@ -146,15 +149,17 @@ int libtreemix_NitrogenUptake(libtreemix *self)
 			{
 				pSLN->fNO3N -= self->plant[i].ActLayNO3NUpt[L]*self->plant[i].TreeDistr*dt;
 				pSLN->fNH4N -= self->plant[i].ActLayNH4NUpt[L]*self->plant[i].TreeDistr*dt;
-				
-				if(pSLN->fNO3N < 0.0)
+
+                if(pSLN->fNO3N < EPSILON)
 				{
-					pSLN->fNO3N = 0.0;
+					pSLN->fNO3N = EPSILON;
 				}
-				if(pSLN->fNH4N < 0.0)
+				if(pSLN->fNH4N < EPSILON)
 				{
-					pSLN->fNH4N = 0.0;
+					pSLN->fNH4N = EPSILON;
 				}				
+				
+//End of Test				
 				
 				pLR = pLR->pNext;
 				pSLN = pSLN->pNext;

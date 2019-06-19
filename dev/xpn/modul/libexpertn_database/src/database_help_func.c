@@ -2148,7 +2148,8 @@ double get_SolRad(double SolRad, double iJulianDay, double Latitude, double time
 	if((m*m) < 0.0001) {
 		hr_ss = 6.0;
 	} else {
-		hr_ss = (12.0/M_PI)*atan(sqrt(1.0-(m*m))/m);			// eq. 44
+		// hr_ss = (12.0/M_PI)*atan(sqrt(1.0-(m*m))/m);			// eq. 44
+		hr_ss = abs((12.0/M_PI)*atan(sqrt(1.0-(m*m))/m)); //Correted by EP and FH on 20190121 for southern hemisphere
 	}
 
 	// calculating day length

@@ -310,6 +310,9 @@ int libtreemix_CalcMineralization_FAGUS(libtreemix *self)
 			
 				xpn->pCh->pCProfile->fCStemLitterSurf	-= (float)(self->plant[j].TreeDistr * (FOCBrSt * (1.0-self->plant[j].FiBrWdFr)));
 				xpn->pCh->pCProfile->fNStemLitterSurf	-= (float)(self->plant[j].TreeDistr * ((FONBrSt-rnac2) * (1.0-self->plant[j].FiBrWdFr)));
+				
+				//Hong added on 20181016 for C-balance			
+				xpn->pCh->pCProfile->fCLitterSurf =xpn->pCh->pCProfile->fCLeafLitterSurf+ xpn->pCh->pCProfile->fCBranchLitterSurf + xpn->pCh->pCProfile->fCStemLitterSurf;//End of Hong, kein Einfluss
 
 				pChL->fCFineRootLitter	-= (float)(self->plant[j].TreeDistr * FOCFiRt);
 				pChL->fNFineRootLitter	-= (float)(self->plant[j].TreeDistr * (FONFiRt - rnac4));

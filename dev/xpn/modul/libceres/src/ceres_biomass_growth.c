@@ -14,6 +14,7 @@ int ceres_biomass_growth_run(ceres *self)
 	PBIOMASS        pBiom=pPl->pBiomass;
 	PDEVELOP        pDev =pPl->pDevelop;
 	PCANOPY         pCan =pPl->pCanopy;
+	PCBALANCE	    pCB = xpn->pCh->pCBalance; //Added by Hong on 20180731
 
 	//wheat, barley:
 	if ((strcmp(pPl->pGenotype->acCropCode,"BA")==0)||(strcmp(pPl->pGenotype->acCropCode,"WH")==0)) {
@@ -53,6 +54,8 @@ int ceres_biomass_growth_run(ceres *self)
 
 				pBiom->fLeafWeight=pBiom->fLeafWeight-(double)0.5*pBiom->fSeedReserv;
 				pBiom->fRootWeight=pBiom->fRootWeight-(double)0.5*pBiom->fSeedReserv;
+				
+				pCB->dCInputCum += pBiom->fSeedReserv; //Hong added on 20180731 for C-balance
 			}
 		}
 

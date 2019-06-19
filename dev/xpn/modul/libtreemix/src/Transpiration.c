@@ -158,6 +158,7 @@ int libtreemix_potential_transpiration_run(libtreemix *self)
 		/* PreciRate AND LiquPreciRate = Canopy Precipitation [mm/d], rate */
 		xpn->pCl->pWeather->fPreciRate 		= self->clim.CanPreciRate;
 		xpn->pCl->pWeather->fLiquPreciRate 	= self->clim.CanPreciRate;
+
 	}
 	else
 	{
@@ -398,6 +399,10 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 					if(SoilWaterAct < pSWL->fContPWP)
 					{
 						self->plant[i].ActLayRtWaterUp[L-1] *= (SoilWaterAct/pSWL->fContPWP);	//aus SPASS
+						
+						//Test of Hong
+						self->plant[i].ActLayRtWaterUp[L-1]= 0;
+						//End of Test
 					}
 					
 					// total actual water uptake for every species

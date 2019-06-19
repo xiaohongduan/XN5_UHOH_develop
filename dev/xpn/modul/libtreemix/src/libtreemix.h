@@ -137,6 +137,7 @@ typedef struct
 {
 	int Species_Count;		//number of different species to simulate
 	gchar **Parameter_Files;	//name of the species config files
+	int Operating; //choose of forst or agroforst, added by Hong on 20180621
 	int Photosynthesis;
 	int Light_Interception;
 	int PhotoRad;			// which radiation input is used
@@ -145,6 +146,7 @@ typedef struct
 	int Phenology;
 	int Respiration;
 	int Tree_Geometry;
+	int Tree_fast_growing; //Added by Hong on 20180627, for modified TREEDYN of Miehle et al.
 	int Weather_Input;
 	int AirPressure;		// read in (0) or calculated (1) in photosynthesis model
 	int Radiation;
@@ -747,6 +749,7 @@ typedef struct
 	double RootDeathRate;	// fine root loss rate [tC/ha*yr], rloss
 	
 	int LfFallStart;	//Start of Leaf Fall [DOY]
+	int LfFallEnd;	//End of Leaf Fall [DOY]
 	double LfFall;		//Leaf Fall Rate [1/yr]
 	double LfFlush;		//Leaf Flush Rate [1/yr]
 	double LfBudBurst;	//Bud Burst Constant
@@ -863,6 +866,8 @@ typedef struct		// [Silviculture]
 	double LitterRemoval;		// litter removal fraction [-]
 	int ThinningCounter;
 	int ThinningMethod;
+	double heightAfterCut; //added by Hong on 20180716
+	double diameterAfterCut;
 		
 		// Bool Operators
 	int StandAlive;

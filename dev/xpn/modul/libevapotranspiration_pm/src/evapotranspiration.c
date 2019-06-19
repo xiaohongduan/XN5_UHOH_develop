@@ -375,7 +375,6 @@ int evapotranspiration_run(evapotranspiration *self)
 		{
 			xpn->pCl->pWeather->fPreciRate-=self->ETpot;
 			xpn->pCl->pWeather->fLiquPreciRate-=self->ETpot;
-
 		}
 	self->ETpot = MAX(0.0, ETpot)*xpn->pWa->kc_factor;		// [mm/d]
 	//self->ETpot = ETpot*self->KC_Factor;
@@ -607,7 +606,7 @@ int evapotranspiration_run65(evapotranspiration *self, int opt_sfc)
 		{
 			xpn->pCl->pWeather->fPreciRate-=self->ETpot;
 			xpn->pCl->pWeather->fLiquPreciRate-=self->ETpot;
-
+			
 		}
 	self->ETpot = MAX(0.0, ETpot)*xpn->pWa->kc_factor;		// [mm/d]
 	//self->ETpot = ETpot*self->KC_Factor;
@@ -669,6 +668,7 @@ double evapotranspiration_calc_crop_cover_frac1(double LAI)
 		{
 			SoilCoverFrac = 1.0;
 		}
+		
 	return SoilCoverFrac;
 }
 
@@ -797,6 +797,7 @@ int evaporation_run(evapotranspiration *self,int crop_cover_calc)
 		}
         
     C_DEBUG(SoilCoverFrac);
+	//printf("Soil Cover Fraction %f ETpot %f Epot %f \n", SoilCoverFrac,xpn->pWa->fPotETR,pE->fPotR);
     LAI= pCan->fLAI;
     C_DEBUG(LAI);
     C_DEBUG(pCan->fkcan);
@@ -859,21 +860,6 @@ int pot_transpiration_run(evapotranspiration *self)
 
 
 	pPLW->fPotTranspR = xpn->pWa->fPotETR - pE->fPotR - pPLW->fInterceptR; // [mm/d]
-/*<<<<<<< .mine
-	
-	
-//Hong
-=======
-    
-    pot_trans = pPLW->fPotTranspR;
-    
-    C_DEBUG(pot_trans);
->>>>>>> .r609*/
-
-//pPLW->fPotTranspR = 1.1*pPLW->fPotTranspR;
-
-// End of Hong
-
 
 	if(pPLW->fPotTranspR < 0.0)
 		{
