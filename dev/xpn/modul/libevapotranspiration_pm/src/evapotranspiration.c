@@ -585,8 +585,11 @@ int evapotranspiration_run65(evapotranspiration *self, int opt_sfc)
 		double rl,LAI_active;
 		//rl = 100.0; // [s m-1] stomata resistiance
 		rl = xpn->pPl->pCanopy->fsto_res;
-		LAI_active = xpn->pPl->pCanopy->fLAI*0.5;
-		rs = rl * LAI_active;
+		//LAI_active = xpn->pPl->pCanopy->fLAI*0.5;
+		//rs = rl * LAI_active; 
+        //SG 20190625: 
+		LAI_active = max(xpn->pPl->pCanopy->fLAI*0.5,0.1);
+		rs = rl / LAI_active; //FAO56-guideline eq. 5
 	}
 
 
