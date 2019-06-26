@@ -287,7 +287,9 @@ int kc_factor_dev_stage_run(kc_factor* self)
         }
     
     
-    if (xpn_time_compare_date(xpn->pTi->pSimTime->year,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,pSI->Year,pSI->Month,pSI->Day)<0)
+   // if (xpn_time_compare_date(xpn->pTi->pSimTime->year,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,pSI->Year,pSI->Month,pSI->Day)<0)
+   //SG 20190626: use bare soil value (else_kc_arr[0]) until field emergence (including phase from sowing (fStageSUCROS= -1.0) until emergence (fStageSUCROS= 0.0) 
+    if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,pSI->Year,pSI->Month,pSI->Day)<0)||(pPl->pDevelop->fStageSUCROS<= 0.0))
         {
             xpn->pWa->kc_factor=self->crop[plant_nr].else_kc_arr[0];            
         }
