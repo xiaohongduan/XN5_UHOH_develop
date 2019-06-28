@@ -1819,6 +1819,28 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,1.0,"residue partition","N_fromDeadleaf_frac");//default value 1.0	
 	pPl->pGenotype->fNDeadleafFrac = dummy_in[i];
 	g_free(dummy_in);
+	
+	/*  Moritz - new division of AOM by lignin/N ratio - 3 new parameters of lignin content [g/g] added
+lig_stem, lig_leaves, lig_roots */
+
+// default vales for lignin contents estimated from Abiven 2011
+// https://link.springer.com/article/10.1007%2Fs11104-011-0725-y#Fig1
+
+
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,0.10,"residue partition","lig_stem");//default value 0.10
+	pPl->pGenotype->lig_stem = dummy_in[i];
+	g_free(dummy_in);
+
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,0.05,"residue partition","lig_leaves");//default value 0.05
+	pPl->pGenotype->lig_leaves = dummy_in[i];
+	g_free(dummy_in);
+
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,0.15,"residue partition","lig_roots");//default value 0.15
+	pPl->pGenotype->lig_roots = dummy_in[i];
+	g_free(dummy_in);
+
+// End of Moritz
+	
 //End of Hong	
 	g_key_file_free(keyfile);
 	return RET_SUCCESS;
@@ -2067,10 +2089,59 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 // Hong: added for Scott Demyan et al. 2016.10.06
 	
 if(pPl->pModelParam->cResidueCarryOff==0)
-              {	                         		       
+              {	       
+
+				// Moritz add new partitioning factor, based on lignin/N ratio, 2018.10.17
+				// Moritz: activate new function with dyn_AOM_div =1	  
 			        pCP->fCStandCropRes  += fCStandR; 
 					
+                    
+                                                     if (pCh->pCProfile->dyn_AOM_div == 1)
+                                                     {
+                                                         double lignin_to_N,lignin_to_N_StandCropRes,fResidues_to_AOM2_part_LN,delta_N_Littersurf,NManureSurf;
+
+				// manual computation of lignin_to_N ratio
+				lignin_to_N=((pPl->pGenotype->lig_stem*pPl->pBiomass->fStemWeight+pPl->pGenotype->lig_leaves*pPl->pBiomass->fLeafWeight)/fNResidue);
+				lignin_to_N_StandCropRes=(pPl->pGenotype->lig_stem/pPl->pPltNitrogen->fStemActConc);	
+
+				fResidues_to_AOM2_part_LN = 0.99-(0.018*lignin_to_N); // formula from CENTURY, Parton (1992), probably a modification necessary for DAISY
+				if (fResidues_to_AOM2_part_LN<=0.01)
+				{
+					fResidues_to_AOM2_part_LN=0.01;
+					}
+			
+				//fStandCropRes_to_AOM2_part_LN = global partitioning factor for Standing crop residues, used in modules daisy_miner.c, miner.c (leachn) and schaf_manag.c (incorporation)
+				pCP->fStandCropRes_to_AOM2_part_LN = 0.99-(0.018*lignin_to_N_StandCropRes); // formula from CENTURY, Parton (1992), probably a modification necessary for DAISY
+				if (pCP->fStandCropRes_to_AOM2_part_LN<=0.01)
+				{
+					pCP->fStandCropRes_to_AOM2_part_LN=0.01;
+					}				
+							
+			        pCP->fCStandCropRes  += fCStandR; 
+
+			        pCP->fCLitterSurf    += ((1-fResidues_to_AOM2_part_LN)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac);
+
+				    pCP->fCManureSurf    += ((fResidues_to_AOM2_part_LN)*(fCResidue - fCStandR));
+
+				    pCP->fNStandCropRes  += fNStandR;
+
+					//Hilfsvariablen zum berechnen der N Mengen in den zwei Pools
+					delta_N_Littersurf= ((1-fResidues_to_AOM2_part_LN)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac)/150;
+					NManureSurf=((fNResidue - fNStandR)-delta_N_Littersurf);
 					
+					if(NManureSurf>0) //Wenn C/N von den Ernteresten <150 ist
+					{
+					pCP->fNLitterSurf    += delta_N_Littersurf; //AOM1 gets a fix C/N of 150
+			        pCP->fNManureSurf    += NManureSurf; //The rest of the N goes into the AOM2 pool
+					}
+					else
+					{
+						pCP->fNLitterSurf    += (fNResidue - fNStandR); //Alles N nach AOM1
+					}
+}
+else {
+					//fNStandCropRes,fStandCropRes_to_AOM2_part_LN,fCLitterSurf,fNLitterSurf,fCManureSurf,fNManureSurf
+        
 					
 			        pCP->fCLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac); 
 					
@@ -2086,13 +2157,17 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 
 
               }
+	
+				
+              }
 		else 
 		  {
             pCP->fCStandCropRes += fCStandR; 
             pCP->fNStandCropRes += fNStandR;
-						
+            
+		
           }
-
+// End of Moritz
 		pMa->pLitter->fRootC = (pPl->pBiomass->fRootWeight+pPl->pBiomass->fDeadRootWeight) * (double)0.4 ; // 40% C in Biomasse
 
         if (pPl->pPltNitrogen->fRootCont > (double) 0.0)
@@ -2134,8 +2209,32 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 				{
 					factor = pMat1Local[i2] / RootSum;
 					amount = pMa->pLitter->fRootC * factor;
+					// Moritz: activate new function with dyn_AOM_div =1
+                                                                         if (pCh->pCProfile->dyn_AOM_div == 1)
+                                                     {
+                                                         					double lignin_to_N,fResidues_to_AOM2_part_LN,fNmanure;
+					lignin_to_N= ((pPl->pBiomass->fRootWeight+pPl->pBiomass->fDeadRootWeight)*pPl->pGenotype->lig_roots/(pPl->pPltNitrogen->fRootCont+pPl->pPltNitrogen->fDeadRootNw));
+					fResidues_to_AOM2_part_LN = 0.99-(0.018*lignin_to_N);					
+					if (fResidues_to_AOM2_part_LN<=0)
+				{
+					fResidues_to_AOM2_part_LN=0;
+				}
+					
+					pCL->fCLitter += amount*pTi->pTimeStep->fAct*(1-fResidues_to_AOM2_part_LN);
+					pCL->fNLitter += amount*pTi->pTimeStep->fAct/150;//AOM1 gets a fix C/N of 150
+					
+					pCL->fCManure += amount*pTi->pTimeStep->fAct*(fResidues_to_AOM2_part_LN);
+					fNmanure =(amount*pTi->pTimeStep->fAct / pMa->pLitter->fRootCN)-(amount*pTi->pTimeStep->fAct/150);
+					if(fNmanure>0){
+					pCL->fNManure += fNmanure;
+					}
+                                                         }
+                                                     else
+                                                         {
 					pCL->fCLitter += amount*pTi->pTimeStep->fAct;
 					pCL->fNLitter += amount*pTi->pTimeStep->fAct / pMa->pLitter->fRootCN;
+                    }
+					//End of Moritz */
 					
 					//Hong added on 20180731 for C-balance			
 				    pCB->dCInputCum +=amount*pTi->pTimeStep->fAct;

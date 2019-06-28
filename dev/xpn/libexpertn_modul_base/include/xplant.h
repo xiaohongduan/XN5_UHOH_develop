@@ -284,6 +284,12 @@ typedef struct stgenotype
     double fResidueAMO1Frac; //fraction of residue divided to LitterSurf pool (AMO1), 0.0...1.0
     double fCDeadleafFrac;   //fraction of dead leaves divided to carbon pool, 0.0...1.0, 
     double fNDeadleafFrac;   //fraction of dead leaves divided to nitrogen pool, 0.0...1.0,  
+    //Moritz added for new residue partitioning by lignin/N 23.08.18
+    double lig_stem;
+    double lig_leaves;
+    double lig_roots;
+    //End of Moritz
+    
     //End of Hong
     RESPONSE    *PmaxTemp;          //Maximum photosynthesis rate to temperature (Temp-Pmax)
     RESPONSE    *PmaxAge;           //Development stage to P/Pmax
@@ -609,7 +615,7 @@ typedef struct stplantCarbon
 
 
 /***********************************************************************************************
-      				 Plant Water 
+                     Plant Water 
 ***********************************************************************************************/
 
 typedef struct stplantWater  *PPLTWATER;

@@ -318,6 +318,9 @@ typedef struct cProfile
 	double	fCNHumusSurf;
 	double  fCStandCropRes;
 	double  fNStandCropRes;
+    //Moritz added fStandCropRes_to_AOM2_part_LN
+	int  dyn_AOM_div; //Switch ot activate new dynamic AOM division by Moritz 
+	double  fStandCropRes_to_AOM2_part_LN; //End of Moritz
 	double  fCStrLitterSurf;
 	double  fNStrLitterSurf;
 	double  fLignFracStrLitSurf;

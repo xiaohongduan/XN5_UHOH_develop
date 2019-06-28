@@ -194,6 +194,10 @@ G_FREE_IF_NOT_0(layers);
 	GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fMinerSatActiv,"MinerSatActiv","mineralisation",PCPARAM,xpn->pCh->pCParam);
 	GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNitrifNO3NH4Ratio,"NitrifNO3NH4Ratio","mineralisation",PCPARAM,xpn->pCh->pCParam);
 	
+    //Moritz Switch for dynamic AOM 27.06.2019
+     GET_INI_INT(xpn->pCh->pCProfile->dyn_AOM_div ,"mineralisation","dyn_AOM_div");
+   //End of Moritz
+   
 	//Hong: Temperaturabhängigkeit für DAISY Abbauraten (für Scott Demyan)
 	GET_INI_INT(self->iTempCorr,"mineralisation","iTempCorr");	
 	GET_INI_DOUBLE(self->fParCAOM1Q10,"mineralisation","CAOM1Q10");

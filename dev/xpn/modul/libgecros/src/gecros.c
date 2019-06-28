@@ -962,6 +962,26 @@ int gecros_load_ini_file(gecros *self)
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,1.0,"residue partition","N_fromDeadleaf_frac");//default value 1.0	
 	pPl->pGenotype->fNDeadleafFrac = dummy_in[i];
 	g_free(dummy_in);
+/*  Moritz - new division of AOM by lignin/N ratio - 3 new parameters of lignin content [g/g] added
+lig_stem, lig_leaves, lig_roots */
+
+// default vales for lignin contents estimated from Abiven 2011
+// https://link.springer.com/article/10.1007%2Fs11104-011-0725-y#Fig1
+
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,0.10,"residue partition","lig_stem");//default value 0.10
+	pPl->pGenotype->lig_stem = dummy_in[i];
+	g_free(dummy_in);
+
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,0.05,"residue partition","lig_leaves");//default value 0.05
+	pPl->pGenotype->lig_leaves = dummy_in[i];
+	g_free(dummy_in);
+
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,0.15,"residue partition","lig_roots");//default value 0.15
+	pPl->pGenotype->lig_roots = dummy_in[i];
+	g_free(dummy_in);
+
+// End of Moritz
+
 
 	PRINT_MESSAGE(xpn,4,"Initialisation using input parameter values from crop_gecros.ini");
    // End of Hong

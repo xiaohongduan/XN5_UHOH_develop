@@ -161,6 +161,10 @@ int daisy_miner_run(daisy_miner *self)
 
 //activated by Hong on 20180724
 SurfaceMiner(self); //exp_p durch stickstoff *self ersetzt
+ 
+ //Moritz: activate new function 
+ //
+StandingPoolDecrease(self); //Added by Moritz on 20181017
 //Hong
 //	rm    = (double)1.0;    /*orig :1.0; */			//analog crikle
 
@@ -876,6 +880,7 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
     f3     = (double)1 / pCP->fCNManureSurf - fMinerEffFac / fMicBiomCN;
     fManureToNH4K = (f3 > 0)? f3 : 0;
     fManureImmK   = (f3 < 0)? (double)-1 * f3 : 0;
+   //Moritz: Erklärung: wenn f3 kleiner 0, dann gibt es Immobilisierung von N
    }
   
   else
@@ -917,7 +922,7 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
     if (fManureImmK)
 	 {
 	  NoImmMan = (double)0.0;
-      fEffNew = fMicBiomCN / pCP->fCNManureSurf;
+      fEffNew = fMicBiomCN / pCP->fCNManureSurf; //Moritz: hier könnte der Fehler liegen
       fRedMan = min(fEffNew,fMinerEffFac);
       fManureToNH4K = (double)0;
       fManureImmK   = (double)0;
@@ -1081,3 +1086,74 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   return 1;
  } /*Funktion Ende*/
 //End of Hong
+
+
+
+//Added by Moritz to DAISY on 20181017, because no daily decrease happened for StandingCropResidues
+/*************************************************************************************/
+/* Procedur    :   StandingPoolDecrease                                              */
+/* Beschreibung:   Abnahme des Standing-Pools                                        */
+/*                 Grundlage RESMAN (Stott et al. 1995)                              */
+/*                                                                                   */
+/*              GSF/ab  Axel Berkenkamp         18.06.01                             */
+/*                                                                                   */
+/*************************************************************************************/
+/*	veränd. Var.  pCh->pCProfile->fCLitterSurf    pCh->pCProfile->fNLitterSurf       */
+/*				  pCh->pCProfile->fCStandCropRes  pCh->pCProfile->fNStandCropRes     */
+/*                                                                                   */
+/*************************************************************************************/
+int StandingPoolDecrease(daisy_miner *self)
+ {
+    expertn_modul_base *xpn = &(self->parent);
+	PTIME 			pTi = xpn->pTi;	 
+	PCPROFILE pCP = xpn->pCh->pCProfile;
+    /*Hilfsvariablen*/
+    double fCDecrease,fNDecrease,delta_N_Littersurf,NManureSurf;
+
+
+  /*  Funktionsaufruf einmal täglich */
+  if (NewDay(pTi))
+  {
+
+   if (pCP->fCStandCropRes > (double)0.0 && pCP->fNStandCropRes > (double)0.0)
+   {
+    fCDecrease = (double)0.01 * pCP->fCStandCropRes;
+    fNDecrease = (double)0.01 * pCP->fNStandCropRes;
+
+	pCP->fCStandCropRes -= fCDecrease;
+
+	// Moritz: activate new function with dyn_AOM_div =1
+    
+                                 if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+                         {	//Moritz: Added a partitioning of LitterSurf by Lig/N ratio 
+     //
+	pCP->fCLitterSurf += fCDecrease * (1-pCP->fStandCropRes_to_AOM2_part_LN);
+	pCP->fCManureSurf += fCDecrease * pCP->fStandCropRes_to_AOM2_part_LN;
+
+	pCP->fNStandCropRes -= fNDecrease;
+	delta_N_Littersurf= fCDecrease * (1-pCP->fStandCropRes_to_AOM2_part_LN)/150;
+	pCP->fNLitterSurf += delta_N_Littersurf; //Assumed C/N ratio of 150 for AOM1
+	NManureSurf=(fNDecrease-delta_N_Littersurf);
+					if(NManureSurf>0)
+					{
+			        pCP->fNManureSurf    += NManureSurf; //The rest of the N goes into the AOM2 pool
+					}
+                    }
+                         else{
+	pCP->fCLitterSurf += fCDecrease;
+	pCP->fNStandCropRes -= fNDecrease;
+	pCP->fNLitterSurf += fNDecrease;
+                         }
+
+
+
+	/*if (pCP->fCLitterSurf>699.4)
+		printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
+	printf("pCP->fCLitterSurf:%f\n",pCP->fCLitterSurf);*/
+   }
+
+   //End of Moritz */
+  }
+
+ return 0;
+ } 

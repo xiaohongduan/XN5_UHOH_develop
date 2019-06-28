@@ -450,7 +450,7 @@ int StandingPoolDecrease(stickstoff *self)
 	PCPROFILE       pCP = xpn->pCh->pCProfile;
 	PCBALANCE	    pCB = xpn->pCh->pCBalance; //Added by Hong on 20180731
     /*Hilfsvariablen*/
-    double fCDecrease,fNDecrease;
+   double fCDecrease,fNDecrease,delta_N_Littersurf,NManureSurf;
 	  
 
   /*  Funktionsaufruf einmal täglich */
@@ -463,10 +463,32 @@ int StandingPoolDecrease(stickstoff *self)
     fNDecrease = (double)0.01 * pCP->fNStandCropRes;
 
 	pCP->fCStandCropRes -= fCDecrease;
-	pCP->fCLitterSurf += fCDecrease;
+    
+    	// Moritz: activate new function with dyn_AOM_div =1
+
+
+    
+                             if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+                         {
+                             	pCP->fCLitterSurf += fCDecrease * (1-pCP->fStandCropRes_to_AOM2_part_LN);
+	pCP->fCManureSurf += fCDecrease * pCP->fStandCropRes_to_AOM2_part_LN;
+
+	pCP->fNStandCropRes -= fNDecrease;
+	delta_N_Littersurf= fCDecrease * (1-pCP->fStandCropRes_to_AOM2_part_LN)/150;
+	pCP->fNLitterSurf += delta_N_Littersurf; //Assumed C/N ratio of 150 for AOM1
+	NManureSurf=(fNDecrease-delta_N_Littersurf);
+					if(NManureSurf>0)
+					{
+			        pCP->fNManureSurf    += NManureSurf; //The rest of the N goes into the AOM2 pool
+					}
+                    }
+                         else{	pCP->fCLitterSurf += fCDecrease;
 
 	pCP->fNStandCropRes -= fNDecrease;
 	pCP->fNLitterSurf += fNDecrease;
+}
+		//End of Moritz */
+
 //	if (pCP->fCLitterSurf>699.4)
 //		printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
 //	printf("pCP->fCLitterSurf:%f\n",pCP->fCLitterSurf);

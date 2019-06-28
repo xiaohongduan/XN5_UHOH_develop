@@ -735,14 +735,58 @@ int LagerungNeu(schaaf_manag *self)
 		pCP->fNLitterSurf += (pCP->fNStandCropRes - restMenge);
 		pCP->fNStandCropRes = restMenge;
 	}
+//Moritz: Added a partitioning of LitterSurf by Lig/N ratio
+	double delta_N_Littersurf,NManureSurf;
 
 	if (pCP->fCStandCropRes >(double)0.0)
 	{
 		restMenge = pCP->fCStandCropRes * (double)exp((double)-0.0569* tiefe
 						 * (effektEinarbeitung * effektEinarbeitung));
-		pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge);
+                         
+                         //Moritz: activate new function with dyn_AOM_div =1
+                         if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+                         {
+        pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to_AOM2_part_LN);
+		pCP->fCManureSurf += (pCP->fCStandCropRes - restMenge) * pCP->fStandCropRes_to_AOM2_part_LN;
+                          
+
+                         }
+                         else
+ 		pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge);                            
+         /*/
+ //*/
+
+
 		pCP->fCStandCropRes = restMenge;
 		
+	}
+delta_N_Littersurf= (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to_AOM2_part_LN)/150;
+
+		if (pCP->fNStandCropRes >(double)0.0)
+	{
+		restMenge = pCP->fNStandCropRes * (double)exp((double)-0.0569* tiefe
+				      * (effektEinarbeitung * effektEinarbeitung));
+                      
+                      //Moritz: activate new function with dyn_AOM_div =1
+                                               if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+                         {
+		pCP->fNLitterSurf += delta_N_Littersurf; //Assumed C/N ratio of 150 for AOM1
+		NManureSurf=((pCP->fNStandCropRes - restMenge)-delta_N_Littersurf);
+		if(NManureSurf>0)
+		{
+		pCP->fNManureSurf    += NManureSurf; //The rest of the N goes into the AOM2 pool
+		} 
+                             }
+                             
+                             else
+		pCP->fNLitterSurf += (pCP->fNStandCropRes - restMenge);
+
+
+		pCP->fNStandCropRes = restMenge;
+		
+		//End of Moritz 
+
+
 		//Hong added on 20180807 for C-balance
 		pCB->dCInputCum +=(pCP->fCStandCropRes - restMenge);
 		
@@ -804,7 +848,7 @@ int LagerungNeu(schaaf_manag *self)
 		pSL->fCHumus    += (pCP->fCHumusSurf - restMenge);
 		pCP->fCHumusSurf = restMenge;
 		
-		//Begion of Hong: change in XN3
+		//Begin of Hong: change in XN3
 		//SG 20161009: For DAISY model - 100% of fCorgManure that is partitioned to "fCHumusSurf" are SOM2 (see TSFertilizer, manage.c line 334-349)
 		pCL->fCHumusFast   += (pCP->fCHumusSurf - restMenge);
 

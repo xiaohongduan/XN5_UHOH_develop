@@ -462,6 +462,40 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManureProf,"output.Carbon.Profile.C Manure Profile kg ha-1",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CHumusProf,"output.Carbon.Profile.C Humus Profile [kg/ha]",0.0);
 
+	//Moritz outputs for testing the new AOM decomposition module [surface residues]
+
+    //new AOM division activation Switch
+   // xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dyn_AOM_div,"pCh.pCProfile.dyn_AOM_div",0.0);
+ 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->dyn_AOM_div,"output.Surface residues.dyn_AOM_div. dimensionless",0.0);	
+   
+
+	//surface residues
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCStandCropRes,"output.Surface residues.C standing Crop residue. kg C ha-1",0.0);	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNStandCropRes,"output.Surface residues.N standing Crop residue. kg N ha-1",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fC_NStandCropRes,"output.Surface residues.C/N standing Crop residue. dimensionless",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fStandCropRes_to_AOM2_part_LN,"output.Surface residues.C of standing residues to AOM2. dimensionless",0.0);
+	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCLitterSurf,"output.Surface residues.C surface litter. kg C ha-1",0.0);	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNLitterSurf,"output.Surface residues.N surface litter. kg N ha-1",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fC_NLitterSurf,"output.Surface residues.C/N surface litter. dimensionless",0.0);
+	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCManureSurf,"output.Surface residues.C surface manure. kg C ha-1",0.0);	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNManureSurf,"output.Surface residues.N surface manure. kg N ha-1",0.0);	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fC_NManureSurf,"output.Surface residues.C/N surface manure. dimensionless",0.0);
+	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCHumusSurf,"output.Surface residues.C surface humus. kg C ha-1",0.0);	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNHumusSurf,"output.Surface residues.N surface humus. kg N ha-1",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fC_NHumusSurf,"output.Surface residues.C/N surface humus. dimensionless",0.0);
+
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNH4NSurf,"output.Surface residues.Surface NH4. kg N ha-1",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNO3NSurf,"output.Surface residues.Surface NO3. kg N ha-1",0.0);
+	
+	//fNH4NSurf,fNO3NSurf
+	
+	//fCStandCropRes,fNStandCropRes,fStandCropRes_to_AOM2_part_LN,fCLitterSurf,fNLitterSurf,fCManureSurf,fNManureSurf,fCHumusSurf,fNHumusSurf,rooting_depth_Mo;
+	
+	//End of Moritz
+	
 	// C - N Ratio:
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CNRatioLitter,"output.Nitrogen.C/N Ratio.C/N Ratio Litter 0-30 cm depth",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CNRatioManure,"output.Nitrogen.C/N Ratio.C/N Ratio Manure 0-30 cm depth",0.0);
@@ -2011,7 +2045,37 @@ int xpn_output_calc_var(xpn_output *self)
 	self->Height	= xpn->pPl->pCanopy->fPlantHeight;
     
     self->rooting_depth = xpn->pPl->pRoot->fDepth;
-    
+    //Moritz, write outputs for testing the new AOM decomposition module [surface residues]
+	
+	//fCStandCropRes,fNStandCropRes,fStandCropRes_to_AOM2_part_LN,fCLitterSurf,fNLitterSurf,fCManureSurf,fNManureSurf,fCHumusSurf,fNHumusSurf,rooting_depth_Mo;
+	
+ 
+   
+	self->dyn_AOM_div = xpn->pCh->pCProfile->dyn_AOM_div;
+ 
+	self->fCStandCropRes = xpn->pCh->pCProfile->fCStandCropRes;
+	self->fNStandCropRes = xpn->pCh->pCProfile->fNStandCropRes;
+	self->fC_NStandCropRes = xpn->pCh->pCProfile->fCStandCropRes/xpn->pCh->pCProfile->fNStandCropRes;
+	self->fStandCropRes_to_AOM2_part_LN = xpn->pCh->pCProfile->fStandCropRes_to_AOM2_part_LN;
+	
+	self->fCLitterSurf = xpn->pCh->pCProfile->fCLitterSurf;
+	self->fNLitterSurf = xpn->pCh->pCProfile->fNLitterSurf;
+	self->fC_NLitterSurf = xpn->pCh->pCProfile->fCLitterSurf/xpn->pCh->pCProfile->fNLitterSurf;
+	
+	self->fCManureSurf = xpn->pCh->pCProfile->fCManureSurf;
+	self->fNManureSurf = xpn->pCh->pCProfile->fNManureSurf;
+	self->fC_NManureSurf = xpn->pCh->pCProfile->fCManureSurf/xpn->pCh->pCProfile->fNManureSurf;
+	
+	self->fCHumusSurf = xpn->pCh->pCProfile->fCHumusSurf;
+	self->fNHumusSurf = xpn->pCh->pCProfile->fNHumusSurf;
+	self->fC_NHumusSurf = xpn->pCh->pCProfile->fCHumusSurf/xpn->pCh->pCProfile->fNHumusSurf;
+	
+	self->fNH4NSurf = xpn->pCh->pCProfile->fNH4NSurf;
+	self->fNO3NSurf = xpn->pCh->pCProfile->fNO3NSurf;
+	
+	//End of Moritz
+	
+	
     self->fActTranspR = xpn->pPl->pPltWater->fActTranspR;
     self->fPotTranspR = xpn->pPl->pPltWater->fPotTranspR;
 
