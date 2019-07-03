@@ -279,11 +279,12 @@ int spass_phenological_development(spass *self)
         /                                                                                       /
         / Da aber iDayAftSow nie hochgezählt wird, nun jetzt hier:                              /
         ///////////////////////////////////////////////////////////////////////////////////////*/
+        
 		
         //SG/19/05/99: after emergence
 
-        if (pDev->fStageSUCROS>=(double)0.0)
-        {
+//        if (pDev->fStageSUCROS>=(double)0.0) //SG 20190703: out-commented to count for BBCH stages between 0 and 10
+//        {
 
         //SG/17/05/99:////////////////////////////////////////////
         //
@@ -302,12 +303,50 @@ int spass_phenological_development(spass *self)
 		else
 		spass_COMVR_TO_ZSTAGE_AND_CERES_DEFAULT(self);
 
-		}
+//		} //SG 20190703: out-commented to count for BBCH stages between 0 and 10
+
         //SG/09/06/99:
         // Änderung des internen Entwicklungsstadiums hinter die 
         // Umwandlung in EC-Stadium verlegt
 	
 		pDev->fStageSUCROS	+= pDev->fDevR*pTi->pTimeStep->fAct;
+        
+ /*   // SG 20130516-----------------------------------------------------------------
+	// To fix the date of Emergence following SUCROS DEVELOPMENT MODEL
+	// provide "Date of Emergence" in database or xnd 
+    // ----------------------------------------------------------------------------
+    if(pPl->pModelParam->EmergenceDay> (double)0) //Wenn "Date of Emergence" in Datenbank oder xnd angegeben, dann erfolgt Feldaufgang an diesem Tag (=SUCROS)
+	{
+   	    if(pTi->pSimTime->fTimeAct < (double)(pPl->pModelParam->EmergenceDay))
+			pDev->fStageSUCROS = -(double)0.3;
+
+	    if(pTi->pSimTime->fTimeAct >= (double)(pPl->pModelParam->EmergenceDay)&&(pDev->fStageSUCROS < (double)0.0))
+			pDev->fStageSUCROS = (double)0.0;
+        }*/
+
+	//return 1;
+	
+  	  if (pDev->fStageSUCROS < 0)
+	  {
+ 
+    day=pTi->pSimTime->mday;
+    month=pTi->pSimTime->mon;
+    year=pTi->pSimTime->year;
+    xpn_time_date_add_dt(&year,&month,&day,1.0);
+    if (xpn_time_compare_date(year,month,day,pPl->pModelParam->EmergenceYear, pPl->pModelParam->EmergenceMonth,pPl->pModelParam->EmergenceDay)>=0) 	  				  				  				  
+     {
+        //initially zero
+        pDev->fStageSUCROS= (double)0.0;
+        pDev->iDayAftEmerg = 0;
+/*        pDev->fCumTDU = (double)0.0;
+	   
+        CTDU =(double)0;
+        DS =(double)0;
+
+        iEmerg = 1;*/
+    }
+      }
+
 
 		//printf("%f %f %s %s \n", pDev->fStageSUCROS, pDev->fDevR,(bPlantGrowth)?"true":"false",(bMaturity)?"true":"false");
 
@@ -642,25 +681,27 @@ int spass_COMVR_TO_ZSTAGE_AND_CERES_WHEAT(spass *self)
    	//--------------------------------------------------------------------
 	//Fromm fStageSUCROS to pDev->fStageWang
    	//--------------------------------------------------------------------
-	if ((pDev->fStageSUCROS>=VR[0])&&(pDev->fStageSUCROS<=VR[1]))
+    if (pDev->fStageSUCROS<VR[0]) //SG 20190703: 0 < BBCH < 10
+		pDev->fStageWang=(double)1.0+pDev->fStageSUCROS;
+    if ((pDev->fStageSUCROS>=VR[0])&&(pDev->fStageSUCROS<=VR[1])) //  10 <= BBCH <= 20
 		pDev->fStageWang=(double)1.0+(pDev->fStageSUCROS-VR[0])/(VR[1]-VR[0]);
-	if ((pDev->fStageSUCROS>VR[1])&&(pDev->fStageSUCROS<=VR[2]))
+	if ((pDev->fStageSUCROS>VR[1])&&(pDev->fStageSUCROS<=VR[2])) //  20 <= BBCH <=30
 		pDev->fStageWang=(double)2.0+(pDev->fStageSUCROS-VR[1])/(VR[2]-VR[1]);
-	if ((pDev->fStageSUCROS>VR[2])&&(pDev->fStageSUCROS<=VR[3]))
+	if ((pDev->fStageSUCROS>VR[2])&&(pDev->fStageSUCROS<=VR[3])) //  30 <= BBCH <= 32
 		pDev->fStageWang=(double)3.0+(double)0.2*(pDev->fStageSUCROS-VR[2])/(VR[3]-VR[2]);
-	if ((pDev->fStageSUCROS>VR[3])&&(pDev->fStageSUCROS<=VR[4]))
+	if ((pDev->fStageSUCROS>VR[3])&&(pDev->fStageSUCROS<=VR[4])) //  32 <= BBCH <= 40
 		pDev->fStageWang=(double)3.2+(double)0.8*(pDev->fStageSUCROS-VR[3])/(VR[4]-VR[3]);
-	if ((pDev->fStageSUCROS>VR[4])&&(pDev->fStageSUCROS<=VR[5]))
+	if ((pDev->fStageSUCROS>VR[4])&&(pDev->fStageSUCROS<=VR[5])) //  40 <= BBCH <= 50
 		pDev->fStageWang=(double)4.0+(pDev->fStageSUCROS-VR[4])/(VR[5]-VR[4]);
-	if ((pDev->fStageSUCROS>VR[5])&&(pDev->fStageSUCROS<=VR[6]))
+	if ((pDev->fStageSUCROS>VR[5])&&(pDev->fStageSUCROS<=VR[6])) //  50 <= BBCH <= 60
 		pDev->fStageWang=(double)5.0+(pDev->fStageSUCROS-VR[5])/(VR[6]-VR[5]);
-	if ((pDev->fStageSUCROS>VR[6])&&(pDev->fStageSUCROS<=VR[7]))
+	if ((pDev->fStageSUCROS>VR[6])&&(pDev->fStageSUCROS<=VR[7])) //  60 <= BBCH <= 70
 		pDev->fStageWang=(double)6.0+(pDev->fStageSUCROS-VR[6])/(VR[7]-VR[6]);
-	if ((pDev->fStageSUCROS>VR[7])&&(pDev->fStageSUCROS<=VR[8]))
+	if ((pDev->fStageSUCROS>VR[7])&&(pDev->fStageSUCROS<=VR[8])) //  70 <= BBCH <= 80
 		pDev->fStageWang=(double)7.0+(pDev->fStageSUCROS-VR[7])/(VR[8]-VR[7]);
-	if ((pDev->fStageSUCROS>VR[8])&&(pDev->fStageSUCROS<=VR[9]))
+	if ((pDev->fStageSUCROS>VR[8])&&(pDev->fStageSUCROS<=VR[9])) //  80 <= BBCH <= 90
 		pDev->fStageWang=(double)8.0+(pDev->fStageSUCROS-VR[8])/(VR[9]-VR[8]);
-	if ((pDev->fStageSUCROS>VR[9])&&(pDev->fStageSUCROS<=VR[10]))
+	if ((pDev->fStageSUCROS>VR[9])&&(pDev->fStageSUCROS<=VR[10])) //  90 <= BBCH <= 20
 		pDev->fStageWang=(double)9.0+(pDev->fStageSUCROS-VR[9])/(VR[10]-VR[9]);
 			
    	//--------------------------------------------------------------------
@@ -820,7 +861,7 @@ int spass_COMVR_TO_ZSTAGE_AND_CERES_POTATO(spass *self)
 	}
 
 
-int spass_COMVR_TO_ZSTAGE_AND_CERES_DEFAULT(spass *self)
+/*int spass_COMVR_TO_ZSTAGE_AND_CERES_DEFAULT(spass *self)
 	{      
 
 	expertn_modul_base *xpn = &(self->parent);
@@ -840,3 +881,50 @@ int spass_COMVR_TO_ZSTAGE_AND_CERES_DEFAULT(spass *self)
 
 	return RET_SUCCESS;
 	}
+    
+   */ 
+    
+    int spass_COMVR_TO_ZSTAGE_AND_CERES_DEFAULT(spass *self)
+	{      
+ //SG 20190702:  COMVR_TO_ZSTAGE_AND_CERES_DEFAULT as in XN3! Advantage: Emergence at BBCH=10
+	expertn_modul_base *xpn = &(self->parent);
+	  
+	PPLANT		pPl = xpn->pPl;
+//	PTIME			pTi = xpn->pTi;
+
+	if (pPl->pDevelop->fStageSUCROS<(double)0.0)
+		pPl->pDevelop->fStageWang = pPl->pDevelop->fStageSUCROS+1.0;   
+    else
+	{
+        if ((pPl->pDevelop->fStageSUCROS>=(double)0.0)&&(pPl->pDevelop->fStageSUCROS<1.0))
+		    pPl->pDevelop->fStageWang = (double)1.0+pPl->pDevelop->fStageSUCROS/0.2;
+        else
+            pPl->pDevelop->fStageWang = (float)6 + (pPl->pDevelop->fStageSUCROS - (float)1.0)/(float)0.28;     
+    }
+          
+	pPl->pDevelop->fDevStage = (double)10.0*pPl->pDevelop->fStageWang;   
+	//pPl->pDevelop->fDevStage = pPl->pDevelop->fStageWang;   
+
+	return RET_SUCCESS;
+	}
+    
+    
+
+/*XN3:
+int WINAPI _loadds COMVR_TO_ZSTAGE_AND_CERES_DEFAULT(EXP_POINTER)
+	{            //SG20181017
+    //Sowing to germination to emergence	
+	if (pPl->pDevelop->fStageSUCROS<(float)0.0) 
+		pPl->pDevelop->fStageWang=pPl->pDevelop->fStageSUCROS+(float)1.0;
+ 
+	if ((pPl->pDevelop->fStageSUCROS>=(float)0.0)&&(pPl->pDevelop->fStageSUCROS<(float)1.0))
+		pPl->pDevelop->fStageWang = (float)1.0+pPl->pDevelop->fStageSUCROS/(float)0.2;   
+	else
+		pPl->pDevelop->fStageWang = (float)6 + (pPl->pDevelop->fStageSUCROS - (float)1.0)/(float)0.28;   
+
+	pPl->pDevelop->fDevStage = (float)10.0*pPl->pDevelop->fStageWang;   
+	//pPl->pDevelop->fDevStage = pPl->pDevelop->fStageWang;   
+
+	return 1;
+	}*/
+	
