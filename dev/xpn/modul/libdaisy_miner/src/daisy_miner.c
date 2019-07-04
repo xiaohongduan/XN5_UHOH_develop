@@ -462,7 +462,19 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
     help6 = fCBOM2DecayR / fCN_MicBiomFast -  (fSOM2 / fCN_HumusFast + ((double) 1.0 - fSOM2) * self->fEff_BOM2 / fCN_MicBiomFast) * fBOM2_DeathC;
 	
    /*SOM2->BOM1*/
-    help7 = fCSOM2DecayR * ((double)1.0 / fCN_HumusFast - fSOM1 / fCN_HumusSlow - self->fEff_SOM2 / fCN_MicBiomSlow + self->fEff_SOM2 * fSOM1 / fCN_MicBiomSlow);
+   
+   //Moritz new fSOM1 function
+        if (xpn->pCh->pCProfile->fSOM1_new == 1)
+      { 
+      help7 = fCSOM2DecayR * ((double)1.0 / fCN_HumusFast - self->fEff_SOM2 / fCN_MicBiomSlow );
+ }
+      else
+      {
+       help7 = fCSOM2DecayR * ((double)1.0 / fCN_HumusFast - fSOM1 / fCN_HumusSlow - self->fEff_SOM2 / fCN_MicBiomSlow + self->fEff_SOM2 * fSOM1 / fCN_MicBiomSlow);
+      }
+//End of Moritz
+
+
 // End of Hong	
 
    /*Summe über alle relevanten Flüsse*/
@@ -520,7 +532,7 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
    /*    Da CN-Verhältnis in den Pools konstant ist, ist eine separate             */
    /*    Modellierung des N redundant.                                             */
    /********************************************************************************/
-    
+    //Moritz: Activate new fSOM1 flow with fSOM1_new == 1
 	/*Gesamt C-Mengen vor dem Zeitschritt*/
 	fCTotal0 = pCL->fCFOMSlow + pCL->fCFOMFast + pCL->fCMicBiomSlow
               + pCL->fCMicBiomFast + pCL->fCHumusSlow + pCL->fCHumusFast
@@ -552,34 +564,79 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 	                       + fBOM1 * fCAOM1DecayR) - fCBOM1DecayR) * DeltaT;
 */		
     // Hong:changed for Scott Demyan et al. 2016.10.06 
+    
+    //Moritz: SOM2 > SOM1 will be set to 0 for new model formualtion 
+     if (xpn->pCh->pCProfile->fSOM1_new == 1)
+      {   
+ pCL->fCMicBiomSlow += (self->fEff_SOM1 * fCSOM1DecayR + ((double)1.0) * self->fEff_SOM2 * fCSOM2DecayR
+	                       + fBOM1 * fCAOM1DecayR * self->fEff_AOM1 - fCBOM1DecayR) * DeltaT; 
+          
+          }
+      else {  
+       
     pCL->fCMicBiomSlow += (self->fEff_SOM1 * fCSOM1DecayR + ((double)1.0-fSOM1) * self->fEff_SOM2 * fCSOM2DecayR
 	                       + fBOM1 * fCAOM1DecayR * self->fEff_AOM1 - fCBOM1DecayR) * DeltaT;    
+    }
+    
+    
 	// End of Hong
+      if (xpn->pCh->pCProfile->fSOM1_new == 1)
+      {  
+     pCL->fCHumusSlow   += (fSOM2 * fSOM1* (fBOM1_DeathC + fBOM2_DeathC)- fCSOM1DecayR) * DeltaT;         
+      }
+      else
+          { 
 			   						   
     pCL->fCHumusSlow   += (fSOM1*fCSOM2DecayR - fCSOM1DecayR) * DeltaT;
-	
+              }
 /* // out-noted since 2016.10.06
     pCL->fCMicBiomFast += (fEff * (((double)1.0-fSOM2) * (fBOM1_DeathC + fBOM2_DeathC) 
                           + ((double)1.0-fBOM1) * fCAOM1DecayR + fCAOM2DecayR) - fCBOM2DecayR) * DeltaT; 
 */
     // Hong:changed for Scott Demyan et al.2016.10.06 
+    
+    
     pCL->fCMicBiomFast += ((((double)1.0-fSOM2) * (self->fEff_BOM1*fBOM1_DeathC + self->fEff_BOM2*fBOM2_DeathC) 
                           + ((double)1.0-fBOM1) * fCAOM1DecayR * self->fEff_AOM1 + fCAOM2DecayR * self->fEff_AOM2) - fCBOM2DecayR) * DeltaT;
     // End of Hong
-	
+     if (xpn->pCh->pCProfile->fSOM1_new == 1)
+      { 
+    pCL->fCHumusFast   += (fSOM2 * ((double)1.0-fSOM1) * (fBOM1_DeathC + fBOM2_DeathC) - fCSOM2DecayR) * DeltaT;
+          }
+      
+          else{
     pCL->fCHumusFast   += (fSOM2 * (fBOM1_DeathC + fBOM2_DeathC) - fCSOM2DecayR) * DeltaT;
-	
+          }
+
+      	
 /* // out-noted since 2016.10.06
     pCL->fCO2ProdR     = (((double)1.0 - fEff) * (fCAOM1DecayR + fCAOM2DecayR + fCSOM1DecayR + fCSOM2DecayR) + fCBOM1DecayR + fCBOM2DecayR
 	                      - (fSOM1 - fEff * fSOM1) * fCSOM2DecayR - (fEff + fSOM2 - fEff * fSOM2) * (fBOM1_DeathC + fBOM2_DeathC));
 */
     // Hong:changed for Scott Demyan et al. 2016.10.06 
+    
+      if (xpn->pCh->pCProfile->fSOM1_new == 1)
+      {
+  
+	pCL->fCO2ProdR     = ((double)1.0 - self->fEff_AOM1) * fCAOM1DecayR 
+    + ((double)1.0 - self->fEff_AOM2) * fCAOM2DecayR 
+    + ((double)1.0 - self->fEff_SOM1) * fCSOM1DecayR 
+    + ((double)1.0 - self->fEff_SOM2) *fCSOM2DecayR 
+    + fCBOM1DecayR + fCBOM2DecayR
+    - ((self->fEff_BOM1 * ((double)1.0 - fSOM2)) + fSOM2 ) * fBOM1_DeathC
+    - ((self->fEff_BOM2 * ((double)1.0 - fSOM2)) + fSOM2 ) * fBOM2_DeathC;
+        
+      }   
+      else 
+          { 
 	pCL->fCO2ProdR     = ((double)1.0 - self->fEff_AOM1) * fCAOM1DecayR + ((double)1.0 - self->fEff_AOM2) * fCAOM2DecayR + ((double)1.0 - self->fEff_SOM1) * fCSOM1DecayR + ((double)1.0 - self->fEff_SOM2) *fCSOM2DecayR + fCBOM1DecayR + fCBOM2DecayR
 	                      - (fSOM1 - self->fEff_SOM2 * fSOM1) * fCSOM2DecayR - (self->fEff_BOM1 + fSOM2 - self->fEff_BOM1 * fSOM2) * fBOM1_DeathC - (self->fEff_BOM2 + fSOM2 - self->fEff_BOM2 * fSOM2) * fBOM2_DeathC;
-    // End of Hong
+          }   
+ // End of Hong
         
 	pCL->fCO2C += pCL->fCO2ProdR * DeltaT;
 
+// End of Moritz
    /*Die Raten pro Zeitschritt, eigentlich überflüssig aber für Punkt 4 und 5 nötig */
    /*Eventuell mit einem Fehler, da bei diesen Flüssen momentan keine Sterberate be-*/
    /*rücksichtigt wird.                                                             */
@@ -616,7 +673,30 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 	fCAOM2ToBOM2R    = self->fEff_AOM2 * fCAOM2DecayR;
     fCAOM2ToCO2R     = ((double)1.0 - self->fEff_AOM2) * fCAOM2DecayR;
 	
-	fCBOM1ToBOM2R    = self->fEff_BOM1 *((double)1.0 - fSOM2) * fCBOM1DecayR;
+
+
+//Moritz
+      if (xpn->pCh->pCProfile->fSOM1_new == 1)
+      {
+    fCBOM1ToBOM2R    = self->fEff_BOM1 *((double)1.0 - fSOM2) * fCBOM1DecayR;
+    fCBOM1ToSOM2R    = fSOM2 * ((double)1.0 - fSOM1) * fCBOM1DecayR;
+    fCBOM1ToCO2R     = ((double)1.0 - self->fEff_BOM1) * ((double)1.0 - fSOM2) * fCBOM1DecayR;
+
+	fBOM2InternC    = self->fEff_BOM2 * ((double)1.0 - fSOM2)* fCBOM2DecayR;  
+    fBOM2ToSOM2C    = fSOM2 * ((double)1.0 - fSOM1) * fCBOM2DecayR;
+    fBOM2ToCO2C     = ((double)1.0 - self->fEff_BOM2) * ((double)1.0 - fSOM2) * fCBOM2DecayR;
+	
+	fSOM1ToBOM1C    = self->fEff_SOM1 * fCSOM1DecayR;
+    fSOM1ToCO2C     = ((double)1.0 - self->fEff_SOM1) * fCSOM1DecayR;
+          
+	fSOM2ToBOM1C    = self->fEff_SOM2 * ((double)1.0 ) * fCSOM2DecayR;
+    fSOM2ToSOM1C    = ((double)1.0 - fSOM2) * fSOM1 * fCBOM1DecayR + ((double)1.0 - fSOM2) * fSOM1 * fCBOM2DecayR ; //Moritz: is now actually fBOM1/2 to SOM1C
+    fSOM2ToCO2C     = ((double)1.0 - self->fEff_SOM2) * ((double)1.0 - fSOM1) * fCSOM2DecayR;
+      }
+      else
+      {
+          
+    fCBOM1ToBOM2R    = self->fEff_BOM1 *((double)1.0 - fSOM2) * fCBOM1DecayR;
     fCBOM1ToSOM2R    = fSOM2 * fCBOM1DecayR;
     fCBOM1ToCO2R     = ((double)1.0 - self->fEff_BOM1) * ((double)1.0 - fSOM2) * fCBOM1DecayR;
 
@@ -626,10 +706,12 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 	
 	fSOM1ToBOM1C    = self->fEff_SOM1 * fCSOM1DecayR;
     fSOM1ToCO2C     = ((double)1.0 - self->fEff_SOM1) * fCSOM1DecayR;
-
+          
 	fSOM2ToBOM1C    = self->fEff_SOM2 * ((double)1.0 - fSOM1) * fCSOM2DecayR;
     fSOM2ToSOM1C    = fSOM1 * fCSOM2DecayR;
-    fSOM2ToCO2C     = ((double)1.0 - self->fEff_SOM2) * ((double)1.0 - fSOM1) * fCSOM2DecayR;
+    fSOM2ToCO2C     = ((double)1.0 - self->fEff_SOM2) * ((double)1.0 - fSOM1) * fCSOM2DecayR;      
+      }
+    // End of Moritz
 	// End of Hong 
 
 

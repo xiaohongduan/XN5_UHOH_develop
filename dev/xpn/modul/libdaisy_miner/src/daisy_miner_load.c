@@ -196,6 +196,8 @@ G_FREE_IF_NOT_0(layers);
 	
     //Moritz Switch for dynamic AOM 27.06.2019
      GET_INI_INT(xpn->pCh->pCProfile->dyn_AOM_div ,"mineralisation","dyn_AOM_div");
+     GET_INI_INT(xpn->pCh->pCProfile->fSOM1_new ,"mineralisation","fSOM1_new");
+     GET_INI_INT(xpn->pCh->pCProfile->dyn_CUE_AOM ,"mineralisation","dyn_CUE_AOM");     
    //End of Moritz
    
 	//Hong: Temperaturabhängigkeit für DAISY Abbauraten (für Scott Demyan)
