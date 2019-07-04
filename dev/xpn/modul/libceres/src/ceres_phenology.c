@@ -927,6 +927,10 @@ double ceres_Emergence(ceres *self)
 	expertn_modul_base *xpn = &(self->parent);
 	PMANAGEMENT pMa = xpn->pMa;
 	PPLANT pPl = xpn->pPl;
+	PTIME	pTi = xpn->pTi;
+
+    int day, month, year;
+
 
 	//=========================================================================================
 	//Variable Declaration and Intitiation
@@ -970,6 +974,42 @@ double ceres_Emergence(ceres *self)
 		self->fEmergValue=(double)-1.0;
 	else
 		self->fEmergValue += pDev->fDTT/self->fP9;
+        
+// Prescribed field emergence in XN3
+//    //-----------------------------------------------------------------------------
+//    if(pPl->pModelParam->iEmergenceDay>0) //Wenn "Date of Emergence" in Datenbank oder xnd angegeben, dann erfolgt Feldaufgang an diesem Tag
+//	{
+//		//SG 20130516------------------------------------------------------------------
+//		// Fixen der Emergence nach
+//		// SUCROS DEVELOPMENT MODEL 
+//		if(pTi->pSimTime->fTimeAct >= (float)(pPl->pModelParam->iEmergenceDay+1))
+//		{
+//			fEmergValue = (float)max(1.05,fEmergValue);
+//			pDev->fSumDTT = fP9;
+//		}
+//		else
+//				fEmergValue = (float)min(0.9,fEmergValue);
+//	}
+
+    //SG 20190704:  Emergence takes place at the latest on the day specified in crop_rotation.ini!
+  	  if (pDev->fStageSUCROS < 0)
+	  {
+ 
+      day=pTi->pSimTime->mday;
+      month=pTi->pSimTime->mon;
+      year=pTi->pSimTime->year;
+     xpn_time_date_add_dt(&year,&month,&day,1.0);
+      if (xpn_time_compare_date(year,month,day,pPl->pModelParam->EmergenceYear, pPl->pModelParam->EmergenceMonth,pPl->pModelParam->EmergenceDay)>=0) 	  				  				  				  
+     {
+        //initially zero
+//        pDev->fStageSUCROS= (double)0.0;
+//        pDev->iDayAftEmerg = 0;
+
+        self->fEmergValue = (double)max(1.01,self->fEmergValue);
+        pDev->fSumDTT = self->fP9;
+    }
+      }
+
 
 	return self->fEmergValue;
 }
