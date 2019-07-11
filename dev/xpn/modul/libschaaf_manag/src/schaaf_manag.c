@@ -82,7 +82,7 @@ int schaaf_manag_load(schaaf_manag *self)
                 (pTi->pSimTime->year == tillage->Year)) {
                 self->tillage_actual = tillage;
 				S2 = xpn_time_get_formated_date(pTi->pSimTime->iyear, pTi->pSimTime->fTimeY, FALSE);
-                S = g_strdup_printf("%s: Soil loosening: %.1f cm depth.", S2, (double)(tillage->fDepth));
+                S = g_strdup_printf("%s: Soil loosening: %.1f cm depth.", S2, (double)(tillage->fDepth)/10.0); // [cm]
                 PRINT_MESSAGE(xpn, 3, S);
                 g_free(S);
 				g_free(S2);
@@ -149,7 +149,7 @@ int schaaf_manag_load(schaaf_manag *self)
                 (pTi->pSimTime->year == tillage->Year)) {
                 self->tillage_actual = tillage;
 				S2 = xpn_time_get_formated_date(pTi->pSimTime->iyear, pTi->pSimTime->fTimeY, FALSE);
-                S = g_strdup_printf("%s: Soil mixing: %.1f cm depth.", S2, (double)(tillage->fDepth));
+                S = g_strdup_printf("%s: Soil mixing: %.1f cm depth.", S2, (double)(tillage->fDepth)/10.0); // [cm]
                 PRINT_MESSAGE(xpn, 3, S);
                 g_free(S);
 				g_free(S2);
