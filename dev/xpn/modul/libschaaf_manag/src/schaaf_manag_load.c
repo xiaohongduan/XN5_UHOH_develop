@@ -106,7 +106,7 @@ int schaaf_tillage_load_config(schaaf_manag *self)
                 tillage->Year = g_date_get_year(self->tillage_gdate[i]);
 				tillage->acName = self->tillage_implement[i];
 				tillage->acCode = self->tillage_code[i];
-                tillage->fDepth = self->tillage_depth[i];
+                tillage->fDepth = self->tillage_depth[i]*(double)10.0; //[cm] -> [mm]
                 if (i == 0) {
                     tillage_first = tillage;
                     tillage_act = tillage;
