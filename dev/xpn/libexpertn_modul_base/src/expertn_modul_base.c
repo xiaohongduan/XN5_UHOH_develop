@@ -2096,34 +2096,30 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 			        pCP->fCStandCropRes  += fCStandR; 
 					
                     
-                                                     if (pCh->pCProfile->dyn_AOM_div == 1)
-                                                     {
-                                                         double lignin_to_N,lignin_to_N_StandCropRes,fResidues_to_AOM2_part_LN,delta_N_Littersurf,NManureSurf;
+                if (pCh->pCProfile->dyn_AOM_div == 1)
+                {
+                    double lignin_to_N,lignin_to_N_StandCropRes,fResidues_to_AOM2_part_LN,delta_N_Littersurf,NManureSurf;
 
-				// manual computation of lignin_to_N ratio
-				lignin_to_N=((pPl->pGenotype->lig_stem*pPl->pBiomass->fStemWeight+pPl->pGenotype->lig_leaves*pPl->pBiomass->fLeafWeight)/fNResidue);
-				lignin_to_N_StandCropRes=(pPl->pGenotype->lig_stem/pPl->pPltNitrogen->fStemActConc);	
+                    // manual computation of lignin_to_N ratio
+                    lignin_to_N=((pPl->pGenotype->lig_stem*pPl->pBiomass->fStemWeight+pPl->pGenotype->lig_leaves*pPl->pBiomass->fLeafWeight)/fNResidue);
+                    lignin_to_N_StandCropRes=(pPl->pGenotype->lig_stem/pPl->pPltNitrogen->fStemActConc);	
 
-				fResidues_to_AOM2_part_LN = 0.99-(0.018*lignin_to_N); // formula from CENTURY, Parton (1992), probably a modification necessary for DAISY
-				if (fResidues_to_AOM2_part_LN<=0.01)
-				{
-					fResidues_to_AOM2_part_LN=0.01;
-					}
+                    fResidues_to_AOM2_part_LN = 0.99-(0.018*lignin_to_N); // formula from CENTURY, Parton (1992), probably a modification necessary for DAISY
+                    if (fResidues_to_AOM2_part_LN<=0.01)
+                    {
+                        fResidues_to_AOM2_part_LN=0.01;
+                    }
 			
-				//fStandCropRes_to_AOM2_part_LN = global partitioning factor for Standing crop residues, used in modules daisy_miner.c, miner.c (leachn) and schaf_manag.c (incorporation)
-				pCP->fStandCropRes_to_AOM2_part_LN = 0.99-(0.018*lignin_to_N_StandCropRes); // formula from CENTURY, Parton (1992), probably a modification necessary for DAISY
-				if (pCP->fStandCropRes_to_AOM2_part_LN<=0.01)
-				{
-					pCP->fStandCropRes_to_AOM2_part_LN=0.01;
-					}				
+                    //fStandCropRes_to_AOM2_part_LN = global partitioning factor for Standing crop residues, used in modules daisy_miner.c, miner.c (leachn) and schaf_manag.c (incorporation)
+                    pCP->fStandCropRes_to_AOM2_part_LN = 0.99-(0.018*lignin_to_N_StandCropRes); // formula from CENTURY, Parton (1992), probably a modification necessary for DAISY
+                    if (pCP->fStandCropRes_to_AOM2_part_LN<=0.01)
+                    {
+                        pCP->fStandCropRes_to_AOM2_part_LN=0.01;
+                    }				
 							
-			        pCP->fCStandCropRes  += fCStandR; 
-
-			        pCP->fCLitterSurf    += ((1-fResidues_to_AOM2_part_LN)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac);
-
-				    pCP->fCManureSurf    += ((fResidues_to_AOM2_part_LN)*(fCResidue - fCStandR));
-
-				    pCP->fNStandCropRes  += fNStandR;
+                   pCP->fCLitterSurf    += ((1-fResidues_to_AOM2_part_LN)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac);
+                    pCP->fCManureSurf    += ((fResidues_to_AOM2_part_LN)*(fCResidue - fCStandR));
+                    pCP->fNStandCropRes  += fNStandR;
 
 					//Hilfsvariablen zum berechnen der N Mengen in den zwei Pools
 					delta_N_Littersurf= ((1-fResidues_to_AOM2_part_LN)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac)/150;
@@ -2138,36 +2134,25 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 					{
 						pCP->fNLitterSurf    += (fNResidue - fNStandR); //Alles N nach AOM1
 					}
-}
-else {
-					//fNStandCropRes,fStandCropRes_to_AOM2_part_LN,fCLitterSurf,fNLitterSurf,fCManureSurf,fNManureSurf
-        
-					
-			        pCP->fCLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac); 
-					
+                }
+                else 
+                {
+				    //fNStandCropRes,fStandCropRes_to_AOM2_part_LN,fCLitterSurf,fNLitterSurf,fCManureSurf,fNManureSurf
+ 			        pCP->fCLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac); 
 				    pCP->fCManureSurf    += ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac); 
-
                     pCB->dCInputCum += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac)+ ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac);//Hong added on 20180731 for C-balance
-
 				    pCP->fNStandCropRes  += fNStandR; 
-					
 				    pCP->fNLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac); 
-					
 			        pCP->fNManureSurf    += ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac);
-
-
-              }
-	
-				
-              }
-		else 
-		  {
+                  }
+              }  //end if(pPl->pModelParam->cResidueCarryOff==0)
+            else 
+            {
             pCP->fCStandCropRes += fCStandR; 
             pCP->fNStandCropRes += fNStandR;
-            
-		
-          }
+            }
 // End of Moritz
+
 		pMa->pLitter->fRootC = (pPl->pBiomass->fRootWeight+pPl->pBiomass->fDeadRootWeight) * (double)0.4 ; // 40% C in Biomasse
 
         if (pPl->pPltNitrogen->fRootCont > (double) 0.0)
