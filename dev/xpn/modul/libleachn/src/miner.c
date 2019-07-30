@@ -494,7 +494,8 @@ int StandingPoolDecrease(stickstoff *self)
 //	printf("pCP->fCLitterSurf:%f\n",pCP->fCLitterSurf);
 	
 	//Hong added on 20180807 for C-balance
-	pCB->dCInputCum += fCDecrease;
+	pCB->dCInputSurf += fCDecrease;
+	//pCB->dCInputCum += fCDecrease;
    }
   }
  

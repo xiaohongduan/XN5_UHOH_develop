@@ -39,8 +39,9 @@ struct _balance
 	double fActETCum;
 	double fProfil, fProfilStart;
 	
-	// Atmosphere:
-	double cum_dust1,cum_dust2,cum_dust3,cum_dust4,cum_dust5;
+    double fGroundHeatNeg;
+    double fGroundHeatDay, fHeatLatentDay, fHeatSensDay, fNetRadDay, fResDay;
+    double fGroundHeatDay_zwischen, fHeatLatentDay_zwischen, fHeatSensDay_zwischen, fNetRadDay_zwischen, fResDay_zwischen;
 	
 	//Added by Hong for WC balance on 20181205
 	double fCumInfilt, fCumIntercept, fCumRunOff;

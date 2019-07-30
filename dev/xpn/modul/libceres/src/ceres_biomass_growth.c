@@ -55,7 +55,8 @@ int ceres_biomass_growth_run(ceres *self)
 				pBiom->fLeafWeight=pBiom->fLeafWeight-(double)0.5*pBiom->fSeedReserv;
 				pBiom->fRootWeight=pBiom->fRootWeight-(double)0.5*pBiom->fSeedReserv;
 				
-				pCB->dCInputCum += pBiom->fSeedReserv; //Hong added on 20180731 for C-balance
+				pCB->dCInputSurf += pBiom->fSeedReserv; //Hong added on 20180731 for C-balance
+				//pCB->dCInputCum += pBiom->fSeedReserv;
 			}
 		}
 

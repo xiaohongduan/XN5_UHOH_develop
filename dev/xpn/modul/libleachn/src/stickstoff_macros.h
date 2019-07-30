@@ -40,8 +40,6 @@
 		var_size = (int)_var_size;\
 	}\
 	
-
-	 
 #define GET_INI_DOUBLE_ARRAY(var,var_size,groupname,key) \
 	{\
 		gsize _var_size;\

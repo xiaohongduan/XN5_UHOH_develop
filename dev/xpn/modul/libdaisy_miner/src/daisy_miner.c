@@ -193,7 +193,6 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
   /* Verhältnisse zum Ende des vorherigen Zeitsschritts.                 */
   /***********************************************************************/
  
-
   pCL->fCFOMSlow = pCL->fCLitter;
   pCL->fCFOMFast = pCL->fCManure;
 
@@ -862,6 +861,7 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
   double fNH4ImmR,fNO3ImmR;
   double fCLitterToHumusR,fCLitterToLitterR,fCLitterToCO2R;
   double fCManureToHumusR,fCManureToLitterR,fCManureToCO2R;
+  double fCLitterToManureR,fCManureToManureR,fNLitterToManureR;//for new formulation of BOM in Manure instead of Litter
   double fCHumusToCO2R;
   
   double fNH4ToLitterR,fNO3ToLitterR;
@@ -908,12 +908,29 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
   /*    C und N -Mineralisierungsraten (dC/dt bzw. dN/dt)           */
   /******************************************************************/
 
+//Moritz - with dyn_AOM_div use decay rates and CUE from DAISY, and include the BOM surface pool into manure (because this pool = AOM2 with higher CUE)
+if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+{
+    
+fHumusMinerMaxR  = pCL->pNext->fHumusFastMaxDecMaxR;
+fLitterMinerMaxR = pCL->pNext->fFOMSlowDecMaxR;
+fManureMinerMaxR = pCL->pNext->fFOMFastDecMaxR;
+fMinerEffFac     = pPA->pNext->fMinerEffFac;
+fMicBiomCN       = pCL->pNext->fMicBiomCN;
+fMinerHumFac     = pPA->pNext->fMinerHumFac;
+}
+
+else 
+{
 fHumusMinerMaxR  = pCL->pNext->fHumusMinerMaxR;
 fLitterMinerMaxR = pCL->pNext->fLitterMinerMaxR;
 fManureMinerMaxR = pCL->pNext->fManureMinerMaxR;
 fMinerEffFac     = pPA->pNext->fMinerEffFac;
 fMicBiomCN       = pCL->pNext->fMicBiomCN;
 fMinerHumFac     = pPA->pNext->fMinerHumFac;
+}
+
+
 
   fCHumusSurfDecay  = pCP->fCHumusSurf  * fHumusMinerMaxR  * corr.Temp * corr.Feucht;
   fCLitterSurfDecay = pCP->fCLitterSurf * fLitterMinerMaxR * corr.Temp * corr.Feucht;
@@ -946,11 +963,18 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   /*Mineralisierungs bzw. Immobilisierungsfaktor*/
    if (pCP->fCNLitterSurf > (double)0.1)
    {
+       if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+       {
+           f2     = (double)1 / pCP->fCNLitterSurf - self->fEff_AOM1 / fMicBiomCN; //REPLACED BY AOM1 CUE   
+       }
+     else
+     {
     f2     = (double)1 / pCP->fCNLitterSurf - fMinerEffFac / fMicBiomCN;
+     }
+	
 	fLitterToNH4K = (f2 > 0)? f2 : 0;
     fLitterImmK   = (f2 < 0)? (double)-1 * f2 : 0;
    }
-
   else
    {
     fLitterToNH4K = (double)0;
@@ -959,12 +983,19 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
 
   if (pCP->fCNManureSurf > (double)0.1)
    {
+        if (pCP->fCNLitterSurf > (double)0.1)
+        {
+            f3     = (double)1 / pCP->fCNManureSurf - self->fEff_AOM2 / fMicBiomCN;//REPLACED BY AOM2 CUE 
+        }
+        else
+        {
     f3     = (double)1 / pCP->fCNManureSurf - fMinerEffFac / fMicBiomCN;
+        }
+    
     fManureToNH4K = (f3 > 0)? f3 : 0;
     fManureImmK   = (f3 < 0)? (double)-1 * f3 : 0;
    //Moritz: Erklärung: wenn f3 kleiner 0, dann gibt es Immobilisierung von N
-   }
-  
+    } //end pCP->fCNManureSurf > (double)0.1
   else
    {
     fManureToNH4K = (double)0;
@@ -991,7 +1022,16 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
 	 {
 	  NoImmLit = (double)0.0;
       fEffNew = fMicBiomCN / pCP->fCNLitterSurf;
+      
+      if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+       { 
+             fRedLit = min(fEffNew,self->fEff_AOM1);
+        }//REPLACED BY AOM1 CUE 
+       else 
+       {
       fRedLit = min(fEffNew,fMinerEffFac);
+       }
+      
       fLitterToNH4K = (double)0;
       fLitterImmK   = (double)0;
      }
@@ -1005,11 +1045,19 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
 	 {
 	  NoImmMan = (double)0.0;
       fEffNew = fMicBiomCN / pCP->fCNManureSurf; //Moritz: hier könnte der Fehler liegen
+      
+      if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+         { 
+             fRedMan = min(fEffNew,self->fEff_AOM2);
+             }//REPLACED BY AOM2 CUE 
+      else 
+        {
       fRedMan = min(fEffNew,fMinerEffFac);
+        }
+      
       fManureToNH4K = (double)0;
       fManureImmK   = (double)0;
      }
-    
 	else
 	 {
 	  NoImmMan = (double)1.0;
@@ -1017,8 +1065,7 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
 	 }
 
 	fNToLitterR = (double)0.0; 
-   }
-  
+  }  // end if (fNToLitterR  > (fNH4ImmR + fNO3ImmR))
   else
    {
     fRedLit = (double)1.0;
@@ -1057,35 +1104,60 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
 
   /* 2. Abbau des C-Litter Pools pro Zeitschritt */
   
+  //Moritz introduce new variables for BOM in Manure
   if(!NoImmLit)
    {
     fCLitterToCO2R    = fCLitterSurfDecay * fRedLit;
     fCLitterToHumusR  = (double)0.0;
     fCLitterToLitterR = (double)0.0;
+    fCLitterToManureR = (double)0.0;//Moritz
    }
-
+  else
+  {
+         if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+         {
+            fCLitterToHumusR  = fCLitterSurfDecay * self->fEff_AOM1 * fMinerHumFac;
+            fCLitterToCO2R    = fCLitterSurfDecay * ((double)1.0 - self->fEff_AOM1);
+            fCLitterToManureR = fCLitterSurfDecay * self->fEff_AOM1 * ((double)1.0 - fMinerHumFac);  //Moritz REPLACED BY AOM1 CUE
+            fCLitterToLitterR = fCLitterSurfDecay * self->fEff_AOM1 * ((double)1.0 - fMinerHumFac);
+   }
   else
    {
     fCLitterToHumusR  = fCLitterSurfDecay * fMinerEffFac * fMinerHumFac;
     fCLitterToCO2R    = fCLitterSurfDecay * ((double)1.0 - fMinerEffFac);
     fCLitterToLitterR = fCLitterSurfDecay * fMinerEffFac * ((double)1.0 - fMinerHumFac);
    }
+   }
   
   /* 3. Abbau des C-Manure Pools pro Zeitschritt */
+  
   
   if(!NoImmMan)
    {  
     fCManureToCO2R    = fCManureSurfDecay * fRedMan;
     fCManureToHumusR  = (double)0.0;
     fCManureToLitterR = (double)0.0;
+    fCManureToManureR = (double)0.0;//Moritz
    }
 
   else
    {
+         if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+         {
+            fCManureToHumusR  = fCManureSurfDecay * self->fEff_AOM2 * fMinerHumFac;
+            fCManureToCO2R    = fCManureSurfDecay * ((double)1.0 - self->fEff_AOM2);
+            fCManureToManureR = fCManureSurfDecay * self->fEff_AOM2 * ((double)1.0 - fMinerHumFac);    //Moritz  REPLACED BY AOM2 CUE 
+            fCManureToLitterR = fCManureSurfDecay * self->fEff_AOM2 * ((double)1.0 - fMinerHumFac);       
+        }
+        else
+        {
     fCManureToHumusR  = fCManureSurfDecay * fMinerEffFac * fMinerHumFac;
     fCManureToCO2R    = fCManureSurfDecay * ((double)1.0 - fMinerEffFac);
     fCManureToLitterR = fCManureSurfDecay * fMinerEffFac * ((double)1.0 - fMinerHumFac);
    }
+   }
+
+//End of Moritz
 
   /* 4. Abbau des C-Humus Pools */
   fCHumusToCO2R     = fCHumusSurfDecay;
@@ -1094,10 +1166,22 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   pCL->fCO2ProdR = fCLitterToCO2R +  fCManureToCO2R + fCHumusToCO2R;
 
   /* 6. Veraenderung in den C-Pools */
+ if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+ {
+      pCP->fCLitterSurf -= (fCLitterToHumusR + fCLitterToCO2R + fCLitterToManureR) * DeltaT;
+      pCP->fCManureSurf -= (fCManureToHumusR + fCManureToCO2R - fCLitterToManureR) * DeltaT;
+      pCP->fCHumusSurf  += (fCLitterToHumusR + fCManureToHumusR - fCHumusToCO2R) * DeltaT;
+      pCL->fCO2C        += pCL->fCO2ProdR * DeltaT;
+ }
+ else
+ {
   pCP->fCLitterSurf -= (fCLitterToHumusR + fCLitterToCO2R - fCManureToLitterR) * DeltaT;
   pCP->fCManureSurf -= (fCManureToHumusR + fCManureToCO2R + fCManureToLitterR) * DeltaT;
   pCP->fCHumusSurf  += (fCLitterToHumusR + fCManureToHumusR - fCHumusToCO2R) * DeltaT;
   pCL->fCO2C        += pCL->fCO2ProdR * DeltaT;
+ }
+                 
+
   
   //Added by Hong on 20180731
   //if (pCL->fCO2C>0.0)
@@ -1121,7 +1205,7 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
 
   /* 3. Bildung von mikrobieller Biomasse */
   fNManureToLitterR = fCManureToLitterR / fMicBiomCN;
-
+  fNLitterToManureR = fCLitterToManureR / fMicBiomCN;//Moritz
 
   /* 4. Humifizierung im Humus-Pool */
   if(!NoImmLit)
@@ -1134,6 +1218,9 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   else
    fNManureToHumusR = fCManureToHumusR / fMicBiomCN;
    
+   
+         
+         
   /* 5. Ammonium-Mineralisierung aus Humus, Litter und Manure */
   fNHumusToNH4R  = fNHumusSurfDecay;
   fNLitterToNH4R = fLitterToNH4K * fCLitterSurfDecay;
@@ -1143,9 +1230,23 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   pCP->fNH4NSurf += (fNHumusToNH4R  + fNLitterToNH4R  + fNManureToNH4R -  fNH4ToLitterR) * DeltaT;
   pCP->fNO3NSurf -= fNO3ToLitterR * DeltaT;
   
+  
+
+  
+                        if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+             {
+  pCP->fNLitterSurf += (fNToLitterR - fNLitterToNH4R - fNLitterToHumusR - fNLitterToManureR) * DeltaT;
+  pCP->fNManureSurf -= (fNManureToHumusR - fNLitterToManureR + fNManureToNH4R) * DeltaT;
+  pCP->fNHumusSurf += (fNLitterToHumusR + fNManureToHumusR - fNHumusToNH4R) * DeltaT;
+             }
+             else
+                 {
   pCP->fNLitterSurf += (fNToLitterR + fNManureToLitterR - fNLitterToNH4R - fNLitterToHumusR) * DeltaT;
   pCP->fNManureSurf -= (fNManureToHumusR + fNManureToLitterR + fNManureToNH4R) * DeltaT;
   pCP->fNHumusSurf += (fNLitterToHumusR + fNManureToHumusR - fNHumusToNH4R) * DeltaT;
+                 }
+  
+
   /* Veränderungen im N-Pool Ende */
 
   /* Übertragung auf globale Variablen */

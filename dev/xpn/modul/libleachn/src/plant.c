@@ -6,6 +6,7 @@
 
 #include "plant.h"
 #include "stickstoff_util.h"
+#include "stickstoff_macros.h"
 #include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,27 +82,43 @@ int leachn_plant_load(leachn_plant *self)
 	expertn_modul_base *xpn = &(self->parent);
 	double   fMinimalRootDepth = (double)50; //mm
 	char *plant_measurement_filename;
+	char *waterUptakePara_filename;
 	PPLTMEASURE  pPM;
 
 	self->fRootPot = 0.0;
 	xpn->pPl->pDevelop->fDevStage = 0.0;
-	//self->use_dist_func = 1; // 0 == noah, 1 == cos
-	//xpn->pPl->pCanopy->fLAI = 2.0;
 
-	/*	xpn->pPl->pCanopy->fLAI = xpn_register_var_get_pointer_convert_to_double(xpn->pXSys->var_list,"Config.Hutson and Wagnet plant.lai",1.0);
-		self->nroot = xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.Hutson and Wagnet plant.nroot",10);
-		self->use_dist_func = xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.Hutson and Wagnet plant.distribution",0);
-		switch(self->use_dist_func)
+    //FH 20190701 for correctly setting pPM to pPM->pNext this variable is needed
+    self->iRootNTrue = 0;
+    
+    //added by Hong 
+    if (self->waterUptakePara_filename==NULL)
+		{
+			// Read from INI File:
+			waterUptakePara_filename = xpn_register_var_get_pointer(self->parent.pXSys->var_list,"Config.leachn.plant_waterUptakePara_filename");
+
+			if (waterUptakePara_filename==NULL)
+				{
+					PRINT_ERROR("Missing entry 'plant_waterUptakePara_filename' in your configuration!");
+				}
+			else
+				{
+
+					char *S2;
+					S2 = expertn_modul_base_replace_std_templates(xpn,waterUptakePara_filename);
+					if (S2!=NULL)
 			{
-			case 0:
-				calc_noah_soil_dens(self,self->nroot);
-				break;
-			case 1:
-				calc_cos_soil_dens(self,self->nroot);
-				break;
-			}
-	*/
+							waterUptakePara_filename = get_fullpath_from_relative(self->parent.pXSys->base_path, S2);
+							self->waterUptakePara_filename = g_strdup_printf("%s",waterUptakePara_filename);
+							waterUptakePara_load_config(self);
+							free(waterUptakePara_filename);
+							free(S2);
+						}
 
+			}
+
+		}
+    //End of Hong   
 
 	if (self->plant_measurement_filename==NULL)
 		{
@@ -272,6 +289,51 @@ int load_plant_measurement_data(leachn_plant *self,char *filename)
 }
 
 
+int waterUptakePara_load_config(leachn_plant *self)
+{
+	GError *error = NULL;
+	expertn_modul_base *xpn = &(self->parent);
+	GKeyFile *keyfile;
+	GKeyFileFlags flags;
+	char *filename;
+	//double *h_Feddes; 
+	int afRSPar_Feddes_len;
+	
+	self->afRSPar_Feddes = NULL;
+	afRSPar_Feddes_len=0;
+
+
+	filename=g_strdup_printf("%s",self->waterUptakePara_filename);
+
+	/* Create a new GKeyFile object and a bitwise list of flags. */
+	keyfile = g_key_file_new ();
+
+	flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
+
+	/* Load the GKeyFile from keyfile.conf or return. */
+	if (!g_key_file_load_from_file (keyfile, filename, flags, &error))
+		{
+			PRINT_ERROR(error->message);
+			return -1;
+		}
+
+	//WATER UPTAKE MODEL PARAMETERS
+	//20020
+	//[Water_uptake_model_parameters]
+	GET_INI_DOUBLE_ARRAY(self->afRSPar_Feddes,afRSPar_Feddes_len,"Water_uptake_model_parameters","afRSPar_Feddes");
+	GET_INI_DOUBLE(self->fh50Global,"Water_uptake_model_parameters","fh50Global_vanGen");
+	GET_INI_DOUBLE(self->fp1Global,"Water_uptake_model_parameters","fp1Global_vanGen");
+	
+    //printf("%f/n", self->fh50Global);
+
+	g_key_file_free(keyfile);
+	g_free(filename);
+
+	return RET_SUCCESS;
+}
+
+
+
 int leachn_plant_InitiateLeachModel(leachn_plant *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
@@ -372,7 +434,532 @@ int leachn_plant_InitiateLeachModel(leachn_plant *self)
 	return RET_SUCCESS;
 }
 
-int leachn_plant_act_transpiration(leachn_plant *self)
+/*########### potential and actual treanspiration from XN3 ##############*///Added by Hong on 20190409
+/**************************************************************/
+/*  Name     : PotentialTranspiration()                       */
+/*                                                            */
+/*  Ein      : Zeiger auf Sammelvariable Evaporation,Zeit     */
+/*             steuerung, Pflanze                             */
+/*                                                            */
+/*  Funktion : Belegung der Systemvariablen zur Transpiration */
+/*             mit neu errechneten potentiellen               */
+/*             Simulationswerten                              */
+/*                                                            */
+/*  Autor    : ep/gsf, ch/gsf, ep/gsf                         */
+/*                                                            */
+/*  Datum    : 19.08.92, 12.03.97, 02.08.00                   */
+/*                                                            */
+/**************************************************************/
+/*  veränd. Var.:		pPW->fPotTranspdt                     */
+/*						pPW->fPotTranspDay                    */
+/**************************************************************/
+
+/*************************************************************************/
+/*  Name: LAI2CropCover()   */
+/*  Autor    : gsf/ch     */
+/*  Datum    : 17.07.97         */
+/*  Purpose   : Sehr simpler Ansatz zur Umrechnung LAI -> CropCoverFrac  */
+/* Da die Pflanzenmodelle LAI modellieren muss CropCoverFrac aus diesem geschätztwerden.*/
+/**++++++++++++++++++**************************************************/
+double LAI2CropCover(double fLAI)
+{
+       double fCropCoverFrac;
+
+       fCropCoverFrac = min((double)1, fLAI / (double)3);
+
+       return fCropCoverFrac;
+       
+}
+
+int leachn_plant_pot_transpiration(leachn_plant *self)
+{
+    expertn_modul_base *xpn = &(self->parent);
+	PWATER       pWa = xpn->pWa; 
+	PPLTWATER    pPW = xpn->pPl->pPltWater;         
+    PCANOPY      pPC = xpn->pPl->pCanopy;         
+	PPLANT       pPl = xpn->pPl;
+	PTIME        pTi = xpn->pTi;
+	PMANAGEMENT   pMa= xpn->pMa;
+
+    double  DeltaT  = pTi->pTimeStep->fAct;
+    double  fLAIFactor;
+	             
+    if ((pMa->pSowInfo == NULL)||(pPl == NULL)) return -1;     
+  
+    pPW->fPotTranspdt = (double)0;
+ 
+    if ((pPC != NULL)&&(pWa->fPotETdt > EPSILON))
+       {	 
+        if ((pPC->fCropCoverFrac > EPSILON)||(pPC->fLAI > EPSILON))
+	       {
+             //potentielle Transpiration ohne Interzeptionsverdunstung	
+	         pPW->fPotTranspdt =  MAX(0.0, pWa->fPotETdt - pWa->pEvap->fPotR*DeltaT);
+	         //self->fPotTraDay =  max((double)0,pWa->fPotETDay - pEV->fPotDay);//removed by Hong
+			 self->fPotTraDay  = MAX(0.0, pWa->fPotETR - pWa->pEvap->fPotR); //Added by Hong on 20190410, there is no pEV->fPotDay
+
+			// transpiration is increased by the evaporation deficit
+			 if((pWa->pEvap->fActR < pWa->pEvap->fPotR)&&(self->fPotTraDay >(double)0))
+                {
+                  pPW->fPotTranspdt = max((double)0,pWa->fPotETdt - pWa->pEvap->fActR*DeltaT);
+	             }
+    
+    //potentielle Transpiration eingeschränkt bei niedrigem LAI <3 :
+     fLAIFactor = LAI2CropCover(pPl->pCanopy->fLAI);
+     pPW->fPotTranspdt*=fLAIFactor;
+     self->fPotTraDay*=fLAIFactor;
+
+	 }//pPC->fLAI>EPSILON
+    }//pPC!=Null und fPotTranspdt > 0
+    
+ pPW->fPotTranspR = pPW->fPotTranspdt/DeltaT; //Added by Hong
+  
+ return RET_SUCCESS;
+}  /* Ende potentielle Transpirations - Berechnung    */
+ 
+
+/*******************************************************************/
+/*  Name     : WaterUptakeNimahHanks()                             */
+/*                                                                 */
+/*  Eingabe  : Wurzelverteilung, Pot. Transpiration im Zeitschritt */
+/*  Ausgabe  : Akt. Transpiration                                  */
+/*             Veraendeung des Wassergehalts durch                 */
+/*             Wurzelwasseraufnahme ---                            */
+/*  Funktion : Berechnung Wasseraufnahme der Pflanze               */
+/*             Veränderung des Bodenwassergehalts                  */
+/*             Methode Leachn                                      */
+/*  Autor    : Ch. Haberbosch                                      */
+/*  Datum    : 7.1.97                                              */
+/*******************************************************************/
+int leachn_plant_WaterUptakeNimahHanks(leachn_plant *self)
+{
+	expertn_modul_base *xpn = &(self->parent);
+	PPLANT pPl = xpn->pPl;
+	PWATER pWa = xpn->pWa;
+	PMANAGEMENT   pMa= xpn->pMa;
+	PSPROFILE pSo = xpn->pSo;
+    PSWATER       pSWL    =xpn->pSo->pSWater; 
+	PSLAYER       pSL;
+	pSL		=pSo->pSLayer;
+    double fContAct; //Added by Hong
+	
+	double DeltaT     = xpn->pTi->pTimeStep->fAct;	
+	signed short int  iterat;
+	
+	/* ch, fRootPot is static for better performance */
+	//static double  fRootPot = (double)0;		-> self	              	/*   [mm]   */
+	double         relWuVert = (double)0;			              	/*   [1]    */
+	double         fEffectPot[MAXSCHICHT],fPotMax,fPotMin;       /*   [mm]   */
+	double         fRootDensTotal = (double)0;        			/*   [mm]   */
+	double         fUptake;				        	/*   [mm]   */
+	double         fUptakeLay;                        /*   [mm]   */
+	double		   fd;
+	
+	PWLAYER       pWL;
+	PLAYERROOT    pLR;
+	
+    int iLayer        = 0; 
+	
+	if ((pMa->pSowInfo == NULL)||(pPl == NULL)) return -1; 
+	
+   	fUptake = 0.0;
+	
+    /* calculate only if Transpiration occurs */
+	if ((pPl->pDevelop->fDevStage > EPSILON || self->iIsConstRootDens) && (pPl->pPltWater->fPotTranspdt > EPSILON))      
+	{		
+		for (SOIL2_LAYERS1(pWL, pWa->pWLayer->pNext, pLR, pPl->pRoot->pLayerRoot->pNext))
+		{
+			/* comment in Leach:    lpPot->osmoticPot *= ((double)(-1.0 * 360.0));  */
+			
+			/* effective water potential = matric + osmotic - root resistance trerm */
+			fEffectPot[iLayer] = (double)min((double)0.0,pWL->fMatPotOld)
+				+ pWL->fOsmPot
+				- (double)1.05 			/*  in Leach: * root flow resistance term */
+				* pSo->fDeltaZ
+				* (double)iLayer;
+			
+			fRootDensTotal += pLR->fLengthDens;
+		}  /* for */
+		
+		
+        //printf("%f \n", fRootDensTotal);
+        
+		fPotMax = (double)0.0;
+		
+		fPotMin = MIN_ROOT_POT;
+		
+		self->fRootPot = (double)max((fPotMin + fPotMax) / (double)2.0,(double)2.0 * self->fRootPot);
+		
+		if (fRootDensTotal > EPSILON)
+		{
+			/*   Iteration    1.. 40  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+			for (iterat=0; iterat< 50; iterat++)
+//			for (iterat=0; iterat< 250; iterat++)
+			{                         
+				fUptake = (double)0.0;
+				
+				for (SOIL2_LAYERS1(pWL, pWa->pWLayer->pNext, pLR, pPl->pRoot->pLayerRoot->pNext))
+				{          
+					relWuVert = pLR->fLengthDens / fRootDensTotal;
+					
+					/* For Uptake there must exist roots,
+					root potential must be lower than effective water potential and
+					effective water potential must be higher than welting point. */
+					if ((relWuVert>EPSILON) && (self->fRootPot < fEffectPot[iLayer])
+						&& (fEffectPot[iLayer] > MIN_ROOT_POT))
+					{         
+						fUptake += (pWL->fHydrCond * relWuVert * DeltaT *(fEffectPot[iLayer] - self->fRootPot)
+							/ ((double)10.0));     /* [ mm/d * 1 * d * mm / mm = mm ] */
+					}/* if  */
+					
+					//if(fUptake > pPl->pPltWater->fPotTranspdt + TOLERANCE)
+                    if(fUptake > pPl->pPltWater->fPotTranspR *DeltaT + TOLERANCE) //changed by Hong 
+					{
+						break;
+					}
+				} /* for */
+				
+				/* if Uptake too high increase root potential */
+				//if (fUptake > pPl->pPltWater->fPotTranspdt + TOLERANCE)
+				if (fUptake > pPl->pPltWater->fPotTranspR * DeltaT + TOLERANCE)
+				{
+					fPotMin  = self->fRootPot;
+					self->fRootPot = (fPotMin + fPotMax) / (double)2.0;
+					
+				}  /* if */
+				else 
+					/* if Uptake too low decrease root potential */
+					//if (fUptake < pPl->pPltWater->fPotTranspdt - TOLERANCE)
+					if (fUptake < pPl->pPltWater->fPotTranspR * DeltaT - TOLERANCE)              
+				{                                            
+					fPotMax  = self->fRootPot;
+					self->fRootPot = ((fPotMin + fPotMax)/(double)2.0);
+					
+				}  /* else if */                         
+				else
+					/* Uptake is ok */
+				{
+					break;
+				}                 
+			}  /*  Iteration   */
+			
+			fUptake = (double)0;  
+			
+			for (SOIL2_LAYERS1(pWL, pWa->pWLayer->pNext, pLR, pPl->pRoot->pLayerRoot->pNext))
+			{          
+				relWuVert = pLR->fLengthDens / fRootDensTotal;
+				
+				/* For Uptake there must exist roots,
+				root potential must be lower than effective water potential and
+				effective water potential must be higher than welting point. */
+				if ((relWuVert>EPSILON) && (self->fRootPot < fEffectPot[iLayer])
+					&& (fEffectPot[iLayer] > MIN_ROOT_POT))
+				{         
+					fUptakeLay = (pWL->fHydrCond * relWuVert * DeltaT *(fEffectPot[iLayer] - self->fRootPot)
+						/ ((double)10.0));     /* [ mm/d * 1 * d * mm / mm = mm ] */
+					
+					
+					// wateruptake in each layer is realized by decreasing
+					// the actual watercontent in this layer:
+					fd = fUptakeLay / pSo->fDeltaZ;
+					
+					//Added by Hong after SPASS on 20190411
+/*					fContAct  = pWL->fContAct; 
+					fContAct -= fd; 
+					if (fContAct<=1.1*pSWL->fContPWP)
+						{
+						fd *= fContAct/pSWL->fContPWP*xpn->pTi->pTimeStep->fAct/pSL->fThickness;
+						fd = 0;
+						} */
+					//End of Hong
+					
+					pWL->fContAct -= fd;  /* [1] */
+					
+					pLR->fPotLayWatUpt          = fUptakeLay / DeltaT;   /* [mm/day] */					
+					fUptake += fUptakeLay;
+				}/* if  */
+				
+				
+			} /* for */
+			
+			//if (fUptake > pPl->pPltWater->fPotTranspdt + (double)0.1)
+			if (fUptake > pPl->pPltWater->fPotTranspR * DeltaT + (double)0.1)
+			{
+				PRINT_ERROR_ID(xpn,"Water updake too high");
+				
+			}    
+		
+		} /* Wasserentzug möglich */
+		else
+		{
+			PRINT_ERROR_ID(xpn,"No Roots");
+        }
+				
+	}   /*  if Transpiration */
+
+    xpn->pPl->pPltWater->fActTranspR = fUptake/DeltaT; //Added by Hong
+	
+	return RET_SUCCESS;
+} /*  ende   WaterUptake    */
+
+
+
+/*******************************************************************/
+/*  Name     : WaterUptakeFeddes()                                 */
+/*                                                                 */
+/*  Eingabe  : Wurzelverteilung, Pot. Transpiration im Zeitschritt */
+/*  Ausgabe  : Akt. Transpiration                                  */
+/*             Veraendeung des Wassergehalts durch                 */
+/*             Wurzelwasseraufnahme ---                            */
+/*  Funktion : Berechnung Wasseraufnahme der Pflanze               */
+/*             Veränderung des Bodenwassergehalts                  */
+/*  Autor    : St.Achatz                                           */
+/*  Datum    : 19.02.98                                            */
+/*******************************************************************/
+
+//--------------- Constants and Subroutines for WaterUptakeFeddes ---------------
+/*double afRSPar[8] = {		(double)9999.0, 
+
+							(double)-120000.0,		//Par1 --- h3
+							(double)-8000.0,			//Par2 \__ h2
+							(double)-2000.0,			//Par3 /
+							(double)-250.0,			//Par4 --- h1
+							(double)-100.0,			//Par5 --- h0
+							(double)0.1,				//Par6
+							(double)0.5}	;			//Par7
+
+*/ //Removed by Hong,parameters are load from ini and saved to self->afRSPar_Feddes						
+double FAlfa(leachn_plant *self, double rRoot,double h)
+{
+	double res;
+	double p0,p1,p2,p3;
+	
+	p0 = self->afRSPar_Feddes[5];
+	p1 = self->afRSPar_Feddes[4];
+	p3 = self->afRSPar_Feddes[1];
+	
+	if      (rRoot < self->afRSPar_Feddes[6]) p2 = self->afRSPar_Feddes[2];
+	else if (rRoot > self->afRSPar_Feddes[7]) p2 = self->afRSPar_Feddes[3];
+	else                     
+		p2 = (self->afRSPar_Feddes[2]*(self->afRSPar_Feddes[7] - rRoot) + 
+		self->afRSPar_Feddes[3]*(rRoot - self->afRSPar_Feddes[6]))  /  (self->afRSPar_Feddes[7] - self->afRSPar_Feddes[6]);
+	res = (double)0.0;
+	
+	if      (h >  p3  &&  h < p2) res = (h-p3)/(p2-p3);
+	else if	(h >= p2  &&  h < p1) res = (double)1.0;
+	else if (h >= p1  &&  h < p0) res = (h-p0)/(p1-p0);
+	
+	return res;
+}
+
+
+/*****************************/
+/* FEDDES  UPTAKE  ROUTINE   */
+/*****************************/
+
+int leachn_plant_WaterUptakeFeddes(leachn_plant *self)
+{
+	expertn_modul_base *xpn = &(self->parent);
+	PPLANT pPl = xpn->pPl;
+	PWATER pWa = xpn->pWa;
+	PSPROFILE pSo = xpn->pSo;
+	PMANAGEMENT   pMa= xpn->pMa;
+	PWLAYER       pWL;
+	PLAYERROOT    pLR;
+	PSWATER       pSWL    =xpn->pSo->pSWater; 
+	PSLAYER       pSL;
+	pSL		=pSo->pSLayer;
+	double DeltaT     = xpn->pTi->pTimeStep->fAct;
+		
+	int				L;
+	double			rRoot;
+	double			dxM;
+	double			Alfa;
+	double			fEffectPot[MAXSCHICHT];
+	double			fRootDensTotal;
+	double			Sink;
+	double          fUptake; //Added by Hong
+	double          fContAct;
+	int iLayer        = 0; 
+	
+	fUptake = 0.0;	
+	
+	if ((pMa->pSowInfo == NULL)||(pPl == NULL)) return -1; //?
+	
+//	if ((pPl->pDevelop->fDevStage < EPSILON && !self->iIsConstRootDens) || 
+//		(pPl->pPltWater->fPotTranspdt < EPSILON)) return -1; //removed by Hong
+	
+	fRootDensTotal = (double)0.0;
+	/* calculate only if Transpiration occurs */
+	if ((pPl->pDevelop->fDevStage > EPSILON || self->iIsConstRootDens) && (pPl->pPltWater->fPotTranspdt > EPSILON))   //Added by Hong   
+	{
+	for (SOIL2_LAYERS1(pWL, pWa->pWLayer->pNext, pLR, pPl->pRoot->pLayerRoot->pNext))  
+	{
+		fEffectPot[iLayer] = (double)min((double)0.0,pWL->fMatPotOld);
+		fRootDensTotal += pLR->fLengthDens;
+	}  /* for */
+	
+//	if (fRootDensTotal <= (double)0.0) return -1; //removed by hong
+
+	rRoot = pPl->pPltWater->fPotTranspdt;
+	for (SOIL2_LAYERS1(pWL, pWa->pWLayer->pNext, pLR, pPl->pRoot->pLayerRoot->pNext))  
+	{
+		//if (pLR->fLengthDens > (double)0.0) //removed by Hong
+        if (fRootDensTotal > EPSILON) //Added by Hong
+		{
+			dxM  = pSo->fDeltaZ;
+			//SG20150930: Für Irenbe Witte - Feddes-alpha kann optional = 1 (const.) gesetzt werden
+			if (self->afRSPar_Feddes[0] ==0)
+				Alfa = (double)1.0;
+			else
+				Alfa = FAlfa(self, rRoot,fEffectPot[iLayer]);	
+
+			Sink = Alfa * pLR->fLengthDens / fRootDensTotal * rRoot/dxM;
+			
+			//Added by Hong after SPASS on 20190411
+		    fContAct  = pWL->fContAct; 
+			fContAct -= Sink; 
+		    if (fContAct<=1.01*pSWL->fContPWP)
+			   {
+			    Sink *= fContAct/pSWL->fContPWP*xpn->pTi->pTimeStep->fAct/pSL->fThickness;
+			   }
+		    //End of Hong
+						
+			pWL->fContAct       -= Sink;
+									
+			pLR->fPotLayWatUpt   = Sink * dxM / DeltaT; 
+			
+			fUptake += Sink * dxM; //Added by Hong 
+			
+		} //if
+		else pLR->fPotLayWatUpt = (double)0.0;
+	} //for
+
+	// hp 221002: fPotUptakedt wird in CERES zur Berechnung der Stressfaktoren
+    //            benoetigt und wird danach gleich Null gesetzt (einmal pro Tag!).
+
+	L 	  = 1;
+	pLR	=pPl->pRoot->pLayerRoot; 
+    pPl->pPltWater->fPotUptakedt = (double)0.0;
+
+    while (((pLR->fLengthDens!=(double)0.0)||(pLR->pNext->fLengthDens !=(double)0.0))
+		  &&(L<pSo->iLayers-2))
+		{
+			pPl->pPltWater->fPotUptakedt += pLR->fPotLayWatUpt*DeltaT;
+			L 	 ++;
+			pLR =pLR ->pNext;
+		}
+
+}/* End if Transpiration */
+
+	xpn->pPl->pPltWater->fActTranspR = fUptake/DeltaT; //Added by Hong
+	
+	return RET_SUCCESS;
+}
+
+
+/*******************************************************************/
+/*  Name     : WaterUptakeVanGenuchten()                           */
+/*                                                                 */
+/*  Eingabe  : Wurzelverteilung, Pot. Transpiration im Zeitschritt */
+/*  Ausgabe  : Akt. Transpiration                                  */
+/*             Veraendeung des Wassergehalts durch                 */
+/*             Wurzelwasseraufnahme ---                            */
+/*  Funktion : Berechnung Wasseraufnahme der Pflanze               */
+/*             Veränderung des Bodenwassergehalts                  */
+/*  Autor    : St.Achatz                                           */
+/*  Datum    : 19.02.98                                            */
+/*******************************************************************/
+
+//--------------- Constants and Subroutines for WaterUptakeVanGnuchten ---------------
+
+
+
+double FWStrs(double h, double h50, double p1)
+{
+	return (double)(1.0/(1.0 + abspowerDBL( min(h,(double)-1.0e-20)/h50 , p1 )));
+}
+
+
+/***********************************/
+/* VanGenuchten   UPTAKE  ROUTINE   */
+/***********************************/
+
+int leachn_plant_WaterUptakeVanGenuchten(leachn_plant *self)
+{
+	expertn_modul_base *xpn = &(self->parent);
+	PPLANT pPl = xpn->pPl;
+	PWATER pWa = xpn->pWa;
+	PSPROFILE pSo = xpn->pSo;
+	PWLAYER       pWL;
+	PLAYERROOT    pLR;	
+	PSWATER       pSWL    =xpn->pSo->pSWater; 
+	PSLAYER       pSL;
+	pSL		=pSo->pSLayer;
+	double DeltaT     = xpn->pTi->pTimeStep->fAct;
+	
+	double			rRoot;
+	double			dxM;
+	double			Alfa;
+	double			fEffectPot[MAXSCHICHT];
+	double			fRootDensTotal;
+	double			Sink;
+	double          fUptake;	//Added by Hong	        				/*   [mm]   */
+	double          fContAct;
+	int iLayer        = 0;
+	fUptake = 0.0;
+	
+	if (pPl == NULL) return -1;
+	/*if ((pPl->pDevelop->fDevStage < EPSILON  && !self->iIsConstRootDens) || 
+		(pPl->pPltWater->fPotTranspdt < EPSILON)) return -1;*/ //removed by Hong
+	
+	fRootDensTotal = (double)0.0;
+	/* calculate only if Transpiration occurs */
+	if ((pPl->pDevelop->fDevStage > EPSILON || self->iIsConstRootDens) && (pPl->pPltWater->fPotTranspdt > EPSILON))   //Added by Hong   
+	{
+	for (SOIL2_LAYERS1(pWL, pWa->pWLayer->pNext, pLR, pPl->pRoot->pLayerRoot->pNext))  
+	{
+		fEffectPot[iLayer] = (double)min((double)0.0,pWL->fMatPotOld);
+		fRootDensTotal += pLR->fLengthDens;
+	}  /* for */
+	
+	//if (fRootDensTotal <= (double)0.0) return -1;//Removed by Hong
+
+	rRoot = pPl->pPltWater->fPotTranspdt;
+	for (SOIL2_LAYERS1(pWL, pWa->pWLayer->pNext, pLR, pPl->pRoot->pLayerRoot->pNext))  
+	{
+		//if (pLR->fLengthDens > (double)0.0) //Removed by Hong
+		if (fRootDensTotal > EPSILON) //Added by Hong
+		{
+			dxM  = pSo->fDeltaZ;
+			Alfa = FWStrs(fEffectPot[iLayer], self->fh50Global, self->fp1Global);		  
+			Sink = Alfa * pLR->fLengthDens / fRootDensTotal * rRoot/dxM;
+
+            //Added by Hong after SPASS on 20190411
+		    fContAct  = pWL->fContAct; 
+			fContAct -= Sink; 
+		    if (fContAct<=1.01*pSWL->fContPWP)
+			   {
+			    Sink *= fContAct/pSWL->fContPWP*xpn->pTi->pTimeStep->fAct/pSL->fThickness;
+			   }
+		    //End of Hong
+			
+			pWL->fContAct       -= Sink;
+			pLR->fPotLayWatUpt   = Sink * dxM / DeltaT; 
+			
+			fUptake += Sink * dxM; //Added by Hong 
+		} //if
+		else pLR->fPotLayWatUpt = (double)0.0;
+	 } //for
+
+	} /*  if Transpiration */
+	
+	xpn->pPl->pPltWater->fActTranspR = fUptake/DeltaT; //Added by Hong
+	
+	return RET_SUCCESS;
+}
+//End of Hong on 20190410
+
+int leachn_plant_act_transpiration_CK(leachn_plant *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
 
@@ -385,7 +972,10 @@ int leachn_plant_act_transpiration(leachn_plant *self)
 	PSPROFILE pSo = xpn->pSo;
 //    PTIME pTi = xpn->pTi;
 	PWATER pWa = xpn->pWa;
-
+	PSWATER       pSWL    =xpn->pSo->pSWater; 
+	PSLAYER       pSL;
+	pSL		=pSo->pSLayer;
+    double fContAct; //Added by Hong
 	int iLayer        = 0;
 	double DeltaT     = xpn->pTi->pTimeStep->fAct;
 //   double SimTime    = xpn->pTi->pSimTime->fTimeAct;
@@ -403,9 +993,6 @@ int leachn_plant_act_transpiration(leachn_plant *self)
 	PWLAYER       pWL;
 	PLAYERROOT    pLR;
 //	PROOT         pRO;
-
-
-
 
 //	pRO = xpn->pPl->pRoot;
 
@@ -512,6 +1099,17 @@ int leachn_plant_act_transpiration(leachn_plant *self)
 									// wateruptake in each layer is realized by decreasing
 									// the actual watercontent in this layer:
 									fd = fUptakeLay / pSo->fDeltaZ;
+									
+									//Added by Hong after SPASS on 20190411
+/*									fContAct  = pWL->fContAct; 
+			                        fContAct -= fd; 
+		                           if (fContAct<=1.1*pSWL->fContPWP)
+			                       {
+			                        fd *= fContAct/pSWL->fContPWP*xpn->pTi->pTimeStep->fAct/pSL->fThickness;
+									fd = 0;
+			                         } */
+		                            //End of Hong
+																		
 									pWL->fContAct -= fd;  /* [1] */
 
 									pLR->fPotLayWatUpt          = fUptakeLay / DeltaT;   /* [mm/day] */
@@ -559,13 +1157,12 @@ int leachn_plant_act_transpiration(leachn_plant *self)
 				{
 					PRINT_ERROR_ID(xpn,"No Roots");
 
+
 				}
+        xpn->pPl->pPltWater->fActTranspR = fUptake/DeltaT;
 
 		}   /*  if Transpiration */
 
-
-	xpn->pPl->pPltWater->fActTranspR = fUptake/DeltaT;
-	
 
 	return RET_SUCCESS;
 }
@@ -646,7 +1243,11 @@ int leachn_plant_LeafMaizeLeach(leachn_plant *self) //CH
 					   }
 					*/
 					
-					
+/*                    if (xpn_time_compare_time(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,pPM->iyear,pPM->fTimeY)>=0)
+                                printf("GT Biom pPM time %d %d %.17f  %d %.17f\n",xpn_time_compare_time(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,pPM->iyear,pPM->fTimeY), xpn->pTi->pSimTime->iyear, xpn->pTi->pSimTime->fTimeY,pPM->iyear,pPM->fTimeY);
+                    if(xpn_time_compare_time(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,pPM->pNext->iyear,pPM->pNext->fTimeY)<0)
+                                printf("GT Biom next pPM time %d %d %.17f  %d %.17f\n",xpn_time_compare_time(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,pPM->pNext->iyear,pPM->pNext->fTimeY), xpn->pTi->pSimTime->iyear, xpn->pTi->pSimTime->fTimeY,pPM->pNext->iyear,pPM->pNext->fTimeY);
+                    */
 
 					if(GROWING_TIME)
 						{
@@ -702,6 +1303,10 @@ int leachn_plant_LeafMaizeLeach(leachn_plant *self) //CH
 							
 							xpn->pPl->pBiomass->fRootWeight=pPM->fRootWeight  + (pPM->pNext->fRootWeight - pPM->fRootWeight) / ((double)1.0 + (double)exp(f1));
 
+                            // FH 2019-07-11 Calculation of plant density using the input (fTillers)
+                            xpn->pPl->pCanopy->fPlantDensity = pPM->fTillers + (pPM->pNext->fTillers - pPM->fTillers) / ((double)1.0 + (double)exp(f1));
+                            
+
 							// FH 2018-01-30 Für Biomasseverlust von Bäumen
 							xpn->pPl->pBiomass->fDeadLeafWeight = 0.0;
 							xpn->pPl->pBiomass->fDeadStemWeight = 0.0;
@@ -738,11 +1343,24 @@ int leachn_plant_LeafMaizeLeach(leachn_plant *self) //CH
 						}  //else
 
 
-					for (pPM = xpn->pPl->pPMeasure;
+                        // 20190705 FH: Old formulation  changed to something better readable and added Root-N-flag to determine when to apply pNext
+/*					for (pPM = xpn->pPl->pPMeasure;
 						 (pPM->pNext != NULL) && ((xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,EPSILON) <= 0.0));
 							pPM = pPM->pNext);
+                            {                   
+                                        xpn->pPl->pPMeasure=pPM;        
+                            }*/
+                if (self->iRootNTrue < 1)
+                {       
+                    if ((pPM->pNext != NULL) && (xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,EPSILON) <= 0.0))
+                        {
+                            pPM = xpn->pPl->pPMeasure;
+                            pPM = pPM->pNext;
 					xpn->pPl->pPMeasure=pPM;
+                        }    
+                }
 			 } //NewDay
+
 
 		}
 	return RET_SUCCESS;
@@ -757,9 +1375,9 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 
 
 // Änderung in der neuen Variablenstruktur: Zugriff auf die Hauptfrucht
-// pPl-> wird hochgzählt zu pPl = pPl->pNext->pNext->;
+// pPl-> wird hochgezählt zu pPl = pPl->pNext->pNext->;
 	PPLTMEASURE    pPM = xpn->pPl->pPMeasure;
-//	PCANOPY        pPC = xpn->pPl->pCanopy;
+	PCANOPY        pPC = xpn->pPl->pCanopy;
 	PLAYERROOT     pLR = xpn->pPl->pRoot->pLayerRoot;
 
 	double    fTimeConst;             // TIM normierte Zeit seit Pflanzung                                  // t=MaxWurzelTiefe+1  => TIM = 113
@@ -775,16 +1393,29 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 	double timetomeasure;
 //	double   fMinimalRootDepth = (double)50;
 
+    if (self->iRootNTrue < 1)
+        {
+        self->iRootNTrue = 1;
+        }
+    
 	if(self->iIsConstRootDens)
 		{
 //	  if(SimStart(pTi))
-			for ((pLR=xpn->pPl->pRoot->pLayerRoot, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
+			for ((pLR=xpn->pPl->pRoot->pLayerRoot->pNext, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
 				pLR->fLengthDens = self->afConstRootDens[iLayer];
 		}
 	else
 		{
 
+            //20190705 FH: Use Plant Numbers (fTillers) from input file as plant density in case there is a value specified
+            if (pPC->fPlantDensity > 0)
+            {
+                fPlantDensity = pPC->fPlantDensity;
+            }
+            else
+            {
 			fPlantDensity = (double)100;
+            }
 			
 			/*if (pPM->pNext != NULL)
 						{
@@ -859,7 +1490,8 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 
 					
 
-
+                    //if (xpn_time_compare_time(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,pPM->iyear,pPM->fTimeY)<0)
+                    //            printf("GT root pPM time %d %d %.17f  %d %.17f\n",xpn_time_compare_time(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,pPM->iyear,pPM->fTimeY), xpn->pTi->pSimTime->iyear, xpn->pTi->pSimTime->fTimeY,pPM->iyear,pPM->fTimeY);
 					if(GROWING_TIME)
 						{
 
@@ -876,7 +1508,7 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 
 							if ((xpn->pPl->pRoot->fDepth < pPM->pNext->fRootDepth - EPSILON)||(xpn->pPl->pRoot->fDepth > pPM->pNext->fRootDepth + EPSILON))
 								{
-									for ((pLR=xpn->pPl->pRoot->pLayerRoot, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
+									for ((pLR=xpn->pPl->pRoot->pLayerRoot, iLayer = 0); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
 										pLR->fLengthDens    = (double) 0.0;
 
 									/* here MaxAge is the time between Harvest and Emergence */
@@ -884,6 +1516,8 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 									//xpn->pPl->pDevelop->iDayAftEmerg = (int)xpn_time_get_number_of_dates(xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->year,xpn->pPl->pModelParam->EmergenceDay,xpn->pPl->pModelParam->EmergenceMonth,xpn->pPl->pModelParam->EmergenceYear);
 									fTotalTime = max(xpn_time_get_number_of_dates(xpn->pPl->pModelParam->EmergenceDay,xpn->pPl->pModelParam->EmergenceMonth,xpn->pPl->pModelParam->EmergenceYear,xpn->pPl->pModelParam->HarvestDay,xpn->pPl->pModelParam->HarvestMonth,xpn->pPl->pModelParam->HarvestYear),1.0);
 
+                                    // FH 20190705 Test: timetomeasure shouldn't timetomeasure be something like iDayAftEmerg? At least in this case here.
+                                    timetomeasure =  max(xpn_time_get_number_of_dates(xpn->pPl->pModelParam->EmergenceDay,xpn->pPl->pModelParam->EmergenceMonth,xpn->pPl->pModelParam->EmergenceYear,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->year),1.0);
 									//fTimeConst  =  (double)113.0 * (double)xpn->pPl->pDevelop->iDayAftEmerg / fTotalTime;
 									fTimeConst  =  (double)113.0 * (double)timetomeasure / fTotalTime;
 
@@ -941,17 +1575,21 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 									f1 = (double)(log((double)f1)/(HalbWert * HalbWert)); //[1/mm^2]
 
 
-									for ((pLR=xpn->pPl->pRoot->pLayerRoot, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
+									for ((pLR=xpn->pPl->pRoot->pLayerRoot->pNext, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
 										{
 											Tiefe = (double)((double)iLayer- (double)0.5) * xpn->pSo->fDeltaZ;  // [mm]
 
 											if (Tiefe - (double)0.5*xpn->pSo->fDeltaZ < xpn->pPl->pRoot->fDepth)
 												{
 													pLR->fLengthDens = (double)exp((double)(-1.0 * f1 * Tiefe * Tiefe));    //[1]
-													pLR->fLengthDens *= (double)cos((double)((PI * Tiefe)/(2.0 * xpn->pPl->pRoot->fDepth))); //[1]
+                                                    // FH 20190701 added new cosine due to problems with negative cosine values
+                                                    pLR->fLengthDens *= (double)cos((double)((PI * Tiefe)/(2.0 * xpn->pPl->pRoot->fDepth + xpn->pSo->fDeltaZ))); //[1]
+                                                    //old formulation
+													//pLR->fLengthDens *= (double)cos((double)(PI * Tiefe)/(2.0 * (xpn->pPl->pRoot->fDepth))); //[1]
 													pLR->fLengthDens *= maxWuLae;   //!!  [1]
 													pLR->fLengthDens *= (double).0001  * fPlantDensity;
 													// 0.0001 *[1] *[1/m^2] = [1/cm^2]
+                                                   //printf("%d %f %f %f %f %f \n", iLayer, pLR->fLengthDens, f1, Tiefe, HalbWert, maxWuLae);
 												}
 
 											else
@@ -959,12 +1597,18 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 
 										} // for  .....
 									xpn->pPl->pRoot->fTotalLength=0.0;
-									for ((pLR=xpn->pPl->pRoot->pLayerRoot, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
+									for ((pLR=xpn->pPl->pRoot->pLayerRoot->pNext, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
 									{
-										
 										xpn->pPl->pRoot->fTotalLength+=pLR->fLengthDens;
 									}
 										
+/*                                    if (xpn->pPl->pRoot->fTotalLength < self->fLengthDensOld)
+                                    {
+                                        printf("%f %f\n", self->fLengthDensOld, xpn->pPl->pRoot->fTotalLength);
+                                        for ((pLR=xpn->pPl->pRoot->pLayerRoot, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
+                                                    printf("%d %f\n", iLayer, pLR->fLengthDens);
+                                    }
+                                    self->fLengthDensOld =xpn->pPl->pRoot->fTotalLength;*/
 								}  //   Zeit   kleiner   Wurzelreifezeit  ( t < MaxWurzelTermin)
 						} // Growing Time && TIME_DURING_PLANT_MEASUREMENTS
 					else
@@ -978,17 +1622,27 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 							xpn->pPl->pDevelop->iDayAftEmerg  = 0;
 							
 							if(xpn->pPl->pRoot->pLayerRoot->pNext->fLengthDens > EPSILON)
-								for ((pLR=xpn->pPl->pRoot->pLayerRoot, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
+								for ((pLR=xpn->pPl->pRoot->pLayerRoot->pNext, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
 									{
 										pLR->fLengthDens = (double)0;
 										xpn->pPl->pRoot->fTotalLength=0.0;
 									}
 						}
 
-					for (pPM = xpn->pPl->pPMeasure;
+/*					for (pPM = xpn->pPl->pPMeasure;
 						 (pPM->pNext != NULL) && ((xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,EPSILON) <= 0.0));
 							pPM = pPM->pNext);
+							xpn->pPl->pPMeasure=pPM;*/
+                
+                 if (self->iRootNTrue < 2)
+                    {
+                      if ((pPM->pNext != NULL) && (xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,EPSILON) <= 0.0))
+                        {
+                          pPM = xpn->pPl->pPMeasure;
+                          pPM = pPM->pNext;
 							xpn->pPl->pPMeasure=pPM;
+                        }    
+                    }           
 				} //NewDay
 
 
@@ -1224,6 +1878,11 @@ int leachn_plant_NUptake(leachn_plant *self)	//CH
 	
 	self->__ERROR=0;
 
+    if (self->iRootNTrue < 2)
+        {
+        self->iRootNTrue = 2;
+        }
+
 	pPM = pPl->pPMeasure;
 	pPN = pPl->pPltNitrogen;
 
@@ -1234,14 +1893,21 @@ int leachn_plant_NUptake(leachn_plant *self)	//CH
 			// pPl->pDevelop->iDayAftEmerg must be set!
 
 			//while ((pPM->pNext != NULL) && ((pPM->pNext->iDay - EPSILON) <= SimTime))
-			while ((pPM->pNext != NULL) && (((xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,pTi->pSimTime->iyear,pTi->pSimTime->fTimeY,EPSILON) <= 0))))
+/*			while ((pPM->pNext != NULL) && (((xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,pTi->pSimTime->iyear,pTi->pSimTime->fTimeY,EPSILON) <= 0))))
 				{
 					pPM = pPM->pNext;
+				}*/
+
+                    if ((pPM->pNext != NULL) && (xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,EPSILON) <= 0.0))
+                        {
+                          pPM = xpn->pPl->pPMeasure;
+                          pPM = pPM->pNext;
+                          xpn->pPl->pPMeasure=pPM;
 				}
 
 			if (pPM->pNext == NULL)
 				{
-					return -1;
+					return RET_SUCCESS;
 				}
 
 			fMaxAge = max(xpn_time_get_number_of_days(pPM->iyear,pPM->fTimeY,pPM->pNext->iyear,pPM->pNext->fTimeY),1.0);
@@ -1332,8 +1998,10 @@ int leachn_plant_NUptake(leachn_plant *self)	//CH
 		}   // DevStage > 0
 	else
 		{
-			pPN->fCumPotNUpt = pPN->fCumActNUpt = pPN->fActNUpt = pPN->fActNUptR = pPN->fActNO3NUpt = pPN->fActNH4NUpt = (double)0;
+			//pPN->fCumPotNUpt = pPN->fCumActNUpt = pPN->fActNUpt = pPN->fActNUptR = pPN->fActNO3NUpt = pPN->fActNH4NUpt = (double)0; //removed by Hong. It made no sence!!!
 		}
+
+    pPN->fCumActNUpt			+=  pPN->fActNUptR*DeltaT; //added by Hong 
 
 	return RET_SUCCESS;
 } /*  ende   NUptake */

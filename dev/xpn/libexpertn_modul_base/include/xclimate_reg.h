@@ -6,6 +6,10 @@
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fSolRad,"pCl.pWeather.fSolRad",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fSolRad_daily_models,"pCl.pWeather.fSolRad_daily_models",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fPAR,"pCl.pWeather.fPAR",0.0);\
+xpn_register_var_init_pdouble( var_list, pCl->pWeather->fTempMax,"pCl.pWeather.fTempMax",0.0);\
+xpn_register_var_init_pdouble( var_list, pCl->pWeather->fTempMin,"pCl.pWeather.fTempMin",0.0);\
+xpn_register_var_init_pdouble( var_list, pCl->pWeather->fTempAve,"pCl.pWeather.fTempAve",0.0);\
+xpn_register_var_init_pdouble( var_list, pCl->pWeather->fGlobalStrahlung,"pCl.pWeather.fGlobalStrahlung",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fSolNet,"pCl.pWeather.fSolNet",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fSolarDirect,"pCl.pWeather.fSolarDirect",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->cosz,"pCl.pWeather.cosz",0.0);\

@@ -35,13 +35,13 @@ int hpm_root_length_growth(hpm *self)
 
 
 // Temperaturabhängigkeit: 3.11b
-    fTrt =1.0; //Test of Hong
+    //fTrt =1.0; //Test of Hong
 	fTrt = calculatePlantTemperatureProcesses_getf_HPM(self,soil_vars.TSoil);
 
 // Effect of Water: (3.11d / 6.7b)
-    fWrt =1.0; //Test of Hong
+    //fWrt =1.0; //Test of Hong
 	fWrt = pow(self->Water.aWrt,self->parameter.plant.qWpl);
-    fWrt= MAX(fWrt, 1e-6);//Test of Hong
+    //fWrt= MAX(fWrt, 1e-6);//Test of Hong
 	
 // Substrate C konzentration 3.3b
 	CHECK_0(self->Plant.MXrt)

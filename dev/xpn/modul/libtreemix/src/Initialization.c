@@ -461,6 +461,15 @@ int load_parameter(libtreemix *self,const char* paramfile, int i)
     GET_INI_DOUBLE(self->plant[i].NUpSpecR,"Miscellaneous","spec_nitrogen_uptake");
     //GET_INI_DOUBLE(self->plant[i].C,"Miscellaneous","spec_nitrogen_uptake");
     
+	//added by Hong on 26032019 for agroforestry:
+	//xpn->pCh->pCProfile->fCNLeafLitterSurf = 1.0 /self->plant[j].NLfDead;
+	//xpn->pCh->pCProfile->fCNBranchLitterSurf =1.0 /self->plant[j].NWdDead;
+	//xpn->pCh->pCProfile->fCNStemLitterSurf = 1.0 /self->plant[j].NWdDead;	
+    //GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNCFineRootLitter,"NFRt","Nitrogen_Contents",PCLAYER,xpn->pCh->pCLayer);
+	
+	//GET_INI_DOUBLE(self->plant[i].NFRt,"Nitrogen_Contents","NFRt");
+	//End of Hong
+	
     g_key_file_free(keyfile);
 
     return RET_SUCCESS;
@@ -472,6 +481,8 @@ int register_var(libtreemix *self)
     //Plant:
     //xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->plant.density,"treemix.plant.density",0.0);
 
+	//xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fCNFineRootLitter,"pCh.pCLayer.fCNFineRootLitter",NFRt);
+	
     return RET_SUCCESS;
 }
 
@@ -1095,11 +1106,15 @@ int libtreemix_set_litter_pools(libtreemix *self)
             xpn->pCh->pCProfile->fNStemLitterSurf += (float)((self->plant[j].FONBrSt*(1.0-self->plant[j].FiBrWdFr))*self->plant[j].TreeDistr);
             
 			//Hong added on 20180807 for C-balance
-			pCB->dCInputCum += self->plant[j].FOCLfFr*self->plant[j].TreeDistr+
+			pCB->dCInputSurf += self->plant[j].FOCLfFr*self->plant[j].TreeDistr+
 							((self->plant[j].FOCBrSt*self->plant[j].FiBrWdFr)*self->plant[j].TreeDistr)+ 
 							((self->plant[j].FOCBrSt*(1.0-self->plant[j].FiBrWdFr))*self->plant[j].TreeDistr); 
 							
-			//xpn->pCh->pCProfile->fCLitterSurf =xpn->pCh->pCProfile->fCLeafLitterSurf+ xpn->pCh->pCProfile->fCBranchLitterSurf + xpn->pCh->pCProfile->fCStemLitterSurf;//20181016				
+/*			pCB->dCInputCum += self->plant[j].FOCLfFr*self->plant[j].TreeDistr+
+							((self->plant[j].FOCBrSt*self->plant[j].FiBrWdFr)*self->plant[j].TreeDistr)+ 
+							((self->plant[j].FOCBrSt*(1.0-self->plant[j].FiBrWdFr))*self->plant[j].TreeDistr);*/
+							
+			xpn->pCh->pCProfile->fCLitterSurf =xpn->pCh->pCProfile->fCLeafLitterSurf+ xpn->pCh->pCProfile->fCBranchLitterSurf + xpn->pCh->pCProfile->fCStemLitterSurf;//20181016				
 			//End of Hong
 			
 			

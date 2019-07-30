@@ -457,7 +457,8 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 			
 			self->plant[i].ActTransdt = self->plant[i].ActTrans*dt;	// [mm/dt]
 			
-			pPW->fActTranspR += (self->plant[i].ActTrans*self->plant[i].TreeDistr);
+			//Hong pPW->fActTranspR += (self->plant[i].ActTrans*self->plant[i].TreeDistr);
+			pPW->fActTranspR = (self->plant[i].ActTrans*self->plant[i].TreeDistr); //changed by Hong on 20190529: 
 			
 		}
 		

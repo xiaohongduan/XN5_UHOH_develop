@@ -201,7 +201,10 @@ int schaaf_mineral_fertilization(schaaf* self) //Hong: =TSFertilizer()?
 		pCh->pCProfile->fCHumusSurf  += (float)0.1*pMa->pNFertilizer->fCorgManure;
 		pCh->pCProfile->fCNHumusSurf += pMa->pNFertilizer->fOrgManureCN;
 		
-		pCB->dCInputCum += (double)pMa->pNFertilizer->fCorgManure; //Hong added on 20180731 for C-balance
+		pCh->pCProfile->fCLeafLitterSurf  += (float)0.72*pMa->pNFertilizer->fCorgManure; //Hong for century_n
+		pCh->pCProfile->fCMicLitterSurf   += (float)0.1*pMa->pNFertilizer->fCorgManure;//Hong for century_n
+		pCB->dCInputSurf += (double)pMa->pNFertilizer->fCorgManure; //Hong added on 20180731 for C-balance
+		//pCB->dCInputCum += (double)pMa->pNFertilizer->fCorgManure;
 		
 //End of Hong
 
@@ -311,7 +314,10 @@ int schaaf_organic_fertilization(schaaf* self) //Hong = LAFertilizer()
     pCh->pCProfile->fNHumusSurf += fHumusPart * pMa->pNFertilizer->fNorgManure;
     pCh->pCProfile->fCHumusSurf += fHumusPart * pMa->pNFertilizer->fCorgManure;
 
-    pCB->dCInputCum += (double)pMa->pNFertilizer->fCorgManure; //Hong added on 20181016 for C-balance
+    pCh->pCProfile->fCLeafLitterSurf += fLitterPart * pMa->pNFertilizer->fCorgManure;//hong for century_n
+	pCh->pCProfile->fCMicLitterSurf   += fHumusPart * pMa->pNFertilizer->fCorgManure;//hong for century_n
+	pCB->dCInputSurf += (double)pMa->pNFertilizer->fCorgManure; //Hong added on 20181016 for C-balance
+	//pCB->dCInputCum += (double)pMa->pNFertilizer->fCorgManure;
 
     /* 19.8.97 unnötig:
     if (pCh->pCProfile->fNManureSurf > EPSILON)
@@ -1183,6 +1189,23 @@ int read_fertilizers(schaaf* self)
             fertil_first = NULL;
             fertil_act = NULL;
 
+			//Added by Hong on 20190513
+			//Get Start and Stop Year
+			PSIMTIME		pST = xpn->pTi->pSimTime;
+			STRUCT_XPN_TIME str_time;
+			int 			startyear,startmon,startday,stopyear,stopmon,stopday;
+			int j;
+			xpn_time_get_struc(&str_time, pST->iStart_year, pST->fStart_TimeY);
+	        startyear = str_time.year;
+		    startmon =  str_time.mon;
+	        startday =  str_time.mday;
+	        xpn_time_get_struc(&str_time, pST->iStop_year, pST->fStop_TimeY);
+	        stopyear = str_time.year;
+			stopmon =  str_time.mon;
+	        stopday =  str_time.mday;
+			j=0.0;
+            //End of Hong
+
             for (i = 0; i < fertilizer_count; i++) {
                 // Struktur mit 0 Initialisieren
                 fertil = g_malloc0_n(1, sizeof(STNFERTILIZER));
@@ -1199,7 +1222,17 @@ int read_fertilizers(schaaf* self)
                 fertil->acCode = self->ges_code[i];
                 fertil->fDryMatter = self->ges_dry_matter[i];
                 fertil->fNorgManure = self->ges_n_org_tot[i];
-                if (i == 0) {
+				
+				//added by Hong on 20190513
+				if (xpn_time_compare_date(startyear,
+				                          startmon,
+										  startday,
+                                         fertil->Year,
+                                         fertil->Month,
+                                         fertil->Day) < 0)
+				
+				{
+					if (j == 0) {
                     fertil_first = fertil;
                     fertil_act = fertil;
                 } else {
@@ -1207,6 +1240,26 @@ int read_fertilizers(schaaf* self)
                     fertil->pBack = fertil_act;
                     fertil_act = fertil_act->pNext;
                 }
+				j++;
+				}
+				
+				if (xpn_time_compare_date(stopyear,
+				                          stopmon,
+										  stopday,
+                                         fertil->Year,
+                                         fertil->Month,
+                                         fertil->Day) < 0)
+											 break;
+				
+            /*    if (i == 0) {
+                    fertil_first = fertil;
+                    fertil_act = fertil;
+                } else {
+                    fertil_act->pNext = fertil;
+                    fertil->pBack = fertil_act;
+                    fertil_act = fertil_act->pNext;
+                }*/
+				//End of Hong
             }
             if (fertilizer_count != 0) {
                 // Letzter hat -1 als Wert

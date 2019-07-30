@@ -4,7 +4,7 @@
 
 G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 {
-	return register_modul_list_new(10,  // Anzahl der Modelle
+	return register_modul_list_new(14,  // Anzahl der Modelle
 	                               register_modul_new("LEACHN",  // Bezeichnung
 	                                       "nitrogen",						                   // Modul
 	                                       "nitrogen transport",				           // Sub Modul
@@ -24,15 +24,57 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 	                                       NULL,						           // mosaic run Function
 	                                       "water_flow_hutson_run",	           // run Funktion
 	                                       "water_flow_hutson_done") ,                                                      // done Function
-	                               register_modul_new("LEACHN",  // Bezeichnung
+								    register_modul_new("LEACHN_pot_transpiration",  // Bezeichnung
+	                                       "plant",						                   // Modul
+	                                       "potential transpiration",				           // Sub Modul
+	                                       "leachn_plant",					           // Klasse
+	                                       "leachn_plant_load",						           // load/init Function
+	                                       NULL,						           // global run Function
+	                                       NULL,						           // mosaic run Function
+	                                       "leachn_plant_pot_transpiration",	           // run Funktion
+	                                       NULL),
+								   		   
+										   
+	                               register_modul_new("LEACHN_CK",  // Bezeichnung
 	                                       "plant",						                   // Modul
 	                                       "actual transpiration",				           // Sub Modul
 	                                       "leachn_plant",					           // Klasse
 	                                       "leachn_plant_load",						           // load/init Function
 	                                       NULL,						           // global run Function
 	                                       NULL,						           // mosaic run Function
-	                                       "leachn_plant_act_transpiration",	           // run Funktion
+	                                       "leachn_plant_act_transpiration_CK",	           // run Funktion
 	                                       NULL),
+								   
+                                   register_modul_new("LEACHN_WaterUptake_NimahHanks",  // Bezeichnung
+	                                       "plant",						                   // Modul
+	                                       "actual transpiration",				           // Sub Modul
+	                                       "leachn_plant",					           // Klasse
+	                                       "leachn_plant_load",						           // load/init Function
+	                                       NULL,						           // global run Function
+	                                       NULL,						           // mosaic run Function
+	                                       "leachn_plant_WaterUptakeNimahHanks",	           // run Funktion
+	                                       NULL),
+										   
+		                           register_modul_new("LEACHN_WaterUptake_Feddes",  // Bezeichnung
+	                                       "plant",						                   // Modul
+	                                       "actual transpiration",				           // Sub Modul
+	                                       "leachn_plant",					           // Klasse
+	                                       "leachn_plant_load",						           // load/init Function
+	                                       NULL,						           // global run Function
+	                                       NULL,						           // mosaic run Function
+	                                       "leachn_plant_WaterUptakeFeddes",	           // run Funktion
+	                                       NULL),
+		         
+				                   register_modul_new("LEACHN_WaterUptake_VanGenuchten",  // Bezeichnung
+	                                       "plant",						                   // Modul
+	                                       "actual transpiration",				           // Sub Modul
+	                                       "leachn_plant",					           // Klasse
+	                                       "leachn_plant_load",						           // load/init Function
+	                                       NULL,						           // global run Function
+	                                       NULL,						           // mosaic run Function
+	                                       "leachn_plant_WaterUptakeVanGenuchten",	           // run Funktion
+	                                       NULL),
+										   
 	                               register_modul_new("LEACHN",  // Bezeichnung
 	                                       "plant",						                   // Modul
 	                                       "biomass growth",				           // Sub Modul

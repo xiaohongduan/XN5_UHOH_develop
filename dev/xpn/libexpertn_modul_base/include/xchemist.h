@@ -69,6 +69,7 @@ typedef struct cLayer
 	double  fNONGasConc;  // ?
 	double  fNONGasConcOld;  // ?
 	double	fCO2C;  // kg/ha CO2-C Gehalt
+	double  fCO2C_dt; // kg/ha CO2-C Gehalt in each time step, for century_n
 	double	fCsolC;  // kg/ha  Gelöster Kohlenstoff
 	double	fNsolC;  //  ?
 	double	fCFreeFOM; // kg/ha Freier C-Gehalt aus frischer org. Substanz
@@ -100,8 +101,10 @@ typedef struct cLayer
 	double  fCMtbLitter;
 	double  fNGrossRootLitter;
 	double  fCGrossRootLitter;
+	double  fCNGrossRootLitter;//added by Hong on 26032019 for agroforestry
 	double  fNFineRootLitter;
 	double  fCFineRootLitter;
+	double  fCNFineRootLitter;//added by Hong on 26032019 for agroforestry
 	double	fChemX;
 	double	fNO3Nmgkg;
 	double	fNH4Nmgkg;
@@ -281,10 +284,22 @@ typedef struct cBalance
     double  fCManureProfile;
 	double  fCHumusProfile;
 	double  dCBalCorrect; 
-
+	//Hong 20190507: balance for 0-30 cm profile
+	double	fCProfileStart_30;
+	double	dCProfile_30;
+	double	dCBalance_30;
+	double  fDOCProfile_30;
+	double  fCLitterProfile_30;
+    double  fCManureProfile_30;
+	double  fCHumusProfile_30;
 
 	double	dCInputCum;
+	double	dCInputSurf;
+	double	dCInputProfile;
 	double	dCOutputCum;
+	double	dCInputCum_30;//Hong 20190507: balance for 0-30 cm profile
+	double	dCInputProfile_30;
+	double	dCOutputCum_30;
 	double	dNInputCum;
 	double	dNOutputCum;
 
@@ -332,10 +347,13 @@ typedef struct cProfile
 	double  fNMicLitterSurf;
 	double  fCLeafLitterSurf;
 	double  fNLeafLitterSurf;
+	double  fCNLeafLitterSurf; //added by Hong on 26032019 for agroforestry
 	double  fCBranchLitterSurf;
 	double  fNBranchLitterSurf;
+	double  fCNBranchLitterSurf;//added by Hong on 26032019 for agroforestry
 	double  fCStemLitterSurf;
 	double  fNStemLitterSurf;
+	double  fCNStemLitterSurf;//added by Hong on 26032019 for agroforestry
 	double	fCLitter;
 	double	fNLitter;
 	double	fCNLitter;
@@ -395,6 +413,7 @@ typedef struct cProfile
 	double  dNManureImmobCum;
 	double  dNHumusImmobCum;
 	double	dNImmobCum;
+	double  dNetNMinerCum;//added by Hong fo N balance
 	double  dNetNMinerCum30;
 	double	dCMinerCum;
 	double	dCO2ProdCum;
@@ -409,8 +428,10 @@ typedef struct cProfile
 	double	dN2EmisCum;
 	double	dNH3VolatCum;
 	double	dCO2EmisCum;
+	double	dCO2EmisCum_30;//Hong 20190507: balance for 0-30 cm profile
 	double	dCO2SurfEmisCum;
 	double	dCO2EmisCumSum; //Added by Hong for C-Balance on 20181112
+	double	dCO2EmisCumSum_30;
 	double	dCH4ImisCum;
 	double  dN2ODrainCum;
 	double	dUreaLeachCum;
@@ -419,6 +440,7 @@ typedef struct cProfile
 	double	dNTotalLeachCum;
 	double  dDONLeachCum;
 	double  dDOCLeachCum;
+	double  dDOCLeachCum_30;//Hong 20190507: balance for 0-30 cm profile
 	double	dNUptakeCum;
 	double  fCO2EmisR;
 	double  fCO2SurfEmisR;
@@ -433,6 +455,11 @@ typedef struct cProfile
 	double  fNH3VolatR;
 	double  fNH3VolatMaxR;
 	double  fNH4ToN2OR;
+	// 2019-03-28 new for agroforestry module:
+	double  fUsedLeafWeight;
+    double  fUsedStemWeight;
+	double  fUsedBranchWeight;
+    double  fUsedRootWeight;
 
 }
 CPROFILE;

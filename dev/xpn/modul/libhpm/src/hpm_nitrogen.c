@@ -35,6 +35,7 @@ void set_SoilVars_N(hpm *self) {
 	double nh4sum,no3sum;
 	double dt;
 	int count,layer_counter;
+	double fCumDepth;
 	
 	fDepth = 0.0;
 	fRootDepth = (double)(xpn->pPl->pRoot->fDepth*1.0e-3);
@@ -89,7 +90,7 @@ void set_SoilVars_N(hpm *self) {
 	}
 	
 	fDepth = 0.0;
-
+    fCumDepth =0.0;
 	while(fDepth<=fRootDepth) {
 		if (count >= xpn->pSo->iLayers-1) break;
 		fDepth += pSL->fThickness*1.0E-3; //fThickness: mm -> m
@@ -149,7 +150,15 @@ void set_SoilVars_N(hpm *self) {
 		//Added by Hong
 		pCL->fCLitter +=((self->Litter.OXrt_li/(double)layer_counter) *dt * mq_TO_ha_1);
 		pCL->fCLitter +=((self->Litter.OCSrt_so/(double)layer_counter) *dt* mq_TO_ha_1);
-		pCB->dCInputCum += ((self->Litter.OXrt_li/(double)layer_counter)+(self->Litter.OCSrt_so/(double)layer_counter)) * dt* mq_TO_ha_1;
+		pCB->dCInputProfile += ((self->Litter.OXrt_li/(double)layer_counter)+(self->Litter.OCSrt_so/(double)layer_counter)) * dt* mq_TO_ha_1;
+		//pCB->dCInputCum += ((self->Litter.OXrt_li/(double)layer_counter)+(self->Litter.OCSrt_so/(double)layer_counter)) * dt* mq_TO_ha_1;
+		//Hong 20190507: balance for 0-30 cm profile:	
+	    fCumDepth +=(double)0.1*pSL->fThickness; //cm
+	    if (fCumDepth <=30.0)
+	      {
+			 pCB->dCInputProfile_30 += ((self->Litter.OXrt_li/(double)layer_counter)+(self->Litter.OCSrt_so/(double)layer_counter)) * dt* mq_TO_ha_1;
+          } 
+		
 		//End of Hong
 		
 		

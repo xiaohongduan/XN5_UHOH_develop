@@ -90,7 +90,8 @@ int libtreemix_NitrogenUptake(libtreemix *self)
 				self->plant[i].NUpLfRt_dt = 0.0;
 				
 				pPlN->fActNUptR = 0.0;				
-				pPlN->fCumActNUpt += 0.0;
+				//pPlN->fCumActNUpt += 0.0;
+				pPlN->fCumActNUpt = 0.0; //Hong
 
 				pLR	= xpn->pPl->pRoot->pLayerRoot->pNext;
 				for (L=1; L <= xpn->pSo->iLayers-2; L++)
@@ -133,8 +134,11 @@ int libtreemix_NitrogenUptake(libtreemix *self)
 		
 		//added by Hong on 20180608 (pPlN->fActNUptR was missed): 
 		pPlN->fActNUptR = (((self->plant[i].ActNO3Up+self->plant[i].ActNH4Up))*self->plant[i].TreeDistr);
+		pPlN->fCumActNUpt =self->plant[i].NUpAct_Sum;
 		//End of Hong
-		pPlN->fCumActNUpt += (((self->plant[i].ActNO3Up+self->plant[i].ActNH4Up)*dt)*self->plant[i].TreeDistr);
+		//pPlN->fCumActNUpt += (((self->plant[i].ActNO3Up+self->plant[i].ActNH4Up)*dt)*self->plant[i].TreeDistr);
+		
+		
 	}
 	
 	/* Actualize Soil Nitrogen Content */

@@ -562,7 +562,7 @@ int LagerungNeu(schaaf_manag *self)
 
 		/* Berechnung des anteils eine Bodenschicht 
 				an dem bearbeiteten Bodenvolumen. */
-		bearbTiefe = pMa->pTillage->fDepth;
+		bearbTiefe = pMa->pTillage->fDepth; // mm 
 		aktTiefe =(double)0.0;
 
 	    for (pSL = pSo->pSLayer->pNext,anzahl=0;
@@ -695,17 +695,17 @@ int LagerungNeu(schaaf_manag *self)
 	restMenge = (double)0.0;	
 	
 	effektEinarbeitung = pMa->pTillage->fEffIncorp;					
-	tiefe = pMa->pTillage->fDepth;
+	tiefe = pMa->pTillage->fDepth; // mm
 	
 	if (pCP->fNO3NSurf >(double)0.0)
 	{
 		restMenge = pCP->fNO3NSurf * (double)exp((double)-0.0569* tiefe
 						 * (effektEinarbeitung * effektEinarbeitung));
 		pCL->fNO3N    += (pCP->fNO3NSurf - restMenge);
-//Hong		pCh->pCBalance->fNInputCum += (pCP->fNO3NSurf - restMenge); //Hong: fNInoutCum = dNinputCum in Xpn 5.0
+
+        //Hong		pCh->pCBalance->fNInputCum += (pCP->fNO3NSurf - restMenge); //Hong: fNInoutCum = dNinputCum in Xpn 5.0
 		pCh->pCBalance->dNInputCum += (pCP->fNO3NSurf - restMenge);
 		pCP->fNO3NSurf = restMenge;
-		
 	}
 
 	if (pCP->fNH4NSurf >(double)0.0)
@@ -728,13 +728,16 @@ int LagerungNeu(schaaf_manag *self)
 		pCP->fUreaNSurf = restMenge;
 	}
 	
-	if (pCP->fNStandCropRes >(double)0.0)
+/*	if (pCP->fNStandCropRes >(double)0.0)
 	{
 		restMenge = pCP->fNStandCropRes * (double)exp((double)-0.0569* tiefe
 				      * (effektEinarbeitung * effektEinarbeitung));
 		pCP->fNLitterSurf += (pCP->fNStandCropRes - restMenge);
 		pCP->fNStandCropRes = restMenge;
 	}
+*/
+     
+     
 //Moritz: Added a partitioning of LitterSurf by Lig/N ratio
 	double delta_N_Littersurf,NManureSurf;
 
@@ -743,44 +746,43 @@ int LagerungNeu(schaaf_manag *self)
 		restMenge = pCP->fCStandCropRes * (double)exp((double)-0.0569* tiefe
 						 * (effektEinarbeitung * effektEinarbeitung));
                          
-                         //Moritz: activate new function with dyn_AOM_div =1
-                         if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-                         {
-        pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to_AOM2_part_LN);
-		pCP->fCManureSurf += (pCP->fCStandCropRes - restMenge) * pCP->fStandCropRes_to_AOM2_part_LN;
-                          
-
-                         }
-                         else
- 		pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge);                            
-         /*/
- //*/
+        //Moritz: activate new function with dyn_AOM_div =1
+        if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+        {
+            pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to_AOM2_part_LN);
+            pCP->fCManureSurf += (pCP->fCStandCropRes - restMenge) * pCP->fStandCropRes_to_AOM2_part_LN;
+        }
+        else
+            pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge);                            
 
 
+		//Hong added on 20180807 for C-balance
+		pCP->fCLeafLitterSurf += (pCP->fCStandCropRes - restMenge); //for century_n
+		pCB->dCInputSurf +=(pCP->fCStandCropRes - restMenge);
+		//pCB->dCInputCum +=(pCP->fCStandCropRes - restMenge);
+		
 		pCP->fCStandCropRes = restMenge;
 		
+        delta_N_Littersurf= (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to_AOM2_part_LN)/150; // C/N ratio = 150
 	}
-delta_N_Littersurf= (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to_AOM2_part_LN)/150;
 
-		if (pCP->fNStandCropRes >(double)0.0)
+    if (pCP->fNStandCropRes >(double)0.0)
 	{
 		restMenge = pCP->fNStandCropRes * (double)exp((double)-0.0569* tiefe
 				      * (effektEinarbeitung * effektEinarbeitung));
                       
-                      //Moritz: activate new function with dyn_AOM_div =1
-                                               if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-                         {
-		pCP->fNLitterSurf += delta_N_Littersurf; //Assumed C/N ratio of 150 for AOM1
-		NManureSurf=((pCP->fNStandCropRes - restMenge)-delta_N_Littersurf);
-		if(NManureSurf>0)
-		{
-		pCP->fNManureSurf    += NManureSurf; //The rest of the N goes into the AOM2 pool
-		} 
-                             }
-                             
-                             else
-		pCP->fNLitterSurf += (pCP->fNStandCropRes - restMenge);
-
+        //Moritz: activate new function with dyn_AOM_div =1
+        if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
+        {
+		    pCP->fNLitterSurf += delta_N_Littersurf; //Assumed C/N ratio of 150 for AOM1
+		    NManureSurf=((pCP->fNStandCropRes - restMenge)-delta_N_Littersurf);
+            if(NManureSurf>0)
+		    {
+		        pCP->fNManureSurf    += NManureSurf; //The rest of the N goes into the AOM2 pool
+		    } 
+        }
+        else
+            pCP->fNLitterSurf += (pCP->fNStandCropRes - restMenge);
 
 		pCP->fNStandCropRes = restMenge;
 		
@@ -788,7 +790,7 @@ delta_N_Littersurf= (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to
 
 
 		//Hong added on 20180807 for C-balance
-		pCB->dCInputCum +=(pCP->fCStandCropRes - restMenge);
+		//pCB->dCInputCum +=(pCP->fCStandCropRes - restMenge);
 		
 	}
 
@@ -799,7 +801,6 @@ delta_N_Littersurf= (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to
 						 * (effektEinarbeitung * effektEinarbeitung));
 		pCL->fNManure    += (pCP->fNManureSurf - restMenge);
 		pCP->fNManureSurf = restMenge;
-
 	}
 
 	if (pCP->fCManureSurf >(double)0.0)
@@ -807,8 +808,11 @@ delta_N_Littersurf= (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to
 		restMenge = pCP->fCManureSurf * (double)exp((double)-0.0569* tiefe
 						 * (effektEinarbeitung * effektEinarbeitung));
 		pCL->fCManure    += (pCP->fCManureSurf - restMenge);
-		pCP->fCManureSurf = restMenge;
+		pCB->dCInputProfile += (pCP->fCManureSurf - restMenge);
+		pCB->dCInputProfile_30 += (pCP->fCManureSurf - restMenge);
 		
+		pCB->dCInputSurf -= (pCP->fCManureSurf - restMenge);
+		pCP->fCManureSurf = restMenge;
 	}
 
 	if (pCP->fNLitterSurf >(double)0.0)
@@ -824,7 +828,13 @@ delta_N_Littersurf= (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to
 		restMenge = pCP->fCLitterSurf * (double)exp((double)-0.0569* tiefe
 						 * (effektEinarbeitung * effektEinarbeitung));
 		pCL->fCLitter    += (pCP->fCLitterSurf - restMenge);
+		pCL->fCFineRootLitter += (pCP->fCLitterSurf - restMenge);//Hong for century_n
+		pCB->dCInputProfile += (pCP->fCLitterSurf - restMenge);//Hong for century_n
+		pCB->dCInputProfile_30 += (pCP->fCLitterSurf - restMenge);//Hong for century_n
+		pCB->dCInputSurf -= (pCP->fCLitterSurf - restMenge);//Hong for century_n
 		pCP->fCLitterSurf = restMenge;
+		pCP->fCLeafLitterSurf = restMenge; //Hong for century_n
+		
 	}
 
 	if (pCP->fNHumusSurf >(double)0.0)
@@ -846,11 +856,17 @@ delta_N_Littersurf= (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to
 		restMenge = pCP->fCHumusSurf * (double)exp((double)-0.0569* tiefe
 						 * (effektEinarbeitung * effektEinarbeitung));
 		pSL->fCHumus    += (pCP->fCHumusSurf - restMenge);
+		
+	    pCL->fCHumusFast   += (pCP->fCHumusSurf - restMenge);//Hong: change in XN3
+        pCB->dCInputProfile += (pCP->fCHumusSurf - restMenge);//for C balance
+		pCB->dCInputProfile_30 += (pCP->fCHumusSurf - restMenge);//for C balance
+		pCB->dCInputSurf -=(pCP->fCHumusSurf - restMenge);//for C balance
 		pCP->fCHumusSurf = restMenge;
+		pCP->fCMicLitterSurf = restMenge;//Hong for century_n
 		
 		//Begin of Hong: change in XN3
 		//SG 20161009: For DAISY model - 100% of fCorgManure that is partitioned to "fCHumusSurf" are SOM2 (see TSFertilizer, manage.c line 334-349)
-		pCL->fCHumusFast   += (pCP->fCHumusSurf - restMenge);
+		//pCL->fCHumusFast   += (pCP->fCHumusSurf - restMenge);
 
         pSL->fHumusCN    =pSL->fCHumus/pSL->fNHumus;
 		//End of Hong
@@ -905,7 +921,7 @@ delta_N_Littersurf= (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to
 
 		/* Berechnung des anteils eine Bodenschicht 
 				an dem bearbeiteten Bodenvolumen. */
-		bearbTiefe = pMa->pTillage->fDepth;
+		bearbTiefe = pMa->pTillage->fDepth; //mm
 		aktTiefe =(double)0.0;
 
 	    for (pSL = pSo->pSLayer->pNext,anzahl=0;

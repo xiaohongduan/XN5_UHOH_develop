@@ -16,7 +16,7 @@ xpn_register_var_init_rec_struct( var_list,HLAYER, pHe->pHLayer,xpn_register_var
 xpn_register_var_init_rec_struct( var_list,HLAYER, pHe->pHLayer,xpn_register_var_init_pdouble,fHeat,"pHe.pHLayer.fHeat",0.0); \
 xpn_register_var_init_rec_struct( var_list,HLAYER, pHe->pHLayer,xpn_register_var_init_pdouble,fHeatflow,"pHe.pHLayer.fHeatflow",0.0); \
 xpn_register_var_init_rec_struct( var_list,HLAYER, pHe->pHLayer,xpn_register_var_init_pdouble,fHeatSens,"pHe.pHLayer.fHeatSens",0.0); \
-xpn_register_var_init_rec_struct( var_list,HLAYER, pHe->pHLayer,xpn_register_var_init_pdouble,fHeatLatent,"pHe.pHLayer.fHeatLatent",0.0); \
+xpn_register_var_init_rec_struct( var_list,HLAYER, pHe->pHLayer,xpn_register_var_init_pdouble,fHeatLatent,"pHe.pHLayer.fHeatLatent",0.0);  \
 xpn_register_var_init_rec_struct( var_list,HLAYER, pHe->pHLayer,xpn_register_var_init_pdouble,fMeltPoint,"pHe.pHLayer.fMeltPoint",0.0); \
 xpn_register_var_init_rec_struct( var_list,HLAYER, pHe->pHLayer,xpn_register_var_init_pdouble,fConduct,"pHe.pHLayer.fConduct",0.0); \
 xpn_register_var_init_rec_struct( var_list,HLAYER, pHe->pHLayer,xpn_register_var_init_pdouble,fConductOld,"pHe.pHLayer.fConductOld",0.0); \

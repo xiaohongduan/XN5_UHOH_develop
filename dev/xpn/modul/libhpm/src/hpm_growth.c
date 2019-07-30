@@ -84,8 +84,8 @@ int hpm_biomass_growth(hpm *self)
     //PSWATER *pSWL;
 //  PWLAYER pWLayer;
      
-	// fWrt =1.0; //Test of Hong
-	// fTrt =1.0; //Test of Hong
+	 //fWrt =1.0; //Test of Hong
+	 //fTrt =1.0; //Test of Hong
     
     dt = (double)xpn->pTi->pTimeStep->fAct;
     // Alle Fluxes werden auf 0 gesetzt und es werden alle fluesse pro Zeiteinheit zusammengebaut:
@@ -100,10 +100,9 @@ int hpm_biomass_growth(hpm *self)
     fTrt = calculatePlantTemperatureProcesses_getf_HPM(self,soil_vars.TSoil);
 
     // Effect of Water: (3.11d / 6.7b)
-	fWrt =1.0; //Test of Hong
+	//fWrt =1.0; //Test of Hong
     fWrt = pow(self->Water.aWrt,qWpl);
-    //fWrt = MAX(fWrt,1e-34);
-    fWrt = MAX(fWrt,1e-6); //Test of Hong
+    //fWrt = MAX(fWrt,1e-6); //Test of Hong
 
     fTsh = calculatePlantTemperatureProcesses_getf_HPM(self,(double)self->Environment.Tair); // 3.11b Temperatureinfluss
 
@@ -223,7 +222,10 @@ int hpm_biomass_growth(hpm *self)
 	//Added by Hong
 	pCh->pCProfile->fCLitterSurf += self->Litter.OXsh_li*dt * mq_TO_ha_1;
 	pCh->pCProfile->fCLitterSurf += self->Litter.OCSsh_so*dt * mq_TO_ha_1;
-	pCB->dCInputCum += (self->Litter.OXsh_li + self->Litter.OCSsh_so)*dt * mq_TO_ha_1;
+	
+	pCh->pCProfile->fCLeafLitterSurf += (self->Litter.OXsh_li + self->Litter.OCSsh_so)*dt * mq_TO_ha_1;//Hong for century_n
+	pCB->dCInputSurf += (self->Litter.OXsh_li + self->Litter.OCSsh_so)*dt * mq_TO_ha_1;
+	//pCB->dCInputCum += (self->Litter.OXsh_li + self->Litter.OCSsh_so)*dt * mq_TO_ha_1;
 	
 	//End of Hong
 
@@ -353,7 +355,7 @@ double calculatePlantTemperatureProcesses_getf_HPM(hpm *self, double T) { //3.11
     }
 
     //Test of Hong 
-	f = MAX(f, 1.0e-6);
+	//f = MAX(f, 1.0e-6);
 
     return f;
 }

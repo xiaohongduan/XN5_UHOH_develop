@@ -458,15 +458,14 @@ typedef struct stbiomass
     double  fTuberDeathRate;
     double  fDeadLeafWeight;
     double  fDeadStemWeight;
+	double  fDeadBranchWeight; //added by Hong for agroforestry
     double  fTotLeafWeight;
     double  fTotRootWeight;
     double  fTotStemWeight;
     // 2018-01-30 new for agroforestry module
-    double  fUsedLeafWeight;
-    double  fUsedStemWeight;
-    double  fUsedRootWeight;
 	double  fDeadLeafWeight_dt;//Added by Hong on 20190220
 	double  fDeadStemWeight_dt;
+	double  fDeadBranchWeight_dt;
 
     PBIOMASS  pNext;
     PBIOMASS  pBack;
@@ -553,8 +552,11 @@ typedef struct stlayerRoot
     double  fPotLayNUpt;
     double  fActLayNUpt;
     double  fNStressRoot;
-	double  fDeadRootWeight_dt;//Added by hong on 20190221 for agroforest
-	double  fDeadRootWeight_Layer;//Hong: not necessary
+	double  fDeadFineRootWeight_dt;//Added by hong on 20190221 for agroforest
+	double  fDeadGrossRootWeight_dt;
+	double  fDeadFineRootWeight_layer;
+	double  fDeadGrossRootWeight_layer;
+	
     PLAYERROOT  pNext;
     PLAYERROOT  pBack;
     }

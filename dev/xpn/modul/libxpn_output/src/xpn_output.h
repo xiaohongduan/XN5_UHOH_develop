@@ -130,6 +130,8 @@ struct _xpn_output
 	double dt_sum_count;
 	double dt_sum;
 	
+   	// Atmosphere:
+	double cum_dust1,cum_dust2,cum_dust3,cum_dust4,cum_dust5;
 	
 	// Nitrogen:
 	double no3profile, no3lower23proflile, no3lower13profile, nh4profile, urealprofil;
@@ -158,12 +160,13 @@ struct _xpn_output
 	// Plant
 	double Nuptake, H2Ouptake;
 	double DevStage, LAI, TotRLD, Diameter, PlantDens,Height;	// Height
-	double RootMass, StemMass, BranchMass, LeafMass, FruitMass, WoodMass, StrawMass; //StrawMass added by Hong
+	double RootMass, StemMass, BranchMass, LeafMass, FruitMass, WoodMass, StrawMass,AboveWoodMass; //StrawMass and AboveWoodMass added by Hong
 	double AboveMass,TotalMass;
 	double AssimilatePool;
 	double RootWaterUp;
     double fPotTranspR;
     double fActTranspR;
+    double fSolRadDay, fPARDay, fSolRadDay_zwischen, fPARDay_zwischen;
 	
 	double *RLD;
 		
@@ -173,7 +176,7 @@ struct _xpn_output
     double rooting_depth;
 	
 	//Moritz variables
-    double dyn_AOM_div;
+    double dyn_AOM_div,fSOM1_new,dyn_CUE_AOM;
 	double fCStandCropRes,fNStandCropRes,fC_NStandCropRes,fStandCropRes_to_AOM2_part_LN,fCLitterSurf,fNLitterSurf,fC_NLitterSurf;
 	double fCManureSurf,fNManureSurf,fC_NManureSurf,fCHumusSurf,fNHumusSurf,fC_NHumusSurf,rooting_depth_Mo,fNH4NSurf,fNO3NSurf;
 	//End Moritz
@@ -208,7 +211,7 @@ struct _xpn_output
 	
 	double *wfps;		// water filled pore space Array i-layer
 	
-	char *special_outout_def_file;
+	char *special_output_def_file;
 	
 	
 	int spec_vars_count;
@@ -225,7 +228,7 @@ G_MODULE_EXPORT int xpn_output_reg_var(xpn_output *self);
 G_MODULE_EXPORT int xpn_output_calc_var(xpn_output *self);
 G_MODULE_EXPORT int xpn_output_done(xpn_output *self);
 
-int xpn_output_load_special_outout_def_file(xpn_output *self);
+int xpn_output_load_special_output_def_file(xpn_output *self);
 
 struct _xpn_outputClass
 {

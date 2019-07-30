@@ -72,7 +72,7 @@ struct _century_n
 	int iForest;
 	double fdrain;
 	
-	
+	double *fCHumus_old; //Hong on 20190509
 	
 	
 };

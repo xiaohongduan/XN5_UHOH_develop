@@ -1680,12 +1680,14 @@ int ceres_DevelopmentCheckAndPostHarvestManagement_run(ceres *self)
 					//pCP->fCLitterSurf += pPl->pBiomass->fBiomassAbvGround * (double)0.4;
 					//pCP->fNLitterSurf += pPl->pBiomass->fBiomassAbvGround * pPl->pPltNitrogen->fVegActConc;
 					pCP->fCLitterSurf += (pPl->pBiomass->fStovWeight+pPl->pBiomass->fGrainWeight) * (double)0.4;
+					pCP->fCLeafLitterSurf += (pPl->pBiomass->fStovWeight+pPl->pBiomass->fGrainWeight) * (double)0.4;//Hong on 20190605: for century_n
 					pCP->fNLitterSurf += (pPl->pBiomass->fStovWeight+pPl->pBiomass->fGrainWeight) * pPl->pPltNitrogen->fVegActConc;
 				}
 			}
 		} else if(pPl->pModelParam->cResidueCarryOff==0) {
 			pCP->fCStandCropRes  += fCStandR;
 			pCP->fCLitterSurf    += (fCResidue - fCStandR);
+			pCP->fCLeafLitterSurf    += (fCResidue - fCStandR);//Hong on 20190605: for century_n
 			pCP->fNStandCropRes  += fNStandR;
 			pCP->fNLitterSurf    += (fNResidue - fNStandR);
 		} else {

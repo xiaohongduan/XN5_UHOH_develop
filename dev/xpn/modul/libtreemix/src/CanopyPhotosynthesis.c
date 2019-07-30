@@ -260,6 +260,8 @@ int libtreemix_CanopyProductionNumericalAdvanced(libtreemix *self)
 					self->clim.IPARCanopyCloud = self->clim.CloudFraction*self->clim.IPARCanopyClear;
 					self->clim.SunltFrac = 1.0 - self->clim.CloudyDaysFrac;
 				}
+                //FH 20190516 Test fuer Transpiration
+                self->clim.IPARCanopy = self->clim.IPARCanopyClear + self->clim.IPARCanopyCloud;
 			}
 			else if(self->conf.PhotoRad == 2)	// using XN5's internally computed radiation: fPAR = 0.5*fSolRad!
 			{
@@ -356,6 +358,8 @@ int libtreemix_CanopyProductionNumericalAdvanced(libtreemix *self)
 						LfTranspirationCloud	= 0.0;
 						LfConductanceCloud		= 0.0;					
 					}
+                    //FH 04062019 Transpiration test
+                    LfLayTranspirationdt = ( (1.0 - self->clim.CloudFraction )* LfTranspirationClear + self->clim.CloudFraction * LfTranspirationCloud)/24.0;
 				}
 				else
 				{	
@@ -410,9 +414,13 @@ int libtreemix_CanopyProductionNumericalAdvanced(libtreemix *self)
 				 */
 				 
 				// calculation without cloud/clear conditions
+                //printf("%f %f\n", pWe->fPAR, self->clim.IPARCanopy);
 				libtreemix_LeafPhotosynthesisFALGE_simple(self, i, self->clim.IPARCanopy, LfLayer);
 				
-				LfLayTranspirationdt	= self->plant[i].Transpiration_Layerdt; 			// [mm]
+                // FH 04062019 Transpirationstest
+				//LfLayTranspirationdt	= self->plant[i].Transpiration_Layerdt; 			// [mm]
+				LfLayTranspirationdt	= self->plant[i].Transpiration_LayerR/24.0; 			// [mm]
+				
 				LfLayPhotosynthesisdt	= self->plant[i].NetPhotoMolLay;					// [µmol/m2/s]
 				LfLayGPPdt				= self->plant[i].GPP_Layer;							// [µmol/m2/s]
 				LfLayMaintRespdt 		= self->plant[i].MainRespLfLay_R;					// [µmol/m2/s]
@@ -1321,6 +1329,9 @@ int libtreemix_LeafPhotosynthesisFALGE_simple(libtreemix *self, int i, double ra
 	
 	/* calculation of stomatal conductance and transpiration [mmol/m2/s] */
 	StomCond = self->plant[i].StomCondMin+self->plant[i].GFac*1000.0*(Pnet1+self->plant[i].fac*self->plant[i].DarkResp)*rH/pWe->fAtmCO2ppm;
+	
+    //printf("%f %f %f %f %f %f %f \n",StomCond, rH, self->plant[i].GFac, Pnet1, self->plant[i].fac, self->plant[i].DarkResp,pWe->fAtmCO2ppm);
+    
 	self->plant[i].StomCond = StomCond/400.0; 						//[mmolH2O/m2(total)*s] -> [cm/s]
 	
 	Transpiration = self->plant[i].vpd/AirPressure * StomCond;						// [mmol/m2*s]

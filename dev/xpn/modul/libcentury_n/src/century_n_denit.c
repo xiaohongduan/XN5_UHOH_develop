@@ -238,7 +238,7 @@ int century_n_Denitrification_run(century_n *self) //daily loss of NH4 due to ni
 						{
 							gramsSoil = pSL->fBulkDens  * pSL->fThickness * 0.1   * 1.0e4;//soil mass in layer (g m-2)
 							if(gramsSoil <= 0.0) PRINT_ERROR_ID((&(self->parent)),"Denitrify Error: Devison by 0");
-							co2PPM[i] =  (pCL->fCO2C*kgphaTOgpm2 ) / gramsSoil * 1.0e6;
+							co2PPM[i] =  (pCL->fCO2C_dt*kgphaTOgpm2 ) / gramsSoil * 1.0e6;
 							if(co2PPM[i]<1e-30) co2PPM[i]=0.0;
 						}
 

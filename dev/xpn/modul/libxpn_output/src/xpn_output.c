@@ -272,34 +272,36 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.Climate.Precipitation.Precipitation [mm]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.canopyprecip_day,"output.Climate.Precipitation.Canopy Precipitation [mm]",0.0);
 	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Precipitation.Snow [mm]",&(xpn->pCl->pWeather->fSnow),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation.Solar Radiation [MJ m-2 day-1]",&(xpn->pCl->pWeather->fSolRad),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation.PAR [MJ m-2 day-1]",&(xpn->pCl->pWeather->fPAR),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Wind Speed.Wind Speed [m s-1]",&(xpn->pCl->pWeather->fWindSpeed),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation.Solar Radiation [MJ/(m2 day)]",&(xpn->pCl->pWeather->fSolRad),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation.PAR [MJ/(m2 day)]",&(xpn->pCl->pWeather->fPAR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Wind Speed.Wind Speed [m/s]",&(xpn->pCl->pWeather->fWindSpeed),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation Day.Solar Radiation [MJ/m2]",&(self->fSolRadDay),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation Day.PAR [MJ/m2]",&(self->fPARDay),-1,TRUE,TRUE);
     //xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation.DTR [J m-2 s-1]",&(xpn->pCl->pWeather->fDTR),-1,TRUE,TRUE);//Hong for GECROS
 	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Climate.Radiation.DTR2 [J m-2 s-1]",&(xpn->pCl->pWeather->fDTR2),-1,TRUE,TRUE);//Hong for GECROS
 	// --------------------------------------------------------------------------------------------------------
 	// definition of special outputs, which fits to the measurement values:
 
-	self->special_outout_def_file=NULL;
+	self->special_output_def_file=NULL;
 	self->spec_vars_count=0;
 	self->spec_vars=NULL;
 
 	self->spec_vars_profile_count=0;
 	self->spec_vars_profile=NULL;
 
-	S = (char*)xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.XPN_OUTPUT.special_outout_def");
+	S = (char*)xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.XPN_OUTPUT.special_output_def");
 	if (S==NULL)
 		{
-			S = (char*)xpn_register_var_get_pointer(xpn->pXSys->var_list,"Global_Config.options.special_outout_def");
+			S = (char*)xpn_register_var_get_pointer(xpn->pXSys->var_list,"Global_Config.options.special_output_def");
 		}
 	if (S!=NULL)
 		{
-			self->special_outout_def_file = expertn_modul_base_replace_std_templates_and_get_fullpath_from_relative(xpn,S);
+			self->special_output_def_file = expertn_modul_base_replace_std_templates_and_get_fullpath_from_relative(xpn,S);
 		}
 
-	if (self->special_outout_def_file!=NULL)
+	if (self->special_output_def_file!=NULL)
 		{
-			xpn_output_load_special_outout_def_file(self);
+			xpn_output_load_special_output_def_file(self);
 		}
 
 	// ... und registrieren:
@@ -331,30 +333,34 @@ int xpn_output_reg_var(xpn_output *self)
 	// matric potential
 	//xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.matric_pot[i],varname,0.0),"output.Water.Matric Potential.Matric_Potential [kPa]",self->soil_numbers);
 
-
+    //FH 2019-07-11: moved from balance.c
+	self->cum_dust1=0.0;
+	self->cum_dust2=0.0;
+	self->cum_dust3=0.0;
+	self->cum_dust4=0.0;
+    self->cum_dust5=0.0;
 
 
 	// Evapotranspiration (ET)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potET_Day,"output.Water.Evapotranspiration Day.Potential Evapotranspiration  [mm]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actET_Day,"output.Water.Evapotranspiration Day.Actual Evapotranspiration [mm]",0.0);
 
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potE_Day,"output.Water.Evap and Transp Day.Potential Evaporation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Day,"output.Water.Evap and Transp Day.Actual Evaporation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potE_Day,"output.Water.Evaporation and Transpiration Day.Potential Evaporation [mm]",0.0);	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Day,"output.Water.Evaporation and Transpiration Day.Actual Evaporation [mm]",0.0);	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potT_Day,"output.Water.Evaporation and Transpiration Day.Potential Transpiration [mm]",0.0);	
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Water.Evaporation and Transpiration Day.Actual Transpiration [mm]",0.0);
 
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potT_Day,"output.Water.Evap and Transp Day.Potential Transpiration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Water.Evap and Transp Day.Actual Transpiration [mm]",0.0);
 
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Potential Evapotranspiration  [mm/day]",&(xpn->pWa->fPotETR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Actual Evapotranspiration  [mm/day]",&(xpn->pWa->fActETR),-1,TRUE,TRUE);
 
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Potential Evapotranspiration  [mm day-1]",&(xpn->pWa->fPotETR),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Actual Evapotranspiration  [mm day-1]",&(xpn->pWa->fActETR),-1,TRUE,TRUE);
-
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evap and Transp Rate.Potential Evaporation  [mm day-1]",&(xpn->pWa->pEvap->fPotR),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evap and Transp Rate.Actual Evaporation  [mm day-1]",&(xpn->pWa->pEvap->fActR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Potential Evaporation  [mm/day]",&(xpn->pWa->pEvap->fPotR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Actual Evaporation  [mm/day]",&(xpn->pWa->pEvap->fActR),-1,TRUE,TRUE);
 
 	self->fPotTranspR = 0.0;
     self->fActTranspR = 0.0;
-    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evap and Transp Rate.Potential Transpiration  [mm day-1]",&(self->fPotTranspR),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evap and Transp Rate.Actual Transpiration [mm day-1]",&(self->fActTranspR),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Potential Transpiration  [mm/day]",&(self->fPotTranspR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Actual Transpiration [mm/day]",&(self->fActTranspR),-1,TRUE,TRUE);
     
     
 
@@ -400,74 +406,82 @@ int xpn_output_reg_var(xpn_output *self)
 
 
 	// Cum. N Transformation:
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNO3LeachCum,"output.Nitrogen.Cum N Transformations.Nitrate N Leaching",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNMinerCum,"output.Nitrogen.Cum N Transformations.Mineralization",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNO3DenitCum,"output.Nitrogen.Cum N Transformations.Denitrifcation",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNH4NitrCum,"output.Nitrogen.Cum N Transformations.Nitrification",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNImmobCum,"output.Nitrogen.Cum N Transformations.Immobilization",0.0);
-
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNMinerCum,"output.Nitrogen.N Transformations Cumulative.Mineralization [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNO3DenitCum,"output.Nitrogen.N Transformations Cumulative.Denitrifcation [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNH4NitrCum,"output.Nitrogen.N Transformations Cumulative.Nitrification [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNImmobCum,"output.Nitrogen.N Transformations Cumulative.Immobilization [kg/ha]",0.0);
 
 	// N Contents in Soil:
 	//xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->no3_content[i],varname,0.0),"output.Nitrogen.NO3-N-Layer.NO3-N [kg/ha]",self->soil_numbers);
 	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->no3profile,"output.Nitrogen.NO3-N-Profile.Soil Profile [kgNO3-N/ha]",0.0);
 
 	// Temporal Changes
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->no3profile,"output.Nitrogen.Temporal Changes.NO3 Profile",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->no3lower23proflile,"output.Nitrogen.Temporal Changes.NO3 lower 2/3 Profile",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->no3lower13profile,"output.Nitrogen.Temporal Changes.NO3 lower 1/3 Profile",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->nh4profile,"output.Nitrogen.Temporal Changes.NH4 Profile",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->urealprofil,"output.Nitrogen.Temporal Changes.Urea Profile",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->no3profile,"output.Nitrogen.N Temporal Changes Day.NO3 Profile [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->no3lower23proflile,"output.Nitrogen.N Temporal Changes Day.NO3 lower 2/3 Profile [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->no3lower13profile,"output.Nitrogen.N Temporal Changes Day.NO3 lower 1/3 Profile [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->nh4profile,"output.Nitrogen.N Temporal Changes Day.NH4 Profile [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->urealprofil,"output.Nitrogen.N Temporal Changes Day.Urea Profile [kg/ha]",0.0);
 
 	// N Transformations
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fUreaHydroDay,"output.Nitrogen.N Transformations.Urea Hydrolysis",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NReleaseFrehOrgMatter,"output.Nitrogen.N Transformations.N-Release Fresh Org Matter",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNHumusMinerDay,"output.Nitrogen.N Transformations.N-Release Soil Org. Matter",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNH4NitrDay,"output.Nitrogen.N Transformations.Nitrified N",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNO3DenitDay,"output.Nitrogen.N Transformations.Denitrified N",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNImmobDay,"output.Nitrogen.N Transformations.Immobilized N",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fUreaHydroDay,"output.Nitrogen.N Transformations Day.Urea Hydrolysis [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NReleaseFrehOrgMatter,"output.Nitrogen.N Transformations Day.Mineralized N from Litter and Manure [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNHumusMinerDay,"output.Nitrogen.N Transformations Day.Mineralized N from Humus [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNH4NitrDay,"output.Nitrogen.N Transformations Day.Nitrified N [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNO3DenitDay,"output.Nitrogen.N Transformations Day.Denitrified N [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNImmobDay,"output.Nitrogen.N Transformations Day.Immobilized N [kg/ha]",0.0);
 
 	// Mineralization/ Immobilization
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNHumusImmobDay,"output.Nitrogen.Mineral/Immob.N Immobilization in Humus",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNManureImmobDay,"output.Nitrogen.Mineral/Immob.N Immobilzation in Young Soil Org. Matter",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNLitterImmobDay,"output.Nitrogen.Mineral/Immob.N Immobilization in Litter",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNHumusMinerDay,"output.Nitrogen.Mineral/Immob.N Release in Humus",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNManureMinerDay,"output.Nitrogen.Mineral/Immob.N Release from Young Soil Org. Matter",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNLitterMinerDay,"output.Nitrogen.Mineral/Immob.N Release from Litter",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNHumusImmobDay,"output.Nitrogen.Mineralization/Immobilization Day.N Immobilization in Humus [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNManureImmobDay,"output.Nitrogen.Mineralization/Immobilization Day.N Immobilization in Manure [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNLitterImmobDay,"output.Nitrogen.Mineralization/Immobilization Day.N Immobilization in Litter [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNHumusMinerDay,"output.Nitrogen.Mineralization/Immobilization Day.N Release from Humus [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNManureMinerDay,"output.Nitrogen.Mineralization/Immobilization Day.N Release from Manure [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNLitterMinerDay,"output.Nitrogen.Mineralization/Immobilization Day.N Release from Litter [kg/ha]",0.0);
+	
+	//Test of Hong
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Daily Mineralization/Immobilization.fHumusMinerR",&(xpn->pCh->pCLayer->fHumusMinerR),-1,TRUE,TRUE);
+	//End of Test
     //xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Mineral/Immob.N fCFOMFast",&(xpn->pCh->pCLayer->fCFOMFast),-1,TRUE,TRUE);//Hong for NIMMOBR
 	
-	/* C - N Pools */
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CLitter,"output.Nitrogen.C and N Pools.C Litter 0-30 cm depth",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManure,"output.Nitrogen.C and N Pools.C Manure 0-30 cm depth",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CHumus,"output.Nitrogen.C and N Pools.C Humus 0-30 cm depth",0.0);
+	/* N Pools */
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NLitterProf,"output.Nitrogen.N Pools in Profile.N Litter in entire Profile [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NManureProf,"output.Nitrogen.N Pools in Profile.N Manure in entire Profile [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NHumusProf,"output.Nitrogen.N Pools in Profile.N Humus in entire Profile [kg/ha]",0.0);
 
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NLitter,"output.Nitrogen.C and N Pools.N Litter 0-30 cm depth",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NManure,"output.Nitrogen.C and N Pools.N Manure 0-30 cm depth",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NHumus,"output.Nitrogen.C and N Pools.N Humus 0-30 cm depth",0.0);
+
+/*	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NLitter,"output.Nitrogen.N Pools in Profile.N Litter [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NManure,"output.Nitrogen.N Pools in Profile.N Manure [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NHumus,"output.Nitrogen.N Pools in Profile.N Humus [kg/ha]",0.0);
 
 	//C
-	// 0-30cm
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CLitter,"output.Carbon.C Pools in Profile.C Litter [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManure,"output.Carbon.C Pools in Profile.C Manure [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CHumus,"output.Carbon.C Pools in Profile.C Humus [kg/ha]",0.0);*/
+    
+/*    // 0-30cm
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CLitter30,"output.Carbon.0 to 30 cm.C Litter 0-30 cm",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManure30,"output.Carbon.0 to 30 cm.C Manure 0-30 cm",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CHumus30,"output.Carbon.0 to 30 cm.C Humus 0-30 cm",0.0);
 	// 30-60cm
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CLitter60,"output.Carbon.30 to 60 cm.C Litter 30-60 cm kg ha-1",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManure60,"output.Carbon.30 to 60 cm.C Manure 30-60 cm kg ha-1",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CHumus60,"output.Carbon.30 to 60 cm.C Humus 30-60 cm kg ha-1",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CLitter60,"output.Carbon.30 to 60 cm.C Litter 30-60 cm kg/ha",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManure60,"output.Carbon.30 to 60 cm.C Manure 30-60 cm kg/ha",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CHumus60,"output.Carbon.30 to 60 cm.C Humus 30-60 cm kg/ha",0.0);
 	// 60-90cm
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CLitter90,"output.Carbon.60 to 90 cm.C Litter 60-90 cm kg ha-1",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManure90,"output.Carbon.60 to 90 cm.C Manure 60-90 cm kg ha-1",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CHumus90,"output.Carbon.60 to 90 cm.C Humus 60-90 cm kg ha-1",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CLitter90,"output.Carbon.60 to 90 cm.C Litter 60-90 cm kg/ha",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManure90,"output.Carbon.60 to 90 cm.C Manure 60-90 cm kg/ha",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CHumus90,"output.Carbon.60 to 90 cm.C Humus 60-90 cm kg/ha",0.0);*/
 	// profile
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CLitterProf,"output.Carbon.Profile.C Litter Profile kg ha-1",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManureProf,"output.Carbon.Profile.C Manure Profile kg ha-1",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CHumusProf,"output.Carbon.Profile.C Humus Profile [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CLitterProf,"output.Carbon.C Pools in Profile.C Litter in entire Profile [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CManureProf,"output.Carbon.C Pools in Profile.C Manure in entire Profile [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CHumusProf,"output.Carbon.C Pools in Profile.C Humus in entire Profile [kg/ha]",0.0);
 
 	//Moritz outputs for testing the new AOM decomposition module [surface residues]
 
     //new AOM division activation Switch
    // xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dyn_AOM_div,"pCh.pCProfile.dyn_AOM_div",0.0);
  	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->dyn_AOM_div,"output.Surface residues.dyn_AOM_div. dimensionless",0.0);	
-   
+ 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fSOM1_new,"output.Surface residues.fSOM1_new. dimensionless",0.0);	   
+ 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->dyn_CUE_AOM,"output.Surface residues.dyn_CUE_AOM. dimensionless",0.0);	
 
 	//surface residues
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCStandCropRes,"output.Surface residues.C standing Crop residue. kg C ha-1",0.0);	
@@ -497,9 +511,9 @@ int xpn_output_reg_var(xpn_output *self)
 	//End of Moritz
 	
 	// C - N Ratio:
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CNRatioLitter,"output.Nitrogen.C/N Ratio.C/N Ratio Litter 0-30 cm depth",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CNRatioManure,"output.Nitrogen.C/N Ratio.C/N Ratio Manure 0-30 cm depth",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CNRatioHumus,"output.Nitrogen.C/N Ratio.C/N Ratio Humus 0-30 cm depth",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CNRatioLitter,"output.Carbon.C/N Ratio in Top Soil.C/N Ratio Litter 0-30 cm [-]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CNRatioManure,"output.Carbon.C/N Ratio in Top Soil.C/N Ratio Manure 0-30 cm [-]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CNRatioHumus,"output.Carbon.C/N Ratio in Top Soil.C/N Ratio Humus 0-30 cm [-]",0.0);
 
 	/* Subdirectory XWATER */
 
@@ -517,62 +531,69 @@ int xpn_output_reg_var(xpn_output *self)
 		xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->heat.cum_sol_rad,"output.Heat.Cum Heat Flux.Sol_Radiation [Wm-2]",0.0);
 		 */
 
-	// Heat Fluxes (Energy Balance):
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Energy Balance.Sensible Heat [W m-2]",&(xpn->pHe->pHEBalance->fHeatSens),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Energy Balance.Latent Heat [W m-2]",&(xpn->pHe->pHEBalance->fHeatLatent),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Energy Balance.Ground Heat [W m-2]",&(xpn->pHe->pHEBalance->fGroundHeat),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Energy Balance.Net Radiation [W m-2]",&(xpn->pHe->pHEBalance->fNetRad),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Net Radiation.Net Shortwave Radiation [W/m2]",&(xpn->pHe->pHEBalance->fShortNetRad),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Net Radiation.Net Longwave Radiation [W/m2]",&(xpn->pHe->pHEBalance->fLongNetRad),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Net Radiation.Net Radiation [W/m2]",&(xpn->pHe->pHEBalance->fNetRad),-1,TRUE,TRUE);
 
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Net Radiation.Short Net Radiation [W m-2]",&(xpn->pHe->pHEBalance->fShortNetRad),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Net Radiation.Long Net Radiation [W m-2]",&(xpn->pHe->pHEBalance->fLongNetRad),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Net Radiation.Net Radiation [W m-2]",&(xpn->pHe->pHEBalance->fNetRad),-1,TRUE,TRUE);
+//Alternative
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Net Radiation.Net Shortwave Radiation [W/m$^2\\!$]",&(xpn->pHe->pHEBalance->fShortNetRad),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Net Radiation.Net Longwave Radiation [W/m$^2\\!$]",&(xpn->pHe->pHEBalance->fLongNetRad),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Net Radiation.Net Radiation [W/m$^2\\!$]",&(xpn->pHe->pHEBalance->fNetRad),-1,TRUE,TRUE);
 
 
 	// emissivity
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->heat.emissivity,"output.Heat.Surface Properties.Emissivity []",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->heat.emissivity,"output.Heat.Surface Properties.Emissivity [-]",0.0);
 	// albedo
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->heat.Albedo,"output.Heat.Surface Properties.Albedo []",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->heat.Albedo,"output.Heat.Surface Properties.Albedo [-]",0.0);
 
 	// Surface Temperature
 	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Surface Temperature.Air Temperature [deg C]",&(xpn->pCl->pWeather->fTempAir),-1,TRUE,TRUE);
 	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Surface Temperature.Surface Temperature [deg C]",&(xpn->pHe->fTempSurf),-1,TRUE,TRUE);
 	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Surface Temperature.Upper Soil Temperature [deg C]",&(xpn->pHe->pHLayer->pNext->fSoilTemp),-1,TRUE,TRUE);
 
+    //Alternative
+    //xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Surface Temperature.Air Temperature [$\\degree$C]",&(xpn->pCl->pWeather->fTempAir),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Surface Temperature.Surface Temperature [$\\degree$C]",&(xpn->pHe->fTempSurf),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Heat.Surface Temperature.Upper Soil Temperature [$\\degree$C]",&(xpn->pHe->pHLayer->pNext->fSoilTemp),-1,TRUE,TRUE);
+
+
 	/* Subdirectory XPLANT */
 	//Development Stage (Crops)
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->DevStage,"output.Plant.Development_Stage.EC_Stage [-]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->DevStage,"output.Plant.Development Stage.BBCH Stage [-]",0.0);
 
 	// N and H2O uptake
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Nuptake,"output.Plant.N_and_H2O_Uptake.N_Uptake [kgN ha-1]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->H2Ouptake,"output.Plant.N_and_H2O_Uptake.H2O_Uptake [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Nuptake,"output.Plant.N and Water Uptake.N Uptake [kgN/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->H2Ouptake,"output.Plant.N and Water Uptake.Water Uptake [mm]",0.0);
 
 	//Masses
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->RootMass,"output.Plant.Biomass.Roots [kg ha-1]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->StemMass,"output.Plant.Biomass.Stem [kg ha-1]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->BranchMass,"output.Plant.Biomass.Branches [kg ha-1]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->LeafMass,"output.Plant.Biomass.Leaves [kg ha-1]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->FruitMass,"output.Plant.Biomass.Fruits [kg ha-1]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->WoodMass,"output.Plant.Biomass.Wood [kg ha-1]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->StrawMass,"output.Plant.Biomass.Straw [kg ha-1]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->RootMass,"output.Plant.Biomass.Roots [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->StemMass,"output.Plant.Biomass.Stem [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->BranchMass,"output.Plant.Biomass.Branches [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->LeafMass,"output.Plant.Biomass.Leaves [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->FruitMass,"output.Plant.Biomass.Fruits [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->StrawMass,"output.Plant.Biomass.Straw [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->AboveWoodMass,"output.Plant.Biomass.Wood above Ground [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->WoodMass,"output.Plant.Biomass.Wood including Gross Root [kg/ha]",0.0);
 
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->AboveMass,"output.Plant.Total Biomass.Above Ground [kg ha-1]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->RootMass,"output.Plant.Total Biomass.Roots [kg ha-1]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->TotalMass,"output.Plant.Total Biomass.Total [kg ha-1]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->AboveMass,"output.Plant.Total Biomass.Above Ground [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->RootMass,"output.Plant.Total Biomass.Roots [kg/ha]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->TotalMass,"output.Plant.Total Biomass.Total [kg/ha]",0.0);
 
 	// Assimilate Pool
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->AssimilatePool,"output.Plant.Biomass.Assimilate_Pool [kg ha-1]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->AssimilatePool,"output.Plant.Biomass.Assimilate Pool [kg/ha]",0.0);
 
 	//LAI
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->LAI,"output.Plant.Leaf_Area_Index.LAI [m2 m-2]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->LAI,"output.Plant.Leaf Area Index.LAI [m2/m2]",0.0);
 
 	//Transpiration
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potT_Day,"output.Plant.Transpiration.pot_Transpiration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Plant.Transpiration.act_Transpiration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potT_Day,"output.Plant.Transpiration Day.Potential Transpiration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Plant.Transpiration Day.Actual Transpiration [mm]",0.0);
 
 	// Total Root Length Density
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->TotRLD,"output.Plant.Tot_Root_Length_Density.Total_RLD [cm cm-3]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->TotRLD,"output.Plant.Root Length Density in Profile.Total RLD [cm/cm3]",0.0);
 	// Root Length Density in soil layers
-	xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->RLD[i],varname,0.0),"output.Plant.Root_Length_Density.RLD [cm cm-3]",self->soil_numbers);
+    // FH 2019-07-18 Moved to special_output_dev
+	//xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->RLD[i],varname,0.0),"output.Plant.Root Length Density.RLD [cm/cm3]",self->soil_numbers);
 	
 	
 	// Rooting depth
@@ -580,15 +601,15 @@ int xpn_output_reg_var(xpn_output *self)
 	
 
 	// N concentration
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NGrain,"output.Plant.N Concentration.N_Fruit",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NLeaves,"output.Plant.N Concentration.N_Leaves",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NStem,"output.Plant.N Concentration.N_Stem",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NRoot,"output.Plant.N Concentration.N_Root",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NGrain,"output.Plant.N Concentration.N in Fruits [-]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NLeaves,"output.Plant.N Concentration.N in Leaves [-]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NStem,"output.Plant.N Concentration.N in Stem [-]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NRoot,"output.Plant.N Concentration.N in Root [-]",0.0);
 
 	//Height, Diameter, Density
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Height,"output.Plant.Height.height [m]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Height,"output.Plant.Height.Height [m]",0.0);
 	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Height,"output.XPlant.Diameter.diameter [m]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->PlantDens,"output.Plant.Plant Density.Plant_Density [Plants ha-1]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->PlantDens,"output.Plant.Plant Density.Plant_Density [Plants/ha]",0.0);
 
 
 
@@ -610,49 +631,67 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Sum,"output.System Balance.Evapotranspiration Cum.Actual Transpiration [mm]",0.0);
 */
 	// cumulative water flows
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_sum,"output.System Balance.Water Cum.Precipitation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Sum,"output.System Balance.Water Cum.Actual Evaporation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Sum,"output.System Balance.Water Cum.Actual Transpiration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Sum,"output.System Balance.Water Cum.Interception Loss [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Sum,"output.System Balance.Water Cum.Runoff [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Sum,"output.System Balance.Water Cum.Infiltration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Sum,"output.System Balance.Water Cum.Drainage [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_sum,"output.Water.Water Compartments Cumulative.Precipitation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Sum,"output.Water.Water Compartments Cumulative.Actual Evaporation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Sum,"output.Water.Water Compartments Cumulative.Actual Transpiration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Sum,"output.Water.Water Compartments Cumulative.Interception Loss [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Sum,"output.Water.Water Compartments Cumulative.Runoff [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Sum,"output.Water.Water Compartments Cumulative.Infiltration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Sum,"output.Water.Water Compartments Cumulative.Drainage [mm]",0.0);
 
 	// cumulative water flows (day)
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.System Balance.Water Daily.Precipitation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Day,"output.System Balance.Water Daily.Actual Evaporation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.System Balance.Water Daily.Actual Transpiration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Day,"output.System Balance.Water Daily.Interception Loss [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Day,"output.System Balance.Water Daily.Runoff [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Day,"output.System Balance.Water Daily.Infiltration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Day,"output.System Balance.Water Daily.Drainage [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.Water.Water Compartments Day.Precipitation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Day,"output.Water.Water Compartments Day.Actual Evaporation [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Water.Water Compartments Day.Actual Transpiration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Day,"output.Water.Water Compartments Day.Interception Loss [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Day,"output.Water.Water Compartments Day.Runoff [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Day,"output.Water.Water Compartments Day.Infiltration [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Day,"output.Water.Water Compartments Day.Drainage [mm]",0.0);
 
 	// soil water balance
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Balance,"output.Water.Soil Water Change in Profile.WC Change in Profile[mm]",0.0); //reloacted to output.Water. by Hong on 20181218
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Input,"output.Water.Soil Water Change in Profile.Input [mm]",0.0);//reloacted to output.Water. by Hong on 20181218
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Output,"output.Water.Soil Water Change in Profile.Output [mm]",0.0);//reloacted to output.Water. by Hong on 20181218
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Balance,"output.Water.Water Storage.Water Storage in Profile [mm]",0.0); //reloacted to output.Water. by Hong on 20181218
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Input,"output.Water.Water Storage.Input [mm]",0.0);//reloacted to output.Water. by Hong on 20181218
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Output,"output.Water.Water Storage.Output [mm]",0.0);//reloacted to output.Water. by Hong on 20181218
+	
 	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.WaterIce_Profile,"output.Water.Soil_Water_Balance.Water_Ice_in_Profile [mm]",0.0);
 	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.BalanceXN,"output.Water.Soil_Water_Balance.Balance_XN [mm]",0.0);
 
 //Added by Hong on 20181220
 //N Balance
     //cumulative
-    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Mineral N Input [kg N ha-1]",&(xpn->pCh->pCBalance->dNInputCum),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Mineral N in Profile [kg N ha-1]",&(xpn->pCh->pCBalance->dNProfile),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Mineral N Uptake [kg N ha-1]",&(xpn->pCh->pCProfile->dNUptakeCum),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.N2O Emission [kg N ha-1]",&(xpn->pCh->pCProfile->dN2OEmisCum),-1,TRUE,TRUE);
-    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.NO Emission [kg N ha-1]",&(xpn->pCh->pCProfile->dNOEmisCum),-1,TRUE,TRUE);//Added by Hong on 20190109
-xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.N2 Emission [kg N ha-1]",&(xpn->pCh->pCProfile->dN2EmisCum),-1,TRUE,TRUE);//Added by Hong on 20190109		
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.N Leaching [kg N ha-1]",&(xpn->pCh->pCProfile->dNTotalLeachCum),-1,TRUE,TRUE);	
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Mineral N Balance [kg N ha-1]",&(xpn->pCh->pCBalance->dNBalance),-1,TRUE,TRUE);
-	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Cum NO3 Leaching [kg ha-1]",&(xpn->pCh->pCProfile->fNO3LeachDay),-1,TRUE,TRUE);
-	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Cum NH4 Leaching [kg ha-1]",&(xpn->pCh->pCProfile->fNH4LeachDay),-1,TRUE,TRUE);
-	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance.Nitrogen Cum.Cum Urea Leaching [kg ha-1]",&(xpn->pCh->pCProfile->fUreaLeachDay),-1,TRUE,TRUE);
-	
+/*    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.Nmin Input [kg N/ha]",&(xpn->pCh->pCBalance->dNInputCum),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.Nmin from mineralization [kg N/ha]",&(xpn->pCh->pCProfile->dNMinerCum),-1,TRUE,TRUE);//added by Hong on 20190516
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.net Nmin (mineral_N-immob_N) [kg N/ha]",&(xpn->pCh->pCProfile->dNetNMinerCum),-1,TRUE,TRUE);//added by Hong on 20190606	
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.Nmin in Profile [kg N/ha]",&(xpn->pCh->pCBalance->dNProfile),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.Nmin Uptake [kg N/ha]",&(xpn->pCh->pCProfile->dNUptakeCum),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.N2O Emission [kg N/ha]",&(xpn->pCh->pCProfile->dN2OEmisCum),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.NO Emission [kg N/ha]",&(xpn->pCh->pCProfile->dNOEmisCum),-1,TRUE,TRUE);//Added by Hong on 20190109
+xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.N2 Emission [kg N/ha]",&(xpn->pCh->pCProfile->dN2EmisCum),-1,TRUE,TRUE);//Added by Hong on 20190109		
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.N Leaching [kg N/ha]",&(xpn->pCh->pCProfile->dNTotalLeachCum),-1,TRUE,TRUE);	
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.Nmin Balance [kg N/ha]",&(xpn->pCh->pCBalance->dNBalance),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.Cum NO3 Leaching [kg/ha]",&(xpn->pCh->pCProfile->fNO3LeachDay),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.Cum NH4 Leaching [kg/ha]",&(xpn->pCh->pCProfile->fNH4LeachDay),-1,TRUE,TRUE);
+	//xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Nitrogen.Nitrogen Cum.Cum Urea Leaching [kg/ha]",&(xpn->pCh->pCProfile->fUreaLeachDay),-1,TRUE,TRUE);
+	*/
 	//daily
-	// xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.System Balance.Nitrogen Daily.N Leaching [kg N ha-1]",0.0);
+	// xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.System Balance.Nitrogen Daily.N Leaching [kg N/ha]",0.0);
 			
 //End of Hong
+
+    // FH 2019-07-11: moved from balance.c
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->cum_dust1,"output.Atmospheric Transport.Dust Distribution.Dust 1 [ug/(kg dryair)]",0.0);		
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->cum_dust2,"output.Atmospheric Transport.Dust Distribution.Dust 2 [ug/(kg dryair)]",0.0);		
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->cum_dust3,"output.Atmospheric Transport.Dust Distribution.Dust 3 [ug/(kg dryair)]",0.0);		
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->cum_dust4,"output.Atmospheric Transport.Dust Distribution.Dust 4 [ug/(kg dryair)]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->cum_dust5,"output.Atmospheric Transport.Dust Distribution.Dust 5 [ug/(kg dryair)]",0.0);
+
+    //Alternative
+   /* xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->cum_dust1,"output.Atmospheric Transport.Dust Distribution.Dust 1 [$\\mu g$/(kg dryair)]",0.0);		
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->cum_dust2,"output.Atmospheric Transport.Dust Distribution.Dust 2 [$\\mu g$/(kg dryair)]",0.0);		
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->cum_dust3,"output.Atmospheric Transport.Dust Distribution.Dust 3 [$\\mu g$/(kg dryair)]",0.0);		
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->cum_dust4,"output.Atmospheric Transport.Dust Distribution.Dust 4 [$\\mu g$/(kg dryair)]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->cum_dust5,"output.Atmospheric Transport.Dust Distribution.Dust 5 [$\\mu g$/(kg dryair)]",0.0);*/
+
 
 //	self->timesave_output_Year = 0;
 //	self->timesave_output_TimeY = 0.0;
@@ -674,7 +713,7 @@ xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.System Balance
 }
 
 
-int xpn_output_load_special_outout_def_file(xpn_output *self)
+int xpn_output_load_special_output_def_file(xpn_output *self)
 {
 	GKeyFile *keyfile;
 	GKeyFileFlags flags;
@@ -686,6 +725,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 	PWLAYER  pWL;
 	PHLAYER pHL;
 	PCLAYER pCL;
+    PLAYERROOT pLR;
 	int iLayer;
 	char *S;
 
@@ -703,7 +743,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 	int count;
 
 
-	char *filename=self->special_outout_def_file;
+	char *filename=self->special_output_def_file;
 	/* Create a new GKeyFile object and a bitwise list of flags. */
 	keyfile = g_key_file_new ();
 
@@ -736,7 +776,8 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pWL->fContAct);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Water.Water Content.theta [] %d cm",(int)(depth*100.0+0.5));
+									//self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Water.WC at Depth.$\\theta$ at %d cm [cm$^3\\!$/cm$^3\\!$]",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Water.Water Content at Depth.theta at %d cm [cm3/cm3]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -753,7 +794,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 		
 		
 	// water potential
-	GET_INI_DOUBLE_ARRAY_OPTIONAL(darray,darray_len,"water","matrix_potential");
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(darray,darray_len,"water","matric_potential");
 	if (darray!=NULL)
 		{
 			for (i=0; i<darray_len; i++)
@@ -771,7 +812,8 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pWL->fMatPotAct);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Water.Matrix Potential.psi [mm] %d cm",(int)(depth*100.0+0.5));
+									//self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Water.Matric Potential at Depth.$\\psi$ at %d cm [mm]",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Water.Matric Potential at Depth.psi at %d cm [mm]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -804,7 +846,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(self->wfps[iLayer]);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Water.wfps.wfps [-] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Water.Water filled Pore Space at Depth.WFPS at %d cm [-]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -836,7 +878,8 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pHL->fSoilTemp);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Heat.Soil Temperature.T [grad C] %d cm",(int)(depth*100.0+0.5));
+									//self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Heat.Soil Temperature at Depth.T at %d cm [$\\degree$C]",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Heat.Soil Temperature at Depth.T at %d cm [deg C]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -868,7 +911,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fNO3N);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Content.NO3 [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Content.NO3 at %d cm [kg/ha]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -899,7 +942,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fNH4N);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Content.NH4 [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Content.NH4 at %d cm [kg/ha]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -930,7 +973,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fUreaN);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Content.Urea [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Content.Urea at %d cm [kg/ha]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -961,7 +1004,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fNLitter);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Pools.N Litter [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Pools at Depth.N Litter at %d cm [kg/ha]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -992,7 +1035,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fNManure);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Pools.N Manure [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Pools at Depth.N Manure at %d cm [kg/ha]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -1023,7 +1066,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pSL->fNHumus);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Pools.N Humus [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Pools at Depth.N Humus at %d cm [kg/ha]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -1036,6 +1079,137 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 				}
 			g_free(darray);
 		}
+
+//Test of Hong
+//fMinerR
+GET_INI_DOUBLE_ARRAY_OPTIONAL(darray,darray_len,"nitrogen","miner_rate");
+	if (darray!=NULL)
+		{
+			for (i=0; i<darray_len; i++)
+				{
+					depth = darray[i];
+					act_depth = 0.0;
+					for (pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext,pHL=xpn->pHe->pHLayer->pNext, pSW = pSo->pSWater->pNext, pWL = pWa->pWLayer->pNext, iLayer = 1;	//start
+					        ((pSL->pNext != NULL)&&(pSW->pNext != NULL)&&(pWL->pNext != NULL));						//end
+					        pSL = pSL->pNext,pCL=pCL->pNext, pSW = pSW->pNext, pWL = pWL->pNext,pHL=pHL->pNext, iLayer++)								//step
+						{
+							act_depth+=pSL->fThickness*1.0e-3; // mm -> m
+							if (act_depth >= depth)
+								{
+									self->spec_vars_count++;
+									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
+									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fMinerR);
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Mineralization Rate.Total at %d cm [kg/ha]",(int)(depth*100.0+0.5));
+									if (5 <= xpn->DEBUG_LEVEL)
+										{
+											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
+											PRINT_MESSAGE(xpn,5,S);
+											g_free(S);
+										}
+									break;
+								}
+						}
+				}
+			g_free(darray);
+		}
+//fHumusMinerR
+GET_INI_DOUBLE_ARRAY_OPTIONAL(darray,darray_len,"nitrogen","humus_miner_rate");
+	if (darray!=NULL)
+		{
+			for (i=0; i<darray_len; i++)
+				{
+					depth = darray[i];
+					act_depth = 0.0;
+					for (pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext,pHL=xpn->pHe->pHLayer->pNext, pSW = pSo->pSWater->pNext, pWL = pWa->pWLayer->pNext, iLayer = 1;	//start
+					        ((pSL->pNext != NULL)&&(pSW->pNext != NULL)&&(pWL->pNext != NULL));						//end
+					        pSL = pSL->pNext,pCL=pCL->pNext, pSW = pSW->pNext, pWL = pWL->pNext,pHL=pHL->pNext, iLayer++)								//step
+						{
+							act_depth+=pSL->fThickness*1.0e-3; // mm -> m
+							if (act_depth >= depth)
+								{
+									self->spec_vars_count++;
+									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
+									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fHumusMinerR);
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Mineralization Rate.In Humus at %d cm [kg/ha]",(int)(depth*100.0+0.5));
+									if (5 <= xpn->DEBUG_LEVEL)
+										{
+											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
+											PRINT_MESSAGE(xpn,5,S);
+											g_free(S);
+										}
+									break;
+								}
+						}
+				}
+			g_free(darray);
+		}		
+
+//fLitterMinerR
+GET_INI_DOUBLE_ARRAY_OPTIONAL(darray,darray_len,"nitrogen","litter_miner_rate");
+	if (darray!=NULL)
+		{
+			for (i=0; i<darray_len; i++)
+				{
+					depth = darray[i];
+					act_depth = 0.0;
+					for (pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext,pHL=xpn->pHe->pHLayer->pNext, pSW = pSo->pSWater->pNext, pWL = pWa->pWLayer->pNext, iLayer = 1;	//start
+					        ((pSL->pNext != NULL)&&(pSW->pNext != NULL)&&(pWL->pNext != NULL));						//end
+					        pSL = pSL->pNext,pCL=pCL->pNext, pSW = pSW->pNext, pWL = pWL->pNext,pHL=pHL->pNext, iLayer++)								//step
+						{
+							act_depth+=pSL->fThickness*1.0e-3; // mm -> m
+							if (act_depth >= depth)
+								{
+									self->spec_vars_count++;
+									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
+									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fLitterMinerR);
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Mineralization Rate.In Litter %d cm [kg/ha]",(int)(depth*100.0+0.5));
+									if (5 <= xpn->DEBUG_LEVEL)
+										{
+											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
+											PRINT_MESSAGE(xpn,5,S);
+											g_free(S);
+										}
+									break;
+								}
+						}
+				}
+			g_free(darray);
+		}	
+
+//fManureMinerR			
+GET_INI_DOUBLE_ARRAY_OPTIONAL(darray,darray_len,"nitrogen","manure_miner_rate");
+	if (darray!=NULL)
+		{
+			for (i=0; i<darray_len; i++)
+				{
+					depth = darray[i];
+					act_depth = 0.0;
+					for (pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext,pHL=xpn->pHe->pHLayer->pNext, pSW = pSo->pSWater->pNext, pWL = pWa->pWLayer->pNext, iLayer = 1;	//start
+					        ((pSL->pNext != NULL)&&(pSW->pNext != NULL)&&(pWL->pNext != NULL));						//end
+					        pSL = pSL->pNext,pCL=pCL->pNext, pSW = pSW->pNext, pWL = pWL->pNext,pHL=pHL->pNext, iLayer++)								//step
+						{
+							act_depth+=pSL->fThickness*1.0e-3; // mm -> m
+							if (act_depth >= depth)
+								{
+									self->spec_vars_count++;
+									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
+									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fManureMinerR);
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Nitrogen.N Mineralization Rate.In Manure %d cm [kg/ha]",(int)(depth*100.0+0.5));
+									if (5 <= xpn->DEBUG_LEVEL)
+										{
+											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
+											PRINT_MESSAGE(xpn,5,S);
+											g_free(S);
+										}
+									break;
+								}
+						}
+				}
+			g_free(darray);
+		}			
+//End of TEST
+
+
 
 	// Carbon
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(darray,darray_len,"carbon","c_litter");
@@ -1055,7 +1229,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fCLitter);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C Pools.C Litter [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C Pools at Depth.C Litter at %d cm [kg/ha]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -1086,7 +1260,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pCL->fCManure);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C Pools.C Manure [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C Pools at Depth.C Manure at %d cm [kg/ha]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -1117,7 +1291,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pSL->fCHumus);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C Pools.C Humus [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C Pools at Depth.C Humus at %d cm [kg/ha]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -1148,7 +1322,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(self->c_n_ratio_litter[iLayer]);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C N Ratio.Litter [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C/N Ratio at Depth.C/N Ratio Litter at %d cm [-]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -1179,7 +1353,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(self->c_n_ratio_manure[iLayer]);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C N Ratio.Manure [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C/N Ratio at Depth.C/N Ratio Manure at %d cm [-]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -1210,7 +1384,7 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 									self->spec_vars_count++;
 									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
 									self->spec_vars[self->spec_vars_count-1].link_to_var=&(self->c_n_ratio_humus[iLayer]);
-									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C N Ratio.Humus [kg ha-1] %d cm",(int)(depth*100.0+0.5));
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Carbon.C/N Ratio at Depth.C/N Ratio Humus at %d cm [-]",(int)(depth*100.0+0.5));
 									if (5 <= xpn->DEBUG_LEVEL)
 										{
 											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
@@ -1224,137 +1398,191 @@ int xpn_output_load_special_outout_def_file(xpn_output *self)
 			g_free(darray);
 		}
 	
+	//Plant
+	/*GET_INI_DOUBLE_ARRAY_OPTIONAL(darray,darray_len,"plant","root_length_density");
+	if (darray!=NULL)
+		{
+			for (i=0; i<darray_len; i++)
+				{
+					depth = darray[i];
+					act_depth = 0.0;
+					for (iLayer=1,pCL = xpn->pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext,pHL=xpn->pHe->pHLayer->pNext, pSW = pSo->pSWater->pNext, pWL = pWa->pWLayer->pNext,pLR=xpn->pPl->pRoot->pLayerRoot->pNext, iLayer = 1;	//start
+					        ((pSL->pNext != NULL)&&(pSW->pNext != NULL)&&(pWL->pNext != NULL)&&(pLR->pNext != NULL));						//end
+					        pSL = pSL->pNext,pCL=pCL->pNext, pSW = pSW->pNext, pWL = pWL->pNext,pHL=pHL->pNext, pLR=pLR->pNext, iLayer++)								//step
+						{
+							act_depth+=pSL->fThickness*1.0e-3; // mm -> m
+							if (act_depth >= depth)
+								{
+									self->spec_vars_count++;
+									self->spec_vars = g_realloc(self->spec_vars,self->spec_vars_count*sizeof(struct_special_var));
+									self->spec_vars[self->spec_vars_count-1].link_to_var=&(pLR->fLengthDens);
+									self->spec_vars[self->spec_vars_count-1].name=g_strdup_printf ("output.Plant.Root Length Density at Depth.RLD at %d cm [cm/cm3]",(int)(depth*100.0+0.5));
+									if (5 <= xpn->DEBUG_LEVEL)
+										{
+											S=g_strdup_printf("%s is at layer %d",self->spec_vars[self->spec_vars_count-1].name,iLayer);
+											PRINT_MESSAGE(xpn,5,S);
+											g_free(S);
+										}
+									break;
+								}
+						}
+				}
+			g_free(darray);
+		}*/
+
+	//xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->RLD[i],varname,0.0),"output.Plant.Root Length Density.RLD [cm/cm3]",self->soil_numbers);
 	
 
 	// Profiles:
 	// water content profile:
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"water","water_content_profile");
-	WRITE_TO_PROFILE_VAR(pWL->fContAct,"output.Water.Water Content Profile.theta [] %d-%d cm",count);
+	WRITE_TO_PROFILE_VAR(pWL->fContAct,"output.Water.Water Content in Profile.theta %d-%d cm [cm3/cm3]",count);
+    //WRITE_TO_PROFILE_VAR(pWL->fContAct,"output.Water.Water Content in Profile.$\\theta$ %d-%d cm [cm$^3\\!$/cm$^3\\!$]",count);
 	
 	// water potential profile:
-	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"water","matrix_potential_profile");
-	WRITE_TO_PROFILE_VAR(pWL->fMatPotAct,"output.Water.Matrix Potential Profile.psi [mm] %d-%d cm",count);
+	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"water","matric_potential_profile");
+	WRITE_TO_PROFILE_VAR(pWL->fMatPotAct,"output.Water.Matric Potential in Profile.psi %d-%d cm [mm]",count);
+	//WRITE_TO_PROFILE_VAR(pWL->fMatPotAct,"output.Water.Matric Potential in Profile.$\\psi$ %d-%d cm [mm]",count);
 	
 	// water filled pore space profile:
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"water","wfps_profile");
-	WRITE_TO_PROFILE_VAR(self->wfps[iLayer],"output.Water.wtfps Profile.wfps [-] %d-%d cm",count);
+	WRITE_TO_PROFILE_VAR(self->wfps[iLayer],"output.Water.Water filled Pore Space in Profile.WFPS %d-%d cm [-]",count);
 	
 	// soil temperature profile:
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"heat","soil_temperature_profile");
-	WRITE_TO_PROFILE_VAR(pHL->fSoilTemp,"output.Heat.Soil Temperature Profile.T [grad C] %d-%d cm",count);
+	WRITE_TO_PROFILE_VAR(pHL->fSoilTemp,"output.Heat.Soil Temperature in Profile.T %d-%d cm [deg C]",count);
+    //WRITE_TO_PROFILE_VAR(pHL->fSoilTemp,"output.Heat.Soil Temperature Profile.T %d-%d cm [$\\degree$C]",count);
 	
 //############################# NITROGEN ######################################	
 
 	// Nitrogen profile no3:	
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"nitrogen","no3_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNO3N,"output.Nitrogen.N Content Profile.NO3 [kg ha-1] %d-%d cm",1.0);
+	//WRITE_TO_PROFILE_VAR(pCL->fNO3N,"output.Nitrogen.Nmin Content in Profile.NO3 %d-%d cm [kg/ha]",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fNO3N,"output.Nitrogen.Nmin Content in Profile.NO3 %d-%d cm [kg/ha]",1.0);
 	
 	// Nitrogen profile nh4:
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"nitrogen","nh4_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNH4N,"output.Nitrogen.N Content Profile.NH4 [kg ha-1] %d-%d cm",1.0);
+	//WRITE_TO_PROFILE_VAR(pCL->fNH4N,"output.Nitrogen.Nmin Content in Profile.NH4 %d-%d cm [kg/ha]",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fNH4N,"output.Nitrogen.Nmin Content in Profile.NH4 %d-%d cm [kg/ha]",1.0);
 	
 	// Nitrogen profile urea:
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"nitrogen","urea_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fUreaN,"output.Nitrogen.N Content Profile.Urea [kg ha-1] %d-%d cm",1.0);
+	//WRITE_TO_PROFILE_VAR(pCL->fUreaN,"output.Nitrogen.Nmin Content in Profile.Urea %d-%d cm [kg/ha]",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fUreaN,"output.Nitrogen.Nmin Content in Profile.Urea %d-%d cm [kg/ha]",1.0);
 	
 	// litter and humus:
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"nitrogen","n_litter_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNLitter,"output.Nitrogen.N Pools.N Litter Profile [kg ha-1] %d-%d cm",1.0);
+	//WRITE_TO_PROFILE_VAR(pCL->fNLitter,"output.Nitrogen.N Pools in Profile.N Litter %d-%d cm [kg/ha]",1.0);
+    WRITE_TO_PROFILE_VAR(pCL->fNLitter,"output.Nitrogen.N Pools in Profile.N Litter %d-%d cm [kg/ha]",1.0);
 	
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"nitrogen","n_manure_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNManure,"output.Nitrogen.N Pools.N Manure Profile [kg ha-1] %d-%d cm",1.0);
+	//WRITE_TO_PROFILE_VAR(pCL->fNManure,"output.Nitrogen.N Pools in Profile.N Manure %d-%d cm [kg/ha]",1.0);
+    WRITE_TO_PROFILE_VAR(pCL->fNManure,"output.Nitrogen.N Pools in Profile.N Manure %d-%d cm [kg/ha]",1.0);
 	
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"nitrogen","n_humus_profile");
-	WRITE_TO_PROFILE_VAR(pSL->fNHumus,"output.Nitrogen.N Pools.N Humus Profile[kg ha-1] %d-%d cm",1.0);
+	//WRITE_TO_PROFILE_VAR(pSL->fNHumus,"output.Nitrogen.N Pools in Profile.N Humus  %d-%d cm [kg/ha]",1.0);
+    WRITE_TO_PROFILE_VAR(pSL->fNHumus,"output.Nitrogen.N Pools in Profile.N Humus  %d-%d cm [kg/ha]",1.0);
 //###################################### CARBON ######################################	
 	// carbon:
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"carbon","c_litter_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fCLitter,"output.Carbon Profile.C Pools.C Litter Profile [kg ha-1] %d-%d cm",1.0);
+	//WRITE_TO_PROFILE_VAR(pCL->fCLitter,"output.Carbon.C Pools in Profile.C Litter %d-%d cm [kg/ha]",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fCLitter,"output.Carbon.C Pools in Profile.C Litter %d-%d cm [kg/ha]",1.0);
 	
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"carbon","c_manure_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fCManure,"output.Carbon.C Pools.C Manure Profile [kg ha-1] %d-%d cm",1.0);
+	//WRITE_TO_PROFILE_VAR(pCL->fCManure,"output.Carbon.C Pools in Profile.C Manure %d-%d cm [kg/ha]",1.0);
+    WRITE_TO_PROFILE_VAR(pCL->fCManure,"output.Carbon.C Pools in Profile.C Manure %d-%d cm [kg/ha]",1.0);
 	
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"carbon","c_humus_profile");
-	WRITE_TO_PROFILE_VAR(pSL->fCHumus,"output.Carbon.C Pools.C Humus Profile [kg ha-1] %d-%d cm",1.0);
+	//WRITE_TO_PROFILE_VAR(pSL->fCHumus,"output.Carbon.C Pools in Profile.C Humus %d-%d cm [kg/ha]",1.0);
+    WRITE_TO_PROFILE_VAR(pSL->fCHumus,"output.Carbon.C Pools in Profile.C Humus %d-%d cm [kg/ha]",1.0);
 	
 	// r_c ratio:
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"carbon","c_n_ratio_litter_profile");
-	WRITE_TO_PROFILE_VAR(self->c_n_ratio_litter[iLayer],"output.Carbon.C N Ratio.Litter Profile [kg ha-1] %d-%d cm",count);
+	//WRITE_TO_PROFILE_VAR(self->c_n_ratio_litter[iLayer],"output.Carbon.C N Ratio in Profile.Litter %d-%d cm [kg/ha]",count);
+    WRITE_TO_PROFILE_VAR(self->c_n_ratio_litter[iLayer],"output.Carbon.C/N Ratio in Profile.C/N Ratio Litter %d-%d cm [-]",count);
 	
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"carbon","c_n_ratio_manure_profile");
-	WRITE_TO_PROFILE_VAR(self->c_n_ratio_manure[iLayer],"output.Carbon.C N Ratio.Manure Profile [kg ha-1] %d-%d cm",count);
+	//WRITE_TO_PROFILE_VAR(self->c_n_ratio_manure[iLayer],"output.Carbon.C N Ratio in Profile.Manure %d-%d cm [kg/ha]",count);
+    WRITE_TO_PROFILE_VAR(self->c_n_ratio_manure[iLayer],"output.Carbon.C/N Ratio in Profile.C/N Ratio Manure %d-%d cm [-]",count);
 	
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"carbon","c_n_ratio_humus_profile");
-	WRITE_TO_PROFILE_VAR(self->c_n_ratio_humus[iLayer],"output.Carbon.C N Ratio.Humus Profile[kg ha-1] %d-%d cm",count);
+	//WRITE_TO_PROFILE_VAR(self->c_n_ratio_humus[iLayer],"output.Carbon.C N Ratio in Profile.Humus %d-%d cm [kg/ha]",count);
+    WRITE_TO_PROFILE_VAR(self->c_n_ratio_humus[iLayer],"output.Carbon.C/N Ratio in Profile.C/N Ratio Humus %d-%d cm [-]",count);
 
     // Hong: added for Scott Demyan:
 	//[DAISY mineralisation]
-	//C in Fresh organic matter Slow (AOM1) [kg ha-1]
+	//C in Fresh organic matter Slow (AOM1) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","C_AOM1_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fCFOMSlow,"output.DAISY mineralisation.C in Fresh organic matter Slow.C_AOM1_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fCFOMSlow,"output.DAISY mineralisation.C in Fresh organic matter Slow.C_AOM1_profile %d-%d cm [kg/ha]",1.0);
 
-    //C in Fresh organic matter Fast (AOM2) [kg ha-1]
+    //C in Fresh organic matter Fast (AOM2) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","C_AOM2_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fCFOMFast,"output.DAISY mineralisation.C in Fresh organic matter Fast.C_AOM2_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fCFOMFast,"output.DAISY mineralisation.C in Fresh organic matter Fast.C_AOM2_profile %d-%d cm [kg/ha]",1.0);
 	
-	//C in MicBiomSlow (BOM1) [kg ha-1]
+	//C in MicBiomSlow (BOM1) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","C_BOM1_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fCMicBiomSlow,"output.DAISY mineralisation.C in MicBiomSlow.C_BOM1_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fCMicBiomSlow,"output.DAISY mineralisation.C in MicBiomSlow.C_BOM1_profile %d-%d cm [kg/ha]",1.0);
 	
-	//C in MicBiomFast (BOM2) [kg ha-1]
+	//C in MicBiomFast (BOM2) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","C_BOM2_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fCMicBiomFast,"output.DAISY mineralisation.C in MicBiomFast.C_BOM2_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fCMicBiomFast,"output.DAISY mineralisation.C in MicBiomFast.C_BOM2_profile %d-%d cm [kg/ha]",1.0);
 	
-	//C in MicBiomDenit (BOMD) [kg ha-1]
+	//C in MicBiomDenit (BOMD) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","C_BOMD_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fCMicBiomDenit,"output.DAISY mineralisation.C in MicBiomDenit.C_BOMD_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fCMicBiomDenit,"output.DAISY mineralisation.C in MicBiomDenit.C_BOMD_profile %d-%d cm [kg/ha]",1.0);
 	
-	//C in HumusSlow (SOM1) [kg ha-1]
+	//C in HumusSlow (SOM1) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","C_SOM1_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fCHumusSlow,"output.DAISY mineralisation.C in HumusSlow.C_SOM1_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fCHumusSlow,"output.DAISY mineralisation.C in HumusSlow.C_SOM1_profile %d-%d cm [kg/ha]",1.0);
 	
-	//C in HumusFast (SOM2) [kg ha-1]
+	//C in HumusFast (SOM2) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","C_SOM2_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fCHumusFast,"output.DAISY mineralisation.C in HumusFast.C_SOM2_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fCHumusFast,"output.DAISY mineralisation.C in HumusFast.C_SOM2_profile %d-%d cm [kg/ha]",1.0);
 	
-	//C in HumusStable (SOM0) [kg ha-1]
+	//C in HumusStable (SOM0) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","C_SOM0_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fCHumusStable,"output.DAISY mineralisation.C in HumusStable.C_SOM0_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fCHumusStable,"output.DAISY mineralisation.C in HumusStable.C_SOM0_profile %d-%d cm [kg/ha]",1.0);
 	
 	
-    //N in Fresh organic matter Slow (AOM1) [kg ha-1]
+    //N in Fresh organic matter Slow (AOM1) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","N_AOM1_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNFOMSlow,"output.DAISY mineralisation.N in Fresh organic matter Slow.N_AOM1_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fNFOMSlow,"output.DAISY mineralisation.N in Fresh organic matter Slow.N_AOM1_profile %d-%d cm [kg/ha]",1.0);
 	
-	//N in Fresh organic matter Fast (AOM2) [kg ha-1]
+	//N in Fresh organic matter Fast (AOM2) [kg/ha]
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","N_AOM2_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNFOMFast,"output.DAISY mineralisation.N in Fresh organic matter Fast.N_AOM2_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fNFOMFast,"output.DAISY mineralisation.N in Fresh organic matter Fast.N_AOM2_profile %d-%d cm [kg/ha]",1.0);
 	
-	//N in MicBiomSlow (BOM1) (AOM2) [kg ha-1]
+	//N in MicBiomSlow (BOM1) (AOM2) [kg/ha]
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","N_BOM1_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNMicBiomSlow,"output.DAISY mineralisation.N in MicBiomSlow.N_BOM1_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fNMicBiomSlow,"output.DAISY mineralisation.N in MicBiomSlow.N_BOM1_profile %d-%d cm [kg/ha]",1.0);
 	
-    //N in MicBiomFast (BOM2) (AOM2) [kg ha-1]
+    //N in MicBiomFast (BOM2) (AOM2) [kg/ha]
 	GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","N_BOM2_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNMicBiomFast,"output.DAISY mineralisation.N in MicBiomFast.N_BOM2_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fNMicBiomFast,"output.DAISY mineralisation.N in MicBiomFast.N_BOM2_profile %d-%d cm [kg/ha]",1.0);
   
-    //N in MicBiomDenit (BOMD) [kg ha-1]
+    //N in MicBiomDenit (BOMD) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","N_BOMD_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNMicBiomDenit,"output.DAISY mineralisation.N in MicBiomDenit.N_BOMD_profile [kg ha-1] %d-%d cm",1.0); 
+	WRITE_TO_PROFILE_VAR(pCL->fNMicBiomDenit,"output.DAISY mineralisation.N in MicBiomDenit.N_BOMD_profile %d-%d cm [kg/ha]",1.0); 
     
-    //N in HumusSlow (SOM1) [kg ha-1]
+    //N in HumusSlow (SOM1) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","N_SOM1_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNHumusSlow,"output.DAISY mineralisation.N in HumusSlow.N_SOM1_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fNHumusSlow,"output.DAISY mineralisation.N in HumusSlow.N_SOM1_profile %d-%d cm [kg/ha]",1.0);
 	
-	//N in HumusFast (SOM2) [kg ha-1]
+	//N in HumusFast (SOM2) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","N_SOM2_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNHumusFast,"output.DAISY mineralisation.N in HumusFast.N_SOM2_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fNHumusFast,"output.DAISY mineralisation.N in HumusFast.N_SOM2_profile %d-%d cm [kg/ha]",1.0);
 	
-    //N in HumusStable (SOM0) [kg ha-1]
+    //N in HumusStable (SOM0) [kg/ha]
     GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"DAISY mineralisation","N_SOM0_profile");
-	WRITE_TO_PROFILE_VAR(pCL->fNHumusStable,"output.DAISY mineralisation.N in HumusStable.N_SOM0_profile [kg ha-1] %d-%d cm",1.0);
+	WRITE_TO_PROFILE_VAR(pCL->fNHumusStable,"output.DAISY mineralisation.N in HumusStable.N_SOM0_profile %d-%d cm [kg/ha]",1.0);
 
 	//End of Hong
+	
+    //FH 2019-07-18 Added Root Length Density
+/*    GET_INI_PROFILE_ARRAY_OPTIONAL(darray_from,darray_to,darray_len,"plant","root_length_density_profile");
+    // 3rd varibale in WRITE_TO_PROFILE_VAR must be "count" for averaging over the layers, otherwise 1.0
+    WRITE_TO_PROFILE_VAR(self->RLD[iLayer],"output.Plant.Root Length Density in Profile.RLD %d-%d cm [cm/cm3]",count);*/
+
 	
 	g_key_file_free(keyfile);
 	return RET_SUCCESS;
@@ -1427,7 +1655,8 @@ int xpn_output_calc_var(xpn_output *self)
 			self->water.potE_Day = self->water.pot_evapo_zwischen;		// pot. Evaporation
 			self->water.potT_Day = self->water.pot_transp_zwischen;		// pot. Transpiration
 
-
+            self->fSolRadDay = self->fSolRadDay_zwischen;
+            self->fPARDay = self->fPARDay_zwischen;
 
 
 			// set zwischen values to zero
@@ -1445,6 +1674,8 @@ int xpn_output_calc_var(xpn_output *self)
 			self->water.pot_evapotransp_zwischen = 0.0;
 			self->water.pot_evapo_zwischen = 0.0;
 
+            self->fSolRadDay_zwischen = 0.0;
+            self->fPARDay_zwischen = 0.0;
 
 		}
 	//===========================================================
@@ -1464,6 +1695,15 @@ int xpn_output_calc_var(xpn_output *self)
 
 	self->water.canopyprecip_zwischen += (self->parent.pCl->pWeather->fPreciRate*dt);
 	self->water.canopyprecip_sum += (self->parent.pCl->pWeather->fPreciRate*dt);
+
+     // FH 2019-07-11 moved from balance.c
+	// Atmosphere dust:
+	self->cum_dust1+=xpn->pCh->pAtmos->dustr1*dt;
+	self->cum_dust2+=xpn->pCh->pAtmos->dustr2*dt;
+	self->cum_dust3+=xpn->pCh->pAtmos->dustr3*dt;	
+	self->cum_dust4+=xpn->pCh->pAtmos->dustr4*dt;
+	self->cum_dust5+=xpn->pCh->pAtmos->dustr5*dt;
+
 
 	// Evapotranspiration
 	self->water.pot_evapotransp_zwischen += (self->parent.pWa->fPotETR*dt);
@@ -1501,6 +1741,10 @@ int xpn_output_calc_var(xpn_output *self)
 	// Drainage
 	self->water.drain_zwischen += (self->parent.pWa->fPercolR*dt);
 	self->water.Drain_Sum += (self->parent.pWa->fPercolR*dt);
+
+    // Radiation
+    self->fSolRadDay_zwischen += xpn->pCl->pWeather->fSolRad *dt;
+    self->fPARDay_zwischen += xpn->pCl->pWeather->fPAR * dt;
 
 	// Balance
 	self->water.BalanceXN = self->parent.pWa->pWBalance->fBalance;
@@ -1789,6 +2033,8 @@ int xpn_output_calc_var(xpn_output *self)
 	for(i = 0,pCL=pCh->pCLayer; pCL->pNext!=NULL; pCL=pCL->pNext,i++)
 		{
 			self->fNMinerCum+=(pCL->fHumusMinerR+pCL->fLitterMinerR+pCL->fManureMinerR) *pTi->pTimeStep->fAct;
+			//self->fNMinerCum += (pCL->fMinerR)*pTi->pTimeStep->fAct;//Changed by Hong on 20190521
+			
 			pCL->fNO3DenitCum += pCL->fNO3DenitR * pTi->pTimeStep->fAct;
 			pCL->fN2ODenitCum += pCL->fN2ODenitR * pTi->pTimeStep->fAct;
 			pCL->fNH4NitrDay  += pCL->fNH4NitrR  * pTi->pTimeStep->fAct;
@@ -1985,6 +2231,9 @@ int xpn_output_calc_var(xpn_output *self)
 			self->CNRatioHumus = self->CHumus/self->NHumus;
 		}
 
+/*	for(i= 1,pCL = pCh->pCLayer->pNext,pSL = pSo->pSLayer->pNext,pWL = pWa->pWLayer->pNext, pLR = xpn->pPl->pRoot->pLayerRoot->pNext;
+	        ((pSL->pNext!=NULL)&&(pCL->pNext!=NULL)&&(pLR->pNext!= NULL)&&((double)pSL->fThickness*(double)i <= 300.0));
+	        pSL=pSL->pNext,pCL=pCL->pNext,pWL=pWL->pNext, pLR = pLR->pNext,i++)*/
 	for(i= 1,pCL = pCh->pCLayer->pNext,pSL = pSo->pSLayer->pNext,pWL = pWa->pWLayer->pNext;
 	        ((pSL->pNext!=NULL)&&(pCL->pNext!=NULL)&&((double)pSL->fThickness*(double)i <= 300.0));
 	        pSL=pSL->pNext,pCL=pCL->pNext,pWL=pWL->pNext,i++)
@@ -1993,6 +2242,8 @@ int xpn_output_calc_var(xpn_output *self)
 			self->c_n_ratio_manure[i] = divide_spec(pCL->fCManure,pCL->fNManure);
 			self->c_n_ratio_humus[i] = divide_spec(pSL->fCHumus,pSL->fNHumus);
 			self->wfps[i] = divide_spec(pWL->fContAct,pSL->fPorosity);
+            //FH 2019-07-18 for correct profile calculation
+            //self->RLD[i] = pLR->fLengthDens;
 		}
 
 	/* XHeat */
@@ -2030,11 +2281,14 @@ int xpn_output_calc_var(xpn_output *self)
 	//self->FruitMass + self->WoodMass;
 	self->AboveMass = self->LeafMass + self->StemMass + self->BranchMass + 
 	self->FruitMass; //Changed by EP and Hong on 20180705, self->WoodMass = self->StemMass + self->BranchMass + GroßßRoot;
+	self->AboveWoodMass = self->StemMass + self->BranchMass; //Added by hong on 20190520 
+	
 	self->TotalMass = self->AboveMass + self->RootMass;
 
 	self->LAI = xpn->pPl->pCanopy->fLAI;
 
-	self->TotRLD = xpn->pPl->pRoot->fTotalLength;
+    // FH 20190705 Added multiplication with fDeltaZ and division by fDepth because we want to have the total root length density
+	self->TotRLD = xpn->pPl->pRoot->fTotalLength * pSo->fDeltaZ/ pSo->fDepth;
 
 	self->NGrain = xpn->pPl->pPltNitrogen->fFruitActConc;
 	self->NLeaves = xpn->pPl->pPltNitrogen->fLeafActConc;
@@ -2052,6 +2306,9 @@ int xpn_output_calc_var(xpn_output *self)
  
    
 	self->dyn_AOM_div = xpn->pCh->pCProfile->dyn_AOM_div;
+	self->fSOM1_new = xpn->pCh->pCProfile->fSOM1_new;
+	self->dyn_CUE_AOM = xpn->pCh->pCProfile->dyn_CUE_AOM;    
+    
  
 	self->fCStandCropRes = xpn->pCh->pCProfile->fCStandCropRes;
 	self->fNStandCropRes = xpn->pCh->pCProfile->fNStandCropRes;
@@ -2246,10 +2503,10 @@ int xpn_output_done(xpn_output *self)
 	if (self->output_time_step_string!=NULL) g_free(self->output_time_step_string);
 	self->output_time_step_string=NULL;
 
-	if (self->special_outout_def_file!=NULL)
+	if (self->special_output_def_file!=NULL)
 		{
-			free(self->special_outout_def_file);
-			self->special_outout_def_file=NULL;
+			free(self->special_output_def_file);
+			self->special_output_def_file=NULL;
 		}
 	if (self->spec_vars!=NULL)
 		{

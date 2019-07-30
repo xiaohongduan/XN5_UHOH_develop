@@ -35,7 +35,6 @@ struct _daisy
     int Frost_Rad_Flag;
     int Lower_boundary_cond;
 	int too_high_or_low_temp;
-	// double daisy_nitrogen; // test, Hong
 };
 
 

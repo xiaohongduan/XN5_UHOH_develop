@@ -26,6 +26,8 @@ int century_n_Mineralisation_init(century_n *self)
 
 	century_n__general_init(self);
 
+	self->fCHumus_old = (double *)g_malloc0((pSo->iLayers-2) * sizeof (double));//Hong
+
 	//set fixed parameters (values from Century file 'ffixed.100' for forests)
 	self->fixed = century_n_getFixedParameters();
 	//read site parameter from 'century.cfg' file
@@ -65,6 +67,8 @@ int century_n_Mineralisation_init(century_n *self)
 	for(i=0,pSL=pSo->pSLayer->pNext,pCL=pCh->pCLayer->pNext, pWL=pWa->pWLayer->pNext;
 	        pSL->pNext!=NULL; pSL=pSL->pNext, pCL=pCL->pNext, pWL=pWL->pNext, i++)
 		{
+			self->fCHumus_old[i] = pSL->fCHumus;//Hong on 20190605
+			
 			pCL->fCHumusFast   = pSL->fCHumus * 0.03;	//percentages from century workbook Ch. II
 			pCL->fNHumusFast   = pSL->fNHumus * 0.03 / 0.7;
 			pCL->fCHumusSlow   = pSL->fCHumus * 0.65;
@@ -110,7 +114,7 @@ int century_n_Mineralisation_run(century_n *self) // returns total daily NNM [g/
 	PSLAYER		pSL;
 	PWLAYER		pWL;
 	PHLAYER		pHL;
-	PCBALANCE	    pCB     = pCh->pCBalance; //Added by Hong on 20180731
+	//PCBALANCE	    pCB     = pCh->pCBalance; //Added by Hong on 20180731
 	
 	//int const TimeStepsPerDay=(int)(1.0/(pTi->pTimeStep->fAct));
 	//double dtDecompDC=(double)1.0/365./TimeStepsPerDay;	//fraction of year per timestep
@@ -149,13 +153,12 @@ frNO3=0.0;
 //********************************************************************************************
 // 0) Initialize
 //********************************************************************************************
-
 			for(pCL=pCh->pCLayer; pCL->pNext!=NULL; pCL=pCL->pNext)
 				{
 					pCL->fMinerR = 0.0;
 					pCL->fNImmobR = 0.0;
 					pCL->fCO2ProdR = 0.0;
-					pCL->fCO2C=0.0;
+					pCL->fCO2C_dt=0.0; //Hong added on 20190604
 					pCL->fHumusMinerR = 0.0;
 					pCL->fLitterMinerR = 0.0;
 					pCL->fNLitterImmobR = 0.0;
@@ -206,7 +209,7 @@ frNO3=0.0;
 					pCh->pCProfile->fNMtbLitterSurf += mN * gpm2TOkgpha;
 					
 					//Hong added on 20180807 for C-balance
-			        pCB->dCInputCum += sC * gpm2TOkgpha+ mC * gpm2TOkgpha;
+			        //pCB->dCInputCum += sC * gpm2TOkgpha+ mC * gpm2TOkgpha;
 				}
 
 // b) soil litter (fine roots)
@@ -250,8 +253,8 @@ frNO3=0.0;
 							pCL->fCMtbLitter += mC * gpm2TOkgpha;
 							pCL->fNMtbLitter += mN * gpm2TOkgpha;
 						}
-//Hong added on 20180807 for C-balance
-			        pCB->dCInputCum += sC * gpm2TOkgpha+ mC * gpm2TOkgpha;
+                    //Hong added on 20180807 for C-balance
+			        //pCB->dCInputCum += sC * gpm2TOkgpha+ mC * gpm2TOkgpha;
 				
 				}//loop over soil layers
 
@@ -353,15 +356,19 @@ frNO3=0.0;
 									CtoSOM2 -= co2loss;//net C flow to SOM2
 
 									pCh->pCProfile->fCStrLitterSurf -= tcflow * gpm2TOkgpha;
-									century_n_CO2intoSOIL(self,co2loss,20.0);
-									pCh->pCLayer->fCO2ProdR += co2loss * gpm2TOkgpha;
+									pCh->pCProfile->fCLeafLitterSurf -= tcflow * gpm2TOkgpha; //Hong added for C-Balance on 20190605, fCLeafLitterSurf was distributed to fCStrLitterSurf and fCMtbLitterSurf
+									pCh->pCProfile->fCLitterSurf -= tcflow * gpm2TOkgpha; //Hong added for C-Balance on 20190605, fCLeafLitterSurf is fCLitterSurf
+									century_n_CO2intoSOIL(self,co2loss,20.0);//CO2 distributed in soil till depth of 20 cm
+									//pCh->pCLayer->fCO2ProdR += co2loss * gpm2TOkgpha;//Hong: Fehler? CO2 distributed in soil till depth of 20 cm
+									//pCh->pCProfile->dCO2SurfEmisCum += co2loss * gpm2TOkgpha; //added by Hong for C balance on 20190605
+									
 									century_n_FlowCintoSOM2(self,CtoSOM2,20.0);
 
 									// Mineralization associated with respiration
 									mineralFlow=co2loss * N/C;
 									mineralFlow=century_n_FlowNintoMineralSoil(self,mineralFlow,20.0,0.0);
 									pCh->pCProfile->fNStrLitterSurf		 -= mineralFlow * gpm2TOkgpha;
-									MinByStructLitter += mineralFlow * gpm2TOkgpha; ;
+									MinByStructLitter += mineralFlow * gpm2TOkgpha; //Hong: sum of fMinerR in 0-20 profile
 
 									// Compute and schedule N flow from A to B.
 									century_n_ScheduleNFlow(self,CtoSOM2,rnewas[1],C,N,Navail,&orgNflow, &minNflow);
@@ -371,7 +378,7 @@ frNO3=0.0;
 										{
 											pCh->pCProfile->fNStrLitterSurf -= minNflow * gpm2TOkgpha;	//A -= minflow
 											century_n_FlowNintoMineralSoil(self,minNflow, 20.0,0.0);	//Mineral += minflow
-											MinByStructLitter += minNflow * gpm2TOkgpha; ;
+											MinByStructLitter += minNflow * gpm2TOkgpha; 
 										}
 									if ( minNflow < 0.0)//Immobilisation
 										{
@@ -379,7 +386,7 @@ frNO3=0.0;
 											//the return value gives the restricted flow of mineral N
 											ret = century_n_FlowNfromMineralSoil(self, (double)fabs(minNflow),20.0,-1);	//Mineral -= minflow
 											century_n_FlowNintoSOM2(self, (double)ret, 20.0);			//B += minflow
-											ImmByStructLitter +=  ret * gpm2TOkgpha; ;
+											ImmByStructLitter +=  ret * gpm2TOkgpha; 
 										}
 
 									// Decompose Box A to SOM1
@@ -391,9 +398,12 @@ frNO3=0.0;
 											co2loss = CtoSOM1 * self->fixed.p1co2a[SRFC];
 											CtoSOM1 -= co2loss;							//net  C flow to SOM1
 
-											pCh->pCLayer->fCO2ProdR += co2loss * gpm2TOkgpha;
-											century_n_CO2intoSOIL(self,co2loss,20.0);
+											//pCh->pCLayer->fCO2ProdR += co2loss * gpm2TOkgpha;//Hong: Fehler? write to layer 0
+									        //pCh->pCProfile->dCO2SurfEmisCum += co2loss * gpm2TOkgpha; //added by Hong for C balance on 20190605 CO2 distributed to soil
+											
+											century_n_CO2intoSOIL(self,co2loss,20.0);//CO2 distributed to soil
 											pCh->pCProfile->fCMicLitterSurf += CtoSOM1 * gpm2TOkgpha;
+											pCh->pCProfile->fCHumusSurf += CtoSOM1 * gpm2TOkgpha; //Hong added for C-Balance on 20190605
 
 											// Mineralization associated with respiration
 											mineralFlow=co2loss * N/C;
@@ -448,9 +458,11 @@ frNO3=0.0;
 											CtoSOM2 -= co2loss;//net C flow to SOM2
 
 											pCL->fCStrcLitter -= tcflow * gpm2TOkgpha;
+											pCL->fCLitter -= tcflow * gpm2TOkgpha;// Hong added for C balance on 20190605 
 											pCL->fCO2ProdR += co2loss * gpm2TOkgpha;
-											pCL->fCO2C		+= co2loss * gpm2TOkgpha;
+											pCL->fCO2C_dt		+= co2loss * gpm2TOkgpha;
 											pCL->fCHumusSlow  += CtoSOM2 * gpm2TOkgpha;
+											pSL->fCHumus  += CtoSOM2 * gpm2TOkgpha; //Hong for C balance
 
 											// Mineralization associated with respiration
 											mineralFlow = co2loss * N/C;
@@ -462,7 +474,8 @@ frNO3=0.0;
 											// Compute and schedule N flow from A to B.
 											century_n_ScheduleNFlow(self,CtoSOM2,rnewbs[1],C,N,Navail,&orgNflow, &minNflow);
 											pCL->fNStrcLitter -= orgNflow * gpm2TOkgpha;	//A -= orgflow
-											pCL->fCHumusSlow  += orgNflow * gpm2TOkgpha;	//B += orgflow
+											//Hong: falsch pCL->fCHumusSlow  += orgNflow * gpm2TOkgpha;	//B += orgflow
+											pCL->fNHumusSlow  += orgNflow * gpm2TOkgpha;	//B += orgflow
 											if( minNflow >= 0.0)//Mineralisation
 												{
 													pCL->fNStrcLitter -= minNflow * gpm2TOkgpha;	//A -= minflow
@@ -475,7 +488,8 @@ frNO3=0.0;
 													minNflow = (double)MIN (fabs(minNflow), (pCL->fNH4N + pCL->fNH4N)*kgphaTOgpm2 ); //limited by availibility
 													if (minNflow > 1e-7)
 														{
-															pCL->fCHumusSlow  +=  (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
+															//Hong: falsch? pCL->fCHumusSlow  +=  (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
+															pCL->fNHumusSlow  +=  (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
 															frNH4 = pCL->fNH4N / (pCL->fNO3N+pCL->fNH4N); //calculate the factor in extra step -> if not: numerical errors appear!!
 															frNO3 = pCL->fNO3N / (pCL->fNO3N+pCL->fNH4N);
 															pCL->fNH4N -= frNH4 *  (double)fabs(minNflow) * gpm2TOkgpha; //Mineral -= minflow
@@ -498,8 +512,9 @@ frNO3=0.0;
 													CtoSOM1 -= co2loss;							//net  C flow to SOM1
 
 													pCL->fCO2ProdR	+= co2loss * gpm2TOkgpha;
-													pCL->fCO2C		+= co2loss * gpm2TOkgpha;
-													pCL->fCHumusFast += CtoSOM1 * gpm2TOkgpha;;
+													pCL->fCO2C_dt		+= co2loss * gpm2TOkgpha;
+													pCL->fCHumusFast += CtoSOM1 * gpm2TOkgpha;
+													pSL->fCHumus += CtoSOM1 * gpm2TOkgpha; //Hong for C balance
 
 													// Mineralization associated with respiration
 													mineralFlow=co2loss * N/C;
@@ -511,7 +526,8 @@ frNO3=0.0;
 													// Compute and schedule N flow from A to B.
 													century_n_ScheduleNFlow(self,CtoSOM1,rnewbs[0],C,N,Navail,&orgNflow, &minNflow);
 													pCL->fNStrcLitter -= orgNflow * gpm2TOkgpha;	//A -= orgflow
-													pCL->fCHumusFast  += orgNflow * gpm2TOkgpha;	//B += orgflow
+													//Hong: falsch pCL->fCHumusFast  += orgNflow * gpm2TOkgpha;	//B += orgflow
+													pCL->fNHumusFast  += orgNflow * gpm2TOkgpha;	//B += orgflow
 													if( minNflow >= 0.0)//Mineralisation
 														{
 															pCL->fNStrcLitter -= minNflow * gpm2TOkgpha;	//A -= minflow
@@ -524,7 +540,8 @@ frNO3=0.0;
 															minNflow = (double)MIN (fabs(minNflow), (pCL->fNH4N + pCL->fNH4N)*kgphaTOgpm2 ); //limited by availibility
 															if(minNflow > 1e-7)
 																{
-																	pCL->fCHumusFast  +=  (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
+																	//Hong: falsch? pCL->fCHumusFast  +=  (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
+																	pCL->fNHumusFast  +=  (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
 																	frNH4 = pCL->fNH4N / (pCL->fNO3N+pCL->fNH4N); //calculate the factor in extra step -> if not: numerical errors appear!!
 																	frNO3 = pCL->fNO3N / (pCL->fNO3N+pCL->fNH4N);
 																	pCL->fNH4N -= frNH4 *  (double)fabs(minNflow) * gpm2TOkgpha;//Mineral -= minflow
@@ -537,9 +554,6 @@ frNO3=0.0;
 																}
 														}
 												}//if(CtoSOM1 > 10e-7)
-										//Added by Hong
-										
-										
 										}//if Candecompose
 								}//C >= 10e-7
 						}//loop over all layer
@@ -565,7 +579,11 @@ frNO3=0.0;
 									co2loss = tcflow * self->fixed.pmco2[SRFC];
 
 									cfmes1 = tcflow - co2loss;
-									pCh->pCProfile->fCMtbLitterSurf -= cfmes1 * gpm2TOkgpha;
+									//Hong: falsch? pCh->pCProfile->fCMtbLitterSurf -= cfmes1 * gpm2TOkgpha;//Hong: Frage? cfmes1 or tcflow
+									//Hong: falsch? pCh->pCProfile->fCLeafLitterSurf -= cfmes1 * gpm2TOkgpha;//Hong added for C-Balance on 20190605
+									pCh->pCProfile->fCMtbLitterSurf -= tcflow * gpm2TOkgpha;//Hong: Frage? cfmes1 or tcflow
+									pCh->pCProfile->fCLeafLitterSurf -= tcflow * gpm2TOkgpha;//Hong added for C-Balance on 20190605
+									pCh->pCProfile->fCLitterSurf -= tcflow * gpm2TOkgpha;//Hong added for C-Balance on 20190605
 									century_n_CO2intoSOIL(self,co2loss,20.0);
 									century_n_FlowCintoSOM1(self,cfmes1,20.0);
 
@@ -623,13 +641,18 @@ frNO3=0.0;
 											tcflow = MIN ( tcflow, C );	    //gross  C flow to SOM1
 											if(tcflow > 10e-7)
 												{
+													pCL->fCMtbLitter  -= tcflow * gpm2TOkgpha;// relocated by Hong
+													pCL->fCLitter  -= tcflow * gpm2TOkgpha;//Hong added for C Balance on 20190605
+													
 													co2loss=tcflow * self->fixed.pmco2[SOIL];
 													tcflow -= co2loss;					//net  C flow to SOM1
 
 													pCL->fCO2ProdR	+= co2loss * gpm2TOkgpha;
-													pCL->fCO2C		+= co2loss * gpm2TOkgpha;
+													pCL->fCO2C_dt		+= co2loss * gpm2TOkgpha;
 													pCL->fCHumusFast  += tcflow * gpm2TOkgpha;
-													pCL->fCMtbLitter  -= tcflow * gpm2TOkgpha;
+													pSL->fCHumus += tcflow * gpm2TOkgpha; //Hong for C balance
+													//Hong: Fehler, soll oben sein pCL->fCMtbLitter  -= tcflow * gpm2TOkgpha;
+													
 													// Mineralization associated with respiration
 													mineralFlow=co2loss * N/C;
 													//mineralFlow = min (mineralFlow,Navail );
@@ -741,6 +764,7 @@ frNO3=0.0;
 
 													century_n_CO2intoSOIL(self,co2loss,20.0);
 													pCh->pCProfile->fCMicLitterSurf += CtoSOM1 * gpm2TOkgpha;
+													pCh->pCProfile->fCHumusSurf += CtoSOM1 * gpm2TOkgpha; //Hong added for C-Balance on 20190605
 
 													// Mineralization associated with respiration
 													mineralFlow=co2loss * N/C;
@@ -833,6 +857,7 @@ frNO3=0.0;
 													// C flow
 													century_n_CO2intoSOIL(self,co2loss,20.0);
 													pCh->pCProfile->fCMicLitterSurf += CtoSOM1 * gpm2TOkgpha;
+													pCh->pCProfile->fCHumusSurf += CtoSOM1 * gpm2TOkgpha; //Hong added for C-Balance on 20190605
 
 													// Mineralization associated with respiration
 													mineralFlow=co2loss * N/C;
@@ -891,9 +916,11 @@ frNO3=0.0;
 
 													// C flow
 													pCL->fCGrossRootLitter -= tcflow * gpm2TOkgpha;
+													pCL->fCManure -= tcflow * gpm2TOkgpha;//Hong added for C balance on 20190605
 													pCL->fCO2ProdR	+= co2loss * gpm2TOkgpha;
-													pCL->fCO2C		+= co2loss * gpm2TOkgpha;
+													pCL->fCO2C_dt		+= co2loss * gpm2TOkgpha;
 													pCL->fCHumusSlow  += CtoSOM2 * gpm2TOkgpha;
+													pSL->fCHumus  += CtoSOM2 * gpm2TOkgpha; //Hong for C balance
 
 													// Mineralization associated with respiration
 													mineralFlow = co2loss * N/C;
@@ -904,7 +931,8 @@ frNO3=0.0;
 													// N flow from A to B.
 													century_n_ScheduleNFlow(self,CtoSOM2,rneww3[1],C,N,Navail,&orgNflow, &minNflow);
 													pCL->fNGrossRootLitter -= orgNflow * gpm2TOkgpha;	//A -= orgflow
-													pCL->fCHumusSlow  += orgNflow * gpm2TOkgpha;	//B += orgflow
+													//falsch pCL->fCHumusSlow  += orgNflow * gpm2TOkgpha;	//B += orgflow
+													pCL->fNHumusSlow  += orgNflow * gpm2TOkgpha;	//B += orgflow
 													if( minNflow >= 0.0)//Mineralisation
 														{
 															pCL->fNGrossRootLitter -= minNflow * gpm2TOkgpha;	//A -= minflow
@@ -918,6 +946,7 @@ frNO3=0.0;
 															if(minNflow > 1e-7)
 																{
 																	pCL->fCHumusSlow  +=  (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
+																	pSL->fCHumus  +=  (double)fabs(minNflow) * gpm2TOkgpha;//Hong for C balance
 																	frNH4 = pCL->fNH4N / (pCL->fNO3N+pCL->fNH4N); //calculate the factor in extra step -> if not: numerical errors appear!!
 																	frNO3 = pCL->fNO3N / (pCL->fNO3N+pCL->fNH4N);
 																	pCL->fNH4N -= frNH4  //Mineral -= minflow
@@ -943,8 +972,9 @@ frNO3=0.0;
 
 															// C flow
 															pCL->fCO2ProdR	+= co2loss * gpm2TOkgpha;
-															pCL->fCO2C		+= co2loss * gpm2TOkgpha;
-															pCL->fCHumusFast  += CtoSOM1 * gpm2TOkgpha;;
+															pCL->fCO2C_dt		+= co2loss * gpm2TOkgpha;
+															pCL->fCHumusFast  += CtoSOM1 * gpm2TOkgpha;
+															pSL->fCHumus += CtoSOM1 * gpm2TOkgpha; //Hong for C balance
 
 															// Mineralization associated with respiration
 															mineralFlow=co2loss * N/C;
@@ -955,7 +985,8 @@ frNO3=0.0;
 															// N flow from A to B.
 															century_n_ScheduleNFlow(self,CtoSOM1,rneww3[0],C,N,Navail,&orgNflow, &minNflow);
 															pCL->fNGrossRootLitter -= orgNflow * gpm2TOkgpha;	//A -= orgflow
-															pCL->fCHumusFast  += orgNflow * gpm2TOkgpha;	//B += orgflow
+															//Hong: falsch pCL->fCHumusFast  += orgNflow * gpm2TOkgpha;	//B += orgflow
+															pCL->fNHumusFast  += orgNflow * gpm2TOkgpha;	//B += orgflow
 															if( minNflow >= 0.0)//Mineralisation
 																{
 																	pCL->fNGrossRootLitter -= minNflow * gpm2TOkgpha;	//A -= minflow
@@ -969,6 +1000,8 @@ frNO3=0.0;
 																	if(minNflow > 1e-7)
 																		{
 																			pCL->fCHumusFast  +=  (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
+																			pSL->fCHumus += (double)fabs(minNflow) * gpm2TOkgpha;		//Hong for C balance
+																			
 																			pCL->fNH4N -= frNH4  //Mineral -= minflow
 																			              *  (double)fabs(minNflow) * gpm2TOkgpha;				//Mineral N is donated by Ammonium and Nitrate
 																			pCL->fNO3N -= frNO3
@@ -1013,6 +1046,7 @@ frNO3=0.0;
 
 									//C flow
 									pCh->pCProfile->fCMicLitterSurf -= microbeC * gpm2TOkgpha;
+									pCh->pCProfile->fCHumusSurf -= microbeC * gpm2TOkgpha;//Hong added for C balance on 20190605
 									century_n_CO2intoSOIL(self,co2loss,20.0);
 									century_n_FlowCintoSOM2(self,cfsfs2,20.0);
 
@@ -1087,11 +1121,14 @@ frNO3=0.0;
 											// SOM2 gets what's left of microbeC.
 											cfs1s2 = microbeC - co2loss - cfs1s3;
 											//C flow
-											pCh->pCLayer->fCO2ProdR += co2loss * gpm2TOkgpha;
-											pCh->pCLayer->fCO2C += co2loss * gpm2TOkgpha;
+											//pCh->pCLayer->fCO2ProdR += co2loss * gpm2TOkgpha; //Hong: Felher?
+											//pCh->pCLayer->fCO2C_dt += co2loss * gpm2TOkgpha;//Hong: Fehler!
+											pCL->fCO2ProdR += co2loss * gpm2TOkgpha;
+											pCL->fCO2C_dt += co2loss * gpm2TOkgpha;//changed by Hong
 											pCL->fCHumusStable  += cfs1s3 * gpm2TOkgpha;
 											pCL->fCHumusSlow  += cfs1s2 * gpm2TOkgpha;
 											pCL->fCHumusFast   -= microbeC * gpm2TOkgpha;
+											pSL->fCHumus -= co2loss * gpm2TOkgpha; //Hong for C balance
 											// Mineralization associated with respiration
 											mineralFlow=co2loss * N/C;
 											pCL->fNH4N += mineralFlow * gpm2TOkgpha; // all to ammonium
@@ -1161,7 +1198,7 @@ frNO3=0.0;
 												}
 
 										} // if candecomp
-								} //if (pCh->pCLayer->fCMtbLitter  >= 10e-7)
+								} //if (pCh->pCLayer->fCHumusFast  >= 10e-7)
 						} // loop over all layer
 
 
@@ -1208,11 +1245,14 @@ frNO3=0.0;
 											         (self->fixed.animp * (1.0 - anerb) + 1.0);
 											cfs2s1 = tcflow - co2loss - cfs2s3;//SOM1 gets what's left of tcflow.
 											// C flow
-											pCh->pCLayer->fCO2ProdR += co2loss * gpm2TOkgpha;
-											pCh->pCLayer->fCO2C += co2loss * gpm2TOkgpha;
+											//pCh->pCLayer->fCO2ProdR += co2loss * gpm2TOkgpha;//Hong: Felher?
+											//pCh->pCLayer->fCO2C_dt += co2loss * gpm2TOkgpha;//Hong: Fehler!
+											pCL->fCO2ProdR += co2loss * gpm2TOkgpha;
+											pCL->fCO2C_dt += co2loss * gpm2TOkgpha;//Changed by Hong
 											pCL->fCHumusFast    += cfs2s1 * gpm2TOkgpha;
 											pCL->fCHumusStable  += cfs2s3 * gpm2TOkgpha;
 											pCL->fCHumusSlow    -= tcflow * gpm2TOkgpha;
+											pSL->fCHumus -= co2loss * gpm2TOkgpha; //Hong for C balance
 											// Mineralization associated with respiration
 											mineralFlow=co2loss * N/C;
 											mineralFlow = MIN(mineralFlow, pCL->fNHumusSlow * kgphaTOgpm2);
@@ -1295,7 +1335,7 @@ frNO3=0.0;
 														}
 												}
 										} // if candecomp
-								} //if (pCh->pCLayer->fCMtbLitter  >= 10e-7)
+								} //if (pCh->pCLayer->fCHumusSlow  >= 10e-7)
 
 						} // loop over all layer
 
@@ -1323,10 +1363,14 @@ frNO3=0.0;
 											cfs3s1 = tcflow - co2loss;
 
 											// C flow
-											pCh->pCLayer->fCO2ProdR += co2loss * gpm2TOkgpha;
-											pCh->pCLayer->fCO2C += co2loss * gpm2TOkgpha;
-											pCL->fCHumusFast   += cfs3s1 * gpm2TOkgpha;;
-											pCL->fCHumusStable  -= tcflow * gpm2TOkgpha;;
+											//pCh->pCLayer->fCO2ProdR += co2loss * gpm2TOkgpha;//Hong: Felher?
+											//pCh->pCLayer->fCO2C_dt += co2loss * gpm2TOkgpha;//Hong: Fehler!
+											pCL->fCO2ProdR += co2loss * gpm2TOkgpha;
+											pCL->fCO2C_dt += co2loss * gpm2TOkgpha;//Changed by Hong
+											pCL->fCHumusFast   += cfs3s1 * gpm2TOkgpha;
+											pCL->fCHumusStable  -= tcflow * gpm2TOkgpha;
+											pSL->fCHumus -= co2loss * gpm2TOkgpha; //Hong for C balance
+											
 											// Mineralization associated with respiration
 											mineralFlow=co2loss * N/C;
 											mineralFlow = MIN (mineralFlow,pCL->fNHumusStable * kgphaTOgpm2 );
@@ -1337,7 +1381,8 @@ frNO3=0.0;
 											// N flow from A to B.
 											century_n_ScheduleNFlow(self,cfs3s1,rceto1,C,N,Navail,&orgNflow, &minNflow);
 											pCL->fNHumusStable -= orgNflow * gpm2TOkgpha;	//A -= orgflow
-											pCL->fCHumusFast  += orgNflow * gpm2TOkgpha;	//B += orgflow
+											//Hong: falsch pCL->fCHumusFast  += orgNflow * gpm2TOkgpha;	//B += orgflow
+											pCL->fNHumusFast  += orgNflow * gpm2TOkgpha;	//B += orgflow
 											if( minNflow >= 0.0)//Mineralisation
 												{
 													pCL->fNHumusStable -= minNflow * gpm2TOkgpha;	//A -= minflow
@@ -1350,7 +1395,8 @@ frNO3=0.0;
 													minNflow = (double)MIN (fabs(minNflow), (pCL->fNH4N + pCL->fNH4N)*kgphaTOgpm2 ); //limited by availibility
 													if(minNflow > 1e-7)
 														{
-															pCL->fCHumusFast  += (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
+															//Hong: falsch? pCL->fCHumusFast  += (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
+															pCL->fNHumusFast  += (double)fabs(minNflow) * gpm2TOkgpha;			//B += minflow
 															frNH4 = pCL->fNH4N / (pCL->fNO3N+pCL->fNH4N); //calculate the factor in extra step -> if not: numerical errors appear!!
 															frNO3 = pCL->fNO3N / (pCL->fNO3N+pCL->fNH4N);
 															pCL->fNH4N -= frNH4  //Mineral -= minflow
@@ -1395,12 +1441,20 @@ frNO3=0.0;
 			pCh->pCLayer->pNext->fNLitterImmobR = (ImmByInput + ImmByStructLitter
 			                                      + ImmByMetabLitter+ ImmByWood); // pTi->pTimeStep->fAct; // - DailyCorrection;wird wohl nie verwendet
 												  
-										
 //write humus and FOS für Ceres-N Denitrifikation
-			for(pCL=pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext ; pSL->pNext != NULL ;
-			        pSL=pSL->pNext,pCL=pCL->pNext)
+			for(i=0, pCL=pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext ; pSL->pNext != NULL ;
+			        pSL=pSL->pNext,pCL=pCL->pNext, i++)
 				{
-					pSL->fCHumus = pCL->fCHumusSlow + pCL->fCHumusFast + pCL->fCHumusStable;
+					//pSL->fCHumus = pCL->fCHumusSlow + pCL->fCHumusFast + pCL->fCHumusStable;
+					//diff = pSL->fCHumus - self->fCHumus_old[i];
+					//Hong: update of humus, litter and manure:
+					//pSL->fCHumus += (pCL->fCHumusSlow + pCL->fCHumusFast + pCL->fCHumusStable) -self->fCHumus_old[i];;
+					
+					
+					//pCL->fCLitter = pCL->fCStrcLitter +pCL->fCMtbLitter;//added by Hong on 20190604
+					//pCL->fCManure = pCL->fCGrossRootLitter; 
+					//End of Hong 
+					
 					//like Mineralisation_Fagus: just the fine root litter is written to FOM[i], no coarse roots
 					
 					pCL->afCOrgFOMFrac[1]= pCL->fCMtbLitter + pCL->fCStrcLitter;
@@ -1409,11 +1463,18 @@ frNO3=0.0;
 					pCL->fMinerR/=pTi->pTimeStep->fAct;
 					pCL->fHumusMinerR/=pTi->pTimeStep->fAct;
 					pCL->fCO2ProdR/=pTi->pTimeStep->fAct;
-					pCL->fCO2C/=pTi->pTimeStep->fAct;
+					//pCL->fCO2C_dt/=pTi->pTimeStep->fAct; //Fehler?
 					pCL->fLitterMinerR/=pTi->pTimeStep->fAct;
 					pCL->fNLitterImmobR/=pTi->pTimeStep->fAct;
 					pCL->fNHumusImmobR/=pTi->pTimeStep->fAct;
+					
+					pCL->fCO2C	+= pCL->fCO2C_dt;//Hong added for C balance
 				}
+
+// Hong on 20190604: update of litterSurf and HumusSurf 
+//pCh->pCProfile->fCLitterSurf = pCh->pCProfile->fCStrLitterSurf +pCh->pCProfile->fCMtbLitterSurf; //falsch!!!
+//pCh->pCProfile->fCHumusSurf = pCh->pCProfile->fCMicLitterSurf;
+//End of Hong
 
 //*******************************************************************************
 // write resultfile: "century.out"
@@ -1805,6 +1866,8 @@ double century_n_FlowCintoSOM2(century_n *self,double Ctoadd,			// amount of C t
 	PSPROFILE pSo = xpn->pSo;
 	PSLAYER  pSL=pSo->pSLayer->pNext; // XN Soil layer start with layer 1
 	PCLAYER  pCL=pCh->pCLayer->pNext;
+	PCBALANCE	    pCB = xpn->pCh->pCBalance; //Added by Hong on 20190717
+
 	double d=0.0,toadd=0.0;
 	int i;
 
@@ -1815,11 +1878,22 @@ double century_n_FlowCintoSOM2(century_n *self,double Ctoadd,			// amount of C t
 				{
 					toadd = Ctoadd *  (pSL->fThickness*0.1)/depth;
 					pCL->fCHumusSlow += toadd * gpm2TOkgpha; //SOM2
+					pSL->fCHumus += toadd * gpm2TOkgpha; //Hong for C balance
+					
+					pCB->dCInputProfile += toadd * gpm2TOkgpha; //Hong on 20190717: new input from surface pools into profile pools
+					if (d <= 30.0)
+						pCB->dCInputProfile_30 += toadd * gpm2TOkgpha; 
+					
 				}
 			if (d > depth && ((d-pSL->fThickness*0.1) < (depth-10e-7)))  //fractional layer
 				{
 					toadd=Ctoadd  * ((pSL->fThickness*0.1)-(d-depth))/depth;
 					pCL->fCHumusSlow += toadd * gpm2TOkgpha;
+					pSL->fCHumus += toadd * gpm2TOkgpha; //Hong for C balance
+					
+					pCB->dCInputProfile += toadd * gpm2TOkgpha; //Hong on 20190717: new input from surface pools into profile pools
+					if (d <= 30.0)
+						pCB->dCInputProfile_30 += toadd * gpm2TOkgpha; 
 				}
 		}
 	return Ctoadd;
@@ -1862,6 +1936,8 @@ double century_n_FlowCintoSOM1(century_n *self,double Ctoadd,			// amount of C t
 	PSPROFILE pSo = xpn->pSo;
 	PSLAYER  pSL=pSo->pSLayer->pNext; // XN Soil layer start with layer 1
 	PCLAYER  pCL=pCh->pCLayer->pNext;
+	PCBALANCE	    pCB = xpn->pCh->pCBalance; //Added by Hong on 20190717
+	
 	double d=0.0,toadd=0.0;
 	int i;
 
@@ -1872,11 +1948,21 @@ double century_n_FlowCintoSOM1(century_n *self,double Ctoadd,			// amount of C t
 				{
 					toadd = Ctoadd *  (pSL->fThickness*0.1)/depth;
 					pCL->fCHumusFast += toadd * gpm2TOkgpha; //SOM2
+					pSL->fCHumus += toadd * gpm2TOkgpha;  //Hong for C balance
+					
+					pCB->dCInputProfile += toadd * gpm2TOkgpha; //Hong on 20190717: new input from surface pools into profile pools
+					if (d <= 30.0)
+						pCB->dCInputProfile_30 += toadd * gpm2TOkgpha; 
 				}
 			if (d > depth && ((d-pSL->fThickness*0.1) < (depth-10e-7)))  //fractional layer
 				{
 					toadd=Ctoadd  * ((pSL->fThickness*0.1)-(d-depth))/depth;
 					pCL->fCHumusFast += toadd * gpm2TOkgpha;
+					pSL->fCHumus += toadd * gpm2TOkgpha;  //Hong for C balance
+					
+					pCB->dCInputProfile += toadd * gpm2TOkgpha; //Hong on 20190717: new input from surface pools into profile pools
+					if (d <= 30.0)
+						pCB->dCInputProfile_30 += toadd * gpm2TOkgpha; 
 				}
 		}
 	return Ctoadd;
@@ -1920,6 +2006,8 @@ double century_n_CO2intoSOIL(century_n *self,double CO2toadd,			// amount of org
 	PSPROFILE pSo = xpn->pSo;
 	PSLAYER  pSL=pSo->pSLayer->pNext; // XN Soil layer start with layer 1
 	PCLAYER  pCL=pCh->pCLayer->pNext;
+	PCBALANCE	    pCB = xpn->pCh->pCBalance; //Added by Hong on 20190717
+	PCPROFILE	pCP = xpn->pCh->pCProfile;
 	double d=0.0,toadd=0.0;
 	int i;
 
@@ -1929,14 +2017,25 @@ double century_n_CO2intoSOIL(century_n *self,double CO2toadd,			// amount of org
 			if (d <= depth)
 				{
 					toadd = CO2toadd *  (pSL->fThickness*0.1)/depth;
-					pCL->fCO2C		+= toadd * gpm2TOkgpha; // [kg/ha]
+					pCL->fCO2C_dt		+= toadd * gpm2TOkgpha; // [kg/ha]
 					pCL->fCO2ProdR	+= toadd * gpm2TOkgpha; // [kg/ha]
+					//Added by Hong on 20190717 for C balance
+					pCP->dCO2SurfEmisCum += toadd * gpm2TOkgpha;
+					pCB->dCInputProfile += toadd * gpm2TOkgpha; //treat CO2 from surface pools as input
+					if (d <= 30.0)
+						pCB->dCInputProfile_30 += toadd * gpm2TOkgpha; 
+					//End of Hong	
 				}
 			if (d > depth && ((d-pSL->fThickness*0.1) < (depth-10e-7)))  //fractional layer
 				{
 					toadd=CO2toadd  * ((pSL->fThickness*0.1)-(d-depth))/depth;
-					pCL->fCO2C		+= toadd * gpm2TOkgpha;// [kg/ha]
+					pCL->fCO2C_dt		+= toadd * gpm2TOkgpha;// [kg/ha]
 					pCL->fCO2ProdR	+= toadd * gpm2TOkgpha; // [kg/ha]
+					
+					pCP->dCO2SurfEmisCum += toadd * gpm2TOkgpha;//Added by Hong on 20190717 for C balance					
+					pCB->dCInputProfile += toadd * gpm2TOkgpha; 
+					if (d <= 30.0)
+						pCB->dCInputProfile_30 += toadd * gpm2TOkgpha; 
 				}
 		}
 	return CO2toadd;

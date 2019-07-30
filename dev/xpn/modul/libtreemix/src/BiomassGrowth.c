@@ -394,6 +394,7 @@ int libtreemix_CalcLeafRenewalDemand(libtreemix *self, int i, double* LeafDemand
 				
 				*LeafDemand = self->plant[i].LfFlush*(self->plant[i].CLfLim-(self->plant[i].CLfMass/1000.0));	// eq. 81
 				
+                //printf("%f \n", *LeafDemand);
 				// for next time step
 				self->plant[i].CLfOld = self->plant[i].CLfMass/1000.0;	// calculating the new 'LfOld' for next time step
 			}

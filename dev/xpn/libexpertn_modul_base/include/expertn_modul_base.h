@@ -126,10 +126,6 @@ G_MODULE_EXPORT char *expertn_modul_base_replace_std_templates_and_get_fullpath_
 #define CHECK_0(x)  if ((x == 0.0)||CHECK_DOUBLE_INVALID (x)) {PRINT_ERROR_ID((&(self->parent)),"Value "#x" is 0");SET_ERROR}
 #define CHECK_VALID(var) if ((&(self->parent))->DEBUG_LEVEL > 2) {if (CHECK_DOUBLE_INVALID (var)) {PRINT_ERROR_ID((&(self->parent)),"Invalid value: "#var);SET_ERROR}}
 
-//Added by Hong on 20180124 for warnung of N-deficit in soil
-#define CHECK_N_INVALID(val) ((val==-INFINITY)||(val==+INFINITY)||(val!=val)||(val<0.0))
-#define CHECK_N_VALID(var) if ((&(self->parent))->DEBUG_LEVEL > 2) {if (CHECK_N_INVALID (var)) {PRINT_ERROR_ID((&(self->parent)),"Invalid value: "#var);SET_ERROR}}
-//End of Hong
 
 #define CONF_m_IN_mm 1.0e+3
 #define CONF_mm_IN_m 1.0e-3

@@ -1254,27 +1254,6 @@ void* xpn_register_var_get_pointer(xpn_register_var *self,char *varname)
 	return NULL;
 }
 
-//Added by Hong on 20180321 for model choice, hat keinen Einfluß auf Simulation
-/*
-void* xpn_register_var_set_pointer(xpn_register_var *self,char *varname, char *model_to_use)
-{
-	int i;
-	for (i=0; i<self->size; i++)
-		{
-			if (strcmp(self->vars[i]->varname,varname)==0)
-				{
-					if  ((self->vars[i]->flag_pointer==TRUE) && (self->vars[i]->vartype==G_TYPE_NONE))
-						{
-							
-							self->vars[i]->val.n= model_to_use;
-							return self->vars[i]->val.n;
-						}
-				}
-		}
-	return NULL;
-}
- */
-//End of Hong
 
 int xpn_register_var_get_pointer_convert_to_int(xpn_register_var *self,char *varname, int standartvalue)
 {

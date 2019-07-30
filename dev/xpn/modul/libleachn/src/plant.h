@@ -35,10 +35,17 @@ struct _leachn_plant
 	int nroot;
 	int use_dist_func; // 0 == noah; 1 == cos
     char *plant_measurement_filename;
+	char *waterUptakePara_filename; //Added by Hong
 	int plant_iAlreadyInitialised;
 	int IsConstRootDens;
 	int iCropCover;
 	double afConstRootDens[MAXSCHICHT];
+	double fPotTraDay; //Added by Hong on 20190410	
+	double *afRSPar_Feddes;//water head parameter of Feddes model, added by Hong on 20190410
+	double fh50Global;// for WaterUptakeVanGenuchten
+    double fp1Global;// for WaterUptakeVanGenuchten	
+    int iRootNTrue; //FH 20190702 for correctly setting pPM to pPM->pNext this variable is needed: 0 when root and N model not selected, 1 when root model selected and 2 when N model selected
+    double  fLengthDensOld; //FH 20190705 for debugging
 };
 
 
@@ -49,14 +56,19 @@ struct _leachn_plant
 
 // public class member function:
 G_MODULE_EXPORT int leachn_plant_load(leachn_plant *self);
-G_MODULE_EXPORT int leachn_plant_act_transpiration(leachn_plant *self);
+G_MODULE_EXPORT int leachn_plant_act_transpiration_CK(leachn_plant *self);
 G_MODULE_EXPORT int leachn_plant_act_biomass_growth(leachn_plant *self);
 G_MODULE_EXPORT int leachn_plant_RootMaizeLeachEP(leachn_plant *self);
 G_MODULE_EXPORT int leachn_plant_RootMaizeLeach(leachn_plant *self);
 G_MODULE_EXPORT int leachn_plant_LeafMaizeLeach(leachn_plant *self);
 G_MODULE_EXPORT int leachn_plant_NUptake(leachn_plant *self);
 G_MODULE_EXPORT int leachn_plant_done(leachn_plant *self);
-
+//Added by Hong on 20190409
+G_MODULE_EXPORT int leachn_plant_pot_transpiration(leachn_plant *self);
+G_MODULE_EXPORT int leachn_plant_WaterUptakeNimahHanks(leachn_plant *self);
+G_MODULE_EXPORT int leachn_plant_WaterUptakeFeddes(leachn_plant *self);
+G_MODULE_EXPORT int leachn_plant_WaterUptakeVanGenuchten(leachn_plant *self);
+//End of Hong
 int load_plant_measurement_data(leachn_plant *self,char *filename);
 int leachn_plant_InitiateLeachModel(leachn_plant *self);
 

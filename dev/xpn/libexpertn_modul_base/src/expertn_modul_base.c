@@ -319,7 +319,11 @@ int expertn_modul_base_PlantVariableInitiation(PPLANT pPl, PSPROFILE pSo, PMSOWI
 	//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	pPltN->fDeadLeafNw = (double)0.0;
 	pPltN->fDeadRootNw = (double)0.0;
-	//======================================================================================
+	
+    // FH 2019-07-11 now the plant density appears in the output
+    pCan->fPlantDensity = pSI->fPlantDens;
+    
+    //======================================================================================
 	//Dry matter initialization
 	//======================================================================================
 	if ((strcmp(pCropCode,"WH")==0)
@@ -1898,7 +1902,8 @@ int expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(expertn_modul_ba
 			double fCut,fHeight;
 			double fCResidue,fNResidue;
 			double fCStandR,fNStandR;
-			double fStaFak;			
+			double fStaFak;	
+            double fCumDepth; 		
 			PSLAYER		pSL	= self->pSo->pSLayer->pNext;
 			PMANAGEMENT pMa = self->pMa;
 			PSPROFILE	pSo = self->pSo;
@@ -2139,8 +2144,11 @@ if(pPl->pModelParam->cResidueCarryOff==0)
                 {
 				    //fNStandCropRes,fStandCropRes_to_AOM2_part_LN,fCLitterSurf,fNLitterSurf,fCManureSurf,fNManureSurf
  			        pCP->fCLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac); 
+                    pCP->fCLeafLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac); //Hong 20190605: for century_n 
+					
 				    pCP->fCManureSurf    += ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac); 
                     pCB->dCInputCum += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac)+ ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac);//Hong added on 20180731 for C-balance
+                    pCB->dCInputSurf += (pPl->pGenotype->fResidueAMO1Frac*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac)+ ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fCResidue - fCStandR)+pPl->pBiomass->fDeadLeafWeight*pPl->pGenotype->fCDeadleafFrac);//Hong added on 20180731 for C-balance
 				    pCP->fNStandCropRes  += fNStandR; 
 				    pCP->fNLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac); 
 			        pCP->fNManureSurf    += ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac);
@@ -2185,6 +2193,7 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 				}
 						   				
 			// Anteilsmaessige Verteilung auf die Bodenschichten.
+			fCumDepth = 0.0;
 			for (pSL = pSo->pSLayer->pNext,
 			        pCL = pCh->pCLayer->pNext,i2=0;
 			        ((pSL->pNext != NULL)&&
@@ -2222,7 +2231,14 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 					//End of Moritz */
 					
 					//Hong added on 20180731 for C-balance			
-				    pCB->dCInputCum +=amount*pTi->pTimeStep->fAct;
+				    //pCB->dCInputCum +=amount*pTi->pTimeStep->fAct;
+					pCB->dCInputProfile +=amount*pTi->pTimeStep->fAct;
+					 //Hong 20190507: balance for 0-30 cm profile:
+					fCumDepth +=(double)0.1*pSL->fThickness; //cm
+	                if (fCumDepth <=30.0)
+					{
+						pCB->dCInputProfile_30 +=amount*pTi->pTimeStep->fAct;
+	                 }
 					
 					if((pCL->fCLitter>EPSILON)&&(pCL->fNLitter>EPSILON))
 						{

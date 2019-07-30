@@ -321,7 +321,9 @@ int gecros_CropSenescence(gecros *self)
 			pCh->pCProfile->fCLitterSurf += pGPltC->fCLeafLossR*DELT; //Hong
 			pCh->pCProfile->fNLitterSurf += pGPltN->fNLeafLossR*DELT; //Hong
             
-			pCB->dCInputCum += pGPltC->fCLeafLossR*DELT; //Hong added on 20180731 for C-balance
+			pCh->pCProfile->fCLeafLitterSurf += pGPltC->fCLeafLossR*DELT; //Hong for century_n
+			pCB->dCInputSurf += pGPltC->fCLeafLossR*DELT; //Hong added on 20180731 for C-balance
+			//pCB->dCInputCum += pGPltC->fCLeafLossR*DELT;
 			
 			//roots
 			//if(pPl->pDevelop->fStageSUCROS>=pPl->pGenotype->fBeginSenesDvs)
@@ -354,6 +356,7 @@ int gecros_CropSenescence(gecros *self)
 				pSL	= pSo->pSLayer->pNext;
 				pLR	= pPl->pRoot->pLayerRoot;
 				pCL = pCh->pCLayer->pNext;
+				fCumDepth =0.0;
 				for (L=1;L<=L1;L++)
 				{
 					fThickness =(double)0.1*pSL->fThickness; //cm
@@ -367,7 +370,15 @@ int gecros_CropSenescence(gecros *self)
 						pCL->fCLitter += fDeadRootC * pLR->fLengthDensFac/TRLDF*DELT;
 						pCL->fNLitter += fDeadRootN * pLR->fLengthDensFac/TRLDF*DELT;
 						
-						pCB->dCInputCum += fDeadRootC * pLR->fLengthDensFac/TRLDF*DELT; //Hong added on 20180731 for C-balance
+						pCB->dCInputProfile += fDeadRootC * pLR->fLengthDensFac/TRLDF*DELT; //Hong added on 20180731 for C-balance
+						//pCB->dCInputCum += fDeadRootC * pLR->fLengthDensFac/TRLDF*DELT; 
+						//Hong 20190507: balance for 0-30 cm profile:	
+	                    fCumDepth +=(double)0.1*pSL->fThickness; //cm
+	                   if (fCumDepth <=30.0)
+	                   {
+						   pCB->dCInputProfile_30 += fDeadRootC * pLR->fLengthDensFac/TRLDF*DELT;
+					   }
+						
 					}
 
 					pSL = pSL->pNext;
@@ -407,7 +418,6 @@ int gecros_NitrogenDemand(gecros *self)
 int gecros_NitrogenUptake(gecros *self)
   {
     expertn_modul_base *xpn = &(self->parent);
-    PTIME      pTi = xpn->pTi;
 	PCHEMISTRY pCh = xpn->pCh;
 	PPLANT     pPl = xpn->pPl;
 	PSPROFILE pSo = xpn->pSo;
@@ -451,14 +461,6 @@ int gecros_NitrogenUptake(gecros *self)
     //*/
 
       pPl->pPltNitrogen->fCumActNUpt += pPl->pPltNitrogen->fActNUptR*DELT;
-
-if (xpn->pTi->pSimTime->fTimeDay>0.555&&xpn->pTi->pSimTime->fTimeDay<0.56)
-			{
-				
-				//printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
-				//printf("pPl->pPltNitrogen->fCumActNUpt: %f\n", pPl->pPltNitrogen->fCumActNUpt);
-				//printf("pPl->pPltNitrogen->fActNUptR: %f\n", pPl->pPltNitrogen->fActNUptR);
-				}
 
       return RET_SUCCESS;
   }
@@ -528,10 +530,7 @@ int gecros_ActualTranspiration(gecros *self)
 	 }		
 
 	}	//	end if NewDayAndPlantGrowing
-if (xpn->pTi->pSimTime->fTimeDay>0.555&&xpn->pTi->pSimTime->fTimeDay<0.56)
-{
-  //printf("pPl->pPltWater->fActTranspR: %f\n",pPl->pPltWater->fActTranspR);
-}
+
     /*
     if ((pPl->pDevelop->bPlantGrowth==TRUE)&&(pPl->pDevelop->bMaturity==FALSE))
     {
@@ -701,7 +700,7 @@ self->WCMIN=0.05; //Hong 20170628
 		if (S!=NULL) {
 			ini_filename = get_fullpath_from_relative(self->parent.pXSys->base_path, S);
 			if (expertn_modul_base_PlantManagementRead(xpn,ini_filename,"gecros")!=0) {
-				PRINT_ERROR("Error Read GECROS INI File");
+				PRINT_ERROR("Error Read Crop Rotation INI File");
 			}
 			self->ini_filename = g_strdup_printf("%s",ini_filename);
 			free(ini_filename);
@@ -948,17 +947,14 @@ int gecros_load_ini_file(gecros *self)
 		}
 
 	g_free(varietynames);
-	//GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"residue partition","ResidueToAMO1_frac");
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,1.0,"residue partition","ResidueToAMO1_frac");//default value 1.0
 	pPl->pGenotype->fResidueAMO1Frac = dummy_in[i];
 	g_free(dummy_in);
 	
-    //    GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"residue partition","C_fromDeadleaf_frac");
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,0.4,"residue partition","C_fromDeadleaf_frac");//default value 0.4	
 	pPl->pGenotype->fCDeadleafFrac = dummy_in[i];
 	g_free(dummy_in);
 	
-    //    GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"residue partition","N_fromDeadleaf_frac");
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,1.0,"residue partition","N_fromDeadleaf_frac");//default value 1.0	
 	pPl->pGenotype->fNDeadleafFrac = dummy_in[i];
 	g_free(dummy_in);
@@ -992,12 +988,11 @@ lig_stem, lig_leaves, lig_roots */
 		xpn->pMa->pSowInfo->fPlantDens = 400.;
 		xpn->pMa->pSowInfo->fSowDepth = 10.;
 		xpn->pMa->pSowInfo->fRowWidth = 50.;
-	}
+	} //Hong:warum hier?
 
 	g_key_file_free(keyfile);
 	
-    //Hong for crop rotation 20170131: to initialize variables
-
+    //Hong for crop rotation 20170131: to initialize plant variables:
     gecros_PlantVariableInitiation(self); 
 
 	return RET_SUCCESS;
@@ -1006,395 +1001,41 @@ lig_stem, lig_leaves, lig_roots */
 int gecros_PlantVariableInitiation(gecros *self)//Hong 20170127
 {
 	expertn_modul_base *xpn = &(self->parent);
-  //PPLTCARBON   pPltC;
-    PPLTNITROGEN pPltN;
-    PGENOTYPE    pGen;
-    PBIOMASS     pPltB;
-    PDEVELOP     pDev;
-    PCANOPY      pCan;
+
+    PPLTNITROGEN    pPltN = xpn->pPl->pPltNitrogen;
+    PGENOTYPE       pGen  = xpn->pPl->pGenotype;
+    PDEVELOP        pDev  = xpn->pPl->pDevelop;
+    PCANOPY         pCan  = xpn->pPl->pCanopy;	
+	PPLANT			pPl   = xpn->pPl;
+	PBIOMASS		pGrw	=pPl->pBiomass;
+	PLAYERROOT		pLR		=pPl->pRoot->pLayerRoot;
+	PSLAYER 		pSL		=xpn->pSo->pSLayer;	
+    PMSOWINFO		pSI	= xpn->pMa->pSowInfo;
+    PSPROFILE		pSo = xpn->pSo;	
     
 	PGECROSCARBON     pGPltC;
     PGECROSNITROGEN   pGPltN;
     PGECROSCANOPY     pGCan;
-    PGECROSPARAMETER  pGPar;
-	PGECROSSOIL       pGS;
-		
-	//pPltC = xpn->pPl->pPltCarbon;
-    pPltN = xpn->pPl->pPltNitrogen;
-    pGen  = xpn->pPl->pGenotype;
-    pPltB = xpn->pPl->pBiomass;
-    pDev  = xpn->pPl->pDevelop;
-    pCan  = xpn->pPl->pCanopy;
      
     pGPltC = self->pGecrosPlant->pGecrosCarbon;
     pGPltN = self->pGecrosPlant->pGecrosNitrogen;
     pGCan  = self->pGecrosPlant->pGecrosCanopy;
-    pGPar  = self->pGecrosPlant->pGecrosParameter;
-	pGS    = self->pGecrosPlant->pGecrosSoil;
 	
-	//Test of Hong
-PPLANT			pPl = xpn->pPl;
-PMSOWINFO		pSI	= xpn->pMa->pSowInfo;
-PSPROFILE		pSo = xpn->pSo;
-double 		CUMDEP,fThickness;
+	double 		CUMDEP,fThickness;
 	int   			L,L1;
 	char			*pCropCode;
-	PGENOTYPE 		pGT		=pPl->pGenotype;
-	//PDEVELOP		pDev	=xpn->pPl->pDevelop;
-	PBIOMASS		pGrw	=pPl->pBiomass;
-	PMODELPARAM 	pGrwP	=pPl->pModelParam;
-	//PCANOPY			pCan	=xpn->pPl->pCanopy;
-	//PPLTNITROGEN	pPltN	=xpn->pPl->pPltNitrogen;
-	PLAYERROOT		pLR		=pPl->pRoot->pLayerRoot;
-	PSLAYER 		pSL		=xpn->pSo->pSLayer;
 	double fSowDepth;
+	
 	pCropCode = (char*)malloc(sizeof(pPl->pGenotype->acCropCode));
 	strcpy(pCropCode,pPl->pGenotype->acCropCode);
 	if(pSI->fSowDepth>(double)0.0)
 		fSowDepth = pSI->fSowDepth;
 	else
 		fSowDepth = (double)3.0;
-	//======================================================================================
-	//Initialize all variables
-	//======================================================================================
-	pPl->pDevelop->iStageCERES = (int)-99;
-	pPl->pDevelop->fDevStage = (int)-99;
-	pPl->pDevelop->fStageXCERES = (int)-99;
-	pPl->pDevelop->fStageWang = (int)-99;
-	pPl->pDevelop->fStageSUCROS = (int)-99;
-	pPl->pDevelop->iDayAftEmerg = (int)0;
-	pPl->pCanopy->fExpandLeafNum = (double)0.0;
-	pPl->pCanopy->fTillerNum = (double)0.0;
-	//FH 2014-03-03 pSI->fPlantDens sollte schon vorher gesetzt sein
-	//pSI->fPlantDens = (double)0.0;
-	pCan->fLeafTipNum = (double)0.0;
-	pDev->fDaylengthEff = (double)0.0;
-	pPl->pOutput->fValue1 = (double)0.0;
-	pPl->pOutput->fValue2 = (double)0.0;
-	pPl->pCanopy->fkcan = 0.6;
-	//======================================================================================
-	//Development Stage
-	//======================================================================================
-	if (pPl->pDevelop->iStageCERES == (int)-99) pPl->pDevelop->iStageCERES	= (int)0;
-	SET_IF_99(pPl->pDevelop->fDevStage,(double)0.0);
-	SET_IF_99(pPl->pDevelop->fStageXCERES,(double)0.0);
-	SET_IF_99(pPl->pDevelop->fStageWang,(double)0.0);
-	SET_IF_99(pPl->pDevelop->fStageSUCROS,(double)0.0);
-	pDev->iStageCERES= (int)0;
-	//pDev->fDevStage=(double)0;
-	//pDev->fStageXCERES=(double)0;
-	//pDev->fStageWang=(double)0;
-	pPl->pModelParam->iEmergenceDay=-1;//Hong
-	pDev->fStageSUCROS=(double)-1.0;
-	if (pSI->fPlantDens == (double)0.0) pSI->fPlantDens = (double)400;
-	if (pSI->fRowWidth  == (double)0.0) pSI->fRowWidth  = (double)10;
-	if (pSI->fSowDepth  == (double)0.0) pSI->fSowDepth  = (double)3;
-	if (pGT->fSpecLfWeight==(double)0.0) pGT->fSpecLfWeight = (double)450;
-	pCan->fLAI=pSI->fPlantDens*((double)5.0E-4);
-	pPl->pCanopy->fCropCoverFrac    = (double) 0.0;
-	pPl->pModelParam->fMaxRootDepth = (double) 0.0;
-	pCan->fPlantLA					=(double)0.16	*pSI->fPlantDens;
-	pGrw->fLeafWeight				=(double)0.00136	*(double)10.0*pSI->fPlantDens;
-	pGrw->fSeedReserv				=(double)0.048	*(double)10.0*pSI->fPlantDens;
-	pGrw->fStemWeight				=(double)0.0		*(double)10.0*pSI->fPlantDens;
-	pGrw->fStovWeight				= pGrw->fLeafWeight;
-	//pGrw->fRootWeight				=(double)2.0		*pGrw->fSeedReserv;
-	pGrw->fTotalBiomass				=(double)0.0;
-	//======================================================================================
-	//Plant nitrogen content
-	//======================================================================================
-	pPltN->fRootActConc	=(double)0.02;
-	pPltN->fGrainConc	=(double)0.0;
-	pPltN->fTopsActConc	=(double)0.050;
-	pPltN->fGrainCont	=(double)0.0;
-	//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-	pPltN->fLeafActConc	=(double)0.05;
-	pPltN->fStemActConc	=(double)0.05;
-	pPltN->fLeafRelNc	=(double)1.0;
-	pPltN->fStemRelNc	=(double)1.0;
-	pPltN->fRootRelNc	=(double)1.0;
-	//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-	pPltN->fDeadLeafNw = (double)0.0;
-	pPltN->fDeadRootNw = (double)0.0;
-	//======================================================================================
-	//Dry matter initialization
-	//======================================================================================
-	if ((strcmp(pCropCode,"WH")==0)
-	        ||((strcmp(pCropCode,"BA")==0)||(strcmp(pCropCode,"S")==0))
-	        ||((strcmp(pCropCode,"RY")==0)))
-		{
-			//FH 2014-03-03 laut CB nicht sinnvoll
-			//if (pSI->fPlantDens<(double)100)
-			//	pSI->fPlantDens=(double)400;
-			pDev->fDaylengthEff	=(double)0.01;
-			//SG 10.11.2004 //////////////////////////////////////////////////////
-			//
-			//	Tausendkorngewicht (TKG)
-			//	WW: 45 g
-			//	BA:	45 g
-			//	S:	50 g
-			//	RY:	35 g
-			//	TC:	45 g
-			//
-			// ca. 50% available carbohydrates
-			if (strcmp(pCropCode,"WH")==0)
-				pGrw->fSeedReserv = (double)(0.045/2.0*10.0)*pSI->fPlantDens; // kg/ha
-			if (strcmp(pCropCode,"BA")==0)
-				pGrw->fSeedReserv = (double)(0.045/2.0*10.0)*pSI->fPlantDens; // kg/ha
-			if (strcmp(pCropCode,"S")==0)
-				pGrw->fSeedReserv = (double)(0.05/2.0*10.0)*pSI->fPlantDens; // kg/ha
-			if (strcmp(pCropCode,"RY")==0)
-				pGrw->fSeedReserv = (double)(0.035/2.0*10.0)*pSI->fPlantDens; // kg/ha
-			//Biomass
-			pGrw->fLeafWeight				= (double)0.5*pGrw->fSeedReserv;
-			pCan->fPlantLA					= (double)1E4*pGrw->fLeafWeight/pGT->fSpecLfWeight;
-			pGrw->fStemWeight				= (double)0.0*pGrw->fSeedReserv;
-			pGrw->fStovWeight				= pGrw->fLeafWeight;
-			pGrw->fRootWeight				= (double)0.5*pGrw->fSeedReserv;
-			pGrw->fTotalBiomass				= (double)0.0;
-			pDev->fCumPhyll					= (double)0.0;
-			pGrwP->fSingleTillerStemWeight	= (double)0.01;
-			pCan->fLAI=pCan->fPlantLA*(double)1E-4;
-			/*
-					// alte Initialisierung:
-					//Biomass
-					pCan->fPlantLA					=(double)0.04*pSI->fPlantDens;
-					pGrw->fLeafWeight				=(double)0.00034*(double)10.0*pSI->fPlantDens;
-					pGrw->fSeedReserv				=(double)0.012*(double)10.0*pSI->fPlantDens;
-					pGrw->fStemWeight				=(double)0.0*(double)10.0*pSI->fPlantDens;
-					pGrw->fStovWeight				= pGrw->fLeafWeight;
-					pGrw->fRootWeight				=(double)0.5*pGrw->fSeedReserv;
-					pGrw->fTotalBiomass				=(double)0.0;
-					pDev->fCumPhyll					=(double)0.0;
-					pGrwP->fSingleTillerStemWeight	=(double)0.01;
-					if (strcmp(pCropCode,"WH"))
-						pCan->fLAI=pSI->fPlantDens*((double)4.0E-6);
-					else
-						pCan->fLAI=pSI->fPlantDens*((double)4.0E-4);
-					pCan->fLAI=pSI->fPlantDens*((double)5.0E-4); //(double)0.010;//0.005;
-			*/
-			pCan->fTillerNum=(double)1.0;
-			pCan->fTillerNumSq=pSI->fPlantDens;
-			if((strcmp(pPl->pGenotype->acCropCode,"WH")==0)||(strcmp(pPl->pGenotype->acCropCode,"BA")==0))
-				{
-					pDev->fCumPhyll		=(double)0.0;
-				}
-			if ((strcmp(pCropCode,"WH")==0)||((strcmp(pCropCode,"RY")==0)))
-				{
-					pPltN->fLeafActConc		=(double)0.044;
-					pPltN->fStemActConc		=(double)0.044;
-					pPltN->fRootActConc=(double)0.02;//0.022; CERES
-					pPltN->fTopsActConc=(double)0.044;
-				}
-			if ((strcmp(pCropCode,"BA")==0)||((strcmp(pCropCode,"S")==0)))
-				{
-					pPltN->fLeafActConc		=(double)0.045;
-					pPltN->fStemActConc		=(double)0.045;
-					pPltN->fRootActConc=(double)0.02; //0.045; CERES
-					pPltN->fTopsActConc=(double)0.045;
-				}
-		}
-	//==========================================================================
-	//POTATO
-	//==========================================================================
-	if (strcmp(pCropCode,"PT")==0)
-		{
-			//SIMPOTATO
-			pCan->fLAI			=pSI->fPlantDens*((double)4.0E-6);
-			pGrw->fSeedReserv	=(double)20.0*(double)10.0*pSI->fPlantDens; //20g/plt
-			pGrw->fLeafWeight	=(double)0.1125*(double)10.0*pSI->fPlantDens; //0.1125g/plt
-			pGrw->fStemWeight	=(double)0.1125*(double)10.0*pSI->fPlantDens;
-			pGrw->fGrainWeight	=(double)0;
-			pPltN->fLeafActConc		=(double)0.06;
-			pPltN->fStemActConc		=(double)0.05;
-			pPltN->fRootActConc=(double)0.0215;
-			pPltN->fTopsActConc=(double)0.08;
-		}
-	//==========================================================================
-	//MAIZE
-	//==========================================================================
-	if (strcmp(pCropCode,"MZ")==0)
-		{
-			//SG 10.11.2004 //////////////////////////////////////////////////////
-			//
-			//	Tausendkorngewicht (TKG)
-			//	MZ: 300 g
-			//
-			// ca. 50% available carbohydrates
-			/* CERES
-			pCan->fPlantLA		=(double)1.0;
-			pCan->fLAI			=(double)0.0001*pSI->fPlantDens*pCan->fPlantLA;
-			*/
-			pDev->fCumPhyll		=(double)0.514;
-			//pGrw->fSeedReserv	=(double)0.2;
-			pGrw->fSeedReserv = (double)(0.3/2.0*10.0)*pSI->fPlantDens; // kg/ha
-			pGrw->fLeafWeight				= (double)0.5*pGrw->fSeedReserv;
-			pCan->fPlantLA					= (double)1E4*pGrw->fLeafWeight/pGT->fSpecLfWeight;
-			pCan->fLAI						= pCan->fPlantLA*(double)1E-4;
-			pGrw->fStemWeight				= (double)0.0*pGrw->fSeedReserv;
-			pGrw->fStovWeight				= pGrw->fLeafWeight;
-			pGrw->fRootWeight				= (double)0.5*pGrw->fSeedReserv;
-			pGrw->fTotalBiomass				= pGrw->fSeedReserv;
-			//Biomass
-			pGrw->fLeafWeight				= (double)0.5*pGrw->fSeedReserv;
-			pCan->fPlantLA					= (double)1E4*pGrw->fLeafWeight/pGT->fSpecLfWeight;
-			pGrw->fStemWeight				= (double)0.0*pGrw->fSeedReserv;
-			pGrw->fStovWeight				= pGrw->fLeafWeight;
-			pGrw->fRootWeight				= (double)0.5*pGrw->fSeedReserv;
-			pGrw->fTotalBiomass				= (double)0.0;
-			pDev->fCumPhyll					= (double)0.0;
-			pGrwP->fSingleTillerStemWeight	= (double)0.01;
-			pCan->fLAI=pCan->fPlantLA*(double)1E-4;		/* alt
-		pGrw->fLeafWeight	=(double)0.2;
-		pGrw->fStemWeight	=(double)0.2;
-		pGrw->fGrainWeight	=(double)0;
-		pGrw->fStovWeight	=(double)0.4;
-		pGrw->fRootWeight	=(double)0.2;
-		pGrw->fTotalBiomass	=pGrw->fStovWeight;
-		*/
-			pPltN->fLeafActConc		=(double)0.044;
-			pPltN->fStemActConc		=(double)0.044;
-			pPltN->fRootActConc=(double)0.022;
-			pPltN->fTopsActConc=(double)0.044;
-		}
-	//==========================================================================
-	//Sunflower
-	//==========================================================================
-	if (strcmp(pCropCode,"SF")==0)
-		{
-			pGrw->fSeedReserv	=(double)0.2;
-			//OILCROP-SUN, pp.5
-			pPltN->fRootActConc	=(double)0.0;
-			pPltN->fLeafActConc	=(double)0.0;
-			pPltN->fStemActConc	=(double)0.0;
-			pPltN->fTopsActConc	=(double)0.0;
-			pDev->fSumDTT = pDev->fCumDTT = pDev->fDTT = (double)0.0;
-			//leaf number (= LN)
-			pCan->fLeafTipNum = (double)0.0;
-			pCan->fLAI=(double)0.0;
-			pPl->pCanopy->fExpandLeafNum = (double)0.0;
-		}
-	//==========================================================================
-	//Sugarbeet
-	//==========================================================================
-	if ((strcmp(pCropCode,"SB")==0)||(strcmp(pPl->pGenotype->acCropCode,"BS")==0)) // um Fehler von "BS" zu vermeiden
-		{
-			//SG20180424
-            //if (pSI->fPlantDens<(double)50)
-			//	pSI->fPlantDens=(double)90;
-            if (pSI->fPlantDens<(float)5) //SG20160510
-	   		pSI->fPlantDens=(float)8;
-
-			//Biomass
-			pCan->fPlantLA					=(double)0.16    *pSI->fPlantDens;
-			pGrw->fLeafWeight				=(double)0.00136	*(double)10.0*pSI->fPlantDens;
-			pGrw->fSeedReserv				=(double)0.05	*(double)10.0*pSI->fPlantDens;
-			pGrw->fStemWeight				=(double)0.0	*(double)10.0*pSI->fPlantDens;
-			pGrw->fGrainWeight	            =(double)0;
-			pGrw->fStovWeight				= pGrw->fLeafWeight;
-			pGrw->fRootWeight				=(double)0.5		*pGrw->fSeedReserv;
-			pGrw->fTotalBiomass				=(double)0.0;
-			pCan->fLAI			=pSI->fPlantDens*((double)5.0E-4);
-			pPltN->fLeafActConc		=(double)0.06;
-			pPltN->fStemActConc		=(double)0.0;
-			pPltN->fRootActConc=(double)0.0215;
-		}
-	//======================================================================================
-	//Dry matter initialization "pasture"
-	//======================================================================================
-	if (strcmp(pCropCode,"IR")==0)
-		{
-			if (pSI->fPlantDens==(double)0.0) pSI->fPlantDens=(double)1000;
-			pCan->fLAI=pSI->fPlantDens*((double)5.0E-4);
-			pPl->pCanopy->fCropCoverFrac    = (double) 0.0;
-			pPl->pModelParam->fMaxRootDepth = (double) 0.0;
-			pCan->fPlantLA			= (double)1E4*pCan->fLAI;
-			pGrw->fLeafWeight		= (double)1E-4 * pCan->fPlantLA * pGT->fSpecLfWeight;
-			pGrw->fSeedReserv		= (double)0.048	*(double)10.0*pSI->fPlantDens;
-			pGrw->fStemWeight		= pGrw->fLeafWeight;
-			pGrw->fStovWeight		= pGrw->fLeafWeight + pGrw->fStemWeight;
-			pGrw->fRootWeight		= pGrw->fStovWeight;
-			pGrw->fTotalBiomass		= pGrw->fRootWeight + pGrw->fLeafWeight + pGrw->fStemWeight;
-			//======================================================================================
-			//Plant nitrogen content   (CERES, NWHEAT)
-			//======================================================================================
-			pPltN->fRootActConc	=(double)0.01;
-			pPltN->fGrainConc	=(double)0.0;
-			pPltN->fTopsActConc	=(double)0.050;
-			pPltN->fGrainCont	=(double)0.0;
-			//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-			pPltN->fLeafActConc	=(double)0.02;
-			pPltN->fStemActConc	=(double)0.02;
-			pPltN->fLeafRelNc	=(double)1.0;
-			pPltN->fStemRelNc	=(double)1.0;
-			pPltN->fRootRelNc	=(double)1.0;
-			//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-			pDev->fStageSUCROS = (double)0.0;
-			strcpy(pPl->pGenotype->acCropCode,"WH\0");
-		} // end "pasture (IR)"
-	//SG 2005/12/14: (wegen neuer N-Stress-Berechnung in Photosynthese)
-	//expertn_modul_base_NitrogenConcentrationLimits(pPl);
-	//======================================================================================
-	//Root depth and length density
-	//======================================================================================
-	pPl->pRoot->fDepth= fSowDepth;
-	pLR	  =pPl->pRoot->pLayerRoot;
-	pSL	  =pSo->pSLayer->pNext;
-	CUMDEP=(double)0.0;
-	for (L=1; L<=pSo->iLayers-2; L++)
-		{
-			fThickness =(double)0.1*pSL->fThickness; //cm
-			CUMDEP=CUMDEP+fThickness;
-			//IF_CROP_IS_UNKNOWN
-			pLR->fLengthDens=(double)0.20*pSI->fPlantDens/fThickness;
-			if ((strcmp(pCropCode,"WH")==0)||(strcmp(pCropCode,"BA")==0))
-				pLR->fLengthDens=(double)0.0024*pSI->fPlantDens/fThickness;
-			if (strcmp(pCropCode,"PT")==0)
-				pLR->fLengthDens=(double)0.2*pSI->fPlantDens/fThickness;
-			if (CUMDEP>pPl->pRoot->fDepth)
-				break;
-			pSL=pSL->pNext;
-			pLR=pLR->pNext;
-		}
-	pLR->fLengthDens = pLR->fLengthDens*
-	                   ((double)1.0-(CUMDEP-pPl->pRoot->fDepth)/((double)0.1*pSL->fThickness));
-	L1=L+1;
-	pLR=pLR->pNext;
-	if (L1<pSo->iLayers)
-		{
-			for (L=L1; L<=pSo->iLayers; L++)
-				{
-					pLR->fLengthDens=(double)0.0;
-					pLR=pLR->pNext;
-				}
-		}
-	//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-	pPltN->fRootCont = pPltN->fRootActConc*pGrw->fRootWeight;
-	pPltN->fStovCont = pPltN->fTopsActConc*pGrw->fStovWeight;
-	pPltN->fLeafCont = pPltN->fLeafActConc*pGrw->fLeafWeight;
-	pPltN->fStemCont = pPltN->fStemActConc*pGrw->fStemWeight;
-	//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-	//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-	pPl->pPltWater->fStressFacPartition	= (double)1;
-	pPl->pPltWater->fStressFacPhoto		= (double)1;
-	pPl->pPltWater->fStressFacLeaf		= (double)1;
-	//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-	//SG 2005 11 03: kein N-Mangel bei Feldaufgang (CERES)
-	//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-	pPl->pPltNitrogen->fNStressPhoto=(double)1.0;
-	pPl->pPltNitrogen->fNStressLeaf=(double)1.0;
-	pPl->pPltNitrogen->fNStressTiller=(double)1.0;
-	//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-	pPl->pCanopy->fPlantHeight = (double)0.0;
-	pCan->fLAISpass = pCan->fLAI;
-//End of test //not necessary!!!!
-
-	
-	
-//Begin of Hong: changed for C. Troost in Oct. 2016
-	
+	//####################### Initialization specially for GECROS ###########################	
+	//Begin of Hong: changed for C. Troost in Oct. 2016	
 	  self->NPL = (double)xpn->pMa->pSowInfo->fPlantDens;
-
+      xpn->pPl->pCanopy->fPlantDensity =  (double)xpn->pMa->pSowInfo->fPlantDens;
       self->FPRO   = (double)6.25*self->SEEDNC;
 	  //SG 20180409: sugarbeet model J. Rabe - 'stem' is 'storage organ'
 	  if((strcmp(pCropCode,"SB")==0)||(strcmp(pCropCode,"OR")==0))
@@ -1427,7 +1068,6 @@ double 		CUMDEP,fThickness;
 		self->NLVI   = self->LNCI* self->CLVI/self->CFV;
 		self->NRTI   = self->NPL * self->SEEDW * self->EFF * self->EG * self->LNCI * self->FCRSH/self->FNRSH - self->NLVI;
 	  }
-
 //End of Hong      
 	  
       self->LNCMIN = self->SLA0*self->SLNMIN;
@@ -1440,9 +1080,6 @@ double 		CUMDEP,fThickness;
       //output
       pGPltC->fCFracStorage = (double)self->CFO;
       pGen->fGrwEffStorage  = (double)self->YGO;
-
-      //pGPltC->fCFracVegetative = (double)CFV;	  
-	  //pGPar->fGrwEffVegOrg  = (double)YGV;
 
       pGPltC->fCLeaf        = (double)self->CLVI;
       pGPltC->fCStrctRoot   = (double)self->CRTI;
@@ -1460,26 +1097,198 @@ double 		CUMDEP,fThickness;
       pGCan->fLAITotal      = (double)self->LAII;
       pGCan->fLAIGreen      = (double)self->LAII;
       pGPltN->fNLeafSpecificContBottom = (double)self->SLNBI;
-      
-	  //pPltN->fStemActConc   = (double)STEMNC;
 
       xpn->pPl->pRoot->fDepth = (double)self->RDI;
       pCan->fPlantHeight      = (double)self->HTI;
 
-	  pPltB->fLeafWeight   = 0;
-      pPltB->fRootWeight   = 0;   
-      pPltB->fStovWeight   = 0;
-      pPltB->fTotalBiomass = 0;
-	  pPltN->fLeafActConc  = 0;
-      pPltN->fRootActConc  = 0;
-	  pPltN->fStemActConc  = 0;
+//################################# End of for GECROS ###########################	
 
-	  //pGPar->iniGecros = (int) 1;
-	  
-	  //Begin of Hong 20171001
-	  pDev->fStageSUCROS =-1;	  
-	  //End of Hong
+
+//#################### Initialization for XN5 structure #############################
+//############# according to expertn_modul_base_PlantVariableInitiation ############# 
 	
+	//======================================================================================
+	//Development Stage initialization 
+	//======================================================================================
+	pPl->pDevelop->fDevStage = (int)-99;
+	pPl->pDevelop->fStageXCERES = (int)-99;
+	pPl->pDevelop->fStageSUCROS = (int)-99;
+	pPl->pDevelop->iDayAftEmerg = (int)0;
+
+	SET_IF_99(pPl->pDevelop->fDevStage,(double)0.0);
+	SET_IF_99(pPl->pDevelop->fStageXCERES,(double)0.0);
+	SET_IF_99(pPl->pDevelop->fStageSUCROS,(double)0.0);
+	
+	//Begin of Hong 20171001
+	pDev->fStageSUCROS =-1;	  
+	//End of Hong	
+	if (pSI->fPlantDens == (double)0.0) pSI->fPlantDens = (double)400; //Hong: könnte bleiben
+	if (pSI->fRowWidth  == (double)0.0) pSI->fRowWidth  = (double)10;//Hong: könnte bleiben
+	if (pSI->fSowDepth  == (double)0.0) pSI->fSowDepth  = (double)3;//Hong: könnte bleiben
+	
+	//======================================================================================
+	//Plant biomass content initialization 
+	//======================================================================================	
+	pGrw->fLeafWeight   =(double)0;
+	pGrw->fRootWeight   =(double)0;
+	pGrw->fStemWeight   =(double)0;
+	pGrw->fStovWeight   =(double)0;
+	pGrw->fTotalBiomass =(double)0;
+	pGrw->fGrainWeight	 =(double)0;
+	//======================================================================================
+	//Plant nitrogen content initialization
+	//======================================================================================
+	pPltN->fLeafActConc  = 0;
+	pPltN->fRootActConc  = 0;
+	pPltN->fStemActConc  = 0;
+	pPltN->fTopsActConc	=(double)0.050;//Hong: könnte bleiben
+	pPltN->fGrainCont	=(double)0.0;
+	
+	//======================================================================================
+	//Dry matter initialization
+	//======================================================================================
+	if ((strcmp(pCropCode,"WH")==0)
+	        ||((strcmp(pCropCode,"BA")==0)||(strcmp(pCropCode,"S")==0))
+	        ||((strcmp(pCropCode,"RY")==0)))
+		{
+			if (strcmp(pCropCode,"WH")==0)
+				pGrw->fSeedReserv = (double)(0.045/2.0*10.0)*pSI->fPlantDens; // kg/ha
+			if (strcmp(pCropCode,"BA")==0)
+				pGrw->fSeedReserv = (double)(0.045/2.0*10.0)*pSI->fPlantDens; // kg/ha
+			if (strcmp(pCropCode,"S")==0)
+				pGrw->fSeedReserv = (double)(0.05/2.0*10.0)*pSI->fPlantDens; // kg/ha
+			if (strcmp(pCropCode,"RY")==0)
+				pGrw->fSeedReserv = (double)(0.035/2.0*10.0)*pSI->fPlantDens; // kg/ha
+			//Biomass
+			pGrw->fLeafWeight				= (double)0.5*pGrw->fSeedReserv;
+			pGrw->fStemWeight				= (double)0.0*pGrw->fSeedReserv;
+			pGrw->fStovWeight				= pGrw->fLeafWeight;
+			pGrw->fRootWeight				= (double)0.5*pGrw->fSeedReserv;
+		
+			if ((strcmp(pCropCode,"WH")==0)||((strcmp(pCropCode,"RY")==0)))
+				{
+					pPltN->fLeafActConc		=(double)0.044;
+					pPltN->fStemActConc		=(double)0.044;
+					
+					pPltN->fTopsActConc=(double)0.044;
+				}
+			if ((strcmp(pCropCode,"BA")==0)||((strcmp(pCropCode,"S")==0)))
+				{
+					pPltN->fLeafActConc		=(double)0.045;
+					pPltN->fStemActConc		=(double)0.045;
+					
+					pPltN->fTopsActConc=(double)0.045;
+				}
+		}
+	//==========================================================================
+	//POTATO
+	//==========================================================================
+	if (strcmp(pCropCode,"PT")==0)
+		{
+			//SIMPOTATO
+			pCan->fLAI			=pSI->fPlantDens*((double)4.0E-6);
+			pGrw->fSeedReserv	=(double)20.0*(double)10.0*pSI->fPlantDens; //20g/plt
+			pGrw->fLeafWeight	=(double)0.1125*(double)10.0*pSI->fPlantDens; //0.1125g/plt
+			pGrw->fStemWeight	=(double)0.1125*(double)10.0*pSI->fPlantDens;
+			pGrw->fGrainWeight	=(double)0;
+			pPltN->fLeafActConc		=(double)0.06;
+			pPltN->fStemActConc		=(double)0.05;
+			pPltN->fRootActConc=(double)0.0215;
+			pPltN->fTopsActConc=(double)0.08;
+		}
+	//==========================================================================
+	//MAIZE
+	//==========================================================================
+	if (strcmp(pCropCode,"MZ")==0)
+		{
+			pGrw->fSeedReserv = (double)(0.3/2.0*10.0)*pSI->fPlantDens; // kg/ha
+			pGrw->fLeafWeight				= (double)0.5*pGrw->fSeedReserv;
+			pGrw->fStemWeight				= (double)0.0*pGrw->fSeedReserv;
+			pGrw->fStovWeight				= pGrw->fLeafWeight;
+			pGrw->fRootWeight				= (double)0.5*pGrw->fSeedReserv;
+			pGrw->fTotalBiomass				= pGrw->fSeedReserv;
+			
+			pPltN->fLeafActConc		=(double)0.044;
+			pPltN->fStemActConc		=(double)0.044;
+			pPltN->fTopsActConc=(double)0.044;
+		}
+	//==========================================================================
+	//Sunflower
+	//==========================================================================
+	if (strcmp(pCropCode,"SF")==0)
+		{
+			pGrw->fSeedReserv	=(double)0.2;
+			//OILCROP-SUN, pp.5
+			pPltN->fRootActConc	=(double)0.0;
+			pPltN->fLeafActConc	=(double)0.0;
+			pPltN->fStemActConc	=(double)0.0;
+			pPltN->fTopsActConc	=(double)0.0;
+			pDev->fSumDTT = pDev->fCumDTT = pDev->fDTT = (double)0.0;
+			//leaf number (= LN)
+			pCan->fLeafTipNum = (double)0.0;
+			pCan->fLAI=(double)0.0;
+			pPl->pCanopy->fExpandLeafNum = (double)0.0;
+		}
+	//==========================================================================
+	//Sugarbeet
+	//==========================================================================
+	if ((strcmp(pCropCode,"SB")==0)||(strcmp(pPl->pGenotype->acCropCode,"BS")==0)) // um Fehler von "BS" zu vermeiden
+		{
+			//SG20180424
+            //if (pSI->fPlantDens<(double)50)
+			//	pSI->fPlantDens=(double)90;
+            if (pSI->fPlantDens<(float)5) //SG20160510
+	   		pSI->fPlantDens=(float)8;
+			//Biomass
+			pGrw->fLeafWeight				=(double)0.00136	*(double)10.0*pSI->fPlantDens;
+			pGrw->fSeedReserv				=(double)0.05	*(double)10.0*pSI->fPlantDens;
+			pGrw->fStemWeight				=(double)0.0	*(double)10.0*pSI->fPlantDens;
+			pGrw->fGrainWeight	            =(double)0;
+			pGrw->fStovWeight				= pGrw->fLeafWeight;
+			pGrw->fRootWeight				=(double)0.5		*pGrw->fSeedReserv;
+			pGrw->fTotalBiomass				=(double)0.0;
+			//nitrogen
+			pPltN->fLeafActConc		=(double)0.06;
+			pPltN->fStemActConc		=(double)0.0;
+			pPltN->fRootActConc=(double)0.0215;
+			
+		}
+
+	//======================================================================================
+	//Root length density initialization
+			//======================================================================================
+	//pPl->pRoot->fDepth= fSowDepth;
+	pLR	  =pPl->pRoot->pLayerRoot;
+	pSL	  =pSo->pSLayer->pNext;
+	CUMDEP=(double)0.0;
+	for (L=1; L<=pSo->iLayers-2; L++)
+		{
+			fThickness =(double)0.1*pSL->fThickness; //cm
+			CUMDEP=CUMDEP+fThickness;
+			//IF_CROP_IS_UNKNOWN
+			pLR->fLengthDens=(double)0.20*pSI->fPlantDens/fThickness;
+			if ((strcmp(pCropCode,"WH")==0)||(strcmp(pCropCode,"BA")==0))
+				pLR->fLengthDens=(double)0.0024*pSI->fPlantDens/fThickness;
+			if (strcmp(pCropCode,"PT")==0)
+				pLR->fLengthDens=(double)0.2*pSI->fPlantDens/fThickness;
+			if (CUMDEP>pPl->pRoot->fDepth)
+				break;
+			pSL=pSL->pNext;
+			pLR=pLR->pNext;
+		}
+	pLR->fLengthDens = pLR->fLengthDens*
+	                   ((double)1.0-(CUMDEP-pPl->pRoot->fDepth)/((double)0.1*pSL->fThickness));
+	L1=L+1;
+	pLR=pLR->pNext;
+	if (L1<pSo->iLayers)
+		{
+			for (L=L1; L<=pSo->iLayers; L++)
+				{
+					pLR->fLengthDens=(double)0.0;
+					pLR=pLR->pNext;
+				}
+		}
+//############## End of expertn_modul_base_PlantVariableInitiation ###################
       
 	  PRINT_MESSAGE(xpn,5,"initialize plant variables");
 	  
@@ -1856,7 +1665,7 @@ int PhasicDevelopment_GECROS(gecros *self)
 	  PDEVELOP      pDev = pPl->pDevelop;
 	  PGECROSSOIL   pGS  = self->pGecrosPlant->pGecrosSoil;	  
 //Hong 2016-08-08: change for Sebastian Gayler and Arne Poyda
-      PMANAGEMENT pMa = xpn->pMa;
+      //PMANAGEMENT pMa = xpn->pMa;
 	  
 	  int day,month,year;
 //End of Hong
@@ -2175,7 +1984,7 @@ double DailyThermalDayUnit_GECROS(gecros *self, double DS,double TEMP,double DIF
       //PGECROSSOIL     pGS    = pGecrosPlant->pGecrosSoil;
 	  //PPLANT          pPl    = GetPlantPoi();
 
-	  int i;
+	  //int i;
       double TMEAN,TT,SUNRIS,SUNSET,TD,TU,TDU;
 	  double dayTime;
 	  //double TBD0,TOD0,TCD0;
@@ -2322,8 +2131,7 @@ double Phenology_GECROS(gecros *self,double DS,double SLP,double DDLP,double SPS
 	   //STRECK, N.A.; WEISS, A.; BAENZINGER, P.S. A generalized vernalization response function for winter wheat. 
 	   //Agronomy Journal, v.95, p.155-159, 2003.
 
-       //SG 20110801: nach SPASS (Wang), activated by Hong on 20170704
-       
+       //SG 20110801: nach SPASS (Wang), activated by Hong on 20170704:
 	   BasVernDays = 0.174*pPl->pGenotype->fOptVernDays; 
        if (pPl->pGenotype->fOptVernDays==(double)0.0)
 			EFV = 1.0;
@@ -2368,7 +2176,7 @@ int Photosynthesis_GECROS(gecros *self)
       PGECROSCARBON   pGPltC = self->pGecrosPlant->pGecrosCarbon;
 	  PGECROSSOIL     pGS    = self->pGecrosPlant->pGecrosSoil;
 
-      RESPONSE VLS[]={0., 0, 2.5, 0};
+      RESPONSE VLS[]={{0.}, {0.}, {2.5}, {0.}};
       char pType[5];      //SG/17/05/99: wg. Unterscheidung der Pflanzenarten
 
 	  double PPCAN,APCANS,APCANN,APCAN,PTCAN,ATCAN,PESOIL,AESOIL,DIFS,DIFSU,DIFSH,DAPAR;
@@ -2383,9 +2191,7 @@ int Photosynthesis_GECROS(gecros *self)
 	  double WLL,PWP;
 	  //*/
 	  double DeltaZ = pSo->fDeltaZ;
-	  //double DELT = (double)1;
-	  double DELT = (double)xpn->pTi->pTimeStep->fAct;
-	  //double HOUR = 12 - 0.5 * self->DAYL + self->DAYL*(double)xpn->pTi->pSimTime->fTimeDay;
+	
       double HOUR = (double)xpn->pTi->pSimTime->fTimeDay*24; //Hong
       
       double CO2A; //SG20190212
@@ -2402,15 +2208,8 @@ int Photosynthesis_GECROS(gecros *self)
 //input parameters
       //Begin of Hong
       DDTR = (double) pCl->pWeather->fSolRad*1E6; //[J/(m2*d)]
-	  //DDTR = (double) pCl->pWeather->fSolRad*1E6*24/self->DAYL; //Hong //[J/(m2*d)]
-	  //DDTR = (double) pCl->pWeather->fGlobalStrahlung*1E6*24/self->DAYL; //Hong
-	  //DDTR = (double) pCl->pWeather->fGlobalStrahlung*DELT*24/self->DAYL*1E6; //Hong
-      //DDTR = (double) *(self->fSolRad)*1E6; //[J/(m2*d)]
 	  TMAX = (double) self->weather.fTempMax; //[°C]
 	  TMIN = (double) self->weather.fTempMin;  //[°C]
-	  //TMAX = (double)xpn->pCl->pWeather->fTempMax;    //[°C] //Hong for test
-      //TMIN = (double)xpn->pCl->pWeather->fTempMin;    //[°C]	 
-	  //TMPA = (double) *(self->TairMean); //[°C]
 	  TMPA = (double) pCl->pWeather->fTempAir; //[°C]
        //End of Hong
       d1   = (double)0.611 * exp((double)17.269*TMAX/((double)237.3+TMAX));
@@ -2609,20 +2408,20 @@ int   BiomassGrowth_GECROS(gecros *self)
 	  
 	  PMANAGEMENT pMa = xpn->pMa;
 	  PPLANT      pPl = xpn->pPl;
-      PWLAYER      pWL   = xpn->pWa->pWLayer;
+    //  PWLAYER      pWL   = xpn->pWa->pWLayer;
 
       PPLTCARBON   pPltC = pPl->pPltCarbon;
       PPLTNITROGEN pPltN = pPl->pPltNitrogen;
       PGENOTYPE    pGen  = pPl->pGenotype;
       PBIOMASS     pPltB = pPl->pBiomass;
       PDEVELOP     pDev  = pPl->pDevelop;
-      PCANOPY      pCan  = pPl->pCanopy;
+     // PCANOPY      pCan  = pPl->pCanopy;
 
       PGECROSBIOMASS    pGPltB = self->pGecrosPlant->pGecrosBiomass;
       PGECROSCARBON     pGPltC = self->pGecrosPlant->pGecrosCarbon;
       PGECROSNITROGEN   pGPltN = self->pGecrosPlant->pGecrosNitrogen;
       PGECROSCANOPY     pGCan  = self->pGecrosPlant->pGecrosCanopy;
-      PGECROSPARAMETER  pGPar  = self->pGecrosPlant->pGecrosParameter;
+      //PGECROSPARAMETER  pGPar  = self->pGecrosPlant->pGecrosParameter;
 	  PGECROSSOIL       pGS    = self->pGecrosPlant->pGecrosSoil;
       //double            fTemp;
 
@@ -2838,12 +2637,8 @@ int   BiomassGrowth_GECROS(gecros *self)
 	  TDU  = (double)pDev->fDTT;
 	  CTDU = (double)pDev->fCumTDU;
 	//Begin of Hong
-      //TMAX = (double)pCl->pWeather->fTempMax;    //[°C]
-      //TMIN = (double)pCl->pWeather->fTempMin;    //[°C]
 	  TMAX = (double) self->weather.fTempMax;     //[°C]
       TMIN = (double) self->weather.fTempMin;     //[°C]	  
-	  //TMAX = (double)xpn->pCl->pWeather->fTempMax;    //[°C] //Hong for test
-      //TMIN = (double)xpn->pCl->pWeather->fTempMin;    //[°C]
 	//End of Hong
 	  DIFS = (double)pGS->fDiffSoilAirTemp;       //[°C]
 	  TBD  = (double)self->TBD;//base temperature for phenology     [°C]  crop  table 3, p47 
@@ -3017,8 +2812,6 @@ int   BiomassGrowth_GECROS(gecros *self)
       //Begin of Hong
 	  TMAX = (double) self->weather.fTempMax;     //[°C]
       TMIN = (double) self->weather.fTempMin;     //[°C]	  
-	  //TMAX = (double)xpn->pCl->pWeather->fTempMax;    //[°C] //Hong for test
-      //TMIN = (double)xpn->pCl->pWeather->fTempMin;    //[°C]
 	  //End of Hong
 	  DIFS = (double)pGS->fDiffSoilAirTemp;       //[°C]
 	  /*
@@ -3078,12 +2871,8 @@ int   BiomassGrowth_GECROS(gecros *self)
 
 //*/   
       //Begin of Hong
-      //TMAX   = (double) pCl->pWeather->fTempMax;    //[°C]
-      //TMIN   = (double) pCl->pWeather->fTempMin;    //[°C]
 	  TMAX = (double) self->weather.fTempMax;     //[°C]
       TMIN = (double) self->weather.fTempMin;     //[°C]	  
-	  //TMAX = (double)xpn->pCl->pWeather->fTempMax;    //[°C] //Hong for test
-      //TMIN = (double)xpn->pCl->pWeather->fTempMin;    //[°C]
 	  //End of Hong
 	  DIFS   = (double)pGS->fDiffSoilAirTemp;       //[°C]
 	  DAVTMP = 0.29*TMIN + 0.71*TMAX;
@@ -3117,7 +2906,7 @@ int   BiomassGrowth_GECROS(gecros *self)
       
       DERI   = max(0.,(SHSAN - SHSA)/(0.001*NTOT/CTOT));
       pGPltB->fShtToRtActivity = (double)DERI;
-      ///*
+      /*
       //%-- Nitrogen partitioning between shoots and roots
       HNCCR  = LNCI*exp(-0.4*DS);
       NDEMD  = INSW(DS-1., WSH*(HNCCR-HNC)*(1.+NRT/NSH)/DELT, 0.);
@@ -3139,7 +2928,7 @@ int   BiomassGrowth_GECROS(gecros *self)
       //RNFIXR = NFIX - min(NDEM,NFIXR/TCP);//rate
       //pGPltN->fNFixReserveChangeR = (double)RNFIXR;
            
-      ///*
+      /*
       pGPltN->fNDmndActDrv     = (double)NDEMA;
       pGPltN->fNDemand         = (double)NDEM;
       //pPltN->fTotalDemand      = (double)NDEM / (double)10;// 1.0 [kg N ha-1] = [g N m-2]  
@@ -3311,14 +3100,6 @@ int   BiomassGrowth_GECROS(gecros *self)
 
 	  RWSO   = RCSO / CFO;
       RWRT   = RCSRT/ CFV + RCRVR/0.444;
-if ((xpn_time_compare_date(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,
-		    2010,7,7) ==0 ))
-//if (xpn->pTi->pSimTime->fTimeDay>0.555&&xpn->pTi->pSimTime->fTimeDay<0.56)
-{	
-	
-//printf("RCRVR: %f\n", RCRVR);
-//printf("WRT: %f\n", WRT);
-}
 
       //output
       pGPltB->fLeafWeightLossR = (double)LWLV;
@@ -3942,7 +3723,7 @@ int     PotentialNitrogenUptake_GECROS(gecros *self)
 	  double SLNMIN = (double)self->SLNMIN;
 
       //double DELT = (double)1;
-	  double DELT = (double)xpn->pTi->pTimeStep->fAct;
+	 // double DELT = (double)xpn->pTi->pTimeStep->fAct;
 //-------------------------------------------------------------------------------------
       ///*
       //%** input ***
@@ -4523,7 +4304,7 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
       //Input: FVPD Param = INSW(C3C4, 0.195127, 0.116214);
 
       //Output: PPCAN,APCANS,APCANN,APCAN,PTCAN,ATCAN,PESOIL,AESOIL,DIFS,DIFSU,DIFSH,DAPAR
-	  expertn_modul_base *xpn = &(self->parent);//Hong
+	 // expertn_modul_base *xpn = &(self->parent);//Hong
       //int     i,j;
       //double  SUNRIS,HOUR;
       double  KBPPAR,KBPNIR;
@@ -5875,7 +5656,7 @@ int gecros_Germination(gecros *self)
 	int iEmergence;
 
     PPLANT pPl = xpn->pPl;
-	PDEVELOP pDev=pPl->pDevelop;
+//	PDEVELOP pDev=pPl->pDevelop;
 	PMANAGEMENT pMa = xpn->pMa;
 
 	//=========================================================================================
@@ -6080,7 +5861,7 @@ double gecros_Vernalization_CERES(gecros *self)
 double gecros_DailyVernalization_SPASS(double fTempMin,double fTempMax,double fTemp, PRESPONSE pResp,
 							  	   double fMinTemp, double fOptTemp, double  fMaxTemp, gecros *self)
      {
-     int         iLoop;
+     //int         iLoop;
      //double         fTemp,fTempFunc,fVernUnit;
      double         fTempFunc,fVernUnit; 
      //Daily vernalization unit
@@ -6136,7 +5917,7 @@ double gecros_PlantTemperature(gecros *self)
      expertn_modul_base *xpn = &(self->parent);
 	 
 	 double fTempMinCrop,fTempMaxCrop,fTempAveCrop;
-     char *lpCropType    =xpn->pPl->pGenotype->acCropCode;
+    // char *lpCropType    =xpn->pPl->pGenotype->acCropCode;
      double fTempMax        =(double) self->weather.fTempMax; 
      double fTempMin        =(double) self->weather.fTempMin;
      double fSnow            =xpn->pCl->pWeather->fSnow;

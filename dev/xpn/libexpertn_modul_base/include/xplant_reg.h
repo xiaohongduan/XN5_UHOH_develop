@@ -8,8 +8,8 @@ xpn_register_var_init_pdouble( var_list, pPl->pRoot->fTotalLength,"pPl.pRoot.fTo
 xpn_register_var_init_rec_struct( var_list,STLAYERROOT, pPl->pRoot->pLayerRoot,xpn_register_var_init_pdouble,fActLayWatUpt,"pPl.pRoot.pLayerRoot.fActLayWatUpt",0.0); \
 xpn_register_var_init_rec_struct( var_list,STLAYERROOT, pPl->pRoot->pLayerRoot,xpn_register_var_init_pdouble,fLengthDens,"pPl.pRoot.pLayerRoot.fLengthDens",0.0); \
 xpn_register_var_init_rec_struct( var_list,STLAYERROOT, pPl->pRoot->pLayerRoot,xpn_register_var_init_pdouble,fLengthDensFac ,"pPl.pRoot.pLayerRoot.fLengthDensFac ",0.0); \
-xpn_register_var_init_rec_struct( var_list,STLAYERROOT, pPl->pRoot->pLayerRoot,xpn_register_var_init_pdouble,fDeadRootWeight_dt ,"pPl.pRoot.pLayerRoot.fDeadRootWeight_dt ",0.0); \
-xpn_register_var_init_rec_struct( var_list,STLAYERROOT, pPl->pRoot->pLayerRoot,xpn_register_var_init_pdouble,fDeadRootWeight_Layer ,"pPl.pRoot.pLayerRoot.fDeadRootWeight_Layer ",0.0); \
+xpn_register_var_init_rec_struct( var_list,STLAYERROOT, pPl->pRoot->pLayerRoot,xpn_register_var_init_pdouble,fDeadFineRootWeight_dt ,"pPl.pRoot.pLayerRoot.fDeadFineRootWeight_dt ",0.0); \
+xpn_register_var_init_rec_struct( var_list,STLAYERROOT, pPl->pRoot->pLayerRoot,xpn_register_var_init_pdouble,fDeadGrossRootWeight_dt ,"pPl.pRoot.pLayerRoot.fDeadGrossRootWeight_dt ",0.0); \
 xpn_register_var_init_pdouble( var_list, pPl->pPltClimate->fPlantAlbedo,"pPl.pPltClimate.fPlantAlbedo",0.23);\
 xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fRoughnessHeat,"pPl.pCanopy.fRoughnessHeat",0.01);\
 xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fRoughnessVapor,"pPl.pCanopy.fRoughnessVapor",0.01);\
@@ -94,7 +94,4 @@ xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fDeadLeafWeight,"pPl.pBi
 xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fDeadStemWeight,"pPl.pBiomass.fDeadStemWeight",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fDeadRootWeight,"pPl.pBiomass.fDeadRootWeight",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fDeadLeafWeight_dt,"pPl.pBiomass.fDeadLeafWeight pro time step",0.0);\
-xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fDeadStemWeight_dt,"pPl.pBiomass.fDeadStemWeight pro time step",0.0);\
-xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fUsedLeafWeight,"pPl.pBiomass.fUsedLeafWeight",0.0);\
-xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fUsedRootWeight,"pPl.pBiomass.fUsedRootWeight",0.0);\
-xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fUsedStemWeight,"pPl.pBiomass.fUsedStemWeight",0.0);
+xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fDeadStemWeight_dt,"pPl.pBiomass.fDeadStemWeight pro time step",0.0);

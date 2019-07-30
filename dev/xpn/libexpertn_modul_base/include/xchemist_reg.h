@@ -60,8 +60,10 @@ xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var
 xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fCMtbLitter,"pCh.pCLayer.fCMtbLitter",0.0);\
 xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fNGrossRootLitter,"pCh.pCLayer.fNGrossRootLitter",0.0);\
 xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fCGrossRootLitter,"pCh.pCLayer.fCGrossRootLitter",0.0);\
+xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fCNGrossRootLitter,"pCh.pCLayer.fCNGrossRootLitter",30.0);\
 xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fNFineRootLitter,"pCh.pCLayer.fNFineRootLitter",0.0);\
 xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fCFineRootLitter,"pCh.pCLayer.fCFineRootLitter",0.0);\
+xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fCNFineRootLitter,"pCh.pCLayer.fCNFineRootLitter",30.0);\
 xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fChemX,"pCh.pCLayer.fChemX",0.0);\
 xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fNO3Nmgkg,"pCh.pCLayer.fNO3Nmgkg",0.0);\
 xpn_register_var_init_rec_struct( var_list,CLAYER, pCh->pCLayer,xpn_register_var_init_pdouble,fNH4Nmgkg,"pCh.pCLayer.fNH4Nmgkg",0.0);\
@@ -230,10 +232,13 @@ xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fCMicLitterSurf,"pCh.pC
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fNMicLitterSurf,"pCh.pCProfile.fNMicLitterSurf",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fCLeafLitterSurf,"pCh.pCProfile.fCLeafLitterSurf",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fNLeafLitterSurf,"pCh.pCProfile.fNLeafLitterSurf",0.0);\
+xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fCNLeafLitterSurf,"pCh.pCProfile.fCNLeafLitterSurf",30.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fCBranchLitterSurf,"pCh.pCProfile.fCBranchLitterSurf",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fNBranchLitterSurf,"pCh.pCProfile.fNBranchLitterSurf",0.0);\
+xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fCNBranchLitterSurf,"pCh.pCProfile.fCNBranchLitterSurf",30.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fCStemLitterSurf,"pCh.pCProfile.fCStemLitterSurf",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fNStemLitterSurf,"pCh.pCProfile.fNStemLitterSurf",0.0);\
+xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fCNStemLitterSurf,"pCh.pCProfile.fCNStemLitterSurf",30.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fCLitter,"pCh.pCProfile.fCLitter",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fNLitter,"pCh.pCProfile.fNLitter",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fCNLitter,"pCh.pCProfile.fCNLitter",0.0);\
@@ -303,9 +308,11 @@ xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dNO3DenitCum,"pCh.pCPro
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dN2ODenitCum,"pCh.pCProfile.dN2ODenitCum",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dN2OEmisCum,"pCh.pCProfile.dN2OEmisCum",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dNOEmisCum,"pCh.pCProfile.dNOEmisCum",0.0);\
+xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dNEmisCum,"pCh.pCProfile.dNEmisCum",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dN2EmisCum,"pCh.pCProfile.dN2EmisCum",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dNH3VolatCum,"pCh.pCProfile.dNH3VolatCum",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dCO2EmisCum,"pCh.pCProfile.dCO2EmisCum",0.0);\
+xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dCO2EmisCumSum,"pCh.pCProfile.dCO2EmisCumSum",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dCO2SurfEmisCum,"pCh.pCProfile.dCO2SurfEmisCum",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dCH4ImisCum,"pCh.pCProfile.dCH4ImisCum",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->dN2ODrainCum,"pCh.pCProfile.dN2ODrainCum",0.0);\
@@ -366,6 +373,10 @@ xpn_register_var_init_pdouble( var_list, pCh->pAtmos->dustr1,"pCh.pAtmos.dustr1"
 xpn_register_var_init_pdouble( var_list, pCh->pAtmos->dustr2,"pCh.pAtmos.dustr2",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pAtmos->dustr3,"pCh.pAtmos.dustr3",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pAtmos->dustr4,"pCh.pAtmos.dustr4",0.0);\
-xpn_register_var_init_pdouble( var_list, pCh->pAtmos->dustr5,"pCh.pAtmos.dustr5",0.0);
+xpn_register_var_init_pdouble( var_list, pCh->pAtmos->dustr5,"pCh.pAtmos.dustr5",0.0);\
+xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fUsedRootWeight,"pCh.pCProfile.fUsedRootWeight",0.0);\
+xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fUsedLeafWeight,"pCh.pCProfile.fUsedLeafWeight",0.0);\
+xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fUsedBranchWeight,"pCh.pCProfile.fUsedBranchWeight",0.0);\
+xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fUsedStemWeight,"pCh.pCProfile.fUsedStemWeight",0.0);
 
 

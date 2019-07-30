@@ -70,6 +70,23 @@ int stickstoff_load_config(stickstoff *self)
 			return -1;
 		}
 
+    //Test of Hong 20190514
+	//START SOIL VALUES C-, N-POOLS
+     //20003, 20008, 20009
+     //[start values general]
+//20003
+/*GET_INI_INT_ARRAY(layers,layers_len,"start values general","layers");
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCLitter,"c_litter","start values general",PCLAYER,xpn->pCh->pCLayer);
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNLitter,"n_litter","start values general",PCLAYER,xpn->pCh->pCLayer);
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCManure,"c_manure","start values general",PCLAYER,xpn->pCh->pCLayer);
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNManure,"n_manure","start values general",PCLAYER,xpn->pCh->pCLayer);
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCHumus,"c_humus","start values general",PSLAYER,xpn->pSo->pSLayer);
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNHumus,"n_humus","start values general",PSLAYER,xpn->pSo->pSLayer);
+*/
+G_FREE_IF_NOT_0(layers);
+	layers_len=0;
+	//End of Test
+
 	//TRANSFORMATION RATES MODEL PARAMETERS
 	//20002
 	//[transformation]
