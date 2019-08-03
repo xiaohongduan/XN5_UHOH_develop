@@ -2109,14 +2109,14 @@ if(pPl->pModelParam->cResidueCarryOff==0)
                     lignin_to_N=((pPl->pGenotype->lig_stem*pPl->pBiomass->fStemWeight+pPl->pGenotype->lig_leaves*pPl->pBiomass->fLeafWeight)/fNResidue);
                     lignin_to_N_StandCropRes=(pPl->pGenotype->lig_stem/pPl->pPltNitrogen->fStemActConc);	
 
-                    fResidues_to_AOM2_part_LN = 0.99-(0.018*lignin_to_N); // formula from CENTURY, Parton (1992), probably a modification necessary for DAISY
+                    fResidues_to_AOM2_part_LN = (pCh->pCProfile->L_N_intercept)-(pCh->pCProfile->L_N_slope*lignin_to_N); // formula from CENTURY, Parton (1992), probably a modification necessary for DAISY
                     if (fResidues_to_AOM2_part_LN<=0.01)
                     {
                         fResidues_to_AOM2_part_LN=0.01;
                     }
 			
                     //fStandCropRes_to_AOM2_part_LN = global partitioning factor for Standing crop residues, used in modules daisy_miner.c, miner.c (leachn) and schaf_manag.c (incorporation)
-                    pCP->fStandCropRes_to_AOM2_part_LN = 0.99-(0.018*lignin_to_N_StandCropRes); // formula from CENTURY, Parton (1992), probably a modification necessary for DAISY
+                    pCP->fStandCropRes_to_AOM2_part_LN = (pCh->pCProfile->L_N_intercept)-(pCh->pCProfile->L_N_slope*lignin_to_N_StandCropRes); // formula from CENTURY, Parton (1992), probably a modification necessary for DAISY
                     if (pCP->fStandCropRes_to_AOM2_part_LN<=0.01)
                     {
                         pCP->fStandCropRes_to_AOM2_part_LN=0.01;
@@ -2208,7 +2208,7 @@ if(pPl->pModelParam->cResidueCarryOff==0)
                                                      {
                                                          					double lignin_to_N,fResidues_to_AOM2_part_LN,fNmanure;
 					lignin_to_N= ((pPl->pBiomass->fRootWeight+pPl->pBiomass->fDeadRootWeight)*pPl->pGenotype->lig_roots/(pPl->pPltNitrogen->fRootCont+pPl->pPltNitrogen->fDeadRootNw));
-					fResidues_to_AOM2_part_LN = 0.99-(0.018*lignin_to_N);					
+					fResidues_to_AOM2_part_LN = (pCh->pCProfile->L_N_intercept)-(pCh->pCProfile->L_N_slope*lignin_to_N);					
 					if (fResidues_to_AOM2_part_LN<=0)
 				{
 					fResidues_to_AOM2_part_LN=0;
