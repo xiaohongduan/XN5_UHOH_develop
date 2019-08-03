@@ -280,8 +280,10 @@ G_FREE_IF_NOT_0(layers);
     //Moritz Switch for dynamic AOM 27.06.2019
      GET_INI_INT(xpn->pCh->pCProfile->dyn_AOM_div ,"mineralisation","dyn_AOM_div");
      GET_INI_INT(xpn->pCh->pCProfile->fSOM1_new ,"mineralisation","fSOM1_new");
-     GET_INI_INT(xpn->pCh->pCProfile->dyn_CUE_AOM ,"mineralisation","dyn_CUE_AOM");     
-   //End of Moritz
+     GET_INI_INT(xpn->pCh->pCProfile->dyn_CUE_AOM ,"mineralisation","dyn_CUE_AOM");  
+	 GET_INI_DOUBLE_OPTIONAL(xpn->pCh->pCProfile->L_N_slope,"mineralisation","L_N_slope",0.018); //variable slope of dynamic L/N division (default = Parton 1987)
+     GET_INI_DOUBLE_OPTIONAL(xpn->pCh->pCProfile->L_N_intercept,"mineralisation","L_N_intercept",0.85); //variable intercept of dynamic L/N division(default = Parton 1987)
+      //End of Moritz
    
 	//Hong: Temperaturabhängigkeit für DAISY Abbauraten (für Scott Demyan)
 	GET_INI_INT(self->iTempCorr,"mineralisation","iTempCorr");	
