@@ -337,7 +337,10 @@ typedef struct cProfile
 	int  dyn_AOM_div; //Switch ot activate new dynamic AOM division by Moritz 
 	int  fSOM1_new; //Switch ot activate new fSOM1 partitioning at BOM death by Moritz     
 	int  dyn_CUE_AOM; //Switch ot activate new dynamic CUE for AOM division by Moritz     
-	double  fStandCropRes_to_AOM2_part_LN; //End of Moritz
+	double  fStandCropRes_to_AOM2_part_LN; 
+    double  L_N_slope; 
+    double  L_N_intercept; 
+    //End of Moritz
 	double  fCStrLitterSurf;
 	double  fNStrLitterSurf;
 	double  fLignFracStrLitSurf;
