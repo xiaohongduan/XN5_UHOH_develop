@@ -2963,7 +2963,7 @@ int   BiomassGrowth_GECROS(gecros *self)
       RMLD   = 0.06*(1.-FCSH)*ASSA;
       RRMUL  = (RMUN+RMUA+RMUS+RMLD-RMUL)/DELT;//rate
 	  pGPltC->fUptRespCostR = (double)RRMUL;
-      //Moritz Root respiration
+      //Moritz Root respiration added 07.08.2019
         double RM_root,RG_root,Resp_root,Resp_root_hr;
       RM_root = RMUN+RMUA+RMUS;
       RG_root = 44./12.*((1.-YGV)/YGV*(RCSRT+LCRT));
