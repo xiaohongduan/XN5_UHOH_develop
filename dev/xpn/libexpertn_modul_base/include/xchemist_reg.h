@@ -223,6 +223,7 @@ xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fStandCropRes_to_AOM2_p
 xpn_register_var_init_pint( var_list, pCh->pCProfile->dyn_AOM_div,"pCh.pCProfile.dyn_AOM_div",0.0);\
 xpn_register_var_init_pint( var_list, pCh->pCProfile->fSOM1_new,"pCh.pCProfile.fSOM1_new",0.0);\
 xpn_register_var_init_pint( var_list, pCh->pCProfile->dyn_CUE_AOM,"pCh.pCProfile.dyn_CUE_AOM",0.0);\
+xpn_register_var_init_pdouble( var_list, pCh->pCProfile->Resp_root,"pCh.pCProfile.Resp_root",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->L_N_slope,"pCh.pCProfile.L_N_slope",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->L_N_intercept,"pCh.pCProfile.L_N_intercept",0.0);\
 xpn_register_var_init_pdouble( var_list, pCh->pCProfile->fCStrLitterSurf,"pCh.pCProfile.fCStrLitterSurf",0.0);\
