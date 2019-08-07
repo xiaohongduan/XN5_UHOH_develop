@@ -482,7 +482,7 @@ int xpn_output_reg_var(xpn_output *self)
  	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->dyn_AOM_div,"output.Surface residues.dyn_AOM_div. dimensionless",0.0);	
  	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fSOM1_new,"output.Surface residues.fSOM1_new. dimensionless",0.0);	   
  	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->dyn_CUE_AOM,"output.Surface residues.dyn_CUE_AOM. dimensionless",0.0);	
-
+ 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Resp_root,"output.Plant.Root respiration. kg CO2 - C ha-1 d-1",0.0);	
 	//surface residues
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCStandCropRes,"output.Surface residues.C standing Crop residue. kg C ha-1",0.0);	
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNStandCropRes,"output.Surface residues.N standing Crop residue. kg N ha-1",0.0);
@@ -2308,7 +2308,7 @@ int xpn_output_calc_var(xpn_output *self)
 	self->dyn_AOM_div = xpn->pCh->pCProfile->dyn_AOM_div;
 	self->fSOM1_new = xpn->pCh->pCProfile->fSOM1_new;
 	self->dyn_CUE_AOM = xpn->pCh->pCProfile->dyn_CUE_AOM;    
-    
+    self->Resp_root = xpn->pCh->pCProfile->Resp_root;  
  
 	self->fCStandCropRes = xpn->pCh->pCProfile->fCStandCropRes;
 	self->fNStandCropRes = xpn->pCh->pCProfile->fNStandCropRes;

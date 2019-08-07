@@ -2963,6 +2963,15 @@ int   BiomassGrowth_GECROS(gecros *self)
       RMLD   = 0.06*(1.-FCSH)*ASSA;
       RRMUL  = (RMUN+RMUA+RMUS+RMLD-RMUL)/DELT;//rate
 	  pGPltC->fUptRespCostR = (double)RRMUL;
+      //Moritz Root respiration
+        double RM_root,RG_root,Resp_root,Resp_root_hr;
+      RM_root = RMUN+RMUA+RMUS;
+      RG_root = 44./12.*((1.-YGV)/YGV*(RCSRT+LCRT));
+      Resp_root = (RM_root + RG_root)/1000*12/44*10000 ; // to kg CO2 - C ha-1 d-1
+      Resp_root_hr = Resp_root/24;
+      xpn->pCh->pCProfile->Resp_root = Resp_root; 
+      //End Moritz
+      
 	  //pGPltC->fUptRespCostR =0.0;//Hong
 	  //RRMUL=0.0;//Hong
       ///*
