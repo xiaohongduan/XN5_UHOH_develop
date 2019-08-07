@@ -176,7 +176,7 @@ struct _xpn_output
     double rooting_depth;
 	
 	//Moritz variables
-    double dyn_AOM_div,fSOM1_new,dyn_CUE_AOM;
+    double dyn_AOM_div,fSOM1_new,dyn_CUE_AOM,Resp_root;
 	double fCStandCropRes,fNStandCropRes,fC_NStandCropRes,fStandCropRes_to_AOM2_part_LN,fCLitterSurf,fNLitterSurf,fC_NLitterSurf;
 	double fCManureSurf,fNManureSurf,fC_NManureSurf,fCHumusSurf,fNHumusSurf,fC_NHumusSurf,rooting_depth_Mo,fNH4NSurf,fNO3NSurf;
 	//End Moritz
