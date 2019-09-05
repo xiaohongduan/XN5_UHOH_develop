@@ -278,11 +278,11 @@ G_FREE_IF_NOT_0(layers);
 	GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNitrifNO3NH4Ratio,"NitrifNO3NH4Ratio","mineralisation",PCPARAM,xpn->pCh->pCParam);
 	
     //Moritz Switch for dynamic AOM 27.06.2019
-     GET_INI_INT(xpn->pCh->pCProfile->dyn_AOM_div ,"mineralisation","dyn_AOM_div");
-     GET_INI_INT(xpn->pCh->pCProfile->fSOM1_new ,"mineralisation","fSOM1_new");
-     GET_INI_INT(xpn->pCh->pCProfile->dyn_CUE_AOM ,"mineralisation","dyn_CUE_AOM");  
-	 GET_INI_DOUBLE_OPTIONAL(xpn->pCh->pCProfile->L_N_slope,"mineralisation","L_N_slope",0.018); //variable slope of dynamic L/N division (default = Parton 1987)
-     GET_INI_DOUBLE_OPTIONAL(xpn->pCh->pCProfile->L_N_intercept,"mineralisation","L_N_intercept",0.85); //variable intercept of dynamic L/N division(default = Parton 1987)
+     GET_INI_INT_OPTIONAL_MO(xpn->pCh->pCProfile->dyn_AOM_div ,"mineralisation","dyn_AOM_div",0);
+     GET_INI_INT_OPTIONAL_MO(xpn->pCh->pCProfile->fSOM1_new ,"mineralisation","fSOM1_new",0);
+     GET_INI_INT_OPTIONAL_MO(xpn->pCh->pCProfile->dyn_CUE_AOM ,"mineralisation","dyn_CUE_AOM",0);  
+	 GET_INI_DOUBLE_OPTIONAL_MO(xpn->pCh->pCProfile->L_N_slope,"mineralisation","L_N_slope",0.018); //variable slope of dynamic L/N division (default = Parton 1987)
+     GET_INI_DOUBLE_OPTIONAL_MO(xpn->pCh->pCProfile->L_N_intercept,"mineralisation","L_N_intercept",0.85); //variable intercept of dynamic L/N division(default = Parton 1987)
       //End of Moritz
    
 	//Hong: Temperaturabhängigkeit für DAISY Abbauraten (für Scott Demyan)
