@@ -3173,8 +3173,10 @@ void expertn_database_help_func_init_Soil_Organic_Matter(expertn_modul_base *sel
                        File eingelesen und sollte nicht ueberschrieben werden   */
 
                     pCL->fCLitter = 0.0;
-                    pCL->fNLitter = 0.1;
-                    pCL->fLitterCN = 0.1;
+//                    pCL->fNLitter = 0.1;
+//                    pCL->fLitterCN = 0.1; 
+                     pCL->fNLitter = 1e-6;
+                     pCL->fLitterCN = 1e-6;
 
                 }
         }
@@ -3589,8 +3591,11 @@ void expertn_database_help_func_set_standard_soil_paramter(expertn_modul_base *s
 			pSLayer->fImpedGasA = 0.0;
 			pSLayer->fImpedGasB = 0.0;
 
-			if (pSLayer->fCHumus==-99.0) pSLayer->fCHumus = pSLayer->fHumus/1.724;
-			if (pSLayer->fNHumus==-99.0) pSLayer->fNHumus = pSLayer->fCHumus/10.0;
+//			if (pSLayer->fCHumus==-99.0) pSLayer->fCHumus = pSLayer->fHumus/1.724;
+//			if (pSLayer->fNHumus==-99.0) pSLayer->fNHumus = pSLayer->fCHumus/10.0;
+//SG20190731
+			if (pSLayer->fCHumus<0) pSLayer->fCHumus = pSLayer->fHumus/1.724;
+			if (pSLayer->fNHumus<0) pSLayer->fNHumus = pSLayer->fCHumus/10.0;
 
 			pSWater->fContSatCER = 0.0;
 

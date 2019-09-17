@@ -159,7 +159,7 @@
 		if (key_exists==FALSE) \
 			{ \
 				gchar *S;\
-				S = g_strdup_printf  ("Init var %s.%s (in file %s) is missing. Standard Value (%d) taken instead!\n",groupname,key,filename,std_value);\
+				S = g_strdup_printf  ("Init var %s.%s (in file %s) is missing. Default Value (%d) taken instead!\n",groupname,key,filename,std_value);\
 				PRINT_ERROR(S);\
 				g_free(S);\
 			}\

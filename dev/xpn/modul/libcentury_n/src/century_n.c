@@ -234,6 +234,29 @@ int century_n_load_config(century_n *self,const char* configfile)
 	if (fNManure!=NULL) g_free(fNManure);
 	if (fCHumus!=NULL) g_free(fCHumus);
 	if (fNHumus!=NULL) g_free(fNHumus);
+    
+//SG 20190802: if [litter] = -99.0
+	 for (pCLayer=xpn->pCh->pCLayer->pNext,pSLayer=xpn->pSo->pSLayer->pNext;pCLayer->pNext!=NULL;pCLayer=pCLayer->pNext,pSLayer=pSLayer->pNext)
+		{
+		if (pCLayer->fCLitter<0 ||pCLayer->fNLitter<0)
+		   {
+			   pCLayer->fCLitter = pCLayer->fCFOMSlow; 
+               pCLayer->fNLitter = pCLayer->fNFOMSlow; 
+		   }
+	    if (pCLayer->fCManure <0 || pCLayer->fNManure <0)
+           {
+			   pCLayer->fCManure = pCLayer->fCFOMFast; 
+               pCLayer->fNManure = pCLayer->fNFOMFast; 
+		    }
+	
+		if (pSLayer->fCHumus <0 ||pSLayer->fNHumus<0)
+           {
+				pSLayer->fCHumus =pSLayer->fHumus * 0.58; 
+				pSLayer->fNHumus =pSLayer->fCHumus * 0.1; 				   
+           }				   
+	     }
+//End of SG
+
 	
 	// For the estimation of Humus C and N, see the ’Century Workbook’ Chap. 2. Label ’20004’ in *.xnm file
 	GET_INI_DOUBLE(pCProfile->fCLitterSurf,"surface","fCLitterSurf");

@@ -42,6 +42,9 @@ int stickstoff_load_config(stickstoff *self)
 {
 	GError *error = NULL;
 	expertn_modul_base *xpn = &(self->parent);
+	PCLAYER		pCL;  //SG20190730
+	PSLAYER		pSL;
+
 	GKeyFile *keyfile;
 	GKeyFileFlags flags;
 	char *filename;
@@ -70,20 +73,43 @@ int stickstoff_load_config(stickstoff *self)
 			return -1;
 		}
 
-    //Test of Hong 20190514
+
 	//START SOIL VALUES C-, N-POOLS
      //20003, 20008, 20009
      //[start values general]
-//20003
-/*GET_INI_INT_ARRAY(layers,layers_len,"start values general","layers");
-GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCLitter,"c_litter","start values general",PCLAYER,xpn->pCh->pCLayer);
-GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNLitter,"n_litter","start values general",PCLAYER,xpn->pCh->pCLayer);
-GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCManure,"c_manure","start values general",PCLAYER,xpn->pCh->pCLayer);
-GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNManure,"n_manure","start values general",PCLAYER,xpn->pCh->pCLayer);
-GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCHumus,"c_humus","start values general",PSLAYER,xpn->pSo->pSLayer);
-GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNHumus,"n_humus","start values general",PSLAYER,xpn->pSo->pSLayer);
-*/
-G_FREE_IF_NOT_0(layers);
+    //20003 
+    GET_INI_INT_ARRAY(layers,layers_len,"start values general","layers");
+    GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCLitter,"c_litter","start values general",PCLAYER,xpn->pCh->pCLayer);
+    GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNLitter,"n_litter","start values general",PCLAYER,xpn->pCh->pCLayer);
+    GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCManure,"c_manure","start values general",PCLAYER,xpn->pCh->pCLayer);
+    GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNManure,"n_manure","start values general",PCLAYER,xpn->pCh->pCLayer);
+    GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCHumus,"c_humus","start values general",PSLAYER,xpn->pSo->pSLayer);
+    GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNHumus,"n_humus","start values general",PSLAYER,xpn->pSo->pSLayer);
+    
+      //SG20190730
+      // if [start values general] = -99.0
+	 for (pSL=xpn->pSo->pSLayer->pNext,pCL = xpn->pCh->pCLayer->pNext; pSL!=NULL,pCL!=NULL; pSL=pSL->pNext, pCL=pCL->pNext)
+		{
+		if (pCL->fCLitter<0 ||pCL->fNLitter<0)
+		   {
+			   pCL->fCLitter =  0; 
+               pCL->fNLitter = 0; 
+		   }
+	    if (pCL->fCManure <0 || pCL->fNManure <0)
+           {
+			   pCL->fCManure = 0; 
+               pCL->fNManure = 0; 
+		    }
+	
+		if (pSL->fCHumus <0 ||pSL->fNHumus<0)
+            {
+				pSL->fCHumus =pSL->fHumus * 0.58; 
+				pSL->fNHumus =pSL->fCHumus * 0.1; 				   
+            }				   
+	     }
+// End  SG20190730
+
+    G_FREE_IF_NOT_0(layers);
 	layers_len=0;
 	//End of Test
 
