@@ -483,51 +483,108 @@ int gecros_ActualTranspiration(gecros *self)
     if ((pPl->pDevelop->bPlantGrowth==TRUE)&&(pPl->pDevelop->bMaturity==FALSE))
 	{                   
 	 int L;
-	 double fExtWat;
+	 double TRWUpot, TRWUopt, TRWUmax;
+	 float RWUopt[MAXSCHICHT];
+	 float RWUmax[MAXSCHICHT];
 
 	 PSWATER		pSWL=pSo->pSWater->pNext;
 	 PWLAYER		pSLW=pWa->pWLayer->pNext; 
 	 PLAYERROOT 	pLR	=pPl->pRoot->pLayerRoot;
      
 	 pPl->pRoot->fUptakeR =(double)0.0;
-		
+	 RWUopt[0] = (double)0.0;
+	 RWUmax[0] = (double)0.0;
+     
+   	 TRWUpot = TRWUopt = TRWUmax = (double)0.0;
+
+    //SG20190911: In Gecros, water limitation is calculated on the basis of water availability in the entire rooted profile.
+	 // Current transpiration rate of one day, ATCAN is multiplied with time step = fActTranspdt.
+	 // fActTranspdt is first distributed evenly over the individual simulation layers (RWUopt[L]). If not enough water is available
+     // in one layer than should be absorbed, this must be compensated in the other layers. However, the maximum possible water 
+     // absorption in one layer (RWUmax[L]) cannot be exceeded. Therefore, the potential water absorption in one layer is the minimum 
+     // of optimal and maximum water absorption. 
+	 // In the first for loop, the potential, optimum and maximum water absorption for each layer is calculated and summed up 
+     // over the rooted profile (TRWUpot, TRWUopt and TRWUmax). In the second for loop, the water uptake is increased in those 
+     // layers where excess water is available. The increase is proportional to the excess water.
+
 	 for (L=1;L<=pSo->iLayers-2;L++)
 	 {
 		 pLR->fActLayWatUpt = (double)0;
+		 RWUopt[L] = (double)0;
+		 RWUmax[L] = (double)0;
 
 		 if(pPl->pRoot->fDepth > (double)0)
 		 {
           if(L*pSo->fDeltaZ<=pPl->pRoot->fDepth*(double)10)
 		  {
-	       //LR->fActLayWatUpt = self->fActTraDay*(double)min((double)1,pSo->fDeltaZ/(pPl->pRoot->fDepth*(double)10));
-	        pLR->fActLayWatUpt = pPl->pPltWater->fActTranspdt*(double)min((double)1,pSo->fDeltaZ/(pPl->pRoot->fDepth*(double)10));
-			//SG 20111122: es darf nur bis zum PWP entleert werden
-			fExtWat = max((double)0, pSLW->fContAct-pSWL->fContPWP);
-			pLR->fActLayWatUpt = (double)min(fExtWat, pLR->fActLayWatUpt);
-
+                 RWUopt[L] =  pPl->pPltWater->fActTranspdt*(double)min((double)1,pSo->fDeltaZ/(pPl->pRoot->fDepth*(double)10));
+                 RWUmax[L] = max(0.0,pSLW->fContAct-pSWL->fContPWP)*pSo->fDeltaZ; //SG20190911: *pSo->fDeltaZ -->[mm]
+		         //SG 20111122: es darf nur bis zum PWP entleert werden
+                 pLR->fPotLayWatUpt = (double)min(RWUmax[L], RWUopt[L]); // [mm]
 		  }
 	      else if (((L-1)*pSo->fDeltaZ<=pPl->pRoot->fDepth*(double)10)
 			      &&(pPl->pRoot->fDepth*(double)10 < L*pSo->fDeltaZ))
 		  {
-	        //pLR->fActLayWatUpt = self->fActTraDay*(double)min((double)1,
-	        pLR->fActLayWatUpt = pPl->pPltWater->fActTranspdt*(double)min((double)1,
-				                 (L*pSo->fDeltaZ-pPl->pRoot->fDepth*(double)10)/(pPl->pRoot->fDepth*(double)10));
-			//SG 20111122: es darf nur bis zum PWP entleert werden
-			fExtWat = max((double)0, pSLW->fContAct-pSWL->fContPWP);
-			pLR->fActLayWatUpt = (double)min(fExtWat, pLR->fActLayWatUpt);
-		  }
+                //SG 20111107: Anteil Wasseraufnahme der untersten durchwurzelten Schicht - Korrektur
+               //	        pLR->fActLayWatUpt = pPl->pPltWater->fActTranspdt*(double)min((double)1,
+               //				                 (L*pSo->fDeltaZ-pPl->pRoot->fDepth*(double)10)/(pPl->pRoot->fDepth*(double)10));
+                 RWUopt[L] = pPl->pPltWater->fActTranspdt*(double)min((double)1,
+                                  (pPl->pRoot->fDepth*(double)10-(L-1)*pSo->fDeltaZ)/(pPl->pRoot->fDepth*(double)10));
+                 RWUmax[L] = max(0.0,pSLW->fContAct-pSWL->fContPWP)*pSo->fDeltaZ; //SG20190911: *pSo->fDeltaZ -->[mm]
+                //SG 20111122: es darf nur bis zum PWP entleert werden
+				  pLR->fPotLayWatUpt = (double)min(RWUmax[L], RWUopt[L]); // [mm]
+          }
 		  else
-	      pLR->fActLayWatUpt = (double)0;
+          {
+               RWUopt[L] = (double)0;
+               RWUmax[L] = (double)0;
+               pLR->fPotLayWatUpt = (double)0;
+          }
+        }
+        else
+        {
+               RWUopt[L] = (double)0;
+               RWUmax[L] = (double)0;
+               pLR->fPotLayWatUpt = (double)0;
+        }
+
+        TRWUpot += pLR->fPotLayWatUpt;
+        TRWUopt += RWUopt[L];
+        TRWUmax += RWUmax[L];
+      
+        pSWL=pSWL->pNext;
+        pSLW=pSLW->pNext;
+        pLR =pLR ->pNext;
+	 }		
+
+	 pSWL = pSo->pSWater->pNext;
+	 pSLW = pWa->pWLayer->pNext; 
+	 pLR  = pPl->pRoot->pLayerRoot;
+
+	 for (L=1;L<=pSo->iLayers-2;L++)
+	 {
+		 //SG 20111107: pLR->fActLayWatUpt auf 0 initialisieren
+		 pLR->fActLayWatUpt = (double)0.0;
+		 if(pPl->pRoot->fDepth > (double)0)
+		 {
+			 if(pLR->fPotLayWatUpt < RWUopt[L])
+				 pLR->fActLayWatUpt = pLR->fPotLayWatUpt;
+			 else
+				 pLR->fActLayWatUpt = pLR->fPotLayWatUpt + (RWUmax[L]-pLR->fPotLayWatUpt)*(TRWUopt-TRWUpot)/NOTNUL(TRWUmax-TRWUpot);
+		 
 		 }
+		 else
+	      pLR->fActLayWatUpt = (double)0;
 	 
-	  pPl->pRoot->fUptakeR += pLR->fActLayWatUpt/pTi->pTimeStep->fAct;
-	  pSLW->fContAct -= pLR->fActLayWatUpt/pSo->fDeltaZ; //[mm/mm/d]
+     
+      	  pPl->pRoot->fUptakeR += pLR->fActLayWatUpt/pTi->pTimeStep->fAct; //[mm/d]
+	      pSLW->fContAct -= pLR->fActLayWatUpt/pSo->fDeltaZ; //[mm/mm]
 
       
 	  pSWL=pSWL->pNext;
       pSLW=pSLW->pNext;
 	  pLR =pLR ->pNext;
-	 }		
+	 }
 
 	}	//	end if NewDayAndPlantGrowing
 
