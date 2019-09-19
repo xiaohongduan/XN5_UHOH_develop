@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <string.h>
+#include <strings.h>
 #include <glib-object.h>
 #include <gmodule.h>
 #include <math.h>
@@ -1243,6 +1244,7 @@ void* xpn_register_var_get_pointer(xpn_register_var *self,char *varname)
 	int i;
 	for (i=0; i<self->size; i++)
 		{
+			//if (strcasecmp(self->vars[i]->varname,varname)==0) //SG "case-insensitive"
 			if (strcmp(self->vars[i]->varname,varname)==0)
 				{
 					if  ((self->vars[i]->flag_pointer==TRUE) && (self->vars[i]->vartype==G_TYPE_NONE))

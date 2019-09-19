@@ -164,7 +164,7 @@ int stickstoff_load_config(stickstoff *self)
 	//[denitrification]
 	
 	GET_INI_DOUBLE(self->fN2Fraction,"denitrification","fn2Fraction")
-	GET_INI_DOUBLE(self->fN2OReduction,"denitrification","fn2oeduction")
+	GET_INI_DOUBLE(self->fN2OReduction,"denitrification","fn2oReduction")
 	GET_INI_INT(self->iRewet,"denitrification","irewet")
 	GET_INI_INT(self->iNO3Kin,"denitrification","ino3kin")
 
