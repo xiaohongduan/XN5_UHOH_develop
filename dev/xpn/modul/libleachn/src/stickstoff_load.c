@@ -42,6 +42,7 @@ int stickstoff_load_config(stickstoff *self)
 {
 	GError *error = NULL;
 	expertn_modul_base *xpn = &(self->parent);
+	PCPROFILE pCProfile = xpn->pCh->pCProfile;	//Added by hong on 20190926
 	PCLAYER		pCL;  //SG20190730
 	PSLAYER		pSL;
 
@@ -108,6 +109,19 @@ int stickstoff_load_config(stickstoff *self)
             }				   
 	     }
 // End  SG20190730
+
+//START VALUES SURFACE C-,N-POOLS
+     //20004
+     //[start values surface]
+//20004
+GET_INI_DOUBLE(pCProfile->fCLitterSurf,"start values surface","fCLitterSurf");
+GET_INI_DOUBLE(pCProfile->fNLitterSurf,"start values surface","fNLitterSurf");
+	
+GET_INI_DOUBLE(pCProfile->fNManureSurf,"start values surface","fNManureSurf");
+GET_INI_DOUBLE(pCProfile->fCManureSurf,"start values surface","fCManureSurf");
+	
+GET_INI_DOUBLE(pCProfile->fCHumusSurf,"start values surface","fCHumusSurf");
+GET_INI_DOUBLE(pCProfile->fNHumusSurf,"start values surface","fNHumusSurf");	
 
     G_FREE_IF_NOT_0(layers);
 	layers_len=0;

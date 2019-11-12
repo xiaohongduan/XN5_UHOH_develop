@@ -41,6 +41,10 @@ typedef struct
 	double AveYearTemp;
 	double MonthTempAmp;
 	
+	//preceding_crop //Added by Hong on 20190930
+	double aboveResidualC;
+	double aboveResidualN;
+    //End of Hong
 	// soil
 	int layer_count;
 	int layer_thickness;
@@ -210,6 +214,7 @@ void expertn_standard_ini_free_cfg_file(expertn_standard_ini *self);
 
 void expertn_standard_ini_set_location(expertn_standard_ini *self);
 void expertn_standard_ini_set_climate_Ave(expertn_standard_ini *self);
+void expertn_standard_ini_set_preceding_crop(expertn_standard_ini *self); //Added by Hong on 20190930
 void expertn_standard_ini_set_soil(expertn_standard_ini *self);
 void expertn_standard_ini_set_start_values(expertn_standard_ini *self);
 void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self);

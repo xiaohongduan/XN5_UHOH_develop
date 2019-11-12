@@ -3137,16 +3137,24 @@ void expertn_database_help_func_init_Soil_Organic_Matter(expertn_modul_base *sel
             pMa->pLitter->fTotalC = 0.0;
             pMa->pLitter->fTotalCN = 0.1;
 
+            if (pCh->pCProfile->fCLitterSurf< 0)
             pCh->pCProfile->fCLitterSurf = 0.0;
+			if (pCh->pCProfile->fNLitterSurf <0)
             pCh->pCProfile->fNLitterSurf = 0.0;
 
-            pCh->pCProfile->fCManureSurf = 0.0;
+            if(pCh->pCProfile->fCManureSurf<0)
+			pCh->pCProfile->fCManureSurf = 0.0;
+			if(pCh->pCProfile->fNManureSurf<0)
             pCh->pCProfile->fNManureSurf = 0.0;
 
-            pCh->pCProfile->fCHumusSurf = 0.0;
+            if(pCh->pCProfile->fCHumusSurf<0)
+			pCh->pCProfile->fCHumusSurf = 0.0;
+			if(pCh->pCProfile->fNHumusSurf<0)
             pCh->pCProfile->fNHumusSurf = 0.0;
 
+            if(pCh->pCProfile->fCStandCropRes < 0)
             pCh->pCProfile->fCStandCropRes = 0.0;
+			if(pCh->pCProfile->fNStandCropRes< 0)
             pCh->pCProfile->fNStandCropRes = 0.0;
 
             /* Berechnen schichtmaessiger Anteil. Zur Vereinfachung
@@ -3591,11 +3599,8 @@ void expertn_database_help_func_set_standard_soil_paramter(expertn_modul_base *s
 			pSLayer->fImpedGasA = 0.0;
 			pSLayer->fImpedGasB = 0.0;
 
-//			if (pSLayer->fCHumus==-99.0) pSLayer->fCHumus = pSLayer->fHumus/1.724;
-//			if (pSLayer->fNHumus==-99.0) pSLayer->fNHumus = pSLayer->fCHumus/10.0;
-//SG20190731
-			if (pSLayer->fCHumus<0) pSLayer->fCHumus = pSLayer->fHumus/1.724;
-			if (pSLayer->fNHumus<0) pSLayer->fNHumus = pSLayer->fCHumus/10.0;
+			if (pSLayer->fCHumus==-99.0) pSLayer->fCHumus = pSLayer->fHumus/1.724;
+			if (pSLayer->fNHumus==-99.0) pSLayer->fNHumus = pSLayer->fCHumus/10.0;
 
 			pSWater->fContSatCER = 0.0;
 

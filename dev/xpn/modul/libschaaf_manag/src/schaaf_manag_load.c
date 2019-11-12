@@ -105,6 +105,7 @@ int schaaf_tillage_load_config(schaaf_manag *self)
                 tillage->Month = g_date_get_month(self->tillage_gdate[i]);
                 tillage->Year = g_date_get_year(self->tillage_gdate[i]);
 				tillage->acName = self->tillage_implement[i];
+				deleteSpaceBegEnd(self->tillage_code[i]); //Added by Hong on 20191001
 				tillage->acCode = self->tillage_code[i];
                 tillage->fDepth = self->tillage_depth[i]*(double)10.0; //[cm] -> [mm]
                 if (i == 0) {
@@ -298,6 +299,7 @@ int schaaf_irrigation_load_config(schaaf_manag *self)
                 irrigation->Month = g_date_get_month(self->irrigation_gdate[i]);
                 irrigation->Year = g_date_get_year(self->irrigation_gdate[i]);
 				irrigation->acName = self->irrigation_type[i];
+				deleteSpaceBegEnd(self->irrigation_code[i]); //Added by Hong on 20191001
 				irrigation->acCode = self->irrigation_code[i];
                 irrigation->fAmount = self->irrigation_amount[i];
 				irrigation->fRate = self->irrigation_rate[i];
