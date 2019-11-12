@@ -2312,20 +2312,20 @@ int xpn_output_calc_var(xpn_output *self)
  
 	self->fCStandCropRes = xpn->pCh->pCProfile->fCStandCropRes;
 	self->fNStandCropRes = xpn->pCh->pCProfile->fNStandCropRes;
-	self->fC_NStandCropRes = xpn->pCh->pCProfile->fCStandCropRes/xpn->pCh->pCProfile->fNStandCropRes;
+	self->fC_NStandCropRes = xpn->pCh->pCProfile->fCStandCropRes/(xpn->pCh->pCProfile->fNStandCropRes+1.e-9);
 	self->fStandCropRes_to_AOM2_part_LN = xpn->pCh->pCProfile->fStandCropRes_to_AOM2_part_LN;
 	
 	self->fCLitterSurf = xpn->pCh->pCProfile->fCLitterSurf;
 	self->fNLitterSurf = xpn->pCh->pCProfile->fNLitterSurf;
-	self->fC_NLitterSurf = xpn->pCh->pCProfile->fCLitterSurf/xpn->pCh->pCProfile->fNLitterSurf;
+	self->fC_NLitterSurf = xpn->pCh->pCProfile->fCLitterSurf/(xpn->pCh->pCProfile->fNLitterSurf+1.e-9);
 	
 	self->fCManureSurf = xpn->pCh->pCProfile->fCManureSurf;
 	self->fNManureSurf = xpn->pCh->pCProfile->fNManureSurf;
-	self->fC_NManureSurf = xpn->pCh->pCProfile->fCManureSurf/xpn->pCh->pCProfile->fNManureSurf;
+	self->fC_NManureSurf = xpn->pCh->pCProfile->fCManureSurf/(xpn->pCh->pCProfile->fNManureSurf+1.e-9);
 	
 	self->fCHumusSurf = xpn->pCh->pCProfile->fCHumusSurf;
 	self->fNHumusSurf = xpn->pCh->pCProfile->fNHumusSurf;
-	self->fC_NHumusSurf = xpn->pCh->pCProfile->fCHumusSurf/xpn->pCh->pCProfile->fNHumusSurf;
+	self->fC_NHumusSurf = xpn->pCh->pCProfile->fCHumusSurf/(xpn->pCh->pCProfile->fNHumusSurf+1.e-9);
 	
 	self->fNH4NSurf = xpn->pCh->pCProfile->fNH4NSurf;
 	self->fNO3NSurf = xpn->pCh->pCProfile->fNO3NSurf;
