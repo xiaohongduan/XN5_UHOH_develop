@@ -448,9 +448,9 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->MonthTempAmp,"climate","MonthTempAmp",6.0);
 	
 	//Added by Hong on 20190930
-	//preceding_crop
-	GET_INI_DOUBLE_OPTIONAL(self->cfg->aboveResidualC,"preceding_crop","above_residual_c",0.0);
-	GET_INI_DOUBLE_OPTIONAL(self->cfg->aboveResidualN,"preceding_crop","above_residual_n",0.0);
+	//preceding_crop  -->  must still be adapted to XN3 (SG20191112).
+	//GET_INI_DOUBLE_OPTIONAL(self->cfg->aboveResidualC,"preceding_crop","above_residual_c",0.0);
+	//GET_INI_DOUBLE_OPTIONAL(self->cfg->aboveResidualN,"preceding_crop","above_residual_n",0.0);
 	
 	//End of hong
 	

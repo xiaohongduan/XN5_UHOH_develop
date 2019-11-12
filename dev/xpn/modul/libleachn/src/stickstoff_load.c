@@ -108,20 +108,19 @@ int stickstoff_load_config(stickstoff *self)
 				pSL->fNHumus =pSL->fCHumus * 0.1; 				   
             }				   
 	     }
-// End  SG20190730
+       // End  SG20190730
 
-//START VALUES SURFACE C-,N-POOLS
+     //START VALUES SURFACE C-,N-POOLS
      //20004
      //[start values surface]
-//20004
-GET_INI_DOUBLE(pCProfile->fCLitterSurf,"start values surface","fCLitterSurf");
-GET_INI_DOUBLE(pCProfile->fNLitterSurf,"start values surface","fNLitterSurf");
+     GET_INI_DOUBLE(pCProfile->fCLitterSurf,"start values surface","fCLitterSurf");
+     GET_INI_DOUBLE(pCProfile->fNLitterSurf,"start values surface","fNLitterSurf");
 	
-GET_INI_DOUBLE(pCProfile->fNManureSurf,"start values surface","fNManureSurf");
-GET_INI_DOUBLE(pCProfile->fCManureSurf,"start values surface","fCManureSurf");
+     GET_INI_DOUBLE(pCProfile->fNManureSurf,"start values surface","fNManureSurf");
+     GET_INI_DOUBLE(pCProfile->fCManureSurf,"start values surface","fCManureSurf");
 	
-GET_INI_DOUBLE(pCProfile->fCHumusSurf,"start values surface","fCHumusSurf");
-GET_INI_DOUBLE(pCProfile->fNHumusSurf,"start values surface","fNHumusSurf");	
+     GET_INI_DOUBLE(pCProfile->fCHumusSurf,"start values surface","fCHumusSurf");
+     GET_INI_DOUBLE(pCProfile->fNHumusSurf,"start values surface","fNHumusSurf");	
 
     G_FREE_IF_NOT_0(layers);
 	layers_len=0;
