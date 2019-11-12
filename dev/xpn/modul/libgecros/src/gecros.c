@@ -738,7 +738,8 @@ self->WCMIN=0.05; //Hong 20170628
    self->COEFT = (double)5.0;
    self->FCRSH = (double)0.5;
    self->FNRSH = (double)0.63;
-   self->CB = (double)0.7;
+   self->PNPRE = (double)0.7; //Added by Hong on 20191015
+   self->CB = (double)0.75;
    self->CX = (double)1.0;
    self->TM = (double)1.5;
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
