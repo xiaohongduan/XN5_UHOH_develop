@@ -921,11 +921,11 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 			pSWater->fVanGenA = self->cfg->van_gen_a[i2];
 			pSWater->fVanGenN = self->cfg->van_gen_n[i2];
 			//Added by Hong Dec.2018
-			//int f1, f2;
-			//f1= (double)-150000;
-			//f2=(double)-3300;
-			//pSWater->fContPWP = WATER_CONTENT(f1);
-			//pSWater->fContFK = WATER_CONTENT(f2);
+			int f1, f2;
+			f1= (double)-150000;
+			f2=(double)-3300;
+			pSWater->fContPWP = WATER_CONTENT(f1);
+			pSWater->fContFK = WATER_CONTENT(f2);
 			//End of Hong
 			pSWater->fMinPot = self->cfg->max_pot[i2];
 			pSWater->fCondSat = self->cfg->cond_sat[i2];
