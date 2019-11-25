@@ -121,6 +121,14 @@ int stickstoff_load_config(stickstoff *self)
 	
      GET_INI_DOUBLE(pCProfile->fCHumusSurf,"start values surface","fCHumusSurf");
      GET_INI_DOUBLE(pCProfile->fNHumusSurf,"start values surface","fNHumusSurf");	
+     
+     // if [start values surface] = -99
+	 pCProfile->fCLitterSurf = max(0.0,pCProfile->fCLitterSurf);
+	 pCProfile->fNLitterSurf = max(0.0,pCProfile->fNLitterSurf);
+	 pCProfile->fCManureSurf = max(0.0,pCProfile->fCManureSurf);
+	 pCProfile->fNManureSurf = max(0.0,pCProfile->fNManureSurf);
+	 pCProfile->fCHumusSurf = max(0.0,pCProfile->fCHumusSurf);
+	 pCProfile->fNHumusSurf = max(0.0,pCProfile->fNHumusSurf);
 
     G_FREE_IF_NOT_0(layers);
 	layers_len=0;

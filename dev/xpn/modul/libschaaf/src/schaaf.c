@@ -64,9 +64,13 @@ int schaaf_fertilizer(schaaf* self)
 									pNF->Month,
 									pNF->Day) == 0)){
 				self->first_fertil_done += 1;
-				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
+/*				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
 					schaaf_mineral_fertilization(self);
 				if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+					schaaf_organic_fertilization(self);*/
+				if ((strncmp(pNF->acCode, "FE\0", 2) == 0))
+					schaaf_mineral_fertilization(self);
+				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
 					schaaf_organic_fertilization(self);
 					
 			}
@@ -83,9 +87,13 @@ int schaaf_fertilizer(schaaf* self)
 				pNF = xpn->pMa->pNFertilizer;
 
 				self->first_fertil_done += 1;
-				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
+/*				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
 					schaaf_mineral_fertilization(self);
 				else if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+					schaaf_organic_fertilization(self);*/
+				if ((strncmp(pNF->acCode, "FE\0", 2) == 0))
+					schaaf_mineral_fertilization(self);
+				else if ((strncmp(pNF->acCode, "RE\0", 2) == 0) ||(strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
 					schaaf_organic_fertilization(self);
 				else {
 					char* S =  g_strdup_printf("Error in schaaf.c:schaaf_fertilizer\nUnknown fertilizer code: %s\n", pNF->acCode);
@@ -107,9 +115,13 @@ int schaaf_fertilizer(schaaf* self)
 
 					xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext; //The data in xpn->pMa->pNFertilizer is required by InfiltrationOrgDuenger(self) and InfiltrationOrgDuengerRegen(self). Therefore xpn->pMa->pNFertilizer should not be switched to the next struc before the date of next fertilization action.   
 					pNF = xpn->pMa->pNFertilizer;
-					if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
+/*					if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
 						schaaf_mineral_fertilization(self);
 					else if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+						schaaf_organic_fertilization(self);*/
+					if ((strncmp(pNF->acCode, "FE\0", 2) == 0))
+						schaaf_mineral_fertilization(self);
+					else if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
 						schaaf_organic_fertilization(self);
                 	                else {
         	                              	char* S =  g_strdup_printf("Error in schaaf.c:schaaf_fertilizer\nUnknown fertilizer code: %s\n", pNF->acCode);
