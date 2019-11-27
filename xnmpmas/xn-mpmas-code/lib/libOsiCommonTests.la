@@ -8,18 +8,18 @@
 dlname='libOsiCommonTests.so.1'
 
 # Names of this library.
-library_names='libOsiCommonTests.so.1.12.8 libOsiCommonTests.so.1 libOsiCommonTests.so'
+library_names='libOsiCommonTests.so.1.13.2 libOsiCommonTests.so.1 libOsiCommonTests.so'
 
 # The name of the static archive.
 old_library=''
 
 # Libraries that this one depends upon.
-dependency_libs=' /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libOsi.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libCoinUtils.la /opt/bwhpc/common/compiler/gnu/4.7.3/x86_64/lib/../lib64/libstdc++.la'
+dependency_libs=' /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libOsi.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libCoinUtils.la /opt/bwhpc/common/compiler/gnu/4.8.3/lib/../lib64/libstdc++.la'
 
 # Version information for libOsiCommonTests.
-current=13
-age=12
-revision=8
+current=14
+age=13
+revision=2
 
 # Is this an already installed library?
 installed=yes
@@ -32,4 +32,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib'
+libdir='/home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib'

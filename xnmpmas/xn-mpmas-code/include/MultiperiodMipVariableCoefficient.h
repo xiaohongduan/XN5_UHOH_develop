@@ -46,6 +46,7 @@ public:
 		virtual void updateSpecificMatrix(mpPrbl* mip,  double val_) = 0;
 		virtual void updateGenericMatrix(mpPrbl* mip, double val_) = 0;
 		static MultiperiodMipVariableValue* makeMipUpdater(int col_, int row_ , double summand_, double multiplier_, std::vector<int> arguments_);
+		static MultiperiodMipVariableValue* makeMipUpdaterFirstMover(int col_, int row_ , double summand_, double multiplier_, std::vector<int> arguments_, mpPrbl* mip);
 };
 
 class MultiperiodMipVariableMatrixCoefficient : public MultiperiodMipVariableValue
@@ -93,4 +94,56 @@ class MultiperiodMipVariableColLbound : public MultiperiodMipVariableValue
 		virtual void updateSpecificMatrix(mpPrbl* mip,  double val_);
 		virtual void updateGenericMatrix(mpPrbl* mip, double val_);
 };
+//191001 Note: The following first mover classes have become necessary
+//as we now allow adding up of inserted values. This is why most methods are changed from set.. to addTo..
+//For the specific matrix this works without problems, because the specific matrix is reinitialized
+//from the generic matrix for each agent in each period. So all past additions are erased
+// The generic matrix however is kept around. In order not to accumulate changes over
+// the years, the generic matrix needs to be reset to initial state before any additions are made.
+// This is achieved by letting the first inserter that writes into a cell of the generic matrix
+// set, while later inserters writing into the same place add.
+// The order of writing is fixed and first movers are identified upon input file reading.
+// To maintain any value that was originally in the generic matrix, before any inserters
+// this value is added to the summand of the first mover at input file processing.
+
+class MultiperiodMipVariableMatrixCoefficientFirstMover : public MultiperiodMipVariableMatrixCoefficient
+{
+	public:
+		MultiperiodMipVariableMatrixCoefficientFirstMover( int col_, int  row_,double summand_, double multiplier_, std::vector<int> arguments_)
+	      :  MultiperiodMipVariableMatrixCoefficient( col_, row_, summand_, multiplier_, arguments_) {}
+		virtual void updateGenericMatrix(mpPrbl* mip, double val_);
+};
+class MultiperiodMipVariableRhsValueFirstMover : public MultiperiodMipVariableRhsValue
+{
+	public:
+		MultiperiodMipVariableRhsValueFirstMover( int row_ , double summand_, double multiplier_, std::vector<int> arguments_)
+		:  MultiperiodMipVariableRhsValue( row_ , summand_, multiplier_, arguments_){}
+		virtual void updateGenericMatrix(mpPrbl* mip, double val_);
+};
+class MultiperiodMipVariableObjCoeffFirstMover : public MultiperiodMipVariableObjCoeff
+{
+	public:
+		MultiperiodMipVariableObjCoeffFirstMover(int col_, double summand_, double multiplier_, std::vector<int> arguments_)
+		: MultiperiodMipVariableObjCoeff(col_, summand_, multiplier_, arguments_) {}
+
+		virtual void updateGenericMatrix(mpPrbl* mip, double val_);
+};
+class MultiperiodMipVariableColUboundFirstMover : public MultiperiodMipVariableColUbound
+{
+	public:
+		MultiperiodMipVariableColUboundFirstMover(int col_, double summand_, double multiplier_, std::vector<int> arguments_)
+		: MultiperiodMipVariableColUbound(col_ , summand_, multiplier_, arguments_) {}
+
+		virtual void updateGenericMatrix(mpPrbl* mip, double val_);
+};
+class MultiperiodMipVariableColLboundFirstMover : public MultiperiodMipVariableColLbound
+{
+	public:
+		MultiperiodMipVariableColLboundFirstMover(int col_, double summand_, double multiplier_, std::vector<int> arguments_)
+		: MultiperiodMipVariableColLbound(col_ , summand_, multiplier_, arguments_) {}
+		virtual void updateGenericMatrix(mpPrbl* mip, double val_);
+};
+
+
+
 #endif /* MULTIPERIODMIPVARIABLECOEFFICIENT_H_ */

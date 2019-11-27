@@ -8,18 +8,18 @@
 dlname='libSym.so.3'
 
 # Names of this library.
-library_names='libSym.so.3.6.16 libSym.so.3 libSym.so'
+library_names='libSym.so.3.6.17 libSym.so.3 libSym.so'
 
 # The name of the static archive.
 old_library=''
 
 # Libraries that this one depends upon.
-dependency_libs=' /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libCgl.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libOsiClp.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libClpSolver.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libClp.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libOsi.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libCoinUtils.la /opt/bwhpc/common/compiler/gnu/4.7.3/x86_64/lib/../lib64/libstdc++.la'
+dependency_libs=' /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libCgl.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libOsiClp.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libClpSolver.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libClp.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libOsi.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libCoinUtils.la /opt/bwhpc/common/compiler/gnu/4.8.3/lib/../lib64/libstdc++.la'
 
 # Version information for libSym.
 current=9
 age=6
-revision=16
+revision=17
 
 # Is this an already installed library?
 installed=yes
@@ -32,4 +32,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib'
+libdir='/home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib'

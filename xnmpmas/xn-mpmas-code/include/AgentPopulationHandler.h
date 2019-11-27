@@ -93,7 +93,7 @@ class b_liste
 	void multiperiod_agentsImportExtYieldsNoMaps(vector<int>& cropActivityID,  double* cropYield, double* stoverYield, double** extraAttrs);
 
 #ifdef LIVSIM_COUPLING
-	void multiperiod_exportLivSimHerdManagement(LivSimHerdTable& herds_table, LivSimGrazingTable& grazing_table, LivSimFeedingTable& feeding_table);
+	void multiperiod_exportLivSimHerdManagement(LivSimHerdTable& herds_table, LivSimGrazingTable& grazing_table, LivSimFeedingTable& feeding_table, Raster2D& baseMapHerdMovement);
 	void multiperiod_updateAssetsFromUpdatedHerd();
 #endif//LIVSIM_COUPLING
 
