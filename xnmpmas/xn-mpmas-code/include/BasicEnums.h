@@ -188,6 +188,7 @@ enum Content
 	contNRU,
 	contExtraCropActAttribute,
 	contCommonPropertyGroup,
+	contCumulGrazingPressure,
 	//add new spatial content here !!!, not above if possible (exceptions for monthly/coupling content, otherwise -A flag numbers will be changed, and that would not be nice
 	contLastSpatial,
 	///Other formats, or special types, that are not gridded data

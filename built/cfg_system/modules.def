@@ -41,8 +41,8 @@ heat.sensible heat
 nitrogen.deposition
 nitrogen.nitrogen transport
 nitrogen.urea hydrolysis
-nitrogen.mineralisation
 nitrogen.nitrification
+nitrogen.mineralisation
 plant.nitrogen demand
 plant.nitrogen uptake
 plant.crop senescence

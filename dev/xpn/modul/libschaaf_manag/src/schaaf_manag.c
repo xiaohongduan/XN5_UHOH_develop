@@ -81,6 +81,9 @@ int schaaf_manag_load(schaaf_manag *self)
             if ((pTi->pSimTime->mday == tillage->Day) && (pTi->pSimTime->mon == tillage->Month) &&
                 (pTi->pSimTime->year == tillage->Year)) {
                 self->tillage_actual = tillage;
+				pMa->pTillage = tillage; //Test of Hong 
+				InitBBGeraet(self);  //Test of Hong 
+				
 				S2 = xpn_time_get_formated_date(pTi->pSimTime->iyear, pTi->pSimTime->fTimeY, FALSE);
                 S = g_strdup_printf("%s: Soil loosening: %.1f cm depth.", S2, (double)(tillage->fDepth)/10.0); // [cm]
                 PRINT_MESSAGE(xpn, 3, S);
@@ -105,7 +108,7 @@ int schaaf_manag_load(schaaf_manag *self)
 	        self->tillage_done += 1;
 	
 		    // run functions:
-            InitBBGeraet(self); 
+            // Test of Hong InitBBGeraet(self); 
             LagerungNeu(self); 
 		  
 		 
@@ -148,6 +151,9 @@ int schaaf_manag_load(schaaf_manag *self)
             if ((pTi->pSimTime->mday == tillage->Day) && (pTi->pSimTime->mon == tillage->Month) &&
                 (pTi->pSimTime->year == tillage->Year)) {
                 self->tillage_actual = tillage;
+				pMa->pTillage = tillage; //Test of Hong 
+				InitBBGeraet(self);  //Test of Hong 
+				
 				S2 = xpn_time_get_formated_date(pTi->pSimTime->iyear, pTi->pSimTime->fTimeY, FALSE);
                 S = g_strdup_printf("%s: Soil mixing: %.1f cm depth.", S2, (double)(tillage->fDepth)/10.0); // [cm]
                 PRINT_MESSAGE(xpn, 3, S);
@@ -175,7 +181,7 @@ int schaaf_manag_load(schaaf_manag *self)
 	     self->tillage_done += 1;
 	
 		 // run the functions
-         InitBBGeraet(self);  	
+         //Test of Hong InitBBGeraet(self);  	
  	     EinarbeitRueckstaende(self);  
          DurchMisch(self); 
 		 		 		 

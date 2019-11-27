@@ -1060,9 +1060,9 @@ class agentF : public agent
 
 #ifdef LIVSIM_COUPLING
 	void initializeLivSimHerdForCoupling();
-	void multiperiod_exportLivSimHerdManagement(LivSimHerdTable& herds_table, LivSimGrazingTable& grazing_table, LivSimFeedingTable& feeding_table);
+	void multiperiod_exportLivSimHerdManagement(LivSimHerdTable& herds_table, LivSimGrazingTable& grazing_table, LivSimFeedingTable& feeding_table, Raster2D& baseMapHerdMovement);
 	void multiperiod_assignAnimalsToHerdGroups();
-	void multiperiod_distributeHerdsOverMap(LivSimGrazingTable& grazing_table);
+	void multiperiod_distributeHerdsOverMap(LivSimGrazingTable& grazing_table, const Raster2D& baseMapHerdMovement);
 	void multiperiod_exportLivsimFeedingDecisions(LivSimFeedingTable& feeding_table);
 	void multiperiod_updateAssetsFromUpdatedHerd();
 #endif

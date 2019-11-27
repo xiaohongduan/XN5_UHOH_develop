@@ -53,6 +53,7 @@
 	#define CBCCALL2
 #endif
 #ifdef USE_CPLEX
+	#include "cplex.h"
 	#include "OsiCpxSolverInterface.hpp"
 #endif
 #ifdef MULTIPERIOD
@@ -252,96 +253,18 @@ public:
 			return refNumber;
 		};
 
-		cplexOption(string s_, int refNum_,  int v_ )
-		{
-			refNumber = refNum_;
-			name = s_;
-			type = 0;
-			value.as_int = v_;
-		};
-		cplexOption(string s_, int refNum_,  double v_ )
-		{
-			name = s_;
-			refNumber = refNum_;
-			type = 1;
-			value.as_double = v_;
-		};
-		cplexOption(string s_, int refNum_, string v_ )
-		{
-			name = s_;
-			refNumber = refNum_;
-			type = 2;
+		cplexOption();
+		cplexOption(string s_, int refNum_,  int v_ );
+		cplexOption(string s_, int refNum_,  double v_ );
+		cplexOption(string s_, int refNum_, string v_ );
+		~cplexOption();
 
+		cplexOption(cplexOption const& other);
+		cplexOption& operator = (const cplexOption& other);
 
-			value.as_string = new string(v_);
-		};
-		~cplexOption()
-		{
-			if (type == 2)
-				delete value.as_string;
-		}
-
-		cplexOption(cplexOption const& other)
-		 {
-			 *this = other;// redirect to the copy assignment
-		  }
-		cplexOption& operator = (const cplexOption& other){
-          if(this != &other)
-          {
-              if(2 == type){
-                  delete value.as_string;
-              }
-
-              name = other.name;
-              refNumber = other.refNumber;
-              type = other.type;
-
-
-              switch(other.type){
-              case 2:{
-            	  	  	  value.as_string = new std::string(*(other.value.as_string));
-                       break;
-                  }
-              case 1:{
-                      value.as_double = other.value.as_double;
-                      break;
-                                }
-              case 0:{
-                      value.as_int = other.value.as_int;
-                      break;
-                                }
-              default:{
-
-                  }
-              }
-          }
-          return *this;
-      }
-
-		int get_int()
-		{
-			if (type != 0)
-			{
-				throw logic_error("Invalid integer union call in cplexOption\n");
-			}
-			return value.as_int;
-		};
-		double get_double()
-		{
-			if (type != 1)
-			{
-				throw logic_error("Invalid double union call in cplexOption\n");
-			}
-			return value.as_double;
-		};
-		string get_string()
-		{
-			if (type !=2)
-			{
-				throw logic_error("Invalid union call in cplexOption\n");
-			}
-			return *(value.as_string);
-		};
+		int get_int();
+		double get_double();
+		string get_string();
 		bool is_int()
 		{
 			return type == 0;
@@ -890,7 +813,7 @@ class mpPrbl
 #pragma db transient
 	static vector<cplexOption> cplexFailedSecondOptions;
 #pragma db transient
-	static vector<cplexOption> cplexLimitReachedOptions;
+	static vector<vector<cplexOption> > cplexLimitReachedOptions;
 #pragma db transient
 	int* priorityIntegers;
 #pragma db transient
@@ -1180,30 +1103,47 @@ public:
    virtual double getZRowEntry(int);//refers to original matrix ap
 	virtual double getVarRHS(int r);
    virtual void setVarRHS(int r, double w);
+   virtual void addToVarRHS(int r, double w);
 
 	virtual double getOgMtxCoeff(int r, int c);//refers to original matrix ap
 	virtual void setOgMtxCoeff(int r, int c, double w);//refers to original matrix ap
+	virtual void addToOgMtxCoeff(int r, int c, double w);//refers to original matrix ap
+
+
    virtual double getOgObjCoeff(int c);//refers original matrix ap
    virtual void setOgObjCoeff(int c, double w);//refers original matrix ap
+   virtual void addToOgObjCoeff(int c, double w);//refers original matrix ap
+
    virtual void copyOgObjRowIntoArray(double* arrayPtr);
 
 	virtual double getOgRhsValue(int r);//refers to original matrix ap
 	virtual void setOgRhsValue(int r, double w);//refers to original matrix ap
+	virtual void addToOgRhsValue(int r, double w);//refers to original matrix ap
+
    virtual void copyOgRhsIntoArray(double* arrayPtr);
 
 	virtual double getMtxCoeff(int r, int c);//refers agent matrix bp
    virtual void setMtxCoeff(int r, int c, double w);//refers agent matrix bp
+   virtual void addToMtxCoeff(int r, int c, double w);//refers agent matrix bp
    virtual double getObjCoeff(int c);//refers agent matrix bp
    virtual void setObjCoeff(int c, double w);//refers agent matrix bp
+   virtual void addToObjCoeff( int c, double w);//refers agent matrix bp
 
    virtual void copyObjRowIntoArray(double* arrayPtr);
    virtual void copyRhsIntoArray(double* arrayPtr);
 
+
 	virtual void setColUpp(int c, double w);
+	virtual void addToColUpp(int c, double w);
+	virtual double getOrigColUpp(int c);
 	virtual void setOrigColUpp(int c, double w);
+	virtual void addToOrigColUpp(int c, double w);
 
 	virtual void setColLow(int c, double w);
+	virtual void addToColLow(int c, double w);
+	virtual double getOrigColLow(int c);
 	virtual void setOrigColLow(int c, double w);
+	virtual void addToOrigColLow(int c, double w);
 
 	virtual void setValueInOrigMatrix(int r, int c, double w);
 	virtual void setValueInMatrix(int r, int c, double w);
@@ -1489,6 +1429,8 @@ protected:
       double*& varsRHS);
 #endif //MIPSTART
 
+
+
    void writePrimsIntoStreamOsi(SolverType whichSolver, FILE* datei, bool formatType);
    void writeDualsIntoStreamOsi(SolverType whichSolver, FILE* datei, bool formatType);
    void writeObjIntoStreamOsi(SolverType whichSolver, FILE* datei, bool formatType);
@@ -1509,6 +1451,13 @@ public:
    static void setCplexOptionsFile(string filename);
    static void readCplexOptionsFile();
    static unsigned getCplexVersion();
+
+#ifdef MIPSTART
+   void checkSolutionPoolCplex(SolverType whichSolver, int agID, int scID, int fstID, double* solToSaveForMipstart, int filegiven, char* filestub, int populate);
+#else
+   void checkSolutionPoolCplex(SolverType whichSolver, int agID, int scID, int fstID, int filegiven, char* filestub, int populate);
+#endif //MIPSTART
+
 #endif //USE_CPLEX
 public:
    static void readSolverOptionsFile();

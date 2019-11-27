@@ -141,6 +141,7 @@ int expertn_standard_ini_load(expertn_standard_ini *self)
 			xpn->pTi->pSimTime->fTimeZone = xpn_register_var_get_pointer_convert_to_double(self->parent.pXSys->var_list,"Config.Expert N Standard Read INI.time zone",0.0);
 			expertn_standard_ini_set_location(self);
 			expertn_standard_ini_set_climate_Ave(self);
+			expertn_standard_ini_set_preceding_crop(self); //Added by Hong on 20190930
 			expertn_standard_ini_set_soil(self);
 			// TODO: expertn_database_readTreatment(self);
 			// TODO: expertn_database_readPlant(self);
@@ -445,6 +446,15 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	// climate:
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->AveYearTemp,"climate","AveYearTemp",7.4);
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->MonthTempAmp,"climate","MonthTempAmp",6.0);
+	
+	//Added by Hong on 20190930
+	//preceding_crop  -->  must still be adapted to XN3 (SG20191112).
+	//GET_INI_DOUBLE_OPTIONAL(self->cfg->aboveResidualC,"preceding_crop","above_residual_c",0.0);
+	//GET_INI_DOUBLE_OPTIONAL(self->cfg->aboveResidualN,"preceding_crop","above_residual_n",0.0);
+	
+	//End of hong
+	
+	
 	// soil properties:
 	GET_INI_INT(self->cfg->layer_count,"soil","layer_count");
 	GET_INI_DOUBLE(self->cfg->layer_thickness,"soil","layer_thickness");
@@ -864,6 +874,16 @@ void expertn_standard_ini_set_climate_Ave(expertn_standard_ini *self)
 	xpn->pCl->pAverage->fYearTemp = self->cfg->AveYearTemp;
 	xpn->pCl->pAverage->fMonthTempAmp = self->cfg->MonthTempAmp;
 }
+
+
+//Added by Hong on 20190930
+void expertn_standard_ini_set_preceding_crop(expertn_standard_ini *self) 
+{
+	expertn_modul_base *xpn = &(self->parent);
+	xpn->pCh->pCProfile->fCStandCropRes = self->cfg->aboveResidualC;
+	xpn->pCh->pCProfile->fNStandCropRes = self->cfg->aboveResidualN;
+}
+//End of Hong
 void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
@@ -921,11 +941,11 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 			pSWater->fVanGenA = self->cfg->van_gen_a[i2];
 			pSWater->fVanGenN = self->cfg->van_gen_n[i2];
 			//Added by Hong Dec.2018
-			//int f1, f2;
-			//f1= (double)-150000;
-			//f2=(double)-3300;
-			//pSWater->fContPWP = WATER_CONTENT(f1);
-			//pSWater->fContFK = WATER_CONTENT(f2);
+			int f1, f2;
+			f1= (double)-150000;
+			f2=(double)-3300;
+			pSWater->fContPWP = WATER_CONTENT(f1);
+			pSWater->fContFK = WATER_CONTENT(f2);
 			//End of Hong
 			pSWater->fMinPot = self->cfg->max_pot[i2];
 			pSWater->fCondSat = self->cfg->cond_sat[i2];

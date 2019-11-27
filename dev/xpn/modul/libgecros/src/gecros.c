@@ -483,51 +483,108 @@ int gecros_ActualTranspiration(gecros *self)
     if ((pPl->pDevelop->bPlantGrowth==TRUE)&&(pPl->pDevelop->bMaturity==FALSE))
 	{                   
 	 int L;
-	 double fExtWat;
+	 double TRWUpot, TRWUopt, TRWUmax;
+	 float RWUopt[MAXSCHICHT];
+	 float RWUmax[MAXSCHICHT];
 
 	 PSWATER		pSWL=pSo->pSWater->pNext;
 	 PWLAYER		pSLW=pWa->pWLayer->pNext; 
 	 PLAYERROOT 	pLR	=pPl->pRoot->pLayerRoot;
      
 	 pPl->pRoot->fUptakeR =(double)0.0;
-		
+	 RWUopt[0] = (double)0.0;
+	 RWUmax[0] = (double)0.0;
+     
+   	 TRWUpot = TRWUopt = TRWUmax = (double)0.0;
+
+    //SG20190911: In Gecros, water limitation is calculated on the basis of water availability in the entire rooted profile.
+	 // Current transpiration rate of one day, ATCAN is multiplied with time step = fActTranspdt.
+	 // fActTranspdt is first distributed evenly over the individual simulation layers (RWUopt[L]). If not enough water is available
+     // in one layer than should be absorbed, this must be compensated in the other layers. However, the maximum possible water 
+     // absorption in one layer (RWUmax[L]) cannot be exceeded. Therefore, the potential water absorption in one layer is the minimum 
+     // of optimal and maximum water absorption. 
+	 // In the first for loop, the potential, optimum and maximum water absorption for each layer is calculated and summed up 
+     // over the rooted profile (TRWUpot, TRWUopt and TRWUmax). In the second for loop, the water uptake is increased in those 
+     // layers where excess water is available. The increase is proportional to the excess water.
+
 	 for (L=1;L<=pSo->iLayers-2;L++)
 	 {
 		 pLR->fActLayWatUpt = (double)0;
+		 RWUopt[L] = (double)0;
+		 RWUmax[L] = (double)0;
 
 		 if(pPl->pRoot->fDepth > (double)0)
 		 {
           if(L*pSo->fDeltaZ<=pPl->pRoot->fDepth*(double)10)
 		  {
-	       //LR->fActLayWatUpt = self->fActTraDay*(double)min((double)1,pSo->fDeltaZ/(pPl->pRoot->fDepth*(double)10));
-	        pLR->fActLayWatUpt = pPl->pPltWater->fActTranspdt*(double)min((double)1,pSo->fDeltaZ/(pPl->pRoot->fDepth*(double)10));
-			//SG 20111122: es darf nur bis zum PWP entleert werden
-			fExtWat = max((double)0, pSLW->fContAct-pSWL->fContPWP);
-			pLR->fActLayWatUpt = (double)min(fExtWat, pLR->fActLayWatUpt);
-
+                 RWUopt[L] =  pPl->pPltWater->fActTranspdt*(double)min((double)1,pSo->fDeltaZ/(pPl->pRoot->fDepth*(double)10));
+                 RWUmax[L] = max(0.0,pSLW->fContAct-pSWL->fContPWP)*pSo->fDeltaZ; //SG20190911: *pSo->fDeltaZ -->[mm]
+		         //SG 20111122: es darf nur bis zum PWP entleert werden
+                 pLR->fPotLayWatUpt = (double)min(RWUmax[L], RWUopt[L]); // [mm]
 		  }
 	      else if (((L-1)*pSo->fDeltaZ<=pPl->pRoot->fDepth*(double)10)
 			      &&(pPl->pRoot->fDepth*(double)10 < L*pSo->fDeltaZ))
 		  {
-	        //pLR->fActLayWatUpt = self->fActTraDay*(double)min((double)1,
-	        pLR->fActLayWatUpt = pPl->pPltWater->fActTranspdt*(double)min((double)1,
-				                 (L*pSo->fDeltaZ-pPl->pRoot->fDepth*(double)10)/(pPl->pRoot->fDepth*(double)10));
-			//SG 20111122: es darf nur bis zum PWP entleert werden
-			fExtWat = max((double)0, pSLW->fContAct-pSWL->fContPWP);
-			pLR->fActLayWatUpt = (double)min(fExtWat, pLR->fActLayWatUpt);
-		  }
+                //SG 20111107: Anteil Wasseraufnahme der untersten durchwurzelten Schicht - Korrektur
+               //	        pLR->fActLayWatUpt = pPl->pPltWater->fActTranspdt*(double)min((double)1,
+               //				                 (L*pSo->fDeltaZ-pPl->pRoot->fDepth*(double)10)/(pPl->pRoot->fDepth*(double)10));
+                 RWUopt[L] = pPl->pPltWater->fActTranspdt*(double)min((double)1,
+                                  (pPl->pRoot->fDepth*(double)10-(L-1)*pSo->fDeltaZ)/(pPl->pRoot->fDepth*(double)10));
+                 RWUmax[L] = max(0.0,pSLW->fContAct-pSWL->fContPWP)*pSo->fDeltaZ; //SG20190911: *pSo->fDeltaZ -->[mm]
+                //SG 20111122: es darf nur bis zum PWP entleert werden
+				  pLR->fPotLayWatUpt = (double)min(RWUmax[L], RWUopt[L]); // [mm]
+          }
 		  else
-	      pLR->fActLayWatUpt = (double)0;
+          {
+               RWUopt[L] = (double)0;
+               RWUmax[L] = (double)0;
+               pLR->fPotLayWatUpt = (double)0;
+          }
+        }
+        else
+        {
+               RWUopt[L] = (double)0;
+               RWUmax[L] = (double)0;
+               pLR->fPotLayWatUpt = (double)0;
+        }
+
+        TRWUpot += pLR->fPotLayWatUpt;
+        TRWUopt += RWUopt[L];
+        TRWUmax += RWUmax[L];
+      
+        pSWL=pSWL->pNext;
+        pSLW=pSLW->pNext;
+        pLR =pLR ->pNext;
+	 }		
+
+	 pSWL = pSo->pSWater->pNext;
+	 pSLW = pWa->pWLayer->pNext; 
+	 pLR  = pPl->pRoot->pLayerRoot;
+
+	 for (L=1;L<=pSo->iLayers-2;L++)
+	 {
+		 //SG 20111107: pLR->fActLayWatUpt auf 0 initialisieren
+		 pLR->fActLayWatUpt = (double)0.0;
+		 if(pPl->pRoot->fDepth > (double)0)
+		 {
+			 if(pLR->fPotLayWatUpt < RWUopt[L])
+				 pLR->fActLayWatUpt = pLR->fPotLayWatUpt;
+			 else
+				 pLR->fActLayWatUpt = pLR->fPotLayWatUpt + (RWUmax[L]-pLR->fPotLayWatUpt)*(TRWUopt-TRWUpot)/NOTNUL(TRWUmax-TRWUpot);
+		 
 		 }
+		 else
+	      pLR->fActLayWatUpt = (double)0;
 	 
-	  pPl->pRoot->fUptakeR += pLR->fActLayWatUpt/pTi->pTimeStep->fAct;
-	  pSLW->fContAct -= pLR->fActLayWatUpt/pSo->fDeltaZ; //[mm/mm/d]
+     
+      	  pPl->pRoot->fUptakeR += pLR->fActLayWatUpt/pTi->pTimeStep->fAct; //[mm/d]
+	      pSLW->fContAct -= pLR->fActLayWatUpt/pSo->fDeltaZ; //[mm/mm]
 
       
 	  pSWL=pSWL->pNext;
       pSLW=pSLW->pNext;
 	  pLR =pLR ->pNext;
-	 }		
+	 }
 
 	}	//	end if NewDayAndPlantGrowing
 
@@ -669,7 +726,8 @@ self->CFS = 0.52;
 //PARAM TOC=7193.; BHC=3500.; FBIOC=0.03; RN=1.; RA=1.
 pGS->fProfileDepth = 150; // added by Hong after XN3 (marker 80009) 
 self->RSS = 100.;//soil resistance, equiv.to stomatal resistance [s m-1] 
-self->SD1 = 25.;  //thickness of upper soil layer [cm] //TCT=4.; TCP=1.; MULTF=1.
+//self->SD1 = 25.;  //thickness of upper soil layer [cm] //TCT=4.; TCP=1.; MULTF=1.
+self->SD1 = 5.;  // [cm] SG20191027
 self->TCP = 1.;
 self->WCMIN=0.05; //Hong 20170628
  
@@ -680,7 +738,8 @@ self->WCMIN=0.05; //Hong 20170628
    self->COEFT = (double)5.0;
    self->FCRSH = (double)0.5;
    self->FNRSH = (double)0.63;
-   self->CB = (double)0.7;
+   self->PNPRE = (double)0.7; //Added by Hong on 20191015
+   self->CB = (double)0.75;
    self->CX = (double)1.0;
    self->TM = (double)1.5;
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2489,6 +2548,8 @@ int   BiomassGrowth_GECROS(gecros *self)
 
       double APCAN=(double)0;
       double DIFS=(double)0;
+      double fTemp;
+      double TSS;
       /*
       int       iJulianDay;
       double    dLatitude;
@@ -2542,6 +2603,13 @@ int   BiomassGrowth_GECROS(gecros *self)
 	  double WRB = self->WRB;//critical root weight density (g m-2 cm-1 depth) const table1,p45
 	  double YGV = self->YGV;//growth efficiency of veg. organs (g C g-1 C) crop table2,p46
                              //pGPar->fGrwEffVegOrg;
+                             
+    //SG20191119
+     double FCRSH = self->FCRSH;  //Initial C fraction in shoot [g C /(g C)]
+     double FNRSH = self->FNRSH;  //Initial N fraction in shoot [g N /(g N)]
+     static double FNSHP;
+     static double FCSHP;
+     
     //SG20180410
     double SINKBEET = self->SINKBEET;//sink strength of beet in sugarbeet model by J. Rabe
       //double DELT = (double)1;
@@ -2728,11 +2796,11 @@ int   BiomassGrowth_GECROS(gecros *self)
       NTOT   = NSH + NRT;
 
 
-      LNC   = NLV / WLV;
-      RNC   = NRT / WRT;
-      HNC   = NSH / WSH;
+      LNC   = NLV / NOTNUL(WLV);
+      RNC   = NRT / NOTNUL(WRT);
+      HNC   = NSH / NOTNUL(WSH);
       ONC   = INSW(-WSO, NSO/NOTNUL(WSO), 0.);
-      PNC   = NTOT/ WTOT;
+      PNC   = NTOT/ NOTNUL(WTOT);
 
 	  pGPltN->fNShootCont     = (double)NSH;
       pPltN->fLeafActConc     = (double)LNC;
@@ -2780,9 +2848,20 @@ int   BiomassGrowth_GECROS(gecros *self)
       KCRN   = -log(0.05)/6.3424/CFV/WRB/RDMX;
       CSRTN  = 1./KCRN*log(1.+KCRN*max(0.,(NRT*CFV-CRVR*RNCMIN))/RNCMIN);
 
-      LCRT   = max(min(CSRT-1.E-4,CSRT-min(CSRTN,CSRT)),0.)/DELT;//rate
-      LWRT   = LCRT/CFV;
-      LNRT   = LWRT*RNCMIN;
+     //LCRT   = max(min(CSRT-1.E-4,CSRT-min(CSRTN,CSRT)),0.)/DELT;//rate [g(C) m-2 d-1]
+      //SG 20191105: per day
+/*      LCRT   = max(min(CSRT-1.E-4,CSRT-min(CSRTN,CSRT)),0.)/1.0;//rate [g(C) m-2 d-1]
+      LWRT   = LCRT/CFV;  // rate [g m-2 d-1]
+      LNRT   = LWRT*RNCMIN;  //rate [g(N) m-2 d-1]*/
+      
+  //%** intput (from OrganSenescence_GECROS)
+     CSRTN  = (double)pGPltC->fCStrctRootN;
+     LWRT = (double)pGPltB->fRootWeightLossR;
+     LCRT  = (double)pGPltC->fCRootLossR;
+     LNRT  = (double)pGPltN->fNRootLossR;
+
+      
+      
       //*/
       ///*
       LAIC   = (double)pGCan->fLAICdeterm;//input
@@ -2834,7 +2913,9 @@ int   BiomassGrowth_GECROS(gecros *self)
       SLNNT  = (NLV+0.001*NLV) *KN/(1.-exp(-KN*LAI));
       
       SLNB   = (double) pGPltN->fNLeafSpecificContBottom;
-      RSLNB  = (SLNBC-SLNB)/DELT;//rate
+      //RSLNB  = (SLNBC-SLNB)/DELT;//rate
+      //SG 20191108
+      RSLNB  = (SLNBC-SLNB)/1.0;//per day [g m-2(leaf) d-1]
         
       ///*
       APCAN  = (double)pPltC->fGrossPhotosynR;
@@ -2877,8 +2958,12 @@ int   BiomassGrowth_GECROS(gecros *self)
 	  DIFS   = (double)pGS->fDiffSoilAirTemp;       //[°C]
 	  DAVTMP = 0.29*TMIN + 0.71*TMAX;
       NAVTMP = 0.71*TMIN + 0.29*TMAX;
-      TAVSS  = ((DAVTMP+DIFS)+NAVTMP)/2.;	  
-      LVDS   = (CLVD-CLVDS)/10.*(TAVSS-TBD)/(TOD-TBD);//rate
+      //TAVSS  = ((DAVTMP+DIFS)+NAVTMP)/2.;	  //Average soil surface temperature -> SG20191121: bei Tagesschritten ok!
+      //LVDS   = (CLVD-CLVDS)/10.*(TAVSS-TBD)/(TOD-TBD);//rate ;	  //SG20191121: bei Tagesschritten ok!
+     //SG20191121: LVDS depends on daytime temperature
+      fTemp = xpn->pCl->pWeather->fTempAir;
+      TSS = fTemp+DIFS;
+      LVDS   = (CLVD-CLVDS)/10.*(TSS-TBD)/(TOD-TBD);//rate
  
       ASSA   = (double)pPl->pPltCarbon->fGrossPhotosynR - RM - RX;
       pPltC->fNetPhotosynR = (double)ASSA;
@@ -2936,16 +3021,43 @@ int   BiomassGrowth_GECROS(gecros *self)
       //*/
 
 	  NDEMP  = (double)pGPltN->fNDmndPrev;	
-      RNDEMP = (NDEM-NDEMP)/DELT;//rate
+      //RNDEMP = (NDEM-NDEMP)/DELT;//rate
+      //SG20191108
+      RNDEMP = (NDEM-NDEMP)/1.0;//per day [g(N) m-2 d-1]
       pGPltN->fNDmndPrvChangeR = (double)RNDEMP;
 
       
 //-----------------------------------------------------------------------------------------
 
-      NCR   = INSW(SLNT-SLNMIN,0.,min(NUPTX,NDEMA))
-             /(YGV*(double)pGPltC->fNetStdgCropPhotosynR*12./44.);
-      FNSH  = 1./(1.+NCR*DERI/NOTNUL(SHSA)*CSH/CRT*NRT/NSH);
-      FCSH  = 1./(1.+NCR*DERI/NOTNUL(SHSA));
+      //NCR   = INSW(SLNT-SLNMIN,0.,min(NUPTX,NDEMA))
+      //       /(YGV*(double)pGPltC->fNetStdgCropPhotosynR*12./44.);
+      //SG 20192215
+      NCR   = INSW(SLNT-SLNMIN,0.,min(NUPTX,max(0.0	,NDEMA)))
+             /(YGV*max(1.e-6,(double)pGPltC->fNetStdgCropPhotosynR)*12./44.);
+      //FNSH  = 1./(1.+NCR*DERI/NOTNUL(SHSA)*CSH/max(1.e-2,CRT)*NRT/max(1.e-2,NSH));
+      //FCSH  = 1./(1.+NCR*DERI/NOTNUL(SHSA));
+//Test_SG
+    if(APCAN>=0.1)
+    {
+        FNSH  = 1./(1.+NCR*DERI/max(1.e-2,SHSA)*CSH/max(1.e-2,CRT)*NRT/max(1.e-2,NSH));
+        FCSH  = 1./(1.+NCR*DERI/max(1.e-2,SHSA));
+        
+/*        FNSH  = max(0.2,min(0.8,FNSH));
+        FCSH  = max(0.2,min(0.8,FCSH));
+ */       
+        FNSHP = FNSH;
+        FCSHP = FCSH;
+    }
+    else
+    {
+       FNSH  = FNRSH;
+       FCSH  = FCRSH;
+        //FNSH  = FNSHP;
+        //FCSH  = FCSHP;
+    }
+        
+/*      FNSH  = max(0.2,min(0.8,1./(1.+NCR*DERI/max(1.e-2,SHSA)*CSH/max(1.e-2,CRT)*NRT/max(1.e-2,NSH))));
+      FCSH  = max(0.2,min(0.8,1./(1.+NCR*DERI/max(1.e-2,SHSA))));*/
 
       pGPltN->fNToCFracNewBiomass = (double)NCR;
 	  pGPltN->fNFracPartShoot     = (double)FNSH;
@@ -2961,16 +3073,10 @@ int   BiomassGrowth_GECROS(gecros *self)
       RMUA   = 44./12.*0.17*NUPTA;
       RMUS   = 0.06* 0.05/0.454*YGV*ASSA;
       RMLD   = 0.06*(1.-FCSH)*ASSA;
-      RRMUL  = (RMUN+RMUA+RMUS+RMLD-RMUL)/DELT;//rate
+      //RRMUL  = (RMUN+RMUA+RMUS+RMLD-RMUL)/DELT;//rate
+      //SG 20191108
+      RRMUL  = (RMUN+RMUA+RMUS+RMLD-RMUL)/1.0;//per day [g(CO2) m-2 d-1]
 	  pGPltC->fUptRespCostR = (double)RRMUL;
-      //Moritz Root respiration added 07.08.2019
-        double RM_root,RG_root,Resp_root,Resp_root_hr;
-      RM_root = RMUN+RMUA+RMUS;
-      RG_root = 44./12.*((1.-YGV)/YGV*(RCSRT+LCRT));
-      Resp_root = (RM_root + RG_root)/1000*12/44*10000 ; // to kg CO2 - C ha-1 d-1
-      Resp_root_hr = Resp_root/24;
-      xpn->pCh->pCProfile->Resp_root = Resp_root; 
-      //End Moritz
       
 	  //pGPltC->fUptRespCostR =0.0;//Hong
 	  //RRMUL=0.0;//Hong
@@ -3030,7 +3136,9 @@ int   BiomassGrowth_GECROS(gecros *self)
 	  else
 		  sinkg(DS,0.,CDMHT*HTMX*CFV,YGV,FDH*IFSH,DCDTR,DCST,DELT,&DCDTC,&DCDT,&FLWCT); //other crops
 
-	  RDCDTP = (DCDTC-DCDTP)/DELT;//rate
+	  //RDCDTP = (DCDTC-DCDTP)/DELT;//rate
+	  //SG 20191108
+      RDCDTP = (DCDTC-DCDTP)/1.0;//per day [g(C) m-2 d-1]
 
       //%-- Output
       pGPltC->fCDlySupplyStem        = (double)DCST;
@@ -3064,19 +3172,32 @@ int   BiomassGrowth_GECROS(gecros *self)
       pGPltC->fCFracPartToStorage     = (double)FCSO;
       pGPltC->fCFracPartToStemReserve = (double)FCRVS;
       pGPltC->fCFracPartToRootReserve = (double)FCRVR;
-      ///*
+      
+      // /*
       ESD    = INSW(DETER, ESDI, 1.);
-      LWLVM  = (LAIC-min(LAIC,LAIN))/SLA0/DELT;
-//SG 20110801: geringeres Absterben der Blätter wg. Messdaten PAK 346 (Kraichgau)
-	  LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.01*WLV);  //original: 0.03
-//    LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.03*WLV);
-	  
-      LCLV   = LWLV*CFV;//rate
-      LNLV   = min(LWLV,LWLVM)*LNCMIN + (LWLV-min(LWLV,LWLVM))*LNC;//rate
-      LCRT   = max(min(CSRT-1.E-4,CSRT-min(CSRTN,CSRT)),0.)/DELT;//rate
-      LWRT   = LCRT/CFV;
-      LNRT   = LWRT*RNCMIN;//rate
-      //*/
+     //LWLVM  = (LAIC-min(LAIC,LAIN))/SLA0/DELT; // g m-2 (soil) d-1
+     //SG20191105: per day
+     LWLVM  = (LAIC-min(LAIC,LAIN))/SLA0/1.0; // g m-2 (soil) d-1; compare NDEMD
+    //SG 20110801: geringeres Absterben der Blätter wg. Messdaten PAK 346 (Kraichgau)
+    //LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.01*WLV);  //[g m-2 d-1 ], original: 0.03 d-1 
+/*    LWLV   = min((WLV-1.E-5)/1.0, LWLVM+REANOR(ESD-DS,LWLVM)*0.03*WLV); //[g m-2 d-1 ]
+    LCLV   = LWLV*CFV;//rate [g(C) m-2 d-1 ]
+    LNLV   = min(LWLV,LWLVM)*LNCMIN + (LWLV-min(LWLV,LWLVM))*LNC;//rate  [g(N) m-2 d-1 ]*/ //SG20191121
+    
+     //%** intput (from OrganSenescence_GECROS)
+      LWLV = (double)pGPltB->fLeafWeightLossR;
+      LCLV = (double)pGPltC->fCLeafLossR;
+      LNLV = (double)pGPltN->fNLeafLossR ;
+
+    
+      
+   // //SG 20191105: Roots already considered in line 2843
+   // //LCRT   = max(min(CSRT-1.E-4,CSRT-min(CSRTN,CSRT)),0.)/DELT;//rate [g(C) m-2 d-1 ]
+   // //SG 20191105: per day
+   // LCRT   = max(min(CSRT-1.E-4,CSRT-min(CSRTN,CSRT)),0.)/1.0; //per day [g(C) m-2 d-1 ]
+   // LWRT   = LCRT/CFV; // [g m-2 d-1]
+   // LNRT   = LWRT*RNCMIN;//rate [g(N) m-2 d-1]
+   // */
 	  
 	  
 
@@ -3085,7 +3206,7 @@ int   BiomassGrowth_GECROS(gecros *self)
       pGPltC->fCRootLossR = (double)LCRT;
       pGPltN->fNRootLossR = (double)LNRT;
 
-      RCLV   = 12./44.*ASSA*    FCSH *    FCLV  *YGV - LCLV;//rate
+      RCLV   = 12./44.*ASSA*    FCSH *    FCLV  *YGV - LCLV;//rate  [g(C) m-2 s-1 ]
       RCSST  = 12./44.*ASSA*    FCSH *    FCSST *YGV;//rate
 	  //SG 20180409: sugarbeet model J. Rabe - 'stem' is 'storage organ'
 	  if(!strcmp(spec,"SB")||!strcmp(spec,"OR"))
@@ -3109,6 +3230,16 @@ int   BiomassGrowth_GECROS(gecros *self)
 
 	  RWSO   = RCSO / CFO;
       RWRT   = RCSRT/ CFV + RCRVR/0.444;
+      
+      //Moritz Root respiration added 07.08.2019
+      double RM_root,RG_root,Resp_root,Resp_root_hr;
+      RM_root = RMUN+RMUA+RMUS;
+      RG_root = 44./12.*((1.-YGV)/YGV*(RCSRT+LCRT));
+      Resp_root = (RM_root + RG_root)/1000*12/44*10000 ; // to kg CO2 - C ha-1 d-1
+      Resp_root_hr = Resp_root/24;
+      xpn->pCh->pCProfile->Resp_root = Resp_root; 
+      //End Moritz
+
 
       //output
       pGPltB->fLeafWeightLossR = (double)LWLV;
@@ -3157,7 +3288,7 @@ int   BiomassGrowth_GECROS(gecros *self)
 
       //%-- output
       pGPltN->fNRootAccumR    = (double)RNRT;//rate
-      pGPltN->fNStemAccumR    = (double)RNST;//rate
+     pGPltN->fNStemAccumR    = (double)RNST;//rate
       pGPltN->fNLeafAccumR    = (double)RNLV;//rate
       pGPltN->fNLeafTotAccumR = (double)RTNLV;//rate
       pGPltN->fNStorageAccumR = (double)RNSO;//rate
@@ -3460,7 +3591,9 @@ int  PlantHeightGrowth_GECROS(gecros *self)
       FDH    = betaf(DVR,(1.+ESD)/2.,PMEH*(1.+ESD)/2.,min((1.+ESD)/2.,DS));
 
       DCDTP  = max(0,DCDTP+RDCDTP*DELT);
-      RDCDTP = (DCDTC-DCDTP)/DELT;
+      //RDCDTP = (DCDTC-DCDTP)/DELT;
+      //SG 20191108
+      RDCDTP = (DCDTC-DCDTP)/1.0; // per day
       IFSH   = LIMIT(0.,1.,DCST/NOTNUL(DCDTP));
 
       HT     = max(0,HT+RHT*DELT);
@@ -3510,7 +3643,9 @@ int   RootSystemFormation_GECROS(gecros *self)
       //*/
       //%** Rooting depth (cm)
 	  KR     = -log(0.05)/RDMX;
-      RRD    = INSW(RD-RDMX, min((RDMX-RD)/DELT,(RWRT+LWRT)/(WRB+KR*(WRT+WRTD))), 0.);//rate
+      //RRD    = INSW(RD-RDMX, min((RDMX-RD)/DELT,(RWRT+LWRT)/(WRB+KR*(WRT+WRTD))), 0.);//rate
+      //SG20191108
+      RRD    = INSW(RD-RDMX, min((RDMX-RD)/1.0,(RWRT+LWRT)/(WRB+KR*(WRT+WRTD))), 0.);//per day [cm d-1]
       RD     = max(0,RD+RRD*DELT);
 
       //output
@@ -3581,10 +3716,13 @@ int   OrganSenescence_GECROS(gecros *self)
       //%** Leaf senescence
       ESD    = INSW(DETER, ESDI, 1.);
 
-      LWLVM  = (LAIC-min(LAIC,LAIN))/SLA0/DELT;
+      //LWLVM  = (LAIC-min(LAIC,LAIN))/SLA0/DELT;
+      //SG20191105: per day
+      LWLVM  = (LAIC-min(LAIC,LAIN))/SLA0/1.0; // per day [g m-2 (soil)]
       //SG 20110801:
-	  LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.01*WLV);
-      //LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.03*WLV);
+	  //LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.01*WLV); //[g m-2 d-1 ], original 0.03 d-1
+     LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.03*WLV); //[g m-2 d-1 ]
+
       LCLV   = LWLV*CFV;
       LNLV   = min(LWLV,LWLVM)*LNCMIN + (LWLV-min(LWLV,LWLVM))*LNC;
       //LWLV   = 0.0;
@@ -3594,7 +3732,9 @@ int   OrganSenescence_GECROS(gecros *self)
       //%** Root senescence
       KCRN   = -log(0.05)/6.3424/CFV/WRB/RDMX;
       CSRTN  = 1./KCRN*log(1.+KCRN*max(0.,(NRT*CFV-CRVR*RNCMIN))/RNCMIN);
-      LCRT   = max(min(CSRT-1.E-4,CSRT-min(CSRTN,CSRT)),0.)/DELT;
+      //LCRT   = max(min(CSRT-1.E-4,CSRT-min(CSRTN,CSRT)),0.)/DELT;
+      //SG20191105: per day
+      LCRT   = max(min(CSRT-1.E-4,CSRT-min(CSRTN,CSRT)),0.)/1.0;//per day [g(C) m-2 d-1]
       LWRT   = LCRT/CFV;
       LNRT   = LWRT*RNCMIN;
       //LWRT   = 0.0;
@@ -3665,9 +3805,13 @@ int   NitrogenFixation_GECROS(gecros *self)
 	  CCFIX  = self->CCFIX;
        
       //%** Nitrogen fixation (g N m-2 d-1)
-	  RNDEMP = (NDEM-NDEMP)/DELT;
+	  //RNDEMP = (NDEM-NDEMP)/DELT;
+      //SG 20191108
+      RNDEMP = (NDEM-NDEMP)/1.0; // per day [g(N) m-2 d-1]
       NDEMP  = max(0,NDEMP+RNDEMP*DELT);
-	  RNSUPP = (NSUP-NSUPP)/DELT;
+	  //RNSUPP = (NSUP-NSUPP)/DELT;
+	  //SG20191108
+      RNSUPP = (NSUP-NSUPP)/1.0; // per day [g(N) m-2 d-1]
 	  NSUPP  = max(0,NSUPP+RNSUPP*DELT);
 
       NFIXE  = max(0., APCAN-1.E-5-RM)/NOTNUL(CCFIX)*12./44.;
@@ -3732,7 +3876,7 @@ int     PotentialNitrogenUptake_GECROS(gecros *self)
 	  double SLNMIN = (double)self->SLNMIN;
 
       //double DELT = (double)1;
-	 // double DELT = (double)xpn->pTi->pTimeStep->fAct;
+	 double DELT = (double)xpn->pTi->pTimeStep->fAct;
 //-------------------------------------------------------------------------------------
       ///*
       //%** input ***
@@ -3767,20 +3911,37 @@ int     PotentialNitrogenUptake_GECROS(gecros *self)
       RMN    = min(44./12.*0.218*(1.001*NTOT-WSH*LNCMIN-WRT*RNCMIN),APCAN-1.E-5-RMUL);
       RMN    = max(0., min(APCAN-1.E-5,RMUL) + max(RMN, 0.));
       RM     = max(0., min(APCAN-1.E-5,RMUL) + RMRE);
+ //Test_SG:
+     //RMN    = max(0., min(APCAN-1.E-2,RMUL) + max(RMN, 0.));
+     //RM     = max(0., min(APCAN-1.E-2,RMUL) + RMRE);
+     RMN = min(RMN,RM); //andernfalls kann DERI negativ werden
 
-	  SHSA   = 12./44. * YGV*(APCAN -RM -RX)/ CSH;
+/*	  SHSA   = 12./44. * YGV*(APCAN -RM -RX)/ CSH;  // [g g(C)-1 d-1]
       SHSAN  = 12./44. * YGV*(APCANN-RMN-RX)/ CSH;
-
-      DERI   = max(0.,(SHSAN - SHSA)/(0.001*NTOT/CTOT));
+      DERI   = max(0.,(SHSAN - SHSA)/(0.001*NTOT/CTOT));  // [g g(N-1 d-1]*/
       //DERI   = (double)fabs((SHSAN - SHSA)/(0.001*NTOT/CTOT));
+      
+//SG 20191115:
+	  SHSA   = 12./44. * YGV*(APCAN -RM -RX)/ CSH;  // [g g(C)-1 d-1]
+      SHSAN  = 12./44. * YGV*(APCANN-RMN-RX)/ CSH;
+      DERI   = max(0.01,(SHSAN - SHSA)/(0.001*max(1.e-2,NTOT)/max(1.e-1,CTOT)));  // [g g(N-1 d-1]
+      //DERI   = max(1.e-12,(SHSAN - SHSA)/(0.001*NTOT/CTOT));  // [g g(N-1 d-1]
 
-      //%-- Nitrogen partitioning between shoots and roots
+        //%-- Nitrogen partitioning between shoots and roots
       HNCCR  = LNCI*exp(-0.4*DS);
-      //NDEMD  = INSW(DS-1., WSH*(HNCCR-HNC)*(1.+NRT/NSH)/DELT, 0.);//original, not correct!!! NDEMD is not a rate.
-	  NDEMD  = INSW(DS-1., WSH*(HNCCR-HNC)*(1.+NRT/NSH), 0.);//changed by Hong, NUPTX has the unit (g N m-2 d-1) 
-      NDEMA  = CRT * SHSA*SHSA/NOTNUL(DERI);
-      NDEMAD = INSW(LNC-1.5*LNCI, max(NDEMA, NDEMD), 0.);
-      NDEM   = INSW(SLNMIN-SLN+1.E-5, min(NUPTX,NDEMAD), 0.);
+      //NDEMD  = INSW(DS-1., WSH*(HNCCR-HNC)*(1.+NRT/NSH)/DELT, 0.);//original, not correct!!! NDEMD is per day. 
+	  NDEMD  = INSW(DS-1., WSH*(HNCCR-HNC)*(1.+NRT/NSH)/1.0, 0.);//changed by Hong, NUPTX has the unit (g N m-2 d-1) 
+      //NDEMA  = CRT * SHSA*SHSA/NOTNUL(DERI); // (g N m-2 d-1)
+//SG 20191115:
+//      NDEMA  = max(1.e-6,CRT * SHSA*SHSA/NOTNUL(DERI)); // (g N m-2 d-1)
+      NDEMA  = max(1.e-4,CRT * SHSA*SHSA/max(0.01,DERI)); // (g N m-2 d-1)
+
+     
+     
+     //NDEMAD = INSW(LNC-1.5*LNCI, max(NDEMA, NDEMD), 0.); 
+     NDEMAD = INSW(LNC-1.5*LNCI, max(NDEMA/self->DAYL*24.0, NDEMD), 0.); //SG20191119: NDEMA per daytime
+     NDEM   = INSW(SLNMIN-SLN+1.E-5, min(NUPTX,NDEMAD), 0.);
+ 
 			 
 //Hong 2016-08-08: change for Sebastian Gayler and Arne Poyda
 
@@ -3886,6 +4047,8 @@ int   ActualNitrogenUptake_GECROS(gecros *self)
       double fnh4sup, fno3sup, fws, fnsup, fnh4up, fno3up, fnup;
       double frd, fpor, fndem, fnh4, fno3;
 	  double fpd, f1, f2;
+      
+      double DEPMAX;
 
       double DeltaZ= pSo->fDeltaZ;
 	  //double DELT = (double)1;
@@ -3914,10 +4077,24 @@ int   ActualNitrogenUptake_GECROS(gecros *self)
       NUPT   = MAX(0., NUPTA + NUPTN + MIN(NDEM, NFIXR/TCP))
     */
 
+
+  //SG20191121: Profile depth
+    DEPMAX=0.0;
+	pSL	  =pSo->pSLayer->pNext;
+	for (L=1;L<=pSo->iLayers-2;L++)
+		{
+		DEPMAX += (double)0.1*pSL->fThickness;	//cm
+		pSL=pSL->pNext;
+		}
+ 
+     pGS->fProfileDepth = DEPMAX;
+
+
       L = 1;
       fDepth =(double)0;
       fh2o = fpor = fnh4p = fno3p = (double)0;
 
+      pSL	  =pSo->pSLayer->pNext;
       while (((pPl->pRoot->fDepth*(double)10)>=fDepth)&&(L<=pSo->iLayers-2))// if pPl->pRoot->fDepth in [cm]
          {
             fnh4p += pSLN->fNH4N;
@@ -4041,14 +4218,14 @@ int   ActualNitrogenUptake_GECROS(gecros *self)
 
        if(L*DeltaZ <= frd) 
 	   {
-        pLR->fActLayNH4NUpt = fnh4;//*DeltaZ/frd;
-        pLR->fActLayNO3NUpt = fno3;//*DeltaZ/frd;
+        pLR->fActLayNH4NUpt = fnh4;// *DeltaZ/frd;
+        pLR->fActLayNO3NUpt = fno3;// *DeltaZ/frd;
 	   }
 	   else if ((frd < L*DeltaZ)&&(L*DeltaZ <= frd + DeltaZ))
        {
         f1 = (L*DeltaZ-frd)/DeltaZ;
-        pLR->fActLayNH4NUpt = (((double)1-f1)*fnh4);//*DeltaZ/frd);
-        pLR->fActLayNO3NUpt = (((double)1-f1)*fno3);//*DeltaZ/frd);
+        pLR->fActLayNH4NUpt = (((double)1-f1)*fnh4);// *DeltaZ/frd);
+        pLR->fActLayNO3NUpt = (((double)1-f1)*fno3);// *DeltaZ/frd);
 	   }
 	   else
 	   {
@@ -4061,9 +4238,12 @@ int   ActualNitrogenUptake_GECROS(gecros *self)
 	  }//for
 	}//*/
 
-      pGS->fProfileDepth = 150; 
+     //SG20191121: wird jetz am Anfang der Funktion berechnet
+     //pGS->fProfileDepth = 150; 
+      
+
 	
-	  frd  = pPl->pRoot->fDepth/pGS->fProfileDepth;
+	  frd  = min(1.0,pPl->pRoot->fDepth/pGS->fProfileDepth);
       fpwc = fpor/(float)NOTNUL((double)pPl->pRoot->fDepth)/(float)10;
       //fpwc = fwcfcwcmin;// sg/hmgu 20090326 
 	  //SG 20111103: pGS->fPlantWaterCapacity wird nicht gesetzt. Deshalb fws aus schichtweiser Berechnung:
@@ -4369,6 +4549,8 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
          //%---sine of solar elevation
          //SINB  = max(0.0, SINLD+COSLD*cos(2.0*PI*(HOUR-12.0)/24.0));
 		 SINB  = max(1E-12, SINLD+COSLD*cos(2.0*PI*(HOUR-12.0)/24.0));//Hong
+		 //SINB  = max(1.e-6, SINLD+COSLD*cos(2.0*PI*(HOUR-12.0)/24.0));//Hong
+         
     
          //%---daytime course of radiation  [J m-2 d-1] --> [J m-2 s-1]
          //Begin of Hong
@@ -4384,7 +4566,7 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
          DAYTMP= TMPA;//Hong
          
 	     //%---daytime course of water supply  [mm d-1] --> [mm s-1]
-         WSUP  = DWSUP*(SINB*SC/1367.)/DSINBE;
+         WSUP  = DWSUP*(SINB*SC/1367.)/DSINBE; //original Gecros, daily time step, Gauss-integration
 		 //WSUP  = DWSUP/(24*3600);//Hong
          WSUP1 = WSUP*SD1/RD;
          WSUP1 = min(WSUP,WSUP1);
@@ -4418,7 +4600,8 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
 */
          
          //Hong: after SPASS
-		 if (SINB > 0.0)
+//		 if (SINB > 0.0)
+		 if (SINB > 0.01) //SG
 		{
 		ATMTR  	= PAR/(0.5*SC*SINB);
 		ATMTR = max(min(ATMTR,1.0),0.0);		
@@ -4442,6 +4625,8 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
 		else
 		{
 			PARDF = PAR;
+            //SG20191119
+            FRDF = 1.0;
 		}
 		PARDR = PAR-PARDF;
 		//End of Test
@@ -4615,15 +4800,39 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
        *APCANS = IAPS  * (double)24 * (double)3600; // [mm s-1] --> [mm d-1]
        *APCANN = IAPNN * (double)24 * (double)3600; // [mm s-1] --> [mm d-1]
        *APCAN  = IAP   * (double)24 * (double)3600; // [mm s-1] --> [mm d-1]
-       *PTCAN  = IPT   * DAYL * (double)3600; // [mm s-1] --> [mm d-1]
+/*       *PTCAN  = IPT   * DAYL * (double)3600; // [mm s-1] --> [mm d-1]
        *ATCAN  = IAT   * DAYL * (double)3600; // [mm s-1] --> [mm d-1]
        *PESOIL = IPE   * DAYL * (double)3600; // [mm s-1] --> [mm d-1]
-       *AESOIL = IAE   * DAYL * (double)3600; // [mm s-1] --> [mm d-1]
+       *AESOIL = IAE   * DAYL * (double)3600; // [mm s-1] --> [mm d-1]*/
+      
+    //SG 20191025
+       *PTCAN  = IPT   * (double)24  * (double)3600; // [mm s-1] --> [mm d-1]
+       *ATCAN  = IAT   * (double)24  * (double)3600; // [mm s-1] --> [mm d-1]
+       *PESOIL = IPE   * (double)24  * (double)3600; // [mm s-1] --> [mm d-1]
+       *AESOIL = IAE   * (double)24  * (double)3600; // [mm s-1] --> [mm d-1]
          
 	   *DIFS   = ADIFS;
        *DIFSU  = ADIFSU;
        *DIFSH  = ADIFSH;
        *DAPAR  = APAR  * (double)24 * (double)3600; // [mm s-1] --> [mm d-1]
+       
+      //SG20191119
+       if (SINB <= 1.e-12)
+		{
+            //*DIFS   = 0.;
+
+           *PPCAN  =0.0; // [mm s-1] --> [mm d-1]
+           *APCANS = 0.0; // [mm s-1] --> [mm d-1]
+           *APCANN = 0.0; // [mm s-1] --> [mm d-1]
+           *APCAN  = 0.0; // [mm s-1] --> [mm d-1]
+        }
+        
+           //*PPCAN  = max(0.1,*PPCAN); 
+           //*APCANS =  max(0.1,*APCANS); 
+           //*APCANN =  max(0.1,*APCANN); 
+           //*APCAN  =  max(0.1,*APCAN); 
+
+       
 	   	  
      return *APCAN;//DTGA;
     }
@@ -4682,7 +4891,9 @@ double kbeam(double SINB,double BL)
        double B,OAV,KB;
 
         //%---solar elevation in radians
-        B      = asin(NOTNUL(SINB));
+  //      B      = asin(NOTNUL(SINB));
+  //SG 20191117
+      B      = asin(max(1.e-6,SINB));
 
        //%---average projection of leaves in the direction of a solar beam
        if (SINB >= sin(BL))
@@ -5403,7 +5614,9 @@ int sinkg(double DS, double SSG,double TOTC,double YG,double FD,double DCDR,doub
       *DCDC   = INSW (DS-SSG, 0., TOTC/YG*FD);
 
  //%---total demand for C at the time step considered
-      *DCD    = *DCDC + max(0.,DCDR)/DELT;
+      //*DCD    = *DCDC + max(0.,DCDR)/DELT;
+      //SG20191108
+      *DCD    = *DCDC + max(0.,DCDR)/1.0; // per day [g m-2 d-1]
 
  //%---flow of current assimilated carbon to sink
       *FLWC   = min(*DCD, DCS);
@@ -5458,22 +5671,27 @@ int rnacc(double FNSH,double NUPT,double RWST,double STEMNC,double LNCMIN,double
  double NRTN,GNRT;
  
       //%---amount of N partitioned to shoot
-      NSHN   = FNSH * NUPT;
+      NSHN   = FNSH * NUPT;  // [g(N) m-2 d-1]
 
       //%---leaf N (NLVA) or root N (NRTA) available for remobilization
-      NLVA   = INSW(LNCMIN-LNC, NLV-WLV*LNCMIN, 0.) / DELT;
-      NRTA   = INSW(RNCMIN-RNC, NRT-WRT*RNCMIN, 0.) / DELT;
-      NTA    = NLVA + NRTA;
+/*      NLVA   = INSW(LNCMIN-LNC, NLV-WLV*LNCMIN, 0.) / DELT; // [g(N) m-2 d-1]
+      NRTA   = INSW(RNCMIN-RNC, NRT-WRT*RNCMIN, 0.) / DELT;  // [g(N) m-2 d-1]
+      NTA    = NLVA + NRTA; // [g(N) m-2 d-1]*/
+    
+      //%---leaf N (NLVA) or root N (NRTA) available for remobilization
+      NLVA   = INSW(LNCMIN-LNC, NLV-WLV*LNCMIN, 0.); // [g(N) m-2]
+      NRTA   = INSW(RNCMIN-RNC, NRT-WRT*RNCMIN, 0.);  // [g(N) m-2]
+      NTA    = NLVA + NRTA; // [g(N) m-2]
 
       //%---rate of N accumulation in stem
-      *RNST   = RWST * INSW(-NTA,STEMNC,0.);
+      *RNST   = RWST * INSW(-NTA,STEMNC,0.);  // [g(N) m-2 d-1]
 
       //%---expected N dynamics during seed(storage organ) filling
       CDS    = CB+(CX-CB)*(4.-TM-DS)/(2.-TM)*abspowerDBL((DS-1.),(1./(2.-TM)));
       ENSNC  = LIMIT(CB,CX,CDS) * SEEDNC;
 
       //%---rate of N accumulation in seed
-      NGS    = NSHN - *RNST - ENSNC*RWSO;
+      NGS    = NSHN - *RNST - ENSNC*RWSO;  // [g(N) m-2 d-1]
       NONC   = max(0.,INSW(NTA+NGS,(NTA+NSHN-*RNST)/NOTNUL(RWSO),ENSNC));
       *RNSO   = RWSO*NONC;
 
@@ -5747,7 +5965,11 @@ int gecros_Germination(gecros *self)
 		if (self->fEmergValue < (double) 1.0)
 			iEmergence = -1;
 		else
+        {
 			iEmergence = 1;
+            self->fEmergValue = 0; //SG20191025
+        }
+        
 	    
     return iEmergence;
   }

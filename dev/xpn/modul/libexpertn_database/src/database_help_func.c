@@ -3137,16 +3137,24 @@ void expertn_database_help_func_init_Soil_Organic_Matter(expertn_modul_base *sel
             pMa->pLitter->fTotalC = 0.0;
             pMa->pLitter->fTotalCN = 0.1;
 
+            if (pCh->pCProfile->fCLitterSurf< 0)
             pCh->pCProfile->fCLitterSurf = 0.0;
+			if (pCh->pCProfile->fNLitterSurf <0)
             pCh->pCProfile->fNLitterSurf = 0.0;
 
-            pCh->pCProfile->fCManureSurf = 0.0;
+            if(pCh->pCProfile->fCManureSurf<0)
+			pCh->pCProfile->fCManureSurf = 0.0;
+			if(pCh->pCProfile->fNManureSurf<0)
             pCh->pCProfile->fNManureSurf = 0.0;
 
-            pCh->pCProfile->fCHumusSurf = 0.0;
+            if(pCh->pCProfile->fCHumusSurf<0)
+			pCh->pCProfile->fCHumusSurf = 0.0;
+			if(pCh->pCProfile->fNHumusSurf<0)
             pCh->pCProfile->fNHumusSurf = 0.0;
 
+            if(pCh->pCProfile->fCStandCropRes < 0)
             pCh->pCProfile->fCStandCropRes = 0.0;
+			if(pCh->pCProfile->fNStandCropRes< 0)
             pCh->pCProfile->fNStandCropRes = 0.0;
 
             /* Berechnen schichtmaessiger Anteil. Zur Vereinfachung
@@ -3173,8 +3181,10 @@ void expertn_database_help_func_init_Soil_Organic_Matter(expertn_modul_base *sel
                        File eingelesen und sollte nicht ueberschrieben werden   */
 
                     pCL->fCLitter = 0.0;
-                    pCL->fNLitter = 0.1;
-                    pCL->fLitterCN = 0.1;
+//                    pCL->fNLitter = 0.1;
+//                    pCL->fLitterCN = 0.1; 
+                     pCL->fNLitter = 1e-6;
+                     pCL->fLitterCN = 1e-6;
 
                 }
         }
