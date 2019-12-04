@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<workbench progressCount="16" version="2.0">
+<workbench progressCount="20" version="2.0">
 <workbenchAdvisor/>
 <window height="410" maximized="true" width="976" x="242" y="274">
 <fastViewData fastViewLocation="1024"/>
@@ -41,15 +41,15 @@
 </editorArea>
 <editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="XnParameterTool.java" partName="XnParameterTool.java" path="/home/troost/490d/XN5/xnParameterTool/XN_tool/src/de/uhoh/for1695/XnParameterTool.java" title="XnParameterTool.java" tooltip="XN_tool/src/de/uhoh/for1695/XnParameterTool.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/XN_tool/src/de/uhoh/for1695/XnParameterTool.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="23" selectionOffset="31988" selectionTopPixel="17108"/>
+<editorState selectionHorizontalPixel="0" selectionLength="27" selectionOffset="38344" selectionTopPixel="20610"/>
 </editor>
 <editor activePart="true" focus="true" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="XnDatabaseConnection.java" partName="XnDatabaseConnection.java" path="/home/troost/490d/XN5/xnParameterTool/XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java" title="XnDatabaseConnection.java" tooltip="XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="200454" selectionTopPixel="92038"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="142604" selectionTopPixel="64192"/>
 </editor>
 <editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="MySQLConnection.java" partName="MySQLConnection.java" path="/home/troost/490d/XN5/xnParameterTool/XN_tool/src/de/uhoh/for1695/MySQLConnection.java" title="MySQLConnection.java" tooltip="XN_tool/src/de/uhoh/for1695/MySQLConnection.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/XN_tool/src/de/uhoh/for1695/MySQLConnection.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1720" selectionTopPixel="1105"/>
+<editorState selectionHorizontalPixel="0" selectionLength="46" selectionOffset="1261" selectionTopPixel="918"/>
 </editor>
 </editors>
 <views>
@@ -58,9 +58,7 @@
 </view>
 <view id="org.eclipse.jdt.ui.MembersView" partName="Members">
 <viewState hidefields="false" hidelocaltypes="false" hidenonpublic="false" hidestatic="false" org.eclipse.jdt.ui.browsing.memberstoeditor="1">
-<customFilters userDefinedPatternsEnabled="false">
-<xmlDefinedFilters>
-<child filterId="org.eclipse.jdt.ui.MembersView.SyntheticMembersFilter" isEnabled="true"/>
+<customFilters userDefinedPatternsEnabled="false">&#x0A;<xmlDefinedFilters>&#x0A;<child filterId="org.eclipse.jdt.ui.MembersView.SyntheticMembersFilter" isEnabled="true"/>
 <child filterId="org.eclipse.jdt.ui.MembersView.ImportDeclarationFilter" isEnabled="false"/>
 </xmlDefinedFilters>
 </customFilters>
@@ -79,7 +77,9 @@
 </view>
 <view id="org.eclipse.jdt.ui.PackageExplorer" partName="Package Explorer">
 <viewState group_libraries="1" layout="2" linkWithEditor="1" rootMode="1" workingSetName="Aggregate for window 1271237787859">
-<customFilters userDefinedPatternsEnabled="false">&#x0A;<xmlDefinedFilters>&#x0A;<child filterId="org.eclipse.jdt.ui.PackageExplorer.LibraryFilter" isEnabled="false"/>
+<customFilters userDefinedPatternsEnabled="false">
+<xmlDefinedFilters>
+<child filterId="org.eclipse.jdt.ui.PackageExplorer.LibraryFilter" isEnabled="false"/>
 <child filterId="org.eclipse.jdt.ui.PackageExplorer.LocalTypesFilter" isEnabled="false"/>
 <child filterId="org.eclipse.jdt.ui.PackageExplorer.StaticsFilter" isEnabled="false"/>
 <child filterId="org.eclipse.pde.ui.ExternalPluginLibrariesFilter1" isEnabled="true"/>
@@ -129,7 +129,7 @@
 <viewState/>
 </view>
 </views>
-<perspectives activePart="org.eclipse.ui.console.ConsoleView" activePerspective="org.eclipse.jdt.ui.JavaBrowsingPerspective">
+<perspectives activePart="org.eclipse.jdt.ui.CompilationUnitEditor" activePerspective="org.eclipse.jdt.ui.JavaBrowsingPerspective">
 <perspective editorAreaTrimState="4" editorAreaVisible="1" fixed="0" version="0.016">
 <descriptor class="org.eclipse.jdt.internal.ui.JavaPerspectiveFactory" id="org.eclipse.jdt.ui.JavaPerspective" label="Java"/>
 <alwaysOnActionSet id="org.eclipse.ui.cheatsheets.actionSet"/>
@@ -269,25 +269,37 @@
 <view id="org.eclipse.ui.views.ContentOutline"/>
 <view id="org.eclipse.debug.ui.DebugView"/>
 <fastViewBars/>
-<layout>&#x0A;<mainWindow>&#x0A;<info folder="true" part="org.eclipse.ui.internal.ViewStack@16e822e">&#x0A;<folder activePageID="org.eclipse.ui.views.ContentOutline" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.ui.views.ContentOutline" label="Outline"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
+<layout>
+<mainWindow>
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@16e822e">
+<folder activePageID="org.eclipse.ui.views.ContentOutline" appearance="2" expanded="2">
+<page content="org.eclipse.ui.views.ContentOutline" label="Outline"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
 </presentation>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.debug.internal.ui.NavigatorFolderView" ratio="0.1789855" ratioLeft="247" ratioRight="1133" relationship="2" relative="org.eclipse.ui.internal.ViewStack@16e822e">&#x0A;<folder activePageID="org.eclipse.debug.ui.DebugView" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.debug.ui.DebugView" label="Debug"/>
+<info folder="true" part="org.eclipse.debug.internal.ui.NavigatorFolderView" ratio="0.1789855" ratioLeft="247" ratioRight="1133" relationship="2" relative="org.eclipse.ui.internal.ViewStack@16e822e">
+<folder activePageID="org.eclipse.debug.ui.DebugView" appearance="2" expanded="2">
+<page content="org.eclipse.debug.ui.DebugView" label="Debug"/>
 <page content="org.eclipse.ui.views.ResourceNavigator" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.ui.PackageExplorer" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.ui.TypeHierarchy" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
 </presentation>
 </folder>
 </info>
-<info folder="true" part="stickyFolderRight" ratio="0.75" ratioLeft="762" ratioRight="254" relationship="2" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">&#x0A;<folder appearance="2" expanded="2">&#x0A;<page content="org.eclipse.help.ui.HelpView" label="LabelNotFound"/>
+<info folder="true" part="stickyFolderRight" ratio="0.75" ratioLeft="762" ratioRight="254" relationship="2" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">
+<folder appearance="2" expanded="2">
+<page content="org.eclipse.help.ui.HelpView" label="LabelNotFound"/>
 <page content="org.eclipse.ui.internal.introview" label="LabelNotFound"/>
 <page content="org.eclipse.ui.cheatsheets.views.CheatSheetView" label="LabelNotFound"/>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.debug.internal.ui.ConsoleFolderView" ratio="0.66276044" ratioLeft="509" ratioRight="259" relationship="4" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">&#x0A;<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
+<info folder="true" part="org.eclipse.debug.internal.ui.ConsoleFolderView" ratio="0.66276044" ratioLeft="509" ratioRight="259" relationship="4" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">
+<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">
+<page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
 <page content="org.eclipse.ui.views.TaskList" label="Tasks"/>
 <page content="org.eclipse.jdt.callhierarchy.view" label="Call Hierarchy"/>
 <page content="org.eclipse.search.ui.views.SearchView" label="Search"/>
@@ -295,7 +307,8 @@
 <page content="org.eclipse.ui.views.PropertySheet" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.debug.ui.DisplayView" label="LabelNotFound"/>
 <page content="org.eclipse.search.SearchResultView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
 <part id="1"/>
 <part id="2"/>
 <part id="3"/>
@@ -303,11 +316,15 @@
 </folder>
 </info>
 <info part="org.eclipse.ui.editorss" ratio="0.45346063" ratioLeft="190" ratioRight="229" relationship="4" relative="org.eclipse.debug.internal.ui.NavigatorFolderView"/>
-<info folder="true" part="org.eclipse.debug.internal.ui.OutlineFolderView" ratio="0.75" ratioLeft="762" ratioRight="254" relationship="2" relative="org.eclipse.ui.editorss">&#x0A;<folder appearance="2" expanded="2">&#x0A;<page content="org.eclipse.ant.ui.views.AntView" label="LabelNotFound"/>
+<info folder="true" part="org.eclipse.debug.internal.ui.OutlineFolderView" ratio="0.75" ratioLeft="762" ratioRight="254" relationship="2" relative="org.eclipse.ui.editorss">
+<folder appearance="2" expanded="2">
+<page content="org.eclipse.ant.ui.views.AntView" label="LabelNotFound"/>
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.debug.internal.ui.ToolsFolderView" ratio="0.5" ratioLeft="508" ratioRight="508" relationship="2" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">&#x0A;<folder appearance="2" expanded="2">&#x0A;<page content="org.eclipse.debug.ui.VariableView" label="LabelNotFound"/>
+<info folder="true" part="org.eclipse.debug.internal.ui.ToolsFolderView" ratio="0.5" ratioLeft="508" ratioRight="508" relationship="2" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">
+<folder appearance="2" expanded="2">
+<page content="org.eclipse.debug.ui.VariableView" label="LabelNotFound"/>
 <page content="org.eclipse.debug.ui.BreakpointView" label="LabelNotFound"/>
 <page content="org.eclipse.debug.ui.ExpressionView" label="LabelNotFound"/>
 <page content="org.eclipse.debug.ui.RegisterView" label="LabelNotFound"/>
@@ -395,7 +412,7 @@
 </folder>
 </info>
 <info folder="true" part="left" ratio="0.24036281" ratioLeft="212" ratioRight="670" relationship="4" relative="org.eclipse.ui.internal.ViewStack@1c9acf1">
-<folder activePageID="org.eclipse.jdt.ui.MembersView" appearance="2" expanded="2">
+<folder activePageID="org.eclipse.jdt.ui.PackageExplorer" appearance="2" expanded="2">
 <page content="org.eclipse.jdt.ui.PackageExplorer" label="Package Explorer"/>
 <page content="org.eclipse.ui.navigator.ProjectExplorer" label="Project Explorer"/>
 <page content="org.eclipse.jdt.ui.MembersView" label="Members"/>
@@ -410,7 +427,7 @@
 </presentation>
 </folder>
 </info>
-<info part="org.eclipse.ui.editorss" ratio="0.18032786" ratioLeft="220" ratioRight="1000" relationship="2" relative="left"/>
+<info part="org.eclipse.ui.editorss" ratio="0.22222222" ratioLeft="360" ratioRight="1260" relationship="2" relative="left"/>
 <info folder="true" part="bottom" ratio="0.6017964" ratioLeft="402" ratioRight="266" relationship="4" relative="org.eclipse.ui.editorss">
 <folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">
 <page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
@@ -442,164 +459,162 @@
 <navigationHistory>
 <editors>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java"/>
-<editor factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/lib\/mysql-connector-java-5.0.7-bin.jar&lt;com.mysql.jdbc(MysqlIO.class"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/XN_tool/src/de/uhoh/for1695/XnParameterTool.java"/>
+<editor factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/lib\/mysql-connector-java-5.0.7-bin.jar&lt;com.mysql.jdbc(Connection.class"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/XN_tool/src/de/uhoh/for1695/XnParameterTool.java"/>
+<editor factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/lib\/mysql-connector-java-5.0.7-bin.jar&lt;com.mysql.jdbc(SQLError.class"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/XN_tool/src/de/uhoh/for1695/MySQLConnection.java"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/XN_tool/src/de/uhoh/for1695/XnParameterTool.java"/>
-<editor factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/lib\/mysql-connector-java-5.0.7-bin.jar&lt;com.mysql.jdbc(MysqlIO.class"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/XN_tool/src/de/uhoh/for1695/XnParameterTool.java"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java"/>
 </editors>
 <item historyLabel="XnDatabaseConnection.java" index="0">
-<position info="not_deleted" x="184999" y="16"/>
+<position info="not_deleted" x="144091" y="0"/>
 </item>
 <item historyLabel="XnDatabaseConnection.java" index="0">
-<position info="not_deleted" x="97909" y="27"/>
+<position info="not_deleted" x="141237" y="27"/>
 </item>
 <item historyLabel="XnDatabaseConnection.java" index="0">
-<position info="not_deleted" x="75427" y="27"/>
+<position info="not_deleted" x="128737" y="0"/>
 </item>
 <item historyLabel="XnDatabaseConnection.java" index="0">
-<position info="not_deleted" x="146345" y="36"/>
+<position info="not_deleted" x="111328" y="20"/>
 </item>
-<item historyLabel="MysqlIO.class" index="1">
-<position info="not_deleted" x="0" y="0"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="111557" y="0"/>
 </item>
-<item historyLabel="XnParameterTool.java" index="2">
-<position info="not_deleted" x="38981" y="0"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="59277" y="16"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="146219" y="27"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="54957" y="15"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="186686" y="16"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="111328" y="20"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="176272" y="27"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="111544" y="13"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="54957" y="15"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="59115" y="0"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="58907" y="0"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="55689" y="0"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="147435" y="26"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="147278" y="26"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="148815" y="32"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="148949" y="1968"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="54957" y="15"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="59095" y="0"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
 <position/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="46131" y="35"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="59614" y="0"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="179376" y="0"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="59614" y="0"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="179629" y="16"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="59042" y="0"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="186686" y="16"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="59094" y="0"/>
 </item>
-<item historyLabel="MySQLConnection.java" index="4">
-<position info="not_deleted" x="1720" y="0"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="59554" y="0"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="186686" y="16"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="60557" y="0"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="186320" y="234"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="59620" y="0"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="186611" y="0"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="60688" y="0"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="186686" y="16"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="49083" y="26"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="179629" y="480"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="60688" y="0"/>
 </item>
-<item historyLabel="XnParameterTool.java" index="2">
-<position info="not_deleted" x="118022" y="8"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="60747" y="0"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="179629" y="480"/>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="61134" y="0"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="186686" y="16"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="186727" y="9"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="179284" y="75"/>
-</item>
-<item historyLabel="XnParameterTool.java" index="2">
-<position info="not_deleted" x="24514" y="123"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="186686" y="16"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="3047" y="0"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="179363" y="0"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="186686" y="16"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="187690" y="0"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="188596" y="0"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="187099" y="38"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="58606" y="16"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="61595" y="0"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="61378" y="0"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="97955" y="27"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="104744" y="32"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="142536" y="32"/>
-</item>
-<item historyLabel="XnParameterTool.java" index="5">
-<position info="not_deleted" x="24514" y="123"/>
-</item>
-<item historyLabel="XnParameterTool.java" index="5">
-<position info="not_deleted" x="4273" y="21"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="142304" y="0"/>
-</item>
-<item historyLabel="XnDatabaseConnection.java" index="3">
-<position info="not_deleted" x="54957" y="15"/>
-</item>
-<item historyLabel="MysqlIO.class" index="6">
-<position info="not_deleted" x="0" y="0"/>
-</item>
-<item historyLabel="XnParameterTool.java" index="7">
-<position info="not_deleted" x="4273" y="21"/>
-</item>
-<item historyLabel="XnParameterTool.java" index="7">
+<item historyLabel="XnParameterTool.java" index="1">
 <position info="not_deleted" x="31988" y="23"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="8">
-<position info="not_deleted" x="54957" y="15"/>
+<item historyLabel="XnParameterTool.java" index="1">
+<position info="not_deleted" x="33519" y="16"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="8">
-<position info="not_deleted" x="176548" y="27"/>
+<item historyLabel="XnParameterTool.java" index="1">
+<position info="not_deleted" x="32232" y="16"/>
 </item>
-<item historyLabel="XnDatabaseConnection.java" index="8">
-<position info="not_deleted" x="187515" y="16"/>
+<item historyLabel="XnParameterTool.java" index="1">
+<position info="not_deleted" x="32207" y="24"/>
 </item>
-<item active="true" historyLabel="XnDatabaseConnection.java" index="8">
-<position info="not_deleted" x="200107" y="16"/>
+<item historyLabel="XnParameterTool.java" index="1">
+<position info="not_deleted" x="38344" y="27"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="165524" y="0"/>
+</item>
+<item historyLabel="Connection.class" index="2">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="0">
+<position info="not_deleted" x="165524" y="0"/>
+</item>
+<item historyLabel="Connection.class" index="2">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="XnParameterTool.java" index="3">
+<position info="not_deleted" x="38344" y="27"/>
+</item>
+<item historyLabel="SQLError.class" index="4">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="XnParameterTool.java" index="3">
+<position info="not_deleted" x="38344" y="27"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="5">
+<position info="not_deleted" x="166053" y="0"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="5">
+<position info="not_deleted" x="145188" y="96"/>
+</item>
+<item historyLabel="MySQLConnection.java" index="6">
+<position info="not_deleted" x="1720" y="0"/>
+</item>
+<item historyLabel="MySQLConnection.java" index="6">
+<position info="not_deleted" x="1261" y="46"/>
+</item>
+<item historyLabel="XnDatabaseConnection.java" index="5">
+<position info="not_deleted" x="59102" y="49"/>
+</item>
+<item active="true" historyLabel="XnDatabaseConnection.java" index="5">
+<position info="not_deleted" x="59505" y="0"/>
 </item>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
@@ -618,6 +633,12 @@
 </trimLayout>
 </window>
 <mruList>
+<file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="SQLError.class" tooltip="com.mysql.jdbc.SQLError">
+<persistable org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/lib\/mysql-connector-java-5.0.7-bin.jar&lt;com.mysql.jdbc(SQLError.class"/>
+</file>
+<file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="Connection.class" tooltip="com.mysql.jdbc.Connection">
+<persistable org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/lib\/mysql-connector-java-5.0.7-bin.jar&lt;com.mysql.jdbc(Connection.class"/>
+</file>
 <file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="MysqlIO.class" tooltip="com.mysql.jdbc.MysqlIO">
 <persistable org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/lib\/mysql-connector-java-5.0.7-bin.jar&lt;com.mysql.jdbc(MysqlIO.class"/>
 </file>
@@ -626,9 +647,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="MySQLConnection.java" tooltip="XN_tool/src/de/uhoh/for1695/MySQLConnection.java">
 <persistable path="/XN_tool/src/de/uhoh/for1695/MySQLConnection.java"/>
-</file>
-<file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="Connection.class" tooltip="com.mysql.jdbc.Connection">
-<persistable org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/lib\/mysql-connector-java-5.0.7-bin.jar&lt;com.mysql.jdbc(Connection.class"/>
 </file>
 <file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditorNoSource" name="ResultSet.class" tooltip="java.sql.ResultSet">
 <persistable org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/\/usr\/lib\/jvm\/java-7-openjdk-amd64\/jre\/lib\/rt.jar&lt;java.sql(ResultSet.class"/>
@@ -659,9 +677,6 @@
 </file>
 <file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="CachedRowSetImpl.class" tooltip="com.sun.rowset.CachedRowSetImpl">
 <persistable org.eclipse.jdt.ui.ClassFileIdentifier="=XN_tool/\/usr\/lib\/jvm\/java-7-openjdk-amd64\/jre\/lib\/rt.jar&lt;com.sun.rowset(CachedRowSetImpl.class"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="XnDatabaseConnection.java" tooltip="XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java">
-<persistable path="/XN_tool/src/de/uhoh/for1695/XnDatabaseConnection.java"/>
 </file>
 </mruList>
 </workbench>

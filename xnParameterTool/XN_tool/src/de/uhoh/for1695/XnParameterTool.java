@@ -113,6 +113,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
 	private JMenuItem menuItemClose;
 	
 	private JMenuItem menuItemImportGecrosXnm;
+	private JMenuItem menuItemImportGecrosIni;
 	private JMenuItem menuItemImportDaisyXnm;
 	private JMenuItem menuItemImportManagementXnd;
 	private JMenuItem menuItemImportSoilStartXndXnm;
@@ -209,9 +210,14 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
         //Import
         JMenu menuImport = new JMenu("Import to database");   
         
-        menuItemImportGecrosXnm = new JMenuItem("Import GECROS from .xnm ...");
+        menuItemImportGecrosXnm = new JMenuItem("Import GECROS from XN3 .xnm ...");
         menuItemImportGecrosXnm.addActionListener(this);
         menuImport.add(menuItemImportGecrosXnm);
+        
+        menuItemImportGecrosIni = new JMenuItem("Import GECROS from XN5 .ini ...");
+        menuItemImportGecrosIni.addActionListener(this);
+        menuImport.add(menuItemImportGecrosIni);
+        
 
         menuImport.add(new JSeparator());
 
@@ -502,6 +508,10 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     	{
     		importGecrosXnm();
     	}
+    	else if (e.getSource() == menuItemImportGecrosIni)
+    	{
+    		importGecrosIni();
+    	}
     	else if (e.getSource() == menuItemImportDaisyXnm)
     	{
     		importDaisyXnm();
@@ -592,6 +602,14 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     
     private void importGecrosXnm () {
     	ImportGecrosDialog dlg = new ImportGecrosDialog(this);
+    	int rc = dlg.showDialog();
+    	if (rc < 0 )
+    	{
+    		return;
+    	}
+    }
+    private void importGecrosIni () {
+    	ImportGecrosDialogIni dlg = new ImportGecrosDialogIni(this);
     	int rc = dlg.showDialog();
     	if (rc < 0 )
     	{
@@ -1257,7 +1275,7 @@ class ProjectGeneralTableModel implements TableModel {
 							myRowSet.getString("plotSize"), myRowSet.getString("adaptive"), myRowSet.getString("max_daily_precip"),
 							myRowSet.getString("xn5_cells_table"), myRowSet.getString("bems_cells_management_table"),
 							myRowSet.getString("elevationCorrectionType"),	myRowSet.getString("elevationCorrectionClassSize"),
-							myRowSet.getString("elevationInfoTableWeatherCells")
+							myRowSet.getString("elevationInfoTableWeatherCells"), myRowSet.getString("kc_param_id")
 							,myRowSet.getString("co2_table")
 							)) {
 	
@@ -3733,6 +3751,179 @@ class ImportGecrosDialog extends JDialog implements ActionListener {
     		 }
     		 else {
     			 JOptionPane.showMessageDialog(null, "Error: Import of GECROS parameters failed.");
+    			 finished = false;
+        		 rc = -1;
+
+    		 }
+    	 }
+    	 
+    }
+}
+
+
+class ImportGecrosDialogIni extends JDialog implements ActionListener {
+	
+	private JTextField tfFilename;
+	private JTextField tfPlant;
+	private JTextField tfVariety;
+	private JComboBox tfEcotype;
+	private JComboBox tfDaylength;
+	private JComboBox tfLeafangle;
+	private JList  lfPlantParam;
+	private DefaultListModel lfPlantParamModel;
+	
+	private JTextField tfOptVernDays;
+	private JTextField tfVernCoeff;
+	private JTextField tfTempMinDevVern;
+	private JTextField tfTempOptDevVern;
+	private JTextField tfTempMaxDevVern;
+	
+	
+	
+	
+	private JButton buttonImportGecrosOk;
+	private JButton buttonImportGecrosCancel;
+	private JButton buttonImportGecrosChooseFile;
+	private JButton buttonImportGecrosNewParamId;
+
+	private boolean finished = false;
+	private int rc;
+	
+	private XnParameterToolMainWindow myMainWindow;
+	
+	public ImportGecrosDialogIni (XnParameterToolMainWindow mainWindow){
+		
+		rc = -1;
+		myMainWindow = mainWindow;
+		
+		setTitle("Import GECROS parameters from .ini file ...");
+		setSize(500,500);
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		
+        JPanel panel = new JPanel();
+        panel.setLayout( new java.awt.GridLayout(4, 3, 1,40) );
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        
+        JLabel fileLabel = new JLabel("File:");
+        panel.add(fileLabel);
+        tfFilename = new JTextField("", 20);
+        panel.add(tfFilename);
+        buttonImportGecrosChooseFile = new JButton("Browse...");
+        buttonImportGecrosChooseFile.addActionListener(this);
+        panel.add(buttonImportGecrosChooseFile);
+        
+        
+        panel.add(new JLabel("Crop code:"));
+        tfPlant = new JTextField("", 2);
+        panel.add(tfPlant);
+        panel.add(new JLabel());
+        
+ 
+       
+        panel.add(new JLabel("Parameterization Name: "));
+        lfPlantParamModel = new DefaultListModel();
+        ResultSet rs = myMainWindow.myConnection.getListOfPlantParameterizations();
+        
+        try {
+	        while (rs.next())
+	        {
+	        	lfPlantParamModel.addElement(rs.getString("plant_param_name"));
+	        }
+	        rs.close();
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        lfPlantParam = new JList(lfPlantParamModel);
+        lfPlantParam.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        JScrollPane plistScroll = new JScrollPane(lfPlantParam, ScrollPaneLayout.VERTICAL_SCROLLBAR_ALWAYS,
+        														ScrollPaneLayout.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        JScrollBar bar = plistScroll.getVerticalScrollBar();
+        bar.setPreferredSize(new Dimension(20, 60));
+        panel.add(plistScroll);
+
+        
+        buttonImportGecrosNewParamId = new JButton("Add Parameterization...");
+        buttonImportGecrosNewParamId.addActionListener(this);
+        panel.add(buttonImportGecrosNewParamId);
+       
+        buttonImportGecrosOk = new JButton("Import");
+        buttonImportGecrosOk.addActionListener(this);
+        buttonImportGecrosOk.setSelected(true);
+        panel.add(buttonImportGecrosOk);
+        
+        
+        buttonImportGecrosCancel = new JButton("Cancel");
+        buttonImportGecrosCancel.addActionListener(this);
+        panel.add(buttonImportGecrosCancel);
+        panel.add(new JLabel());
+
+        
+        this.add(panel);
+
+		
+	}
+	public int showDialog () {         
+		this.setModal(true);
+	
+		while(!finished) {
+			this.setVisible(true);
+		}
+		return rc;
+    }
+	
+
+	//Event handler
+    public void actionPerformed(ActionEvent ae) {
+    	 if(ae.getSource() == buttonImportGecrosCancel){
+    		 finished = true;
+    		 rc = -1;
+    		 dispose();
+    	 }
+    	 else if(ae.getSource() == buttonImportGecrosChooseFile){
+			JFileChooser chooser = new JFileChooser();
+	        int rc = chooser.showOpenDialog(null);
+	        
+	        /* Abfrage, ob auf "Öffnen" geklickt wurde */
+	        if(rc == JFileChooser.APPROVE_OPTION)
+	        {
+	        	tfFilename.setText(chooser.getSelectedFile().getPath());
+	    		finished = false;
+	        }
+    	 }
+    	 else if(ae.getSource() == buttonImportGecrosNewParamId){
+        		createNewPlantParamDialog dlg = new createNewPlantParamDialog();
+           		plantParam pp  = dlg.showDialog(myMainWindow.myConfig, myMainWindow.myConnection);
+           		lfPlantParamModel.addElement(pp.plant_param_code);
+           		lfPlantParam.setSelectedValue(pp.plant_param_code, true);
+           		finished = false;
+    	 }
+    	 else if(ae.getSource() == buttonImportGecrosOk){
+    		 
+    			
+    		 String iniFileName = tfFilename.getText();
+    		 String crop_code = tfPlant.getText();
+
+    		 String param_name = (String) lfPlantParam.getSelectedValue();
+    		 
+ 
+    		 
+    		 int param_id = myMainWindow.myConnection.getPlantParamIdForPlantParamName(param_name);
+    		 
+    		 //Import GECROS parameters from XN3 to database
+    		 boolean ret = myMainWindow.myConnection.importGecrosParametersFromIniFile(iniFileName, 
+    				 		param_id, crop_code, true);
+    			
+    		 if(ret)
+    		 {	rc = 0;
+    		 	finished = true;
+    		 	dispose();
+    		 }
+    		 else {
+    			 JOptionPane.showMessageDialog(null, "Error: Import of GECROS parameters from .ini file failed.");
     			 finished = false;
         		 rc = -1;
 

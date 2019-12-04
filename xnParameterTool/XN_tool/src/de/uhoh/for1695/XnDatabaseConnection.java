@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.io.File;
 import java.lang.Math;
 
@@ -1517,6 +1518,9 @@ class	XnDatabaseConnection {
 		}
 		return ok;
 	}
+	
+	
+	
 	/*public boolean	parse_and_upload_xnm_section_80001( BufferedReader xnmIn, int cropId, int plantParamId, String variety ) 
 	{
 		boolean ok = false;
@@ -1700,6 +1704,132 @@ class	XnDatabaseConnection {
 		c[0] = Character.toLowerCase(c[0]);
 		return new String(c);
 	}
+	
+	public boolean importGecrosParametersFromIniFile (String iniFileName,  
+			int plantParamId, String crop_code, boolean overwrite ) {
+		boolean ok = false;
+		try {
+		
+			BufferedReader xnmIn = new BufferedReader(new InputStreamReader(new DataInputStream(new FileInputStream(iniFileName))));
+
+			//Create an entry in the table, to be updated later on
+/*			if (overwrite)
+			{
+				String sqlstring = "DELETE FROM  plant_parameterization_gecros  " 
+						+ " WHERE plant_param_id = " + plantParamId
+						+ " AND crop_code =  '" + crop_code + "' AND variety = '" + variety +"'"
+						+";";;
+				//System.out.println( sqlstring);
+				myConnection.updateDb(sqlstring);
+			}
+*/			
+			
+			
+			
+			List<String> fieldList = Arrays.asList(
+					
+													"variety", "ECOTYPE", "DAYLENGTH", "LEAFANGLE",
+													"LEGUME", "C3C4", "DETER", "SLP", "LODGE", "VERN",
+													"YGV", "CFV",	"EG", "FFAT","FLIG", "FOAC","FMIN",
+													"LWIDTH",	"CDMHT", "RDMX", "TBD", "TOD", "TCD", "TSEN",
+													"NUPTX","RNCMIN",	"STEMNC","SLNMIN", "LNCI", "SLA0", "CCFIX",
+													"INSP", "SPSP", "EPSP",	"EAJMAX",	   "XVN",	    "XJN",	    "THETA",
+													"SEEDW", "SEEDNC", "BLD", "HTMX", "MTDV", "MTDR", "PSEN",
+													"PMEH",	   "PMES",		      "ESDI",			"WRB",
+													"CO2A","COEFR", "COEFT", "COEFV",	"FCRSH", "FNRSH", "PNPRE", "CB", "CX", "TM",
+													"OptVernDays", "VernCoeff", "TempOptDevVern", "TempMinDevVern", "TempMaxDevVern"
+													
+									);
+			if (crop_code.equals("SB")) {
+				fieldList.add("SINKBEET");
+				fieldList.add("EFF");
+				fieldList.add("CFS");
+			}
+			
+			//"ResidueToAMO1_frac","C_fromDeadleaf_frac","N_fromDeadleaf_frac"
+			
+			HashMap<String,String> map = new HashMap<String, String>();
+			
+			String inLine;
+			while ((inLine = xnmIn.readLine()) != null) {
+				//System.out.println( rfsLine);
+				if (inLine.matches("^\\s*#") ) {
+					continue;
+				}
+				if (inLine.matches("^\\s*$") ) {
+					continue;
+				}
+				if (inLine.matches("^\\s*\\[") ) {
+					continue;
+				}
+				
+				if (inLine.matches("^\\s*[\\w].*") ) {
+					
+					StringTokenizer st = new StringTokenizer(inLine, "=;");
+		
+					try {
+						String field = st.nextToken();
+						String value = st.nextToken();
+						//field = field.trim();
+						//value = value.trim();
+						//System.out.println("Field:\t'"+field+"'");
+						//System.out.println("Value:\t'"+value+"'");
+						
+						map.put(field.trim(), value.trim());
+					}
+					catch (Exception ex)
+					{
+						break; //exit from for list
+					}
+				}
+			}
+			
+			String sqlstring;
+			String sqlstring2 = ") VALUES ("+ plantParamId + ", '" +  crop_code + "'";
+			
+			if (overwrite) {
+				sqlstring = "REPLACE INTO plant_parameterization_gecros  (plant_param_id, crop_code";
+			}
+			else {
+				sqlstring = "INSERT INTO plant_parameterization_gecros  (plant_param_id, crop_code";
+
+			}
+			for (int i = 0; i < fieldList.size(); ++i) {
+			
+				String value = map.get( fieldList.get(i) );
+				if (value == null){
+					JOptionPane.showMessageDialog(null, "Missing entry " +  fieldList.get(i) +" in import of GECROS parameters from .ini file.");
+				}
+				else {
+					sqlstring += ", " + fieldList.get(i);
+					sqlstring2 +=", '" + value+"'";
+				}
+			}	
+			
+			sqlstring2 +=");";
+			
+			//System.out.println( sqlstring);
+			//System.out.println(sqlstring+sqlstring2);
+			myConnection.updateDb(sqlstring+sqlstring2);
+			
+			
+			
+			xnmIn.close();
+			ok = true;
+		}
+		catch (Exception e) 
+		{
+			  e.printStackTrace();
+			  return false;
+		}
+		return ok;
+	}
+	
+	
+		
+	
+	
+	
 	public boolean writeXn5GenericContentFile (String xn5FilePrefix, int projectId, String projectName, String table, String contentColumn, String title) {
 		boolean ok = false;
 		try {
@@ -1859,7 +1989,7 @@ class	XnDatabaseConnection {
 	public boolean writeXn5XpnFile(String xn5FilePrefix, int projectId, String projectName, String xn5_cells_table_name) {
 		boolean ok = false;
 		try {
-			String s0 = "SELECT startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize " 
+			String s0 = "SELECT startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize, kc_param_id " 
 					+ " FROM simulation_projects_general "
 					+ " WHERE simulation_project_id = "+ projectId + ";";
 			ResultSet projectInfo = myConnection.query(s0);	
@@ -1949,9 +2079,116 @@ class	XnDatabaseConnection {
 			
 			out.println("");
 			out.println(freeText.getString("xpnText"));
-			freeText.close();
-			projectInfo.close();
 			out.close();
+			freeText.close();
+
+			
+			String xn5FileNameKcDevStage = xn5FilePrefix + "_kc_dev_stage.ini" ;		
+			PrintWriter outKc = new PrintWriter(new BufferedWriter(new FileWriter(xn5FileNameKcDevStage)));
+			
+			String s2 = "SELECT `kc_dev_stage`.`Crop`,`kc_dev_stage`.`VarietyName`, `kc_dev_stage`.`DevStage`, `kc_dev_stage`.`kc`" +
+					" , IF (`kc_dev_stage`.`VarietyName` = 'Default', 'AAAAAAAAAAAAA', `kc_dev_stage`.`VarietyName`)   AS VarietyNameForSort" +
+					" FROM `for1695_expertN`.`kc_dev_stage` WHERE `kc_dev_stage`.`kc_param_id` = "+ projectInfo.getInt("kc_param_id") 
+					+ " ORDER BY Crop, VarietyNameForSort, DevStage;"
+					;
+		    ResultSet kcData = myConnection.query(s2);	
+			
+		    if (kcData.first()) {
+			    String curCrop = kcData.getString("Crop");
+			    String curVariety = kcData.getString("VarietyName");
+			    int counterDevStage = 0;
+			    int counterElse = 0;
+			    
+			    List<String> fieldContents = new ArrayList<String>();
+				fieldContents.add("VarietyName " + " = " + String.format("%-20s",curVariety+";") +"\t" );
+				fieldContents.add("DevKC       " + " = " );
+				fieldContents.add("KC          " + " = " );
+				fieldContents.add("else        " + " = " );
+				
+				outKc.println("["+curCrop+"]");
+			    while (! kcData.isAfterLast())
+				{
+			    	if(!curCrop.equals(kcData.getString("Crop"))) {
+
+			    		fieldContents.set(1, fieldContents.get(1) + ";\t"  );
+			    		fieldContents.set(2, fieldContents.get(2) + ";\t"  );
+			    		fieldContents.set(3, fieldContents.get(3) + ";\t\t\t"  );
+			    		
+			    		outKc.println(fieldContents.get(0));
+			    		outKc.println(fieldContents.get(1));
+			    		outKc.println(fieldContents.get(2));
+			    		outKc.println(fieldContents.get(3));
+			    		outKc.println("");
+			    		
+			    		curCrop = kcData.getString("Crop");			    		
+			    		fieldContents.clear();
+						fieldContents.add("VarietyName " + " = " );
+						fieldContents.add("DevKC       " + " = " );
+						fieldContents.add("KC          " + " = " );
+						fieldContents.add("else        " + " = " );
+			    		
+						curVariety = kcData.getString("VarietyName");
+					    counterDevStage = 0;
+					    counterElse = 0;
+
+			    		fieldContents.set(0, fieldContents.get(0) +  String.format("%-20s",curVariety+";") +"\t"  );
+		
+			    		outKc.println("["+curCrop+"]");
+			    	}
+			    	if(!curVariety.equals(kcData.getString("VarietyName"))) {
+			    		curVariety = kcData.getString("VarietyName");
+			    		fieldContents.set(0, fieldContents.get(0) +  String.format("%-20s",curVariety+";") +"\t"  );
+			    		fieldContents.set(1, fieldContents.get(1) + ";\t"  );
+			    		fieldContents.set(2, fieldContents.get(2) + ";\t"  );
+			    		fieldContents.set(3, fieldContents.get(3) + ";\t\t"  );
+					    counterDevStage = 0;
+					    counterElse = 0;
+
+			    	}
+			    	if(kcData.getDouble("DevStage") < 10)
+			    	{
+			    		if (counterDevStage == 0)
+			    		{
+			    			fieldContents.set(1, fieldContents.get(1) + String.format("%.2f",kcData.getDouble("DevStage"))  );
+			    			fieldContents.set(2, fieldContents.get(2) + String.format("%.2f",kcData.getDouble("kc"))  );
+			    		}
+			    		else {
+			    			fieldContents.set(1, fieldContents.get(1) + ","+ String.format("%.2f", kcData.getDouble("DevStage"))   );
+			    			fieldContents.set(2, fieldContents.get(2) + ","+ String.format("%.2f",kcData.getDouble("kc"))   );			    			
+			    		}
+			    		counterDevStage++;
+			    	}
+			    	else if (kcData.getDouble("DevStage") >= 9.9)
+			    	{
+			    		if (counterElse == 0) {
+			    			fieldContents.set(3, fieldContents.get(3) +  String.format("%.2f",kcData.getDouble("kc"))   );
+			    		}
+			    		else {
+			    			fieldContents.set(3, fieldContents.get(3) + ","+ String.format("%.2f",kcData.getDouble("kc"))   );
+			    		}
+			    		counterElse++;
+			    	}
+			    	
+			    	if ( ! kcData.next())
+			    			break;
+				}
+	    		fieldContents.set(1, fieldContents.get(1) + ";"  );
+	    		fieldContents.set(2, fieldContents.get(2) + ";"  );
+	    		fieldContents.set(3, fieldContents.get(3) + ";"  );
+	    		
+	    		outKc.println(fieldContents.get(0));
+	    		outKc.println(fieldContents.get(1));
+	    		outKc.println(fieldContents.get(2));
+	    		outKc.println(fieldContents.get(3));
+	    		outKc.println("");
+			    
+		    }
+		    outKc.println("");	
+			kcData.close();
+			
+			outKc.close();
+			projectInfo.close();
+			
 			ok = true;
 			
 		}
@@ -2468,7 +2705,9 @@ class	XnDatabaseConnection {
 			minFertList.first();
 			
 			String s5 = "SELECT process_id, t4.fertilizer_organic_code as orgfert_code, "
-					+ "		t4.ammonium_n_content * t2.quantity as nh4n,  t4.amount_org_substance* t2.quantity  as organic_substance, t4.dry_matter_content * t2.quantity as dry_matter,"
+//					+ "		t4.ammonium_n_content * t2.quantity as nh4n,  t4.amount_org_substance* t2.quantity  as organic_substance, " +
+					+ "		t4.ammonium_n_content * t2.quantity as nh4n,  t4.total_n_content* t2.quantity  as n_tot_org, " +
+					"		t4.dry_matter_content * t2.quantity as dry_matter,"
 					+ "		xn_year, xn_month, xn_day "
 					+ "	 FROM for1695_mpmas.tbl_xp_process t1" 
 					+ "		JOIN for1695_mpmas.tbl_xp_crop_fertilization t2" 
@@ -2733,7 +2972,8 @@ class	XnDatabaseConnection {
 					out.println("      code               : "+orgFertList.getString("orgfert_code"));
 					out.println("      nh4n               : "+orgFertList.getString("nh4n"));
 					out.println("      dry-matter         : "+orgFertList.getString("dry_matter"));
-					out.println("      organic-substance  : "+orgFertList.getString("organic_substance"));
+	//				out.println("      organic-substance  : "+orgFertList.getString("organic_substance"));
+					out.println("      n-tot-org  		  : "+orgFertList.getString("n_tot_org"));
 					orgFertList.next();
 				}
 				
@@ -2890,11 +3130,11 @@ class	XnDatabaseConnection {
 			
 			String s1 = "SELECT  xn5_cell_x, xn5_cell_y, year, position, " 
 							+ " t1.crop_management_id, t1.crop_code as CropCode, t1.variety,"
-							+ " sow_depth, row_dist, sow_dens, sow_date, IF(emerg_date = -99 OR emerg_date IS NULL, sow_date, emerg_date) AS emerg_date, harvest_date,"
+							+ " sow_depth, row_dist, sow_dens, sow_date,  IFNULL(emerg_date,-99) as emerg_date, harvest_date,"
 							+ " IF(max_biom_date = -99 OR max_biom_date IS NULL, harvest_date, max_biom_date) AS max_biom_date, " +
 							 "IF(max_ro_date = -99 OR max_ro_date IS NULL, harvest_date, max_ro_date) AS max_ro_date, " +
 							 "max_root_depth AS max_root, biom_remove, t3.crop_name as CropName"
-							+ ", sow_date_year, IF(emerg_date_year = -99 OR emerg_date_year IS NULL, sow_date_year, emerg_date_year) AS emerg_date_year, " +
+							+ ", sow_date_year, IFNULL(emerg_date_year, -99) as emerg_date_year, " +
 							"harvest_date_year, IF(max_biom_date_year = -99 OR max_biom_date_year IS NULL, harvest_date_year," +
 							"max_biom_date_year) AS max_biom_date_year , IF(max_ro_date_year = -99 OR max_ro_date_year IS NULL, harvest_date_year,max_ro_date_year) AS max_ro_date_year,  " +
 							"HTMX * 100 as max_plant_height "
@@ -3003,7 +3243,7 @@ class	XnDatabaseConnection {
 				List<String> fieldList = Arrays.asList(		"CropCode","CropName","variety"
 						 , "sow_depth", "row_dist", "sow_dens", "sow_date", "emerg_date", "harvest_date",
 						  "max_biom_date", "max_ro_date", "max_root", "biom_remove", "max_plant_height"
-						);
+						); /*Note: further code assumes that sow_date comes before emerg_date, if you change that, adapt later code*/
 
 				printManagementsForCellToIniFile(fieldList, out, managementList, curX, curY);
 				out.println("");
@@ -3189,7 +3429,7 @@ class	XnDatabaseConnection {
 		boolean ok = false;
 		try {
 			
-			String s0 = "SELECT startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize " 
+			String s0 = "SELECT startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize , kc_param_id" 
 						+ " FROM simulation_projects_general "
 						+ " WHERE simulation_project_id = "+ projectID + ";";
 			ResultSet projectInfo = myConnection.query(s0);	
@@ -3338,12 +3578,13 @@ class	XnDatabaseConnection {
 						+ " AND (  (xn5_cell_x = "+batchMaxX+" AND  xn5_cell_y <= "+batchMaxY +")  OR (xn5_cell_x < "+batchMaxX+"  ))" 
 							+ "	 ORDER BY xn5_cell_x, xn5_cell_y, first_layer;";
 			
-				ResultSet soilStart2 = myConnection.query(s7);
-				
+				//ResultSet soilStart2 = myConnection.query(s7);
+				ResultSet soilStart2_for_leachn = myConnection.query(s7);
+
 				
 				String s8 = "SELECT xn5_cell_x, xn5_cell_y, " +
 						" t2.effic, t2.humf, t2.min_cn, t2.temp0, t2.miner_q10, t2.theta0, t2.MinerSatActiv, t2.NitrifNO3NH4Ratio," +
-						" t3. `leachn_param_id`, t3.`fn2Fraction`, t3.`fn2oeduction`, t3.`irewet`, t3.`ino3kin` "
+						" t3. `leachn_param_id`, t3.`fn2Fraction`, t3.`fn2oeduction` as fn2oReduction , t3.`irewet`, t3.`ino3kin` "
 						+ "	 FROM `"+xn5_cells_table_name+"` t1	 "
 						+ " JOIN daisy_parameterization t2	ON t1.profileID = t2.profileID	" +
 						"		AND t1.daisy_param_id = t2.daisy_param_id "
@@ -3467,7 +3708,21 @@ class	XnDatabaseConnection {
 	
 				ResultSet leachnParamLayersDenitrifEvents = myConnection.query(s12);
 		
+				String s13 = "SELECT xn5_cell_x, xn5_cell_y, t1.profileID, " +
+						"			IFNULL(fCLitterSurf, -99) AS fCLitterSurf, IFNULL(fNLitterSurf,-99) AS  fNLitterSurf, " +
+						"			IFNULL(fCManureSurf, -99) AS fCManureSurf ,IFNULL(fNManureSurf,-99) AS  fNManureSurf, " +
+						"			IFNULL(fCHumusSurf, -99) AS fCHumusSurf, IFNULL(fNHumusSurf,-99) AS fNHumusSurf" 	
+						+ " FROM `"+xn5_cells_table_name+"` t1"
+	                    + "    LEFT JOIN soil_initialization_surface t3"
+	                    + "     	ON t1.profileID = t3.profileID"
+	                    + "         AND t1.soilinit_param_id = t3.soilinit_param_id"
+						+ "	  	 WHERE simulation_project_id = " + projectID
+						+ " AND (  (xn5_cell_x = "+batchMinX+" AND  xn5_cell_y >= "+batchMinY +")  OR (xn5_cell_x > "+batchMinX+"  )) "
+						+ " AND (  (xn5_cell_x = "+batchMaxX+" AND  xn5_cell_y <= "+batchMaxY +")  OR (xn5_cell_x < "+batchMaxX+"  ))" 
+							+ "	 ORDER BY xn5_cell_x, xn5_cell_y;";
 			
+				
+				ResultSet soilStart3_for_leachn = myConnection.query(s13);
 				
 				/*if (cellList)
 				{
@@ -3488,8 +3743,14 @@ class	XnDatabaseConnection {
 				if (! soilStart.first() ) {
 					throw new Exception("Error: Missing soil initialization for simulation project.");
 				}
-				if (! soilStart2.first() ) {
+				//if (! soilStart2.first() ) {
+				//	throw new Exception("Error: Missing soil initialization for simulation project.");
+				//}
+				if (! soilStart2_for_leachn.first() ) {
 					throw new Exception("Error: Missing soil initialization for simulation project.");
+				}
+				if (! soilStart3_for_leachn.first() ) {
+					throw new Exception("Error: Missing soil surface initialization for simulation project.");
 				}
 				if (! daisyParam.first() ) {
 					throw new Exception("Error: Missing DAISY parameterization for simulation project.");
@@ -3669,11 +3930,11 @@ class	XnDatabaseConnection {
 					printLayersForCellToIniFile(daisyFieldList, outDaisy, daisyStart, curX, curY);
 	
 					//old 20003
-					outDaisy.println("[start values general]");
+					/*outDaisy.println("[start values general]");
 					daisyFieldList = Arrays.asList("layers", "c_litter", "n_litter", "c_manure", "n_manure", "c_humus", "n_humus"
 							);
 					printLayersForCellToIniFile(daisyFieldList, outDaisy, soilStart2, curX, curY);
-					
+					*/
 					outDaisy.close();
 					
 					//leachn.ini
@@ -3710,7 +3971,7 @@ class	XnDatabaseConnection {
 					
 					outLeachn.println("[denitrification]");
 					printNextRowInColToIniFile("fn2Fraction", outLeachn, leachnParam);
-					printNextRowInColToIniFile("fn2oeduction", outLeachn, leachnParam);
+					printNextRowInColToIniFile("fn2oReduction", outLeachn, leachnParam);
 					printNextRowInColToIniFile("irewet", outLeachn, leachnParam);
 					printNextRowInColToIniFile("ino3kin", outLeachn, leachnParam);
 					outLeachn.println("");
@@ -3728,6 +3989,17 @@ class	XnDatabaseConnection {
 					outLeachn.println("");
 					
 					
+					outLeachn.println("[start values general]");
+					leachnFieldList = Arrays.asList("layers", "c_litter", "n_litter", "c_manure", "n_manure", "c_humus", "n_humus"
+							);
+					printLayersForCellToIniFile(leachnFieldList, outLeachn, soilStart2_for_leachn, curX, curY);
+
+					outLeachn.println("[start values surface]");
+					leachnFieldList = Arrays.asList("fCLitterSurf", "fNLitterSurf", "fCManureSurf", "fNManureSurf", "fCHumusSurf", "fNHumusSurf"
+							);
+					printLayersForCellToIniFile(leachnFieldList, outLeachn, soilStart3_for_leachn, curX, curY);
+					
+					
 					outLeachn.close();
 					
 				} // end cellloop
@@ -3742,7 +4014,7 @@ class	XnDatabaseConnection {
 				leachnParamLayersNitrif.close();
 				leachnParamLayersTransf.close();
 				soilStart.close();
-				soilStart2.close();
+//					soilStart2.close();
 				++repcount;
 				
 			}//END batchloop
@@ -3895,7 +4167,29 @@ class	XnDatabaseConnection {
 			while(! rs.isAfterLast() &&  rs.getInt("xn5_cell_x") == curX && rs.getInt("xn5_cell_y") == curY ) { 
 				for (int i = 0; i < fieldList.size(); ++i)
 				{
-					if ( fieldList.get(i).matches(".*date.*") )
+					
+					if ( fieldList.get(i).matches("emerg_date") )
+					{
+						if (rs.getString(fieldList.get(i)).equals("-99") || rs.getString(fieldList.get(i)).equals("-99.0") )
+						{
+							String sowdate= rs.getString("sow_date");
+							int year= rs.getInt("sow_date_year");
+							
+							String[] sowdate_parts =  sowdate.split("-");
+							int month = Integer.valueOf(sowdate_parts[0]) + 1;
+							if (month > 12) {
+								month = 1;
+								year += 1;
+							}
+							fieldContents.set(i, fieldContents.get(i) + " " + year + "-" + month + "-" + sowdate_parts[1]);
+						}
+						else {
+							int year = rs.getInt(fieldList.get(i)+"_year") + rs.getInt("year") ;
+							String temp = year +"-"+ rs.getString(fieldList.get(i));
+							fieldContents.set(i, fieldContents.get(i) + " " + temp + ";" );
+						}
+					}
+					else if ( fieldList.get(i).matches(".*date.*") )
 					{
 						if (rs.getString(fieldList.get(i)).equals("-99") || rs.getString(fieldList.get(i)).equals("-99.0") )
 						{
@@ -4441,7 +4735,7 @@ class	XnDatabaseConnection {
 	//PROJECT GENERAL INFO
 	public ResultSet getGeneralInfoForProject( int projectId ) {
 		String s = "SELECT startDay, startMonth, startYear, endDay, endMonth, endYear, plotSize, adaptive, max_daily_precip, xn5_cells_table, bems_cells_management_table" 
-				+ ", elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells , co2_table"	+
+				+ ", elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells , co2_table, kc_param_id"	+
 				" FROM simulation_projects_general WHERE simulation_project_id = " + projectId + ";";
 				
 		return myConnection.query(s);
@@ -4453,11 +4747,11 @@ class	XnDatabaseConnection {
 			String endMonth, String endDay,
 			String plotSize , String adaptive, String max_daily_precip, String xn5cells, String bemsManag,
 			String elevationCorrectionType, String elevationCorrectionClassSize, 
-			String elevationInfoTableWeatherCells, String co2Table) {
-		String s = "REPLACE INTO simulation_projects_general " +
+			String elevationInfoTableWeatherCells, String co2Table, String kc_param_id) {
+		    String s = "REPLACE INTO simulation_projects_general " +
 				"VALUES ("+ projectId+", "+ startYear +", "+endYear+","+startMonth+","+startDay+","
 				+endMonth+","+endDay+","+plotSize+","+adaptive+","+max_daily_precip+",'"+xn5cells+"','"+ bemsManag
-				+"',"+ elevationCorrectionType+","+ elevationCorrectionClassSize+", '"+elevationInfoTableWeatherCells+"', '"+co2Table+"');";	
+				+"',"+ elevationCorrectionType+","+ elevationCorrectionClassSize+", '"+elevationInfoTableWeatherCells+"', '"+co2Table+"', "+kc_param_id+");";	
 		return myConnection.updateDb(s);
 	}
 	

@@ -614,11 +614,26 @@ if (NewDay(pTi))
 					self->daysSinceBBCH1 = 0;
 					self->daysSinceBBCH2 = 0;
 										
-		pPl->pGenotype->acCropCode = self->mpmas_to_xn->coverCropCode;
+					pPl->pGenotype->acCropCode = self->mpmas_to_xn->coverCropCode;
                     pPl->pGenotype->acCropName = self->mpmas_to_xn->coverCropName;
+                    
+                    
                     pSI->Day = self->mpmas_to_xn->coverCropSowDate.day;
                     pSI->Month = self->mpmas_to_xn->coverCropSowDate.month;
                     pSI->Year = self->mpmas_to_xn->coverCropSowDate.year;
+                    
+                    
+                    xnmpmasDate lastEmergenceDate = self->mpmas_to_xn->coverCropSowDate;
+					xpn_time_date_add_dt(&lastEmergenceDate.year, &lastEmergenceDate.month, &lastEmergenceDate.day, 30);
+
+                    
+                    pPl->pModelParam->EmergenceDay = lastEmergenceDate.day;
+					pPl->pModelParam->EmergenceMonth = lastEmergenceDate.month;
+					pPl->pModelParam->EmergenceYear = lastEmergenceDate.year;
+                    
+                    
+                    
+                    
                     pPl->pGenotype->acVarietyName = self->mpmas_to_xn->coverCropVariety;
                     pSI->fPlantDens = self->mpmas_to_xn->coverCropSowDens;
                     pSI->fRowWidth = self->mpmas_to_xn->coverCropRowDist;
@@ -752,9 +767,21 @@ if (NewDay(pTi))
 		
 					pPl->pGenotype->acCropCode = self->mpmas_to_xn->CropCode;
                     pPl->pGenotype->acCropName = self->mpmas_to_xn->CropName;
+                    
                     pSI->Day = self->mpmas_to_xn->sowDate.day;
                     pSI->Month = self->mpmas_to_xn->sowDate.month;
                     pSI->Year = self->mpmas_to_xn->sowDate.year;
+                    
+                    xnmpmasDate lastEmergenceDate = self->mpmas_to_xn->sowDate;
+					xpn_time_date_add_dt(&lastEmergenceDate.year, &lastEmergenceDate.month, &lastEmergenceDate.day, 30);
+
+                    
+                    pPl->pModelParam->EmergenceDay = lastEmergenceDate.day;
+					pPl->pModelParam->EmergenceMonth = lastEmergenceDate.month;
+					pPl->pModelParam->EmergenceYear = lastEmergenceDate.year;
+                    
+                    
+                    
                     pPl->pGenotype->acVarietyName = self->mpmas_to_xn->variety;
                     pSI->fPlantDens = self->mpmas_to_xn->sowDens;
                     pSI->fRowWidth = self->mpmas_to_xn->rowDist;

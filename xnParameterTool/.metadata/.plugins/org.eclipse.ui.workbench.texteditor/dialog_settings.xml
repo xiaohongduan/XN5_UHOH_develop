@@ -3,7 +3,7 @@
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
 		<item value="372" key="DIALOG_WIDTH"/>
 		<item value="174" key="DIALOG_Y_ORIGIN"/>
-		<item value="453" key="DIALOG_HEIGHT"/>
+		<item value="537" key="DIALOG_HEIGHT"/>
 		<item value="18" key="DIALOG_X_ORIGIN"/>
 		<item value="1|Ubuntu|11.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
 	</section>
@@ -13,16 +13,16 @@
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="false" key="wholeword"/>
-		<item value="does not exist" key="selection"/>
+		<item value="soilStart" key="selection"/>
 		<list key="findhistory">
-			<item value="does not exist"/>
-			<item value="does not exist for"/>
-			<item value="Table does not exist"/>
-			<item value="co2Table"/>
-			<item value="regexp"/>
-			<item value="simulation_projects_general"/>
-			<item value="co2Series"/>
-			<item value="for1695_weather"/>
+			<item value="soilStart"/>
+			<item value="fNLitterSurf"/>
+			<item value="soilStart2"/>
+			<item value="start values general"/>
+			<item value="start values surface"/>
+			<item value="fn2oeduction"/>
+			<item value="throw"/>
+			<item value="emerg_date"/>
 		</list>
 		<list key="replacehistory">
 			<item value=""/>
