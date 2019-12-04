@@ -2112,7 +2112,7 @@ class	XnDatabaseConnection {
 
 			    		fieldContents.set(1, fieldContents.get(1) + ";"+ String.format("%8s"," ")  );
 			    		fieldContents.set(2, fieldContents.get(2) + ";" + String.format("%8s"," ")  );
-			    		fieldContents.set(3, fieldContents.get(3) + ";"+ String.format("%18s"," ")  );
+			    		fieldContents.set(3, fieldContents.get(3) + ";"+ String.format("%26s"," ")  );
 			    		
 			    		outKc.println(fieldContents.get(0));
 			    		outKc.println(fieldContents.get(1));
@@ -2140,7 +2140,7 @@ class	XnDatabaseConnection {
 			    		fieldContents.set(0, fieldContents.get(0) +  String.format("%-20s",curVariety+";") + String.format("%8s"," ")  );
 			    		fieldContents.set(1, fieldContents.get(1) + ";"+ String.format("%8s"," ")  );
 			    		fieldContents.set(2, fieldContents.get(2) + ";"+ String.format("%8s"," ")  );
-			    		fieldContents.set(3, fieldContents.get(3) + ";"+ String.format("%18s"," ")  );
+			    		fieldContents.set(3, fieldContents.get(3) + ";"+ String.format("%16s"," ")  );
 					    counterDevStage = 0;
 					    counterElse = 0;
 
