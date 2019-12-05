@@ -45,4 +45,5 @@
 <fullyQualifiedTypeName name="java.rmi.activation.ActivateFailedException"/>
 <fullyQualifiedTypeName name="javax.swing.JCheckBox"/>
 <fullyQualifiedTypeName name="java.lang.Integer"/>
+<fullyQualifiedTypeName name="java.util.HashMap"/>
 </qualifiedTypeNameHistroy>

@@ -3166,7 +3166,7 @@ class	XnDatabaseConnection {
 					+ "  AND t1.crop_code = t2.crop_code "
 				    + "   AND t1.variety = t2.variety "
 				    + "  WHERE simulation_project_id = " 	+ projectID +
-					" ORDER BY xn5_cell_x, xn5_cell_y, year, position, STR_TO_DATE(CONCAT(year + date_year, '-', date), '%Y-%m-%d');";
+					" ORDER BY xn5_cell_x, xn5_cell_y, year, position;";
 			
 			ResultSet minFertList = myConnection.query(s2);
 			
@@ -3179,7 +3179,7 @@ class	XnDatabaseConnection {
 						+  "  AND t1.crop_code = t2.crop_code "
 						+  "  AND t1.variety = t2.variety "
 						+  "  WHERE simulation_project_id ="	+ projectID +
-								" ORDER BY xn5_cell_x, xn5_cell_y, year, position, STR_TO_DATE(CONCAT(year + date_year, '-', date), '%Y-%m-%d');";
+								" ORDER BY xn5_cell_x, xn5_cell_y, year, position;";
 						
 			ResultSet orgFertList = myConnection.query(s3);
 
@@ -3192,7 +3192,7 @@ class	XnDatabaseConnection {
 						+  "  AND t1.crop_code = t2.crop_code "
 						+  "  AND t1.variety = t2.variety "
 						+  "  WHERE simulation_project_id = " +  projectID +"" +
-								" ORDER BY xn5_cell_x, xn5_cell_y, year, position, STR_TO_DATE(CONCAT(year + date_year, '-', date), '%Y-%m-%d');";
+								" ORDER BY xn5_cell_x, xn5_cell_y, year, position;";
 			
 			ResultSet irrigationList = myConnection.query(s4);
 
@@ -3206,7 +3206,7 @@ class	XnDatabaseConnection {
 					    +  " AND t1.crop_code = t2.crop_code "
 					    +  " AND t1.variety = t2.variety "
 					    +  " WHERE simulation_project_id = " +  projectID +"" +
-						" ORDER BY xn5_cell_x, xn5_cell_y, year, position, STR_TO_DATE(CONCAT(year + date_year, '-', date), '%Y-%m-%d');";
+						" ORDER BY xn5_cell_x, xn5_cell_y, year, position;";
 			
 
 			ResultSet tillageList = myConnection.query(s5);
