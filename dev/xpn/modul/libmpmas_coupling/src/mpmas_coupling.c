@@ -695,12 +695,7 @@ if (NewDay(pTi))
 						
 						
 					}
-					
-                    
-                    
 
-                    
- 
 					
 					self->internal_actualCoverCropSowDate = self->mpmas_to_xn->coverCropSowDate;		
 					

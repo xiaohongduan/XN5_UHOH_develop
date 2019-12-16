@@ -2973,7 +2973,7 @@ class	XnDatabaseConnection {
 					out.println("      nh4n               : "+orgFertList.getString("nh4n"));
 					out.println("      dry-matter         : "+orgFertList.getString("dry_matter"));
 	//				out.println("      organic-substance  : "+orgFertList.getString("organic_substance"));
-					out.println("      n-tot-org  		  : "+orgFertList.getString("n_tot_org"));
+					out.println("      n-tot-org          : "+orgFertList.getString("n_tot_org"));
 					orgFertList.next();
 				}
 				
@@ -3179,7 +3179,7 @@ class	XnDatabaseConnection {
 						+  "  AND t1.crop_code = t2.crop_code "
 						+  "  AND t1.variety = t2.variety "
 						+  "  WHERE simulation_project_id ="	+ projectID +
-								" ORDER BY xn5_cell_x, xn5_cell_y, year, position;";
+								" ORDER BY xn5_cell_x, xn5_cell_y, year, position, STR_TO_DATE(CONCAT(year + date_year, '-', date), '%Y-%m-%d');";
 						
 			ResultSet orgFertList = myConnection.query(s3);
 
@@ -3192,7 +3192,7 @@ class	XnDatabaseConnection {
 						+  "  AND t1.crop_code = t2.crop_code "
 						+  "  AND t1.variety = t2.variety "
 						+  "  WHERE simulation_project_id = " +  projectID +"" +
-								" ORDER BY xn5_cell_x, xn5_cell_y, year, position;";
+								" ORDER BY xn5_cell_x, xn5_cell_y, year, position, STR_TO_DATE(CONCAT(year + date_year, '-', date), '%Y-%m-%d');";
 			
 			ResultSet irrigationList = myConnection.query(s4);
 
@@ -3206,7 +3206,7 @@ class	XnDatabaseConnection {
 					    +  " AND t1.crop_code = t2.crop_code "
 					    +  " AND t1.variety = t2.variety "
 					    +  " WHERE simulation_project_id = " +  projectID +"" +
-						" ORDER BY xn5_cell_x, xn5_cell_y, year, position;";
+						" ORDER BY xn5_cell_x, xn5_cell_y, year, position, STR_TO_DATE(CONCAT(year + date_year, '-', date), '%Y-%m-%d');";
 			
 
 			ResultSet tillageList = myConnection.query(s5);
