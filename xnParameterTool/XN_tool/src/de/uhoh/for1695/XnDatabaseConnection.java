@@ -1989,9 +1989,10 @@ class	XnDatabaseConnection {
 	public boolean writeXn5XpnFile(String xn5FilePrefix, int projectId, String projectName, String xn5_cells_table_name) {
 		boolean ok = false;
 		try {
-			String s0 = "SELECT startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize, kc_param_id " 
-					+ " FROM simulation_projects_general "
-					+ " WHERE simulation_project_id = "+ projectId + ";";
+			String s0 = "SELECT startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize, kc_param_id,type_of_project " 
+					+ " FROM simulation_projects_general t1"
+					+ " JOIN info_simulation_projects t2 ON t1. simulation_project_id = t2.simulation_project_id "
+					+ " WHERE t1.simulation_project_id = "+ projectId + ";";
 			ResultSet projectInfo = myConnection.query(s0);	
 	
 			if (! projectInfo.first()) {
@@ -2086,8 +2087,10 @@ class	XnDatabaseConnection {
 			String xn5FileNameKcDevStage = xn5FilePrefix + "_kc_dev_stage.ini" ;		
 			PrintWriter outKc = new PrintWriter(new BufferedWriter(new FileWriter(xn5FileNameKcDevStage)));
 			
-			outKc.println("[LOAD ALL]");
-			outKc.println("");
+			if (projectInfo.getInt("type_of_project") > 0 ) {
+				outKc.println("[LOAD ALL]");
+				outKc.println("");
+			}
 
 			String s2 = "SELECT `kc_dev_stage`.`Crop`,`kc_dev_stage`.`VarietyName`, `kc_dev_stage`.`DevStage`, `kc_dev_stage`.`kc`" +
 					" , IF (`kc_dev_stage`.`VarietyName` = 'Default', 'AAAAAAAAAAAAA', `kc_dev_stage`.`VarietyName`)   AS VarietyNameForSort" +
