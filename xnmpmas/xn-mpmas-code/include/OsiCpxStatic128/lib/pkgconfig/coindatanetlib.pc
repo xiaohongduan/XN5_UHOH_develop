@@ -1,0 +1,9 @@
+prefix=/home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/cplexOsi128/OsiCpxStatic128/
+datadir=${prefix}/share/coin/Data/Netlib
+
+Name: Netlib
+Description: Netlib models
+URL: https://projects.coin-or.org/svn/Data/Netlib
+Version: 1.2.7
+Libs:
+Cflags:

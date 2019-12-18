@@ -26,7 +26,6 @@
 <fullyQualifiedTypeName name="javax.swing.table.TableCellRenderer"/>
 <fullyQualifiedTypeName name="java.sql.SQLException"/>
 <fullyQualifiedTypeName name="java.io.PrintWriter"/>
-<fullyQualifiedTypeName name="java.lang.Integer"/>
 <fullyQualifiedTypeName name="de.uhoh.for1695.ImportXn3Dialog"/>
 <fullyQualifiedTypeName name="de.uhoh.for1695.XnDatabaseConnection.idTypes"/>
 <fullyQualifiedTypeName name="de.uhoh.for1695.ImportXn3Dialog.xn3ImportType"/>
@@ -45,4 +44,6 @@
 <fullyQualifiedTypeName name="java.lang.System"/>
 <fullyQualifiedTypeName name="java.rmi.activation.ActivateFailedException"/>
 <fullyQualifiedTypeName name="javax.swing.JCheckBox"/>
+<fullyQualifiedTypeName name="java.lang.Integer"/>
+<fullyQualifiedTypeName name="java.util.HashMap"/>
 </qualifiedTypeNameHistroy>

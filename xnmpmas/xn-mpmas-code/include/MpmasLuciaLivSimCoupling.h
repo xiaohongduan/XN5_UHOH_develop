@@ -301,7 +301,10 @@ class LivSimHerd
 
 	   LivSimHerd(int _id) : herdId(_id), animals() {}
 	   //
-		void addAnimal(LivSimAnimalInfo newAnimal) { animals.push_back(newAnimal);}
+		void addAnimal(LivSimAnimalInfo newAnimal) { animals.push_back(newAnimal);
+
+
+		}
 		//void removeAnimal(LivSimAnimalInfo animal) { animals.remove(animal);}
 		void setAnimalRemovedById(int id) {
 			list<LivSimAnimalInfo>::iterator it = std::find_if(animals.begin(), animals.end(), matchAnimalID(id));
@@ -1007,7 +1010,7 @@ class MpmasLivSimTransformationInfo
 	LivSimAssetMatchingClass getLivSimMatchForAsset(int assetObjId, int age, bool allowEmptyReturn = false);
 	pair<int,int> getAssetMatchForLivSimAnimal(string breed_, int sex_, double age, double bwU, int gestating_, int lactating_);
 	int ageConversionLivSimToMpmas( double livsimAge){ return int ((double) livsimAge * age_age_factor  + EPS);	}
-	double ageConversionMpmasToLivSim( int mpmasAge) { return  mpmasAge / age_age_factor;	}
+	double ageConversionMpmasToLivSim( double mpmasAge) { return  (double) mpmasAge /  age_age_factor;	}
 
 	int ageConversionLivSimToMatchClass( double livsimAge) {  return int( livsimAge * (double) precision_age + 0.5 + EPS);}
 	double ageConversionMatchClassToLivSim( int matchClassAge) {  return  (double) matchClassAge / (double) precision_age ;}
@@ -1039,9 +1042,11 @@ class LivSimHerdCollection
 
 	public :
 
-	   LivSimHerdCollection() : fstId(-1), herds(LIVSIM_SUBHERD_MAX) /*NULL initialization by default constructor, writing NULL explicitly gives 32bit errors though*/, herdOfAnimal() {herds[0] = new LivSimHerd(asLivSimHerdId(fstId,0));}
+	   LivSimHerdCollection() : fstId(-1), herds(LIVSIM_SUBHERD_MAX) , herdOfAnimal() /*herds:= NULL initialization by default constructor, writing NULL explicitly gives 32bit errors though*/
+										{herds[0] = new LivSimHerd(asLivSimHerdId(fstId,0));}
 
-	   LivSimHerdCollection(int _id) : fstId(_id),  herds(LIVSIM_SUBHERD_MAX)/*NULL initialization by default constructor, writing NULL explicitly gives 32bit errors though*/, herdOfAnimal() { herds[0] = new LivSimHerd(asLivSimHerdId(fstId,0));}
+	   LivSimHerdCollection(int _id) : fstId(_id),  herds(LIVSIM_SUBHERD_MAX), herdOfAnimal()
+	   						{ herds[0] = new LivSimHerd(asLivSimHerdId(fstId,0));} /*herds:= NULL initialization by default constructor, writing NULL explicitly gives 32bit errors though*/
 	   ~LivSimHerdCollection()
 	   {	for (int i = 0; i < LIVSIM_SUBHERD_MAX; ++i)
 	   	{
@@ -1083,7 +1088,7 @@ class LivSimHerdCollection
 			}
 			else
 			{	stringstream errmsg;
-				errmsg << "Error can't remove animal " << id << " of agent " << fstId << ". Animal not found in agent's herd\n";
+				errmsg << "Error can't remove animal " << id << " of agent " << fstId << ". Animal not found in any of agent's herds\n";
 				throw runtime_error(errmsg.str());
 			}
 		}
@@ -1121,6 +1126,22 @@ class LivSimHerdCollection
 				it->second = 0;
 			}
 		}
+		void updateAnimalToHerdMap(int animalId, int herdId)
+		{ //reinitialize herd association of animals (e.g. based on LIVSIM results, especially for newborn)
+
+
+			if ( herds[herdgroupIdFromLivSimHerdId(herdId)]->getAnimalById(animalId).get_id() == -1)
+			{
+				stringstream errmsg;
+				errmsg << "Error trying to update herd mapping for  " << animalId << " of agent " << fstId <<
+						" to herd  "<< herdId<< ", but animal is not part of that herd\n";
+				throw logic_error(errmsg.str());
+			}
+
+			herdOfAnimal[animalId] = herdgroupIdFromLivSimHerdId(herdId);
+
+		}
+
 		void moveAnimalToHerdGroup(int animalId, int whichHerd)
 		{
 			LivSimAnimalInfo newAnimal;

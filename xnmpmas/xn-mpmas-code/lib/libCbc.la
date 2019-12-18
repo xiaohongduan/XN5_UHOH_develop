@@ -5,21 +5,21 @@
 # It is necessary for linking the library.
 
 # The name that we can dlopen(3).
-dlname='libCbc.so.0'
+dlname='libCbc.so.3'
 
 # Names of this library.
-library_names='libCbc.so.0.0.0 libCbc.so.0 libCbc.so'
+library_names='libCbc.so.3.10.3 libCbc.so.3 libCbc.so'
 
 # The name of the static archive.
 old_library=''
 
 # Libraries that this one depends upon.
-dependency_libs=' -L/home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas/lib/libClp.so -L/home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libCgl.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libOsiClp.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libClpSolver.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libClp.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libOsi.la /home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib/libCoinUtils.la /opt/bwhpc/common/compiler/gnu/4.7.3/x86_64/lib/../lib64/libstdc++.la /opt/bwhpc/common/compiler/gnu/4.7.3/x86_64/lib/../lib64/libstdc++.la'
+dependency_libs=' -L/home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas/lib/libClp.so -L/home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libCgl.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libOsiClp.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libClpSolver.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libClp.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libOsi.la /home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib/libCoinUtils.la /opt/bwhpc/common/compiler/gnu/4.8.3/lib/../lib64/libstdc++.la /opt/bwhpc/common/compiler/gnu/4.8.3/lib/../lib64/libstdc++.la'
 
 # Version information for libCbc.
-current=0
-age=0
-revision=0
+current=13
+age=10
+revision=3
 
 # Is this an already installed library?
 installed=yes
@@ -32,4 +32,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/home/ho/ho_mas/ho_trooscb9/coin/coin298Mpmas//lib'
+libdir='/home/ho/ho_mas/ho_trooscb9/workingCopyV3/libraries/coinor/temp/coin/coin2103Mpmas//lib'
