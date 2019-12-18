@@ -1989,9 +1989,10 @@ class	XnDatabaseConnection {
 	public boolean writeXn5XpnFile(String xn5FilePrefix, int projectId, String projectName, String xn5_cells_table_name) {
 		boolean ok = false;
 		try {
-			String s0 = "SELECT startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize, kc_param_id " 
-					+ " FROM simulation_projects_general "
-					+ " WHERE simulation_project_id = "+ projectId + ";";
+			String s0 = "SELECT startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize, kc_param_id,type_of_project " 
+					+ " FROM simulation_projects_general t1"
+					+ " JOIN info_simulation_projects t2 ON t1. simulation_project_id = t2.simulation_project_id "
+					+ " WHERE t1.simulation_project_id = "+ projectId + ";";
 			ResultSet projectInfo = myConnection.query(s0);	
 	
 			if (! projectInfo.first()) {
@@ -2086,6 +2087,11 @@ class	XnDatabaseConnection {
 			String xn5FileNameKcDevStage = xn5FilePrefix + "_kc_dev_stage.ini" ;		
 			PrintWriter outKc = new PrintWriter(new BufferedWriter(new FileWriter(xn5FileNameKcDevStage)));
 			
+			if (projectInfo.getInt("type_of_project") > 0 ) {
+				outKc.println("[LOAD ALL]");
+				outKc.println("");
+			}
+
 			String s2 = "SELECT `kc_dev_stage`.`Crop`,`kc_dev_stage`.`VarietyName`, `kc_dev_stage`.`DevStage`, `kc_dev_stage`.`kc`" +
 					" , IF (`kc_dev_stage`.`VarietyName` = 'Default', 'AAAAAAAAAAAAA', `kc_dev_stage`.`VarietyName`)   AS VarietyNameForSort" +
 					" FROM `for1695_expertN`.`kc_dev_stage` WHERE `kc_dev_stage`.`kc_param_id` = "+ projectInfo.getInt("kc_param_id") 
@@ -2973,7 +2979,7 @@ class	XnDatabaseConnection {
 					out.println("      nh4n               : "+orgFertList.getString("nh4n"));
 					out.println("      dry-matter         : "+orgFertList.getString("dry_matter"));
 	//				out.println("      organic-substance  : "+orgFertList.getString("organic_substance"));
-					out.println("      n-tot-org  		  : "+orgFertList.getString("n_tot_org"));
+					out.println("      n-tot-org          : "+orgFertList.getString("n_tot_org"));
 					orgFertList.next();
 				}
 				
@@ -4300,7 +4306,7 @@ class	XnDatabaseConnection {
 				return -1;
 			}
 
-			s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30,'simulation_projects_xn5_cells', 'simulation_projects_bems_cells_management',0,NULL,NULL,NULL);";
+			s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30,'simulation_projects_xn5_cells', 'simulation_projects_bems_cells_management',0,NULL,NULL,NULL, 1);";
 			if(! myConnection.updateDb(s) ) {
 				myConnection.updateDb("ROLLBACK;");
 				return -1;
@@ -4330,7 +4336,7 @@ class	XnDatabaseConnection {
 			s= "REPLACE INTO simulation_projects_general " +
 			" SELECT " + toId + ", startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize, adaptive, max_daily_precip " +
 					", xn5_cells_table, bems_cells_management_table, elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells,  " +
-					"co2_table " +
+					"co2_table, kc_param_id " +
 					" FROM simulation_projects_general WHERE simulation_project_id = " + fromId + ";";
 			
 			if(!  myConnection.updateDb(s)) {
