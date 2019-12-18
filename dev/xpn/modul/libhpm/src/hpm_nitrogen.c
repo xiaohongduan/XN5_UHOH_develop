@@ -38,7 +38,8 @@ void set_SoilVars_N(hpm *self) {
 	double fCumDepth;
 	
 	fDepth = 0.0;
-	fRootDepth = (double)(xpn->pPl->pRoot->fDepth*1.0e-3);
+	//fRootDepth = (double)(xpn->pPl->pRoot->fDepth*1.0e-3);
+	fRootDepth = (double)(xpn->pPl->pRoot->fDepth*1.0e-2); //SG20191203 cm --> m
 	dt =  xpn->pTi->pTimeStep->fAct;
 	count = 0;
 

@@ -3031,7 +3031,7 @@ int   BiomassGrowth_GECROS(gecros *self)
 
       //NCR   = INSW(SLNT-SLNMIN,0.,min(NUPTX,NDEMA))
       //       /(YGV*(double)pGPltC->fNetStdgCropPhotosynR*12./44.);
-      //SG 20192215
+      //SG 20191115
       NCR   = INSW(SLNT-SLNMIN,0.,min(NUPTX,max(0.0	,NDEMA)))
              /(YGV*max(1.e-6,(double)pGPltC->fNetStdgCropPhotosynR)*12./44.);
       //FNSH  = 1./(1.+NCR*DERI/NOTNUL(SHSA)*CSH/max(1.e-2,CRT)*NRT/max(1.e-2,NSH));
@@ -4821,7 +4821,7 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
 		{
             //*DIFS   = 0.;
 
-           *PPCAN  =0.0; // [mm s-1] --> [mm d-1]
+           *PPCAN  = 0.0; // [mm s-1] --> [mm d-1]
            *APCANS = 0.0; // [mm s-1] --> [mm d-1]
            *APCANN = 0.0; // [mm s-1] --> [mm d-1]
            *APCAN  = 0.0; // [mm s-1] --> [mm d-1]

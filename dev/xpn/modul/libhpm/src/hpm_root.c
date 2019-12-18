@@ -59,10 +59,10 @@ int hpm_root_length_growth(hpm *self)
 
 	self->Plant.rort += Drort*dt;
 
-	xpn->pPl->pRoot->fDepth = MAX(0.02, (self->Plant.MXrt/(self->Plant.rort*1.0e-3)));
+	xpn->pPl->pRoot->fDepth = MAX(0.02, (self->Plant.MXrt/(self->Plant.rort*1.0e-3)));//cm
 
 	//Added by Hong on 20180806
-	xpn->pPl->pRoot->fDepth =MIN(xpn->pPl->pRoot->fDepth, 120);
+	xpn->pPl->pRoot->fDepth =MIN(xpn->pPl->pRoot->fDepth, 120); //cm
 	
 	return self->__ERROR;	
 }

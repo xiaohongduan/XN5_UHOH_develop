@@ -322,7 +322,8 @@ double calculateWaterRootPool(hpm *self,double *IWso_rt,double *OWrt_sh, double 
 
 		fDepth = 0.0;
 		count = 0;
-		fRootDepth = (double)(xpn->pPl->pRoot->fDepth*1.0e-3);
+		//fRootDepth = (double)(xpn->pPl->pRoot->fDepth*1.0e-3);
+		fRootDepth = (double)(xpn->pPl->pRoot->fDepth*1.0e-2); //SG20191203: cm --> m
 		sumIWso_rt=0.0;
 
 		*IWso_rt=0.0;
@@ -346,7 +347,8 @@ double calculateWaterRootPool(hpm *self,double *IWso_rt,double *OWrt_sh, double 
 			Ksomax = pWL->fHydrCond/86400.0; // mm/ day --> mm/s
 			Kso = Ksomax * pow(theta_so / theta_so_max,qpsi_soW + qpsi_soW + 3.0);
 			Kso = pWL->fHydrCond/86400.0;
-			rho_rt = self->Plant.MXrt / (xpn->pPl->pRoot->fDepth*1.0e-3);
+			//rho_rt = self->Plant.MXrt / (xpn->pPl->pRoot->fDepth*1.0e-3);
+            rho_rt = self->Plant.MXrt / (xpn->pPl->pRoot->fDepth*1.0e-2); // SG20191203: cm --> m
 			MXrt = self->Plant.MXrt;
 			rWso_rt = cWrs_rt/rho_rt * (MXrt + KWrs_rt)/ MXrt + cWso_rs*rho_rt / (Kso * MXrt);
 
@@ -532,7 +534,8 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 
 	*OWrt_sh = (Psi_rt - Psi_sh) / rWrt_sh;
 	
-	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
+	//fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
+	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-2); //SG20191203 cm --> m
 	if (self->__USE_STATIC_ROOT_LENGTH==TRUE) {
 		count=self->__STATIC_ROOT_LENGTH;
 	} else {		
@@ -593,6 +596,10 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	rRoot = pot_water_uptake;
 
 	//End of Hong
+    
+    //SG20191205: pSL muss wieder auf die erste Schicht gesetzt werden, da es 
+    // zuvor (im Fall nicht-statischer Wurzeln) schon heruntergezählt wurde!
+    pSL = xpn->pSo->pSLayer->pNext;
 	for (SOIL2_LAYERS1(pWL, xpn->pWa->pWLayer->pNext, pLR, xpn->pPl->pRoot->pLayerRoot)) {
 		if (pLR->fLengthDens > 0.0) {
 			dxM  = xpn->pSo->fDeltaZ;

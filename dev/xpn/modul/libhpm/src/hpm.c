@@ -40,7 +40,8 @@ expertn_modul_base *xpn = &(self->parent);
 	int count_max;
 	int count2;
 	
-	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
+	//fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
+	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-2); //SG20191203 cm --> m
 	if (self->__USE_STATIC_ROOT_LENGTH==TRUE) {
 		count_max=self->__STATIC_ROOT_LENGTH;
 	} else {		
@@ -56,7 +57,8 @@ expertn_modul_base *xpn = &(self->parent);
 	}
 
 	fDepth = 0.0;
-	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
+	//fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
+	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-2); //SG20191203 cm --> m
 	vars->Namm = 0.0;
 	vars->Nnit = 0.0;
 	vars->theta_soil=0.0;
@@ -64,8 +66,9 @@ expertn_modul_base *xpn = &(self->parent);
 	count = 0;
 	count2=0;
 	
-	
-		
+	//SG20191205: pSL muss wieder auf die erste Schicht gesetzt werden, da es im Fall 
+    //dynamischen Wurzelwachstumsbereits bis count_max heruntergezählt wurde!
+	pSL = xpn->pSo->pSLayer->pNext;	
 	while(1) {
 		if (count >= xpn->pSo->iLayers-1) break;		
 		fDepth += pSL->fThickness*1.0E-3; //fThickness: mm -> m		
