@@ -142,6 +142,13 @@ int spass_canopy_formation(spass *self)
   		fStemWeight =pBm->fStemWeight/((double)10.0*pMa->pSowInfo->fPlantDens);	//g per plant
   		
     	pCan->fGrainNum	 = fStemWeight*pPl->pGenotype->fStorageOrganNumCoeff;  			//Grains per plant
+
+        //SG20200117: from XN3
+        if (strcmp(pPl->pGenotype->acCropCode,"MZ")==0)
+		{   //Grains per plant
+			pCan->fGrainNum	 = pPl->pGenotype->fStorageOrganNumCoeff;  			
+		}           
+
     	pCan->fGrainNumSq= pCan->fGrainNum*pMa->pSowInfo->fPlantDens; //Grains per sq meter 	
 
 

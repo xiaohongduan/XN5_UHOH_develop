@@ -2839,7 +2839,8 @@ int   BiomassGrowth_GECROS(gecros *self)
 
       pGPltB->fTotalSeedNum    = (double)TSN;
 //SG20110909: für Ausgabe in *.rfp
-	  pPl->pCanopy->fGrainNum = (double)TSN / pMa->pSowInfo->fPlantDens; //[grains m-2]
+	  pPl->pCanopy->fGrainNum     = (double)TSN / pMa->pSowInfo->fPlantDens; //[grains per plant]
+	  pPl->pCanopy->fGrainNumSq = (double)TSN; //[grains m-2]
       pGPltB->f1000GrainWeight = (double)TSW; 
       pGPltN->fSeedProtein     = (double)PSO;
 	  //*/
@@ -4627,6 +4628,8 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
 			PARDF = PAR;
             //SG20191119
             FRDF = 1.0;
+            //SG20200109
+            ATMTR = 1.0;
 		}
 		PARDR = PAR-PARDF;
 		//End of Test
@@ -4641,6 +4644,9 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
          BL    = BLD*PI/(double)180.;   //leaf angle, conversion to radians
 
          KB    = kbeam(SINB,BL);
+         
+         //SG20200110 to avoid unrealistic values of resistances, leaf temperature, dark respiration ... during night time:
+         KB = min(2.0,KB);
 
          SCPPAR = (double)0.2;           //leaf scattering coefficient for PAR
          SCPNIR = (double)0.8;           //leaf scattering coefficient for NIR
@@ -4726,6 +4732,15 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
                                            &PLFSH,&PTSH,&RSWSH,&NRADSH,&SLOPSH);
          IPP    = PLFSU+ PLFSH;
          IPT    = PTSU + PTSH;
+         
+      //SG20200108
+       if (SINB <= 1.e-12)
+		{
+           IPT  = 0.0;
+           PTSU  = 0.0;
+           PTSH  = 0.0;
+        }
+         
          PT1    = IPT  * SD1/RD;
 
          //%---instantaneous potential soil evaporation 
@@ -5315,6 +5330,9 @@ double internalCO2(double TLEAF,double DVP,double FVPD,double CO2A,double C3C4)
 
         //%---internal/ambient CO2 ratio, based on data of Morison & Gifford (1983)
         RCICA  = (double)1.-((double)1.-GAMMA/CO2A)*((double)0.14+FVPD*VPDL);
+        
+        //SG 20200108: to avoid negative leaf internal CO2 concentrations
+        RCICA = max(RCICA,0.05);
 
         //%---intercellular CO2 concentration
         CO2I   = RCICA * CO2A;

@@ -111,7 +111,9 @@ int init_hpm_model(hpm *self)
 	xpn->pPl->pCanopy->fLAI = (float)hpm_math_sum4(self->Plant.LAI4);
 	// '
 	//Gilt nur am Anfang
-	xpn->pPl->pRoot->fDepth=(float) (self->Plant.MXrt/ 1.0 * 1.0e3); //TODO: strange ergibt 2 statt 20(Plant.MXrt/ 1.0 * 1.0e-3); ???
+	//xpn->pPl->pRoot->fDepth=(float) (self->Plant.MXrt/ 1.0 * 1.0e3); //TODO: strange ergibt 2 statt 20(Plant.MXrt/ 1.0 * 1.0e-3); ???
+  //SG20200120: restrict root depth to soil profile depth
+xpn->pPl->pRoot->fDepth=(float) min(xpn->pSo->fDepth * 1.0e-1,(self->Plant.MXrt/ 1.0 * 1.0e3)); //TODO: strange ergibt 2 statt 20(Plant.MXrt/ 1.0 * 1.0e-3); ???
 
 	self->Plant.MCTrt=0.0;
 	self->Plant.MCTsh=0.0;

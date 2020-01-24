@@ -2296,6 +2296,9 @@ int xpn_output_calc_var(xpn_output *self)
 	self->NRoot = xpn->pPl->pPltNitrogen->fRootActConc;
 
 	self->PlantDens = xpn->pPl->pCanopy->fPlantDensity;
+    //SG20200117: Notbehelf
+    //self->PlantDens = xpn->pPl->pCanopy->fGrainNumSq;
+
 	self->Height	= xpn->pPl->pCanopy->fPlantHeight;
     
     self->rooting_depth = xpn->pPl->pRoot->fDepth;
