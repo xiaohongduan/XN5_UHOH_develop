@@ -356,7 +356,7 @@ int main(int argc, char **argv)
 #endif
 
 //			if ((fraction < (1.0- EPSILON)) || ((fraction > (1.0+ EPSILON)))) {
-			if ((fraction < (0.99)) || ((fraction > (1.01)))) {
+			if ((fraction < (0.99)) || ((fraction > (1.01)))) { //SG20200212: to avoid unnecessary error messages
 				S2 = g_strdup_printf("Sum of the landcover fractions %s is not 100%% +/-1%%. It is: %f",xpn_class[i3-1]->pXSys->reg_str,fraction*100.0);
 				PRINT_ERROR(S2);
 				g_free(S2);

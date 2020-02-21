@@ -513,7 +513,7 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 		{
 			sum=self->cfg->clay[i]+self->cfg->sand[i]+self->cfg->silt[i];
 //			if ((sum-EPSILON > 100.0) || (sum+EPSILON < 100.0))
-			if ((sum > 101) || (sum < 99))
+			if ((sum > 101) || (sum < 99)) //SG20200212: to avoid unnecessary error messages
 				{
 					gchar *S;
 					S = g_strdup_printf  ("Clay + silt + sand is not 100 %% +/-1%%, it is %f. Check your configuration in file (col %d): %s!",sum,i+1,filename);
