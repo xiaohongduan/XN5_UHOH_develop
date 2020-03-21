@@ -3,6 +3,7 @@ DIR="xnmpmas_for_installation/"
 mkdir -p  $HOME/$DIR/lib
 
 cp ./expertn_mpmas_mpi $HOME/$DIR/
+cp ./expertn_mpmasCplex_mpi $HOME/$DIR/
 cp -r ./xn-mpmas-code/lib/* $HOME/$DIR/lib/
 
 tar czf $HOME/xnmpmas_for_installation.tar.gz -C $HOME $DIR
