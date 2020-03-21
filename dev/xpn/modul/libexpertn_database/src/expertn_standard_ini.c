@@ -512,10 +512,11 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	for (i=0; i<self->cfg->soil_type_len; i++)
 		{
 			sum=self->cfg->clay[i]+self->cfg->sand[i]+self->cfg->silt[i];
-			if ((sum-EPSILON > 100.0) || (sum+EPSILON < 100.0))
+//			if ((sum-EPSILON > 100.0) || (sum+EPSILON < 100.0))
+			if ((sum > 101) || (sum < 99)) //SG20200212: to avoid unnecessary error messages
 				{
 					gchar *S;
-					S = g_strdup_printf  ("Clay + silt + sand is not 100 %%, it is %f. Check your configuration in file (col %d): %s!",sum,i+1,filename);
+					S = g_strdup_printf  ("Clay + silt + sand is not 100 %% +/-1%%, it is %f. Check your configuration in file (col %d): %s!",sum,i+1,filename);
 					PRINT_ERROR(S);
 					g_free(S);
 					return -1;
@@ -923,15 +924,20 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 			pSLayer->fClay = self->cfg->clay[i2];
 			pSLayer->fSilt = self->cfg->silt[i2];
 			pSLayer->fSand = self->cfg->sand[i2];
-			pSLayer->fNHumus = self->cfg->organic_nitrogen[i2];
-			pSLayer->fCHumus = self->cfg->organic_carbon[i2];
 			pSLayer->fHumus = self->cfg->organic_matter[i2];
+			pSLayer->fNHumus = self->cfg->organic_nitrogen[i2];
+            if(pSLayer->fNHumus<0.0) pSLayer->fNHumus = pSLayer->fHumus*0.058; //SG20200211
+            pSLayer->fCHumus = self->cfg->organic_carbon[i2];
+            if(pSLayer->fCHumus<0.0) pSLayer->fCHumus = pSLayer->fHumus*0.58; //SG20200211
 			pSLayer->fpH = self->cfg->ph[i2];
 			pSLayer->fBulkDens = self->cfg->bulk_desity[i2];
 			pSLayer->fBulkDensStart = self->cfg->bulk_desity[i2];
 			pSLayer->fPorosity = self->cfg->porosity[i2];
 			//pSLayer->fRockFrac = self->cfg->rock_fraction[i2] * pSLayer->fBulkDens/2.65; //weight% to volume%
 			pSLayer->fRockFrac = self->cfg->rock_fraction[i2] * pSLayer->fBulkDens/2.06; //weight% to volume%
+            //SG20200211: -99 abfangen
+            pSLayer->fRockFrac = max(0,pSLayer->fRockFrac);
+            
 			pSWater->fContSat = pSLayer->fPorosity;//self->cfg->cont_sat[i2];
 			pSWater->fContPWP = self->cfg->wilting_point[i2];
 			pSWater->fContFK = self->cfg->field_capacity[i2];

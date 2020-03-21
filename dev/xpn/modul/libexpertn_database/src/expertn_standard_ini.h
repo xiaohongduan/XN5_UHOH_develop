@@ -47,7 +47,8 @@ typedef struct
     //End of Hong
 	// soil
 	int layer_count;
-	int layer_thickness;
+	//int layer_thickness; //SG20200219: int-->double
+	double layer_thickness;
 	int *layers;
 	int layers_len;
 	double *clay;

@@ -334,7 +334,7 @@ typedef struct {
 	double aWrt; // Water activity (Wurzel)
 	double aWsh; // Water activity (shoot)
 	double theta_sh; // shoot water content
-	//double theta_so; // soil water content
+	double theta_so; // soil water content
 	double theta_rt; // root water content
 
 	// Variablen, nur fürs Wassermodell
