@@ -355,8 +355,9 @@ int main(int argc, char **argv)
 		if ((i3-1 >= loop_min) && (i3-1 < loop_max)) {
 #endif
 
-			if ((fraction < (1.0- EPSILON)) || ((fraction > (1.0+ EPSILON)))) {
-				S2 = g_strdup_printf("Sum over the landcover of grids %s are not 100%%. It is: %f",xpn_class[i3-1]->pXSys->reg_str,fraction*100.0);
+//			if ((fraction < (1.0- EPSILON)) || ((fraction > (1.0+ EPSILON)))) {
+			if ((fraction < (0.99)) || ((fraction > (1.01)))) { //SG20200212: to avoid unnecessary error messages
+				S2 = g_strdup_printf("Sum of the landcover fractions %s is not 100%% +/-1%%. It is: %f",xpn_class[i3-1]->pXSys->reg_str,fraction*100.0);
 				PRINT_ERROR(S2);
 				g_free(S2);
 			}

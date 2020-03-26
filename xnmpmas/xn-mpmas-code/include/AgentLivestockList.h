@@ -66,11 +66,11 @@ public:
 	virtual void checkLsInventory(int oid, MatrixDouble& ageLs);
 	virtual void makeLsEntriesRHS(MatrixDouble& lsTyp, MatrixDouble& lsRHS);
 	virtual void makeActLPcoeff(int cshSpans, int labSpans,
-			int, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&);
+			int, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&);
 	virtual void makeExpLPcoeff(int cshSpans, int labSpans,
-			int, double, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&);
+			int, double, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&);
 	virtual void makeInvLPcoeff(int, double,
-                        MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&);
+                        MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&, MatrixDouble&);
 	virtual int getLastID(void);
 
 	virtual livestck* searchForLivestck(int pID);

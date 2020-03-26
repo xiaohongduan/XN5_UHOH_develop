@@ -1444,9 +1444,9 @@ protected:
    int solveModelCplex(int agID, int scID, int fstID);
    int multipleSolveForPlotValuationCplex(int agentID,  int catchmentID,  int fstID, vector<double>&valuations, int numPlots, double* solutionToBeSavedForWarmStart = NULL);
    void freeModelCplex();
-   void applyCplexUserSettings(int stage = 0);
-   void printCplexUserSettings(int curstage = 0);
-   int whatIfCplexFailed(int stage = 0, int limit_reached = 0);
+   void applyCplexUserSettings(int stage, int limits_stage, int failed_stage);
+   void printCplexUserSettings(int curstage = 0, int failed_stage = 0, int limits_stage = 0);
+   void whatIfCplexFailed(int& stage, int& limits_stage, int& new_failed_stage, int limit_reached = 0);
 public:
    static void setCplexOptionsFile(string filename);
    static void readCplexOptionsFile();
