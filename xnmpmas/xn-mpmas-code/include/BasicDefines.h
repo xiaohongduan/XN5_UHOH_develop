@@ -41,11 +41,15 @@ MPS			???
 
 NOT_NEWFORMAT14	unsets the NEWFORMAT14 flag for new input format while not complete
 NOT_LPPACKED		unsets the LPPACKED flag for the use of CoinPackedMatrix to store matrix internally
+OLD_OMPI				after OMPI 4.0 upgrade: keep deprecated OMPI 1 code elements for reference
 
 INVBOUNDS   ???, OBSOLETE???
 NRSLV       Uses NR-solver (not debugged), OBSOLETE?
 SENSITIVITY ???, OBSOLETE???
 OPTIMALSPEED ???
+
+
+
  */
 
 //implicit compiler flags for using OSL
@@ -54,10 +58,10 @@ OPTIMALSPEED ???
 #endif
 
 //version info
-#define BUILT_DATE 200122
+#define BUILT_DATE 200323
 #define MAJOR_VERSION 3
 #define MINOR_VERSION 3
-#define BUILD_NUMBER 485
+#define BUILD_NUMBER 489
 #define REVISION 0
 
 #ifndef NOT_ODB
@@ -70,7 +74,6 @@ OPTIMALSPEED ???
 	#define NEWFORMAT14
 	#define RNGSTREAM //activates RNGSTREAM random number generation
 #endif
-
 
 
 #ifdef MULTIPERIOD

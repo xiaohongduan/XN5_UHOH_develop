@@ -38,6 +38,13 @@ typedef struct
    MatrixDouble cashDmd;//cash demand
    MatrixDouble landDmd;//land demand
    MatrixDouble labDmd; //labor demand
+
+	//Troost 200206 -
+	//for maximum instead of annualized in livestock
+	//start addition
+		MatrixDouble maxDmd; //constraint demands to be considered with maximum (not annualized) in investment LP
+	//end addition -Troost 200206
+
 }  lstck;
 
 
@@ -58,6 +65,12 @@ class lsfarm
    int lsProds;
    int lsInPrd;
 
+	//Troost 200206 -
+	//for maximum instead of annualized in livestock
+	//start addition
+		int lsMaxDem;
+	//end addition -Troost 200206
+
 	void returnFscan(int retVal, char* strVar);
 
 	public:
@@ -76,6 +89,12 @@ class lsfarm
 
    virtual int getLsProds();
    virtual int getLsInPrd();
+
+	//Troost 200206 -
+	//for maximum instead of annualized in livestock
+	//start addition
+		virtual int getLsMaxDem();
+	//end addition -Troost 200206
 
    virtual int getNumTypes();
    virtual int getTypeID(int i);
@@ -107,6 +126,15 @@ class lsfarm
    virtual int getLabColLP (int lsID, int row);
 
 
+	//Troost 200206 -
+	//for maximum instead of annualized in livestock
+	//start addition
+	virtual int getMaxDmdRowLP (int lsID, int row);
+	virtual int getMaxDmdColLP (int lsID, int row);
+	//end addition -Troost 200206
+
+
+
    //functions return error flag
 	virtual int addActOffs(MatrixDouble& mtx, int lsID, int age);
    virtual int addExpOffs(MatrixDouble& mtx, int lsID, int age, double=0.0);
@@ -122,6 +150,13 @@ class lsfarm
    virtual int addExpLabDmd(MatrixDouble& mtx, int lsID, int age, double=0.0);
 	virtual int addActLivWgt(MatrixDouble& mtx, int lsID, int age);
    virtual int addExpLivWgt(MatrixDouble& mtx, int lsID, int age, double=0.0);
+
+	//Troost 200206 -
+	//for maximum instead of annualized in livestock
+	//start addition
+	virtual int addActMaxDmds(MatrixDouble& mtx, int lsID, int age);
+	virtual int addExpMaxDmds(MatrixDouble& mtx, int lsID, int age, double=0.0);
+	//end addition -Troost 200206
 
 	virtual void printToScreen(void);
 	virtual void deallocateMem(void);

@@ -44,11 +44,11 @@ def conf_get_svn_rev():
 
 
 
-def check_MPmas(conf,add_includes,add_flags):
+def check_MPmas(conf,add_includes,add_flags, cplexlib, cplexlibdir):
      Mpmas_msg="Checking for Mpmas "
 
 
-     linkflag=['-L'+os.getcwd().replace("\\","/")+'/../lib','-L'+os.getcwd().replace("\\","/")+'/../lib/coinor/lib','-L/usr/lib/x86_64-linux-gnu']+add_flags
+     linkflag=['-L'+os.getcwd().replace("\\","/")+'/../lib','-L'+os.getcwd().replace("\\","/")+'/../lib/coinor/lib','-L/usr/lib/x86_64-linux-gnu','-L'+cplexlibdir]+add_flags
      cflag=''
      includes=add_includes
      if conf.options.USE_MPI:
@@ -60,7 +60,7 @@ def check_MPmas(conf,add_includes,add_flags):
                         }
                        '''
 	if conf.options.cplex:
-            conf.check_cxx(msg=Mpmas_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib=["MpmasCplexMP_MPI","Cbc","OsiSym","Sym","OsiClp","Clp","Cgl","Osi","CoinUtils","CbcSolver"], fragment=Mpmas_fragment,uselib='M OPEN_MPI', uselib_store='MPMAS')
+            conf.check_cxx(msg=Mpmas_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib=["MpmasCplexMP_MPI",cplexlib], fragment=Mpmas_fragment,uselib='M OPEN_MPI', uselib_store='MPMAS')
         else:	
             conf.check_cxx(msg=Mpmas_msg,cflags=cflag,linkflags=linkflag,includes=includes,lib=["MpmasMP_MPI","Cbc","OsiSym","Sym","OsiClp","Clp","Cgl","Osi","CoinUtils","CbcSolver"], fragment=Mpmas_fragment,uselib='M OPEN_MPI', uselib_store='MPMAS')
 
@@ -164,7 +164,9 @@ def options(opt):
     opt.add_option('--USE_OPENMP', action='store_true', default=False,help='Compile Expert-N with OPENMP')
     opt.add_option('--USE_MPI', action='store_true', default=False,help='Compile MPMAS_XN with Open MPI')
     opt.add_option('--mas32', action='store_true', default=False,help='Compile MPMAS_XN with Mpmas 32bit library')
-    opt.add_option('--cplex', action='store_true', default=False,help='Complie MPMAS_XN with MpmasCplex library (only with MPI)')
+    opt.add_option('--cplex', action='store_true', default=False,help='Compile MPMAS_XN with MpmasCplex library (only with MPI)')
+    opt.add_option('--cplex_lib', action='store', default='cplex1280',help='Name of MpmasCplex library (default cplex1280)')
+    opt.add_option('--cplex_libdir', action='store', default='~/lib',help='Directory of MpmasCplex library (default cplex1280)')
 
 def configure(conf):
     # Compiler Flags:
@@ -331,13 +333,13 @@ def configure(conf):
 
 
 
-    
+   
 
     
     if conf.options.mas32:
         check_MPmas32(conf,conf.env['INCLUDES_STD'],conf.env['LINK_FLAGS'])
     else:
-        check_MPmas(conf,conf.env['INCLUDES_STD'],conf.env['LINK_FLAGS'])
+        check_MPmas(conf,conf.env['INCLUDES_STD'],conf.env['LINK_FLAGS'], conf.options.cplex_lib, conf.options.cplex_libdir )
     
     conf.env.append_value('USELIB_STD','MPMAS')
     
