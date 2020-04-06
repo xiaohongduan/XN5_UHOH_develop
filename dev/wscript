@@ -154,7 +154,7 @@ def options(opt):
 
     opt.add_option('--prefix', action='store', default=default_prefix,help='installation prefix [default='+default_prefix+']')
     opt.add_option('--debug', action='store_true', default=False, help='enable debugging')
-    opt.add_option('--with_database', action='store_true', default=False, help='Compiling without libgda! Expert-N has no Database!')
+    opt.add_option('--with_database', action='store_true', default=False, help='Compiling with libgda. Expert-N has database!')
     opt.add_option('--max_optimize', action='store_true', default=False, help='maximal optimization (speed)')
     opt.add_option('--USE_OPENMP', action='store_true', default=False,help='Compile Expert-N with OPENMP')
     opt.add_option('--USE_MPI', action='store_true', default=False,help='Compile Expert-N with Open MPI')
@@ -185,7 +185,11 @@ def configure(conf):
     #check_libgda(conf)
 
     if conf.options.with_database:
-        conf.check_cfg (package='libgda-4.0', uselib_store='LIBGDA', atleast_version='4.0.9',
+        try:
+            conf.check_cfg (package='libgda-4.0', uselib_store='LIBGDA', atleast_version='4.0.9',
+                    args='--cflags --libs')
+        except conf.errors.ConfigurationError:
+            conf.check_cfg (package='libgda-5.0', uselib_store='LIBGDA', 
                     args='--cflags --libs')
     else:
         conf.define('XPN_WITHOUT_DATABASE',1)    

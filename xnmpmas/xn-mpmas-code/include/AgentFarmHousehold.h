@@ -636,23 +636,24 @@ class agentF : public agent
 
 #else //ndef MULTIPERIOD
 	virtual int copyLPdataInvMode(int numIntegSets, int doInvest); //
+#ifdef OUTDATED
 	virtual int copyLpDataInInvestmentMode(int isIntegerProblem);
-	
 	virtual void copyAvailablePermanentCropsInInvestmentMode(int availPCropsIdx);
 	virtual void copyExistingPermanentCropsInInvestmentMode(int agentRegistryIdx, int lpCol, int lpRow);//dkult_reg
 	virtual void copyAllOtherAvailableObjectsInInvestmentMode(int invObjIdx);
 	virtual void copyNewLivestockInInvestmentMode(int invObjIdx);
 	virtual void copyExistingLivestockInInvestmentMode(int objectID);
-
+#endif //OUTDATED
 	virtual int copyLPdataPrdMode(int);//substitute
+
+#ifdef OUTDATED
 	virtual int copyLpDataInProductionMode(int isIntegerProblem);
-	
 	virtual void copyExistingPermanentCropsInProductionMode(int agentRegistryIdx, int lpCol, int lpRow);//dkult_reg
 	virtual void copyExistingLivestockInProductionMode(int objectID);
-
+#endif //OUTDATED
 	virtual void copyExpectedWaterDemandsIntoMILP();
 	virtual void copyExpectedYieldsOfAnnualCropsIntoMILP();//refactoring of <copyYldExpMILP>
-	
+
 	virtual int copyLPdataMarkMode(int ipr, int doMarketing);
 	virtual int copyLPdataConsMode(int ipr, int doConsume);
 	virtual void copyConsCoeff(double hhEgy);
