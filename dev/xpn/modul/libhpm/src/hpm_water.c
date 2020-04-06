@@ -510,7 +510,7 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	int iLayer        = 0;
 	double DeltaT     = xpn->pTi->pTimeStep->fAct;
 	double roWpl20 = self->parameter.water.roWpl20; //Todo
-	double rWrt_sh,DWrt;
+	double rWrt_sh,DWrt, gWrt_sh;
 	int				L,i,count;
 	double			rRoot;
 	double			dxM;
@@ -530,10 +530,17 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	double fContAct;
     //End of Hong 
 
-	rWrt_sh = roWpl20 / self->Water.Wsh + roWpl20/self->Water.Wrt;
+/*	rWrt_sh = roWpl20 / self->Water.Wsh + roWpl20/self->Water.Wrt;
+    
+   	*OWrt_sh = (Psi_rt - Psi_sh) / rWrt_sh;*/
+ 
+    //SG20200403: eq. 6.3c:
+    gWrt_sh = 1/roWpl20*(self->Plant.MXLam+self->Plant.MXss)*self->Plant.MXrt/(self->Plant.MXLam+self->Plant.MXss+self->Plant.MXrt);
+    
+    *OWrt_sh = gWrt_sh*(Psi_rt - Psi_sh);
 
-	*OWrt_sh = (Psi_rt - Psi_sh) / rWrt_sh;
 	
+    
 	//fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
 	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-2); //SG20191203 cm --> m
 	if (self->__USE_STATIC_ROOT_LENGTH==TRUE) {
