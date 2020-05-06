@@ -431,6 +431,18 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
 			if (!rc) {
 				JOptionPane.showMessageDialog(null, "Error: Copying project information failed.");
 			}
+			//done here to make sure alternative cells and management tables are updated after project settings have been copied
+			ResultSet rs =  myConnection.getSimulationProjectInfo(newP.simulation_project_id);
+			try {
+				rs.next();
+				newP.bems_cells_management_table = rs.getString("bems_cells_management_table");
+				newP.xn5_cells_table = rs.getString("xn5_cells_table");
+				rs.close();
+			}
+			catch(Exception exc) {
+				exc.printStackTrace();
+			}
+			
 			switchProject(newP);
     	}	    	
     	
@@ -904,6 +916,18 @@ class obsolete_XnParameterProjectPanel extends JPanel implements ActionListener 
     			if (!rc) {
     				JOptionPane.showMessageDialog(null, "Error: Copying project information failed.");
     			}
+    			//done here to make sure alternative cells and management tables are updated after project settings have been copied
+    			ResultSet rs =  myMainWindow.myConnection.getSimulationProjectInfo(currentProject.simulation_project_id);
+    			try {
+    				rs.next();
+    				currentProject.bems_cells_management_table = rs.getString("bems_cells_management_table");
+    				currentProject.xn5_cells_table = rs.getString("xn5_cells_table");
+    				rs.close();
+    			}
+    			catch(Exception exc) {
+    				exc.printStackTrace();
+    			}
+    			
     			myMainWindow.switchProject(currentProject);
 	    	}	    	
 	    	
@@ -1012,6 +1036,43 @@ class simProjectListModel extends DefaultListModel {
     }
 	
 }
+class columnListModel extends DefaultListModel {
+
+	
+	public Object getElementAt(int index) {
+		String sp = (String) super.getElementAt(index);
+		try {
+			return  sp;
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+    }
+	public String getColumnAt(int index) {
+		String sp = (String) super.getElementAt(index);
+		try {
+			return  sp;
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+    }
+	public int getListIndexOfColumn(String column) {
+		for (int index = 0; index < super.getSize(); ++index)
+		{ String t = (String) super.getElementAt(index);
+			if (t.equals(column) )
+				return index;
+		}
+		return -1;
+    }
+	
+}
+
+
 class XnParameterProjectPanel extends JPanel implements ActionListener, RowSetListener {
 	private XnParameterToolMainWindow myMainWindow ;
 	
@@ -1275,8 +1336,8 @@ class ProjectGeneralTableModel implements TableModel {
 							myRowSet.getString("plotSize"), myRowSet.getString("adaptive"), myRowSet.getString("max_daily_precip"),
 							myRowSet.getString("xn5_cells_table"), myRowSet.getString("bems_cells_management_table"),
 							myRowSet.getString("elevationCorrectionType"),	myRowSet.getString("elevationCorrectionClassSize"),
-							myRowSet.getString("elevationInfoTableWeatherCells"), myRowSet.getString("kc_param_id")
-							,myRowSet.getString("co2_table")
+							myRowSet.getString("elevationInfoTableWeatherCells"),myRowSet.getString("co2_table"), myRowSet.getString("kc_param_id")
+							
 							)) {
 	
 		    			JOptionPane.showMessageDialog(null, "Error: Changing general simulation project info failed.");
@@ -1722,8 +1783,11 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	private JTextField  tNewX;
 	private JTextField  tNewY;
 	
+	private JButton buttonUpdate;
+	private JTextArea updateSETstring;
+	private JTextArea updateWHEREstring;
 	
-
+	
 	
 	public XnParameterSoilPanel(XnParameterToolMainWindow mainWindow) {
 		super();
@@ -1777,6 +1841,35 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	    buttonDeleteRow.addActionListener(this);
 	    lpanel.add(buttonDeleteRow);
 	    
+	    lpanel.add(new JLabel());
+	    lpanel.add(new JSeparator(SwingConstants.HORIZONTAL));
+	    lpanel.add(new JLabel("UPDATE ... SET "));
+	    updateSETstring = new JTextArea();
+	    JScrollPane tableViewScrollPaneLeft2 = new JScrollPane (updateSETstring, 
+	            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+	    Dimension preferredSize2 = new Dimension(100,200);
+		tableViewScrollPaneLeft2.setPreferredSize(preferredSize2);
+		updateSETstring.setText("");
+		updateSETstring.setEditable(true);
+		lpanel.add(tableViewScrollPaneLeft2);
+
+	    lpanel.add(new JLabel("WHERE "));
+	    updateWHEREstring = new JTextArea();
+	    JScrollPane tableViewScrollPaneLeft3 = new JScrollPane (updateWHEREstring, 
+	            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+	    Dimension preferredSize3 = new Dimension(100,200);
+		tableViewScrollPaneLeft3.setPreferredSize(preferredSize3);
+		updateWHEREstring.setText("");
+		updateWHEREstring.setEditable(true);
+		lpanel.add(tableViewScrollPaneLeft3);
+		
+	    
+	    buttonUpdate = new JButton("Update");
+	    buttonUpdate.addActionListener(this);
+	    lpanel.add(buttonUpdate);
+	    
 	    panel.add(lpanel, java.awt.BorderLayout.WEST);
 		
 	    
@@ -1805,14 +1898,27 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	    		boolean editable = true;
 	    	
 	    		String cellsTableName = myMainWindow.currentProject.xn5_cells_table;
-	    		if ( ! cellsTableName.equals("simulation_projects_xn5_cells"))  {
+	    		if (  cellsTableName.equals("simulation_projects_xn5_cells"))  {
+	    			buttonAddRow.setEnabled(true);
+	    			buttonDeleteRow.setEnabled(true);
+	    			buttonUpdate.setEnabled(true);
+
+	    			editable = true;
+
+	    		}
+	    		else if( myMainWindow.myConnection.checkTableIsNotView("for1695_expertN", cellsTableName)) {
+	    			editable = true;
+	    			buttonAddRow.setEnabled(false);
+	    			buttonDeleteRow.setEnabled(false);
+	    			buttonUpdate.setEnabled(true);
+
+	    		}
+	    		else {
 	    			editable = false;
 	    			buttonAddRow.setEnabled(false);
 	    			buttonDeleteRow.setEnabled(false);
-	    		}
-	    		else {
-	    			buttonAddRow.setEnabled(true);
-	    			buttonDeleteRow.setEnabled(true);
+	    			buttonUpdate.setEnabled(false);
+
 	    		}
 	    		
 		    	ResultSet rs2 = myMainWindow.myConnection.getSoilInfoForProject(myMainWindow.myConfig.currentProjectId, cellsTableName);
@@ -1869,6 +1975,16 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	      		int x = soilsTM.myRowSet.getInt("xn5_cell_x");
 	      		int y = soilsTM.myRowSet.getInt("xn5_cell_y");
 	      		myMainWindow.myConnection.deleteCell(myMainWindow.myConfig.currentProjectId,x,y);
+      		}
+      		catch(Exception ex) {
+      			ex.printStackTrace();
+      		}
+      		
+      		myMainWindow.refreshAll();
+      	}
+      	else if (e.getSource() == buttonUpdate) {
+      		try {
+	      		myMainWindow.myConnection.userUpdateSoilsTable(myMainWindow.currentProject.xn5_cells_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText() );
       		}
       		catch(Exception ex) {
       			ex.printStackTrace();

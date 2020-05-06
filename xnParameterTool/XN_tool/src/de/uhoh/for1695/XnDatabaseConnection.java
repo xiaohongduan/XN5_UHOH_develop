@@ -4263,7 +4263,7 @@ class	XnDatabaseConnection {
 		try {
 			String s = "SELECT t1.simulation_project_id, simulation_project_code, simulation_project_description, t1.author_id, author_first_name, author_surname, " +
 					" type_of_project, xn5_cells_table, bems_cells_management_table FROM info_simulation_projects t1 JOIN info_authors t2 on t1.author_id = t2.author_id " +
-					" JOIN simulation_projects_general on t1.simulation_project_id = t2.simulation_project_id"
+					" JOIN simulation_projects_general t3 on t1.simulation_project_id = t3.simulation_project_id"
 					+ " WHERE t1.simulation_project_id =" + id +";";
 			ResultSet rs = myConnection.query(s);
 			
@@ -4342,12 +4342,38 @@ class	XnDatabaseConnection {
 			if(!  myConnection.updateDb(s)) {
 				return false;
 			}
-			s = "REPLACE INTO simulation_projects_xn5_cells " +
+			
+			s= "SELECT xn5_cells_table, bems_cells_management_table FROM simulation_projects_general WHERE simulation_project_id = " + toId +";";
+			String cellsTableName = "simulation_projects_xn5_cells";
+			String managTableName = "simulation_projects_bems_cells_management";
+			try {
+				ResultSet temp = myConnection.query(s);
+				if (!temp.first ()) {
+					return false;
+				}
+				String cellsTableNameTest = temp.getString("xn5_cells_table");
+				String managTableNameTest = temp.getString("bems_cells_management_table");
+				
+				if (! managTableNameTest.isEmpty())	
+					managTableName = managTableNameTest;
+			
+				if (! cellsTableNameTest.isEmpty())	
+					cellsTableName = cellsTableNameTest;
+				
+			}
+			catch (Exception e) {
+				return false;
+
+			}
+			
+			
+			
+			s = "REPLACE INTO  " + cellsTableName +
 					" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
 					+"`profileID`, `soil_param_id`,`daisy_param_id`,`sompools_param_id`,"
 					+"`soilinit_param_id`,`lat`,	`lon`,	`alt`,`exposition`, `inclination`,	`AveYearTemp`,"
 					+"`MonthTempAmp`, leachn_param_id, climate_file, weather_table_name, weather_station_id " 
-					+" FROM simulation_projects_xn5_cells WHERE simulation_project_id = " + fromId + ";";
+					+" FROM "+cellsTableName+" WHERE simulation_project_id = " + fromId + ";";
 			
 			if(!  myConnection.updateDb(s)) {
 				return false;
@@ -4364,11 +4390,11 @@ class	XnDatabaseConnection {
 				return false;
 			}
 			
-			s = "REPLACE INTO simulation_projects_bems_cells_management " +
+			s = "REPLACE INTO "+managTableName +
 					" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
 					+"`crop_sequence_id`,`start_position`"
 
-					+" FROM simulation_projects_bems_cells_management " +
+					+" FROM "+ managTableName +
 					"  WHERE simulation_project_id = " + fromId + ";";
 			if(!  myConnection.updateDb(s)) {
 				return false;
@@ -4765,7 +4791,8 @@ class	XnDatabaseConnection {
 		    String s = "REPLACE INTO simulation_projects_general " +
 				"VALUES ("+ projectId+", "+ startYear +", "+endYear+","+startMonth+","+startDay+","
 				+endMonth+","+endDay+","+plotSize+","+adaptive+","+max_daily_precip+",'"+xn5cells+"','"+ bemsManag
-				+"',"+ elevationCorrectionType+","+ elevationCorrectionClassSize+", '"+elevationInfoTableWeatherCells+"', '"+co2Table+"', "+kc_param_id+");";	
+				+"',"+ elevationCorrectionType+","+ elevationCorrectionClassSize+", '"+elevationInfoTableWeatherCells+"', '"+co2Table+"', "+kc_param_id+");";
+		    //System.out.println(s);
 		return myConnection.updateDb(s);
 	}
 	
@@ -4915,7 +4942,23 @@ class	XnDatabaseConnection {
 			+ ";";
 		return  myConnection.updateDb(s2);
 	}
-
+    public boolean userUpdateSoilsTable(String xn5_cells_table, int simulation_project_id, String updateSETstring, String updateWHEREstring ) {
+  		try {
+      		String sqlString = 
+      				"UPDATE  " + xn5_cells_table + " SET " 
+      				+   updateSETstring
+      				+ " WHERE  simulation_project_id = " + simulation_project_id 
+      				+ " AND " + updateWHEREstring + ";"
+      				;
+      		return myConnection.updateDb(sqlString );
+  		}
+  		catch(Exception ex) {
+  			ex.printStackTrace();
+  			return false;
+  		}
+    	
+    	
+    }
 	
 	public ResultSet getManagementInfoForProject(int id) {
 		String s = "SELECT  `xn5_cell_x`, `xn5_cell_y`, `year`, `position`, `crop_management_id`, `crop_code`,"
@@ -5754,7 +5797,23 @@ class	XnDatabaseConnection {
 			return false;
 		}
 	}
-	
+	public boolean checkTableIsNotView(String db, String tableName) {
+		try {	
+			String s = "SELECT TABLE_TYPE FROM information_schema.TABLES "
+					  + " WHERE TABLE_SCHEMA = '"+db+"'"
+					  + "	AND TABLE_NAME = '"+tableName+"';";
+			ResultSet rs = myConnection.query(s);
+			boolean b = false;
+			if(rs.first() && rs.getString("TABLE_TYPE").equals("BASE TABLE") ) {
+				b = true;
+			}
+			rs.close();
+			return b;
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
 	
 	
 	
