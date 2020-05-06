@@ -19,8 +19,9 @@ int ceres_NitrogenConcentrationLimits(ceres *self)
 	PDEVELOP            pDev  = pPl->pDevelop;
 	PPLTNITROGEN        pPltN = pPl->pPltNitrogen;
 
-	P1V=(double)pPl->pGenotype->iVernCoeff;
-	fStage = (double)0.1 * pDev->fDevStage;
+	//P1V=(double)pPl->pGenotype->iVernCoeff;
+    P1V=1.0/(double)pPl->pGenotype->iVernCoeff;
+    fStage = (double)0.1 * pDev->fDevStage;
 
 	//============================================================================
 	//Tops Nitrogen Concentration of the Plant - Stage dependant

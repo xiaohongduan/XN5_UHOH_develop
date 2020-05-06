@@ -119,7 +119,7 @@ int leachn_miner_run(stickstoff *self)
 
 	/*Variablen für die C-Flüsse*/
 	double fNTotal, fCTotal;
-	double rm, wmin,wlow,whigh;
+	double rm, wmin,wlow,whigh,wmax;
 	double f1,f3,f4;																	//auskommentiert 2.10.13
 	double fHumusMineralR,fLitterToHumusR,fLitterToCO2R,fLitterToMBiomassR;
 	double fManureToHumusR,fManureToCO2R,fManureToMBiomassR;
@@ -204,11 +204,27 @@ int leachn_miner_run(stickstoff *self)
 //	  wmax  = pSL->fPorosity;
 //    whigh = wmax - (double)0.08;
 
-			corr.Feucht = Polygon4((pWL->fContAct + pWL->fIce),
+/*			corr.Feucht = Polygon4((pWL->fContAct + pWL->fIce),
 			                       wmin,(double)0,  wlow, (double)1 , whigh, (double)1,
 			                       pSL->fPorosity, pPA->fMinerSatActiv);
+                                   */
+                                   
+        //SG20200504: Anpassung an XN3
+    	/* Ansatz DAISY, Bezugswert Wasserspannung */
+	    f1= (float)-31622770;    //pF = 6.5
+        wmin = WATER_CONTENT(f1);
+        f1= (float)-3160;        //pF = 2.5
+        wlow = WATER_CONTENT(f1);
+        f1= (float)-316;         //pF = 1.5
+        whigh = WATER_CONTENT(f1);
+        f1= (float)0;
+        wmax = WATER_CONTENT(f1);
 
+			corr.Feucht = Polygon4((pWL->fContAct + pWL->fIce),
+			                       wmin,(double)0,  wlow, (double)1 , whigh, (double)1,
+			                       wmax, pPA->fMinerSatActiv);
 
+			
 
 
 //	 wmin = WATER_CONTENT((double)-155330);

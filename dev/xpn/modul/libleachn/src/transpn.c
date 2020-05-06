@@ -168,6 +168,18 @@ int transpn_get_DON_TransformationRates(transpn *self)
 			wlow  = wmin + (double)0.10;
 			wmax  = pSL->fPorosity;
 			whigh = wmax - (double)0.08; */
+            
+      //SG20200504: Anpassung an LeachN-Mineralisation      
+      /* Ansatz DAISY, Bezugswert Wasserspannung */
+	  f1= (float)-31622770;    //pF = 6.5
+      wmin = WATER_CONTENT(f1);
+      f1= (float)-3160;        //pF = 2.5
+      wlow = WATER_CONTENT(f1);
+      f1= (float)-316;         //pF = 1.5
+      whigh = WATER_CONTENT(f1);
+//    f1= (float)0;
+//    wmax = WATER_CONTENT(f1);
+
 
 			corr.Feucht = Polygon4((pWL->fContAct + pWL->fIce),
 			                       wmin,(double)0,  wlow, (double)1 , whigh, (double)1,

@@ -2204,40 +2204,40 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 					factor = pMat1Local[i2] / RootSum;
 					amount = pMa->pLitter->fRootC * factor;
 					// Moritz: activate new function with dyn_AOM_div =1
-                                                                         if (pCh->pCProfile->dyn_AOM_div == 1)
-                                                     {
-                                                         					double lignin_to_N,fResidues_to_AOM2_part_LN,fNmanure;
-					lignin_to_N= ((pPl->pBiomass->fRootWeight+pPl->pBiomass->fDeadRootWeight)*pPl->pGenotype->lig_roots/(pPl->pPltNitrogen->fRootCont+pPl->pPltNitrogen->fDeadRootNw));
-					fResidues_to_AOM2_part_LN = (pCh->pCProfile->L_N_intercept)-(pCh->pCProfile->L_N_slope*lignin_to_N);					
-					if (fResidues_to_AOM2_part_LN<=0)
-				{
-					fResidues_to_AOM2_part_LN=0;
-				}
+                    if (pCh->pCProfile->dyn_AOM_div == 1)
+                    {
+                        double lignin_to_N,fResidues_to_AOM2_part_LN,fNmanure;
+                        lignin_to_N= ((pPl->pBiomass->fRootWeight+pPl->pBiomass->fDeadRootWeight)*pPl->pGenotype->lig_roots/(pPl->pPltNitrogen->fRootCont+pPl->pPltNitrogen->fDeadRootNw));
+					    fResidues_to_AOM2_part_LN = (pCh->pCProfile->L_N_intercept)-(pCh->pCProfile->L_N_slope*lignin_to_N);					
+					    if (fResidues_to_AOM2_part_LN<=0)
+				        {
+					        fResidues_to_AOM2_part_LN=0;
+				        }
 					
-					pCL->fCLitter += amount*pTi->pTimeStep->fAct*(1-fResidues_to_AOM2_part_LN);
-					pCL->fNLitter += amount*pTi->pTimeStep->fAct/150;//AOM1 gets a fix C/N of 150
+					    pCL->fCLitter += amount*(1-fResidues_to_AOM2_part_LN); //pCL->fCLitter += amount*pTi->pTimeStep->fAct*(1-fResidues_to_AOM2_part_LN);
+					    pCL->fNLitter += amount/150;//pCL->fNLitter += amount*pTi->pTimeStep->fAct/150;//AOM1 gets a fix C/N of 150
 					
-					pCL->fCManure += amount*pTi->pTimeStep->fAct*(fResidues_to_AOM2_part_LN);
-					fNmanure =(amount*pTi->pTimeStep->fAct / pMa->pLitter->fRootCN)-(amount*pTi->pTimeStep->fAct/150);
-					if(fNmanure>0){
-					pCL->fNManure += fNmanure;
-					}
-                                                         }
-                                                     else
-                                                         {
-					pCL->fCLitter += amount*pTi->pTimeStep->fAct;
-					pCL->fNLitter += amount*pTi->pTimeStep->fAct / pMa->pLitter->fRootCN;
+					    pCL->fCManure += amount*(fResidues_to_AOM2_part_LN);//pCL->fCManure += amount*pTi->pTimeStep->fAct*(fResidues_to_AOM2_part_LN);
+					    fNmanure =(amount/ pMa->pLitter->fRootCN)-(amount/150);//fNmanure =(amount*pTi->pTimeStep->fAct / pMa->pLitter->fRootCN)-(amount*pTi->pTimeStep->fAct/150);
+					    if(fNmanure>0){
+					    pCL->fNManure += fNmanure;
+					    }
+                    }
+                    else
+                    {
+					    pCL->fCLitter += amount;//pCL->fCLitter += amount*pTi->pTimeStep->fAct;
+					    pCL->fNLitter += amount / pMa->pLitter->fRootCN;//pCL->fNLitter += amount*pTi->pTimeStep->fAct / pMa->pLitter->fRootCN;
                     }
 					//End of Moritz */
 					
 					//Hong added on 20180731 for C-balance			
 				    //pCB->dCInputCum +=amount*pTi->pTimeStep->fAct;
-					pCB->dCInputProfile +=amount*pTi->pTimeStep->fAct;
+					pCB->dCInputProfile +=amount;//pCB->dCInputProfile +=amount*pTi->pTimeStep->fAct;
 					 //Hong 20190507: balance for 0-30 cm profile:
 					fCumDepth +=(double)0.1*pSL->fThickness; //cm
 	                if (fCumDepth <=30.0)
 					{
-						pCB->dCInputProfile_30 +=amount*pTi->pTimeStep->fAct;
+						pCB->dCInputProfile_30 +=amount;//pCB->dCInputProfile_30 +=amount*pTi->pTimeStep->fAct;
 	                 }
 					
 					if((pCL->fCLitter>EPSILON)&&(pCL->fNLitter>EPSILON))

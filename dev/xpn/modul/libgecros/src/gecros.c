@@ -3983,7 +3983,7 @@ int     PotentialNitrogenUptake_GECROS(gecros *self)
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// SG20140312:
 	// Vorschlag von Joachim Ingwersen zur Simulation der Winterung
-	if((strcmp(pPl->pGenotype->acCropCode,"WH")==0)||(strcmp(pPl->pGenotype->acCropCode,"BA")==0)) // here we have to distinguish between winter and summer crops --> DB!!!// here we have to distinguish between winter and summer crops --> DB!!!
+	if((strcmp(pPl->pGenotype->acCropCode,"WH")==0)||(strcmp(pPl->pGenotype->acCropCode,"BA")==0)) // here we have to distinguish between winter and summer crops!!!
 									
 	{
 		//	if (DS < 0.25) // DSCRIT = 0.25
@@ -4558,6 +4558,7 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
 		 //DTR   = DDTR*(SINB*SC/1367.)/DSINBE; //original
 		 //DTR   = xpn->pCl->pWeather->fGlobalStrahlung*1E6*(SINB*SC/1367.)/DSINBE;//the calculted fSol_Rad not used		
 		 DTR = DDTR/24/3600 * (self->DSINB/DSINBE);		
+		 //DTR = DDTR/24/3600;		
 		 //End of Hong
 		 
 		 //C_DEBUG(DTR);
@@ -5229,9 +5230,13 @@ double PotEvaporTransp_GECROS(double RSW,double RT,double RBW,double RBH,double 
 
         //%---radiation-determined term
         PTR    = NRADC*SLOPE        /(SLOPE+PSR)/LHVAP;
+        //SG20200409: no negative evaporation/transpiration, if NRADC<0
+       // PTR    = max(0,PTR);
+       // PTR    = 0;
 
         //%---vapour pressure-determined term
         PTD    = (VHCA*VPD/(RBH+RT))/(SLOPE+PSR)/LHVAP;
+        //PTD    =0;
 
         //%---potential evaporation or transpiration
         PT     = max((double)1.E-10,PTR+PTD);
