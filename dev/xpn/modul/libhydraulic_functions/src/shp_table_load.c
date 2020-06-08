@@ -12,11 +12,13 @@ int shp_table_load_ini(hydraulic_functions *self)
 	if (self->ini_filename==NULL)
 		{
 			// Read from INI File:
-			ini_filename = xpn_register_var_get_pointer(self->parent.pXSys->var_list,"Config.shp_table.filename");
+//			ini_filename = xpn_register_var_get_pointer(self->parent.pXSys->var_list,"Config.shp_table.filename");
+			ini_filename = xpn_register_var_get_pointer(self->parent.pXSys->var_list,"Config.Look-up Table.shp_table");
 
 			if (ini_filename==NULL)
 				{
-					PRINT_ERROR("Missing entry 'shp_table.ini_filename' in your configuration!");
+//					PRINT_ERROR("Missing entry 'shp_table.ini_filename' in your configuration!");
+					PRINT_ERROR("Missing entry 'Look-up Table.shp_table' in your configuration!");
 				}
 			else
 				{
