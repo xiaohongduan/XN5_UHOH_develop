@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 	// glib Klassen initiatisieren
 	g_type_init();
 	
-	// Wenn man das nicht macht, kann man keine Dateien öffnent, die Umlaute haben oder printf mit Umlauten geht nicht
+	// Wenn man das nicht macht, kann man keine Dateien öffnen, die Umlaute haben oder printf mit Umlauten geht nicht
 	setlocale(LC_ALL, "en_US.UTF-8");
 
 	// Command Line Parser:

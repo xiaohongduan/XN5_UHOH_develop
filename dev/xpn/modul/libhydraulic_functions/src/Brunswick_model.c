@@ -1,32 +1,34 @@
-#include "VanGenuchten.h"
-#include "hydraulic_functions.h"
-
+#include "Brunswick_model.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "math_functions.h"
 
+//////////////////////////////////////////////////////////////////////////////////
+// HIER STEHT NOCH DAS VGM MODELL  !                                                             //
+// WEBER-MODELL MUSS NOCH IMPLEMENTIERT WERDEN!!!                         //
+// SG20180913                                                                                                           // 
+////////////////////////////////////////////////////////////////////////////////
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-/*  Name     : VG_HCond()                                            */
+/*  Name     : BRUNSWICK_HCond()                                            */
 /*                                                                   */
 /*  Function : Calculation of hydraulic unsaturated conductivity     */
-/*             following van Genuchten (1980) and Mualem (1976)      */
+/*             following Weber et al (2019)      */
 /*             HYDRUS 5.0                                            */
-/*  Author   : ep 27.11.95                                           */
+/*  Author   : sg, 13.09.2018                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-double VG_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+double BRUNSWICK_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2,  
+                double Alpha2, double N2, double M2, double W1, double W2,   
                 double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW)
 {
  //Hydraulic conductivity
  double m,n,Alfa,Qe,Qee,Qees,Qs,Qr,Qm,Hs,HH;
  double FFQ,FFQs,Kr,Ks,FK;
- //double Bpar=(double)0.5;
- double Bpar=tau;
+ double Bpar=(double)0.5;
  int Ppar=2;
 
       Qr=Tmin;
@@ -59,20 +61,20 @@ double VG_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
         }
  return FK;
 
-}  /*  van Genuchten/Mualem conductivity */
+}  /* end Brunswick_model conductivity */
 /*------------------------------------------------*/
 
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-/*  Name     : VG_WCont()                                            */
+/*  Name     : BRUNSWICK_WCont()                                                                                                          */
+/*                                                                                                                                                             */
+/*  Function : Calculation of volumetric water content                                                    */
+/*             following Weber et al (2019)         */
 /*                                                                   */
-/*  Function : Calculation of volumetric water content               */
-/*             following van Genuchten (1980) and HYDRUS 5.0         */
-/*                                                                   */
-/*  Author   : ep  27.11.95                                          */
+/*  Author   : sg, 13.09.2018                                          */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
                
-double VG_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+double BRUNSWICK_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
                 double Alpha2, double N2, double M2, double W1, double W2,   
@@ -105,17 +107,17 @@ double VG_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
         }
           
  return FQ;
-}  /*  end van Genuchten water content  */
+}  /*  end Brunswick_model water content  */
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-/*  Name     : VG_DWCap()                                          */
+/*  Name     : BRUNSWICK_DWCap()                                          */
 /*                                                                 */
 /*  Function : Calculation of differential water capacity          */
-/*             following van Genuchten (1980) and HYDRUS 5.0       */
-/*  Author   : ep 27.11.95                                         */
+/*             following Weber et al (2019)       */
+/*  Author   : sg, 13.09.2018                                         */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-double VG_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+double BRUNSWICK_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
                 double Alpha2, double N2, double M2, double W1, double W2,   
@@ -152,21 +154,21 @@ double VG_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 //      FC=(double)0.1 * FC; //[cm] to [mm]
 
  return FC;
-}  /* end van Genuchten  DWC*/
+}  /* end Brunswick_model  DWC*/
 
 
 
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-/*  Name     : VG_MPotl()                                          */
+/*  Name     : BRUNSWICK_MPotl()                                          */
 /*  Function : Calculation of matric potential from                */
 /*             a given volumetric water content                    */
-/*             following van Genuchten (1980) and HYDRUS 5.0       */
+/*             following Weber et al (2019)       */
 /*                                                                 */
-/*  Autor    : ep, 12.4.96                                         */
+/*  Autor    : sg, 13.09.2018                                         */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-double VG_MPotl(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+double BRUNSWICK_MPotl(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
                 double Alpha2, double N2, double M2, double W1, double W2,   
@@ -199,5 +201,4 @@ double VG_MPotl(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
       FH=max(HH,(double)-1e37);
 //      FH=(double)10.0 * FH; //[cm] to [mm]
  return FH;
-}  /*  end VGMPotl  */
-
+}  /* end Brunswick_model Potl  */

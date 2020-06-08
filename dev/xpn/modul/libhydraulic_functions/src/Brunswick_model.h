@@ -1,19 +1,19 @@
-#ifndef __VAN_GENUCHTEN_H__
-#define __VAN_GENUCHTEN_H__
+#ifndef __BRUNSWICK_MODEL_H__
+#define __BRUNSWICK_MODELP_H__
 
 #include <expertn_modul_base.h>
 #include <xsoil.h>
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-/*  Name     : VG_HCond()                                            */
+/*  Name     : BRUNSWICK_HCond()                                            */
 /*                                                                   */
 /*  Function : Calculation of hydraulic unsaturated conductivity     */
-/*             following van Genuchten (1980) and Mualem (1976)      */
+/*             following Weber et al. (2019)     */
 /*             HYDRUS 5.0                                            */
-/*  Author   : ep 27.11.95                                           */
+/*  Author   : sg, 13.09.2018                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-double VG_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+double BRUNSWICK_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
                 double Alpha2, double N2, double M2, double W1, double W2, 
@@ -21,15 +21,15 @@ double VG_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-/*  Name     : VG_WCont()                                            */
+/*  Name     : BRUNSWICK_WCont()                                            */
 /*                                                                   */
 /*  Function : Calculation of volumetric water content               */
-/*             following van Genuchten (1980) and HYDRUS 5.0         */
+/*             following Weber et al. (2019)         */
 /*                                                                   */
-/*  Author   : ep  27.11.95                                          */
+/*  Author   : sg, 13.09.2018                                          */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
                
-double VG_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+double BRUNSWICK_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
                 double Alpha2, double N2, double M2, double W1, double W2, 
@@ -37,30 +37,30 @@ double VG_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 				
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-/*  Name     : VG_DWCap()                                          */
+/*  Name     : BRUNSWICK_DWCap()                                          */
 /*                                                                 */
 /*  Function : Calculation of differential water capacity          */
-/*             following van Genuchten (1980) and HYDRUS 5.0       */
-/*  Author   : ep 27.11.95                                         */
+/*             following Weber et al. (2019)       */
+/*  Author   : sg, 13.09.2018                                         */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-double VG_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+double BRUNSWICK_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2,  
+                double Alpha2, double N2, double M2, double W1, double W2, 
                 double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
 				
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-/*  Name     : VG_MPotl()                                          */
+/*  Name     : BRUNSWICK_MPotl()                                          */
 /*  Function : Calculation of matric potential from                */
 /*             a given volumetric water content                    */
-/*             following van Genuchten (1980) and HYDRUS 5.0       */
+/*             following Weber et al. (2019)       */
 /*                                                                 */
-/*  Autor    : ep, 12.4.96                                         */
+/*  Autor    : sg, 13.09.2018                                         */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-double VG_MPotl(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
+double BRUNSWICK_MPotl(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
                 double Alpha2, double N2, double M2, double W1, double W2, 

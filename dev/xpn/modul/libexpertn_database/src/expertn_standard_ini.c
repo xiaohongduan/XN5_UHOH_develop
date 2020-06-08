@@ -492,6 +492,13 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->cont_inflec,self->cfg->cont_inflec_len,self->cfg->layers_len,-99.0,"soil","cont_inflec");
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->pot_inflec_hPa,self->cfg->pot_inflec_hPa_len,self->cfg->layers_len,-99.0,"soil","pot_inflec_hPa");
 	GET_INI_STRING_ARRAY_OPTIONAL(self->cfg->soil_type,self->cfg->soil_type_len,self->cfg->layers_len,"-99.0","soil","soil_type");
+    //SG20200327:
+ 	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->pore_connectivity,self->cfg->pore_connectivity_len,self->cfg->layers_len,0.5,"soil","pore_connectivity");
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->cont_sat_c,self->cfg->cont_sat_c_len,self->cfg->layers_len,-99.0,"soil","cont_sat_c");
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->res_water_cont_c,self->cfg->res_water_cont_c_len,self->cfg->layers_len,-99.0,"soil","res_water_cont_c");
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->cond_sat_c,self->cfg->cond_sat_c_len,self->cfg->layers_len,-99.0,"soil","cond_sat_c");
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->cond_sat_nc,self->cfg->cond_sat_nc_len,self->cfg->layers_len,-99.0,"soil","cond_sat_nc");
+   
 	// Array Groessen muessen alle gleich sein, sonst: Fehlermeldung und abbrechen
 	CHECK_LEN(self->cfg->layers_len,self->cfg->organic_carbon_len);
 	CHECK_LEN(self->cfg->layers_len,self->cfg->organic_nitrogen_len);
@@ -509,6 +516,16 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	CHECK_LEN(self->cfg->layers_len,self->cfg->cont_inflec_len);
 	CHECK_LEN(self->cfg->layers_len,self->cfg->pot_inflec_hPa_len);
 	CHECK_LEN(self->cfg->layers_len,self->cfg->soil_type_len);
+    
+    //SG20200327:
+  	CHECK_LEN(self->cfg->layers_len,self->cfg->pore_connectivity_len);
+  	CHECK_LEN(self->cfg->layers_len,self->cfg->cont_sat_c_len);
+	CHECK_LEN(self->cfg->layers_len,self->cfg->res_water_cont_c_len);
+	CHECK_LEN(self->cfg->layers_len,self->cfg->cond_sat_c_len);
+	CHECK_LEN(self->cfg->layers_len,self->cfg->cond_sat_nc_len);
+
+    
+    
 	for (i=0; i<self->cfg->soil_type_len; i++)
 		{
 			sum=self->cfg->clay[i]+self->cfg->sand[i]+self->cfg->silt[i];
@@ -594,6 +611,14 @@ void expertn_standard_ini_free_cfg_file(expertn_standard_ini *self)
 			G_FREE_IF_NOT_0(self->cfg->cond_sat);
 			G_FREE_IF_NOT_0(self->cfg->cont_inflec);
 			G_FREE_IF_NOT_0(self->cfg->pot_inflec_hPa);
+            
+            //SG20200327:
+            G_FREE_IF_NOT_0(self->cfg->pore_connectivity);
+            G_FREE_IF_NOT_0(self->cfg->cont_sat_c);
+            G_FREE_IF_NOT_0(self->cfg->res_water_cont_c);
+            G_FREE_IF_NOT_0(self->cfg->cond_sat_c);
+            G_FREE_IF_NOT_0(self->cfg->cond_sat_nc);
+
 			if (self->cfg->soil_type!=NULL)
 				{
 					for (i=0; i<self->cfg->soil_type_len; i++)
@@ -889,16 +914,17 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
 	int i,i2,i3;
+/*    int  i4,var_len; //SG 20180921*/
 	double fDepth_all;
 	PSPROFILE pSo;
 	PSLAYER pSLayer;
 	PSWATER pSWater;
 	PSHEAT pSHeat;
-	//Added by Hong
+/*	//Added by Hong
 	PWLAYER pWL;
 	PSWATER      pSW;
     pWL= xpn->pWa->pWLayer; //Added by Hong
-	pSW = xpn->pSo->pSWater;
+	pSW = xpn->pSo->pSWater;*/
 	//End of Hong
 	pSo = xpn->pSo;
 	pSo->fDepth=0.0;
@@ -908,14 +934,14 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 	
 	//Added by Hong
 	// Hydraulische Funktionen laden:
-	self->WCont = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.WCont");
+/*	self->WCont = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.WCont");
 	self->HCond = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.HCond");
 	self->DWCap = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.DWCap");
 	self->MPotl = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.MPotl");
 	if ((self->WCont==NULL) || (self->HCond==NULL) || (self->DWCap==NULL) || (self->MPotl==NULL))
 		{
 			PRINT_ERROR("Problem with hydraulic functions!");
-		}
+		}*/
 	//End of Hong
 	
 	
@@ -946,17 +972,32 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 			pSWater->fCampB = self->cfg->camp_b[i2];
 			pSWater->fVanGenA = self->cfg->van_gen_a[i2];
 			pSWater->fVanGenN = self->cfg->van_gen_n[i2];
-			//Added by Hong Dec.2018
-			int f1, f2;
-			f1= (double)-150000;
-			f2=(double)-3300;
-			pSWater->fContPWP = WATER_CONTENT(f1);
-			pSWater->fContFK = WATER_CONTENT(f2);
-			//End of Hong
+
 			pSWater->fMinPot = self->cfg->max_pot[i2];
 			pSWater->fCondSat = self->cfg->cond_sat[i2];
 			pSWater->fContInflec = self->cfg->cont_inflec[i2];
 			pSWater->fPotInflec =  self->cfg->pot_inflec_hPa[i2];
+
+            //SG20200327
+            pSWater->fTau= self->cfg->pore_connectivity[i2];
+            pSWater->fContSat_c= self->cfg->cond_sat_c[i2];
+            pSWater->fContRes_c= self->cfg->res_water_cont_c[i2];
+            pSWater->fCondSat_c= self->cfg->cond_sat_c[i2];
+            pSWater->fCondSat_nc= self->cfg->cond_sat_nc[i2];
+
+/* 		//Added by Hong Dec.2018
+			int f1, f2;
+			f1= (double)-150000;
+			f2=(double)-3300;
+			pSWater->fContPWP = WATER_CONTENT(f1);
+			pSWater->fContFK = WATER_CONTENT(f2);*/
+			//End of Hong
+            
+            //SG20200327 --> verschoben in die jeweils ausgewählte Hydraulische Funktion!
+            //Dadurch werden die Werte für PWP und FK aus der cfg nur dann überschrieben, wenn eine Hydraulische Funktion ausgewählt wurde.
+            //Wichtig für Plan, Tipping-Bucket Modell zu implementieren
+
+            
 			pSLayer->acSoilID=g_strdup_printf("%s",self->cfg->soil_type[i2]);
 			pSLayer->fThickness =self->cfg->layer_thickness * 10.0; // cm --> mm
 			if ((i>0) && (i<pSo->iLayers-1))
