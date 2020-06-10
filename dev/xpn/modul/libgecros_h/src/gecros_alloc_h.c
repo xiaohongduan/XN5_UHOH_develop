@@ -4,7 +4,7 @@
 	if (var!=NULL) g_free(var);\
 	var=NULL;
 
-int gecros_alloc_allocateGECROSVariables(gecros *self)
+int gecros_h_alloc_allocateGECROSVariables(gecros_h *self)
 {	
 		
 		self->pGecrosPlant = g_malloc0(sizeof(struct stGecrosPlant));
@@ -25,7 +25,7 @@ int gecros_alloc_allocateGECROSVariables(gecros *self)
 
 
 
-int gecros_alloc_freeAllocatedGECROSMemory(gecros *self)
+int gecros_h_alloc_freeAllocatedGECROSMemory(gecros_h *self)
 {
 	FREE_IFN_0(self->pGecrosPlant->pGecrosSoil);
 	FREE_IFN_0(self->pGecrosPlant->pGecrosCanopy);

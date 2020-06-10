@@ -180,7 +180,7 @@ double  abspowerDBL(double x, double y) {
 	return z;
 }
 
-GDate *gecros_convert_str_to_gdate(char* S) {
+GDate *gecros_h_convert_str_to_gdate(char* S) {
 	char yearstr[5],monthstr[3],daystr[3];
 	int i;
 	int day,month,year;

@@ -5,27 +5,27 @@
 
 
 
-#ifndef __GECROS_H__
-#define __GECROS_H__
+#ifndef __GECROS_H_H__
+#define __GECROS_H_H__
 
 #include <expertn_modul_base.h>
 
 G_BEGIN_DECLS
 
-#define GECROS_TYPE				(gecros_get_type())
-#define GECROS(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj),\
-			GECROS_TYPE, gecros))
-#define GECROS_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass),\
-			GECROS_TYPE, gecrosClass))
-#define IS_GECROS(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj),\
-			GECROS_TYPE))
-#define IS_GECROS_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),\
-			GECROS_TYPE))
+#define GECROS_H_TYPE				(gecros_h_get_type())
+#define GECROS_H(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj),\
+			GECROS_H_TYPE, gecros_h))
+#define GECROS_H_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass),\
+			GECROS_H_TYPE, gecros_hClass))
+#define IS_GECROS_H(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj),\
+			GECROS_H_TYPE))
+#define IS_GECROS_H_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),\
+			GECROS_H_TYPE))
 //Test of Hong
 #define SET_IF_99(x1,y1) if (x1==-99.0) x1=(y1);
 //End of Test
-typedef struct _gecros			gecros;
-typedef struct _gecrosClass		gecrosClass;
+typedef struct _gecros_h			gecros_h;
+typedef struct _gecros_hClass		gecros_hClass;
 
 typedef struct stGecrosGenotype * PGECROSGENOTYPE;
 typedef struct stGecrosGenotype
@@ -337,7 +337,7 @@ typedef struct {
 } struct_weather;
 
 
-struct _gecros
+struct _gecros_h
 {
 	expertn_modul_base parent;
 	/* add your public declarations here */
@@ -441,27 +441,27 @@ struct _gecros
 	}\*/
 
 // public class member function:
-G_MODULE_EXPORT int gecros_Init_and_AllocMemory(gecros *self);
-G_MODULE_EXPORT int gecros_Development(gecros *self);
-G_MODULE_EXPORT int gecros_Photosynthesis(gecros *self);
-G_MODULE_EXPORT int gecros_BiomassGrowth(gecros *self);
-G_MODULE_EXPORT int gecros_CanopyFormation(gecros *self);
-G_MODULE_EXPORT int gecros_RootSytem(gecros *self);
-G_MODULE_EXPORT int gecros_CropSenescence(gecros *self);
-G_MODULE_EXPORT int gecros_NitrogenDemand(gecros *self);
-G_MODULE_EXPORT int gecros_NitrogenUptake(gecros *self);
-G_MODULE_EXPORT int gecros_ActualTranspiration(gecros *self);
-G_MODULE_EXPORT int gecros_Done_and_FreeMemory(gecros *self);
+G_MODULE_EXPORT int gecros_h_Init_and_AllocMemory(gecros_h *self);
+G_MODULE_EXPORT int gecros_h_Development(gecros_h *self);
+G_MODULE_EXPORT int gecros_h_Photosynthesis(gecros_h *self);
+G_MODULE_EXPORT int gecros_h_BiomassGrowth(gecros_h *self);
+G_MODULE_EXPORT int gecros_h_CanopyFormation(gecros_h *self);
+G_MODULE_EXPORT int gecros_h_RootSytem(gecros_h *self);
+G_MODULE_EXPORT int gecros_h_CropSenescence(gecros_h *self);
+G_MODULE_EXPORT int gecros_h_NitrogenDemand(gecros_h *self);
+G_MODULE_EXPORT int gecros_h_NitrogenUptake(gecros_h *self);
+G_MODULE_EXPORT int gecros_h_ActualTranspiration(gecros_h *self);
+G_MODULE_EXPORT int gecros_h_Done_and_FreeMemory(gecros_h *self);
 
 
-struct _gecrosClass
+struct _gecros_hClass
 {
 	expertn_modul_baseClass parent_class;
 };
 
-G_MODULE_EXPORT GType gecros_get_type (void);
+G_MODULE_EXPORT GType gecros_h_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GECROS_H__ */
+#endif /* __GECROS_H_H__ */
 

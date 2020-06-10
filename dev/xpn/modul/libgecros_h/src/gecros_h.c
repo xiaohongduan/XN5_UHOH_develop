@@ -15,44 +15,44 @@
 #include "gecros_tools_h.h"
 
 //Hong 2016-08-08: change for Sebastian Gayler and Arne Poyda
-int gecros_Germination(gecros *self);
-int Emergence_GECROS(gecros *self);
-double gecros_Vernalization_CERES(gecros *self); //added on 20170704
+int gecros_Germination(gecros_h *self);
+int Emergence_GECROS(gecros_h *self);
+double gecros_Vernalization_CERES(gecros_h *self); //added on 20170704
 double gecros_DailyVernalization_SPASS(double fTempMin,double fTempMax, double fTemp, PRESPONSE pResp,
-							  	   double fMinTemp, double fOptTemp, double  fMaxTemp, gecros *self);//added on 20170704
+							  	   double fMinTemp, double fOptTemp, double  fMaxTemp, gecros_h *self);//added on 20170704
 double gecros_RelativeTemperatureResponse_SPASS(double fTemp, double fMinTemp, double fOptTemp, double fMaxTemp);//added on 20170704
-double gecros_PlantTemperature(gecros *self);//added on 20170704
+double gecros_PlantTemperature(gecros_h *self);//added on 20170704
 //End of Hong
 
-int    DefaultPlantParameters_GECROS(gecros *self);
-int    PhasicDevelopment_GECROS(gecros *self);
-int    Photosynthesis_GECROS(gecros *self);
-int    BiomassGrowth_GECROS(gecros *self);
-int    CanopyFormation_GECROS(gecros *self);
-int    RootSystemFormation_GECROS(gecros *self);
-int    OrganSenescence_GECROS(gecros *self);
-int    PotentialNitrogenUptake_GECROS(gecros *self);
-int    ActualNitrogenUptake_GECROS(gecros *self);
+int    DefaultPlantParameters_GECROS(gecros_h *self);
+int    PhasicDevelopment_GECROS(gecros_h *self);
+int    Photosynthesis_GECROS(gecros_h *self);
+int    BiomassGrowth_GECROS(gecros_h *self);
+int    CanopyFormation_GECROS(gecros_h *self);
+int    RootSystemFormation_GECROS(gecros_h *self);
+int    OrganSenescence_GECROS(gecros_h *self);
+int    PotentialNitrogenUptake_GECROS(gecros_h *self);
+int    ActualNitrogenUptake_GECROS(gecros_h *self);
 
-int    gecros_Init_Vars(gecros *self);
-int    LeafAreaGrowth_GECROS(gecros *self);
-int    PlantHeightGrowth_GECROS(gecros *self);
-int    NitrogenFixation_GECROS(gecros *self);
+int    gecros_Init_Vars(gecros_h *self);
+int    LeafAreaGrowth_GECROS(gecros_h *self);
+int    PlantHeightGrowth_GECROS(gecros_h *self);
+int    NitrogenFixation_GECROS(gecros_h *self);
 
 //Hong for crop rotation on 20170131
-int    gecros_load_ini_file(gecros *self);
-int    gecros_PlantVariableInitiation(gecros *self);
+int    gecros_load_ini_file(gecros_h *self);
+int    gecros_PlantVariableInitiation(gecros_h *self);
 //End of Hong
 
-int    Astronomy_GECROS(gecros *self, int iJulianDay, double vLatitude);//, double INSP);
+int    Astronomy_GECROS(gecros_h *self, int iJulianDay, double vLatitude);//, double INSP);
 //double DailyThermalDayUnit_GECROS(double DS,double TMAX,double TMIN,double DIF,double DAYL,
 //								  double TBD,double TOD,double TCD,double TSEN);//Hong
-double DailyThermalDayUnit_GECROS(gecros *self, double DS,double TEMP,double DIF,double DAYL,
+double DailyThermalDayUnit_GECROS(gecros_h *self, double DS,double TEMP,double DIF,double DAYL,
 								  double TBD,double TOD,double TCD,double TSEN);
 								  
 //double Phenology_GECROS(gecros *self,double DS,double SLP,double DDLP,double SPSP,double EPSP, double PSEN,double MTDV,double MTDR,double TDU);
-double Phenology_GECROS(gecros *self,double DS,double SLP,double DDLP,double SPSP,double EPSP, double PSEN,double MTDV,double MTDR,double TDU,double OptVernDays);//added double OptVernDays by Hong on 20170704
-double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD,double COSLD,double DAYL,double DSINBE,
+double Phenology_GECROS(gecros_h *self,double DS,double SLP,double DDLP,double SPSP,double EPSP, double PSEN,double MTDV,double MTDR,double TDU,double OptVernDays);//added double OptVernDays by Hong on 20170704
+double DailyCanopyGrossPhotosynthesis_GECROS(gecros_h *self,double SC,double SINLD,double COSLD,double DAYL,double DSINBE,
           double DDTR,double TMPA,double HOUR,double DVP,double WNM,double C3C4,double LAI,double TLAI,
           double HT,double LWIDTH,double RD,double SD1,double RSS,double BLD,double NLV,double TNLV,
           double SLNMIN,double DWSUP,double CO2A,double LS,double EAJMAX,double XVN,double XJN,double THETA,
@@ -106,15 +106,15 @@ int    rnacc(double FNSH,double NUPT,double RWST,double STEMNC,double LNCMIN,dou
              double LNRT,double *RNRT,double *RNST,double *RNLV,double *RTNLV,double *RNSO);
 
 
-int gecros_integrate_small_time_step_vars(gecros *self);
+int gecros_integrate_small_time_step_vars(gecros_h *self);
 
-G_DEFINE_TYPE(gecros, gecros, EXPERTN_MODUL_BASE_TYPE);
-
-
-static void gecros_class_init(gecrosClass *klass){}
+G_DEFINE_TYPE(gecros_h, gecros_h, EXPERTN_MODUL_BASE_TYPE);
 
 
-static void gecros_init(gecros *self)
+static void gecros_h_class_init(gecros_hClass *klass){}
+
+
+static void gecros_h_init(gecros_h *self)
 {
  self->_init_done=0;
  self->_done_done=0;
@@ -125,18 +125,18 @@ static void gecros_init(gecros *self)
 // XN-GECROS Modul Functions:
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-int gecros_Init_and_AllocMemory(gecros *self)
+int gecros_h_Init_and_AllocMemory(gecros_h *self)
 {
 	if (self->_init_done!=0) return RET_SUCCESS;
 	self->_init_done++;
 
-	gecros_alloc_allocateGECROSVariables(self);	
+	gecros_h_alloc_allocateGECROSVariables(self);	
 	gecros_Init_Vars(self); //Hong: only read once  
 	
 	return RET_SUCCESS;
 }
 
-int gecros_Done_and_FreeMemory(gecros *self)
+int gecros_h_Done_and_FreeMemory(gecros_h *self)
 {	
 	if (self->_done_done!=0) return RET_SUCCESS;
 	self->_done_done++;
@@ -146,7 +146,7 @@ int gecros_Done_and_FreeMemory(gecros *self)
 }
 
 // Phasic development
-int gecros_Development(gecros *self)
+int gecros_h_Development(gecros_h *self)
   {
 	  expertn_modul_base *xpn = &(self->parent);
 	  PTIME pTi = xpn->pTi;
@@ -172,7 +172,7 @@ if (NewDay(pTi)){
 	  if ((xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
 		    pMa->pSowInfo->Year,pMa->pSowInfo->Month,pMa->pSowInfo->Day)==0)&&(self->first_round)>=0)			
       {
-		  gecros_alloc_allocateGECROSVariables(self);
+		  gecros_h_alloc_allocateGECROSVariables(self);
 		  gecros_load_ini_file(self);
 		  
 		  
@@ -192,7 +192,7 @@ if (NewDay(pTi)){
 
 
 // Gross Photosynthesis
-int gecros_Photosynthesis(gecros *self)
+int gecros_h_Photosynthesis(gecros_h *self)
   {
 	  expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -216,7 +216,7 @@ int gecros_Photosynthesis(gecros *self)
   }
 
 // Biomass Growth
-int gecros_BiomassGrowth(gecros *self)
+int gecros_h_BiomassGrowth(gecros_h *self)
   {
 	  expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -236,7 +236,7 @@ int gecros_BiomassGrowth(gecros *self)
   }
 
 // Canopy Formation
-int gecros_CanopyFormation(gecros *self)
+int gecros_h_CanopyFormation(gecros_h *self)
   {
 	  expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -257,7 +257,7 @@ int gecros_CanopyFormation(gecros *self)
   }
 
 // Root System Formation
-int gecros_RootSytem(gecros *self)
+int gecros_h_RootSytem(gecros_h *self)
   {
 	  expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -278,7 +278,7 @@ int gecros_RootSytem(gecros *self)
   }
 
 // Crop Senescence
-int gecros_CropSenescence(gecros *self)
+int gecros_h_CropSenescence(gecros_h *self)
   {
     expertn_modul_base *xpn = &(self->parent);
     PCHEMISTRY pCh = xpn->pCh;
@@ -393,7 +393,7 @@ int gecros_CropSenescence(gecros *self)
   }
 
 // Nitrogen Demand
-int gecros_NitrogenDemand(gecros *self)
+int gecros_h_NitrogenDemand(gecros_h *self)
   {
 	  expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -415,7 +415,7 @@ int gecros_NitrogenDemand(gecros *self)
   }
 
 // Nitrogen Uptake
-int gecros_NitrogenUptake(gecros *self)
+int gecros_h_NitrogenUptake(gecros_h *self)
   {
     expertn_modul_base *xpn = &(self->parent);
 	PCHEMISTRY pCh = xpn->pCh;
@@ -466,7 +466,7 @@ int gecros_NitrogenUptake(gecros *self)
   }
 
 // Water Uptake
-int gecros_ActualTranspiration(gecros *self)
+int gecros_h_ActualTranspiration(gecros_h *self)
   {
     expertn_modul_base *xpn = &(self->parent);
     PTIME      pTi = xpn->pTi;
@@ -621,7 +621,7 @@ int gecros_ActualTranspiration(gecros *self)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-int gecros_Init_Vars(gecros *self)
+int gecros_Init_Vars(gecros_h *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
 	//DECLARE_XPN
@@ -778,7 +778,7 @@ self->WCMIN=0.05; //Hong 20170628
 	return RET_SUCCESS;
 }
 
-int gecros_load_ini_file(gecros *self)
+int gecros_load_ini_file(gecros_h *self)
 {
 	GError *error = NULL;
 	expertn_modul_base *xpn = &(self->parent);
@@ -1057,7 +1057,7 @@ lig_stem, lig_leaves, lig_roots */
 	return RET_SUCCESS;
 }
 
-int gecros_PlantVariableInitiation(gecros *self)//Hong 20170127
+int gecros_PlantVariableInitiation(gecros_h *self)//Hong 20170127
 {
 	expertn_modul_base *xpn = &(self->parent);
 
@@ -1358,7 +1358,7 @@ int gecros_PlantVariableInitiation(gecros *self)//Hong 20170127
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    DefaultPlantParameters_GECROS
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-int   DefaultPlantParameters_GECROS(gecros *self)
+int   DefaultPlantParameters_GECROS(gecros_h *self)
 {
   expertn_modul_base *xpn = &(self->parent);
   
@@ -1714,7 +1714,7 @@ return 1;
 //      PhasicDevelopment_GECROS
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-int PhasicDevelopment_GECROS(gecros *self)
+int PhasicDevelopment_GECROS(gecros_h *self)
     {
       expertn_modul_base *xpn = &(self->parent);
 	  PLOCATION pLo = xpn->pLo; 
@@ -1975,7 +1975,7 @@ int PhasicDevelopment_GECROS(gecros *self)
 *  FILE usage : none                                                   *
 *----------------------------------------------------------------------*/
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-int Astronomy_GECROS(gecros *self, int iJulianDay, double dLatitude)//, double INSP)
+int Astronomy_GECROS(gecros_h *self, int iJulianDay, double dLatitude)//, double INSP)
       {
       double DEC,AOB;
       int    nHiWord;
@@ -2036,7 +2036,7 @@ int Astronomy_GECROS(gecros *self, int iJulianDay, double dLatitude)//, double I
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //double DailyThermalDayUnit_GECROS(double DS,double TMAX,double TMIN,double DIF,double DAYL,
 //								  double TBD,double TOD,double TCD,double TSEN)
-double DailyThermalDayUnit_GECROS(gecros *self, double DS,double TEMP,double DIF,double DAYL,
+double DailyThermalDayUnit_GECROS(gecros_h *self, double DS,double TEMP,double DIF,double DAYL,
 								  double TBD,double TOD,double TCD,double TSEN)
     {
 	  expertn_modul_base *xpn = &(self->parent);	
@@ -2143,7 +2143,7 @@ double DailyThermalDayUnit_GECROS(gecros *self, double DS,double TEMP,double DIF
 *----------------------------------------------------------------------*/
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //double Phenology_GECROS(gecros *self, double DS,double SLP,double DDLP,double SPSP,double EPSP,double PSEN, double MTDV,double MTDR,double TDU)
-double Phenology_GECROS(gecros *self,double DS,double SLP,double DDLP,double SPSP,double EPSP, double PSEN,double MTDV,double MTDR,double TDU,double OptVernDays) //added by Hong on 20170704
+double Phenology_GECROS(gecros_h *self,double DS,double SLP,double DDLP,double SPSP,double EPSP, double PSEN,double MTDV,double MTDR,double TDU,double OptVernDays) //added by Hong on 20170704
 {
  expertn_modul_base *xpn = &(self->parent);
  PPLANT pPl = xpn->pPl;
@@ -2219,7 +2219,7 @@ double Phenology_GECROS(gecros *self,double DS,double SLP,double DDLP,double SPS
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //Photosynthesis_GECROS (Gross Photosynthesis and Transpiration) 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-int Photosynthesis_GECROS(gecros *self)
+int Photosynthesis_GECROS(gecros_h *self)
   {
       expertn_modul_base *xpn = &(self->parent);
 	  PTIME pTi = xpn->pTi;
@@ -2461,7 +2461,7 @@ int Photosynthesis_GECROS(gecros *self)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //      BiomassGrowth_GECROS
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-int   BiomassGrowth_GECROS(gecros *self)
+int   BiomassGrowth_GECROS(gecros_h *self)
       {
       expertn_modul_base *xpn = &(self->parent);
 	  
@@ -3451,7 +3451,7 @@ int   BiomassGrowth_GECROS(gecros *self)
 //int  PlantHeightGrowth_GECROS(EXP_POINTER);
 
 
-int   CanopyFormation_GECROS(gecros *self)
+int   CanopyFormation_GECROS(gecros_h *self)
       {
        LeafAreaGrowth_GECROS(self);
        PlantHeightGrowth_GECROS(self);
@@ -3460,7 +3460,7 @@ int   CanopyFormation_GECROS(gecros *self)
       }
 
 
-int   LeafAreaGrowth_GECROS(gecros *self)
+int   LeafAreaGrowth_GECROS(gecros_h *self)
      {
       expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -3557,7 +3557,7 @@ int   LeafAreaGrowth_GECROS(gecros *self)
 
 
 
-int  PlantHeightGrowth_GECROS(gecros *self)
+int  PlantHeightGrowth_GECROS(gecros_h *self)
     {
       expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -3617,7 +3617,7 @@ int  PlantHeightGrowth_GECROS(gecros *self)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //      Root depth 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-int   RootSystemFormation_GECROS(gecros *self)
+int   RootSystemFormation_GECROS(gecros_h *self)
      {
       expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -3662,7 +3662,7 @@ int   RootSystemFormation_GECROS(gecros *self)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //      OrganSenescence_GECROS
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-int   OrganSenescence_GECROS(gecros *self)
+int   OrganSenescence_GECROS(gecros_h *self)
       {   
       expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -3760,7 +3760,7 @@ int   OrganSenescence_GECROS(gecros *self)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //      NitrogenFixation_GECROS
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-int   NitrogenFixation_GECROS(gecros *self)
+int   NitrogenFixation_GECROS(gecros_h *self)
      {
       expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -3852,7 +3852,7 @@ int   NitrogenFixation_GECROS(gecros *self)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //      PotentialNitrogenUptake_WAVE
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-int     PotentialNitrogenUptake_GECROS(gecros *self)
+int     PotentialNitrogenUptake_GECROS(gecros_h *self)
    {
       expertn_modul_base *xpn = &(self->parent);
 	  PPLANT pPl = xpn->pPl;
@@ -4023,7 +4023,7 @@ int     PotentialNitrogenUptake_GECROS(gecros *self)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //      ActualNitrogenUptake_GECROS
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-int   ActualNitrogenUptake_GECROS(gecros *self)
+int   ActualNitrogenUptake_GECROS(gecros_h *self)
      {
       expertn_modul_base *xpn = &(self->parent);
 
@@ -4472,7 +4472,7 @@ int   ActualNitrogenUptake_GECROS(gecros *self)
 *----------------------------------------------------------------------*/
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD,double COSLD,double DAYL,double DSINBE,
+double DailyCanopyGrossPhotosynthesis_GECROS(gecros_h *self,double SC,double SINLD,double COSLD,double DAYL,double DSINBE,
           double DDTR,double TMPA,double HOUR,double DVP,double WNM,double C3C4,double LAI,double TLAI,
             double HT,double LWIDTH,double RD,double SD1,double RSS,double BLD,double NLV,double TNLV,
             double SLNMIN,double DWSUP,double CO2A,double LS,double EAJMAX,double XVN,double XJN,double THETA,
@@ -5732,7 +5732,7 @@ int rnacc(double FNSH,double NUPT,double RWST,double STEMNC,double LNCMIN,double
 return 1;
 }
 
-int gecros_integrate_small_time_step_vars(gecros *self)
+int gecros_integrate_small_time_step_vars(gecros_h *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
 	PTIME pTi = xpn->pTi;
@@ -5798,7 +5798,7 @@ int gecros_integrate_small_time_step_vars(gecros *self)
 //Hong 2016-08-08: change for Sebastian Gayler and Arne Poyda:
 
 //aus ceres_phenology.c, ceres_Germination(ceres *self)
-int gecros_Germination(gecros *self)
+int gecros_Germination(gecros_h *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
 
@@ -5890,7 +5890,7 @@ int gecros_Germination(gecros *self)
 
 
 
-  int Emergence_GECROS(gecros *self)
+  int Emergence_GECROS(gecros_h *self)
   {
 	  expertn_modul_base *xpn = &(self->parent);
 	  
@@ -6000,7 +6000,7 @@ int gecros_Germination(gecros *self)
 // End of Hong
 
 //Begion of Hong on 20170622: Vernalisation
-double gecros_Vernalization_CERES(gecros *self)
+double gecros_Vernalization_CERES(gecros_h *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
 
@@ -6113,7 +6113,7 @@ double gecros_Vernalization_CERES(gecros *self)
 //Reference:1. Wang,Enli. xxxx.
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 double gecros_DailyVernalization_SPASS(double fTempMax ,double fTempMin,double fTemp, PRESPONSE pResp,
-							  	   double fMinTemp, double fOptTemp, double  fMaxTemp, gecros *self)
+							  	   double fMinTemp, double fOptTemp, double  fMaxTemp, gecros_h *self)
      {
      //int         iLoop;
      //double         fTemp,fTempFunc,fVernUnit;
@@ -6163,7 +6163,7 @@ double gecros_RelativeTemperatureResponse_SPASS(double fTemp, double fMinTemp, d
 /************************************************************************************************
                  Function PlantTemperature ()
 ************************************************************************************************/
-double gecros_PlantTemperature(gecros *self)
+double gecros_PlantTemperature(gecros_h *self)
      {
 //=========================================================================================
      //Variable Declaration and Intitiation

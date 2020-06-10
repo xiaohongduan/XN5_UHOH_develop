@@ -1,5 +1,5 @@
-#ifndef __GECROS__TOOLS_H__
-#define __GECROS__TOOLS_H__
+#ifndef __GECROS_H__TOOLS_H__
+#define __GECROS_H__TOOLS_H__
 
 #include <expertn_modul_base.h>
 
@@ -15,8 +15,8 @@ double REANOR(double x, double y);
 
 double  abspowerDBL(double x, double y);
 
-GDate *gecros_convert_str_to_gdate(char* S);
+GDate *gecros_h_convert_str_to_gdate(char* S);
 
 G_END_DECLS
 
-#endif /* __GECROS_H__ */
+#endif /* __GECROS_H_H__ */
