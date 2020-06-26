@@ -153,6 +153,11 @@ G_MODULE_EXPORT int leachn_miner_done(stickstoff *self);
 G_MODULE_EXPORT int leachn_hydro_load(stickstoff *self);	
 G_MODULE_EXPORT int leachn_hydro_run(stickstoff *self);	
 G_MODULE_EXPORT int leachn_hydro_done(stickstoff *self);
+//SG20200626:
+G_MODULE_EXPORT int leachn_NH3Volat1_load(stickstoff *self);	
+G_MODULE_EXPORT int leachn_NH3Volat1_run(stickstoff *self);	
+G_MODULE_EXPORT int leachn_NH3Volat1_done(stickstoff *self);
+
 
 int leachn_denit_run(stickstoff *self, double fN2Fraction, double fN2OReduction, int iRewet, int iNO3Kin);
 
