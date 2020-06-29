@@ -55,7 +55,28 @@
 		var_size = (int)_var_size;\
 	}\
 	
-#define CHECK_LEN(var1,var2)\
+#define GET_INI_DOUBLE_OPTIONAL(var,groupname,key,std_value)\
+{\
+		gboolean key_exists;\
+		error = NULL; \
+		key_exists = g_key_file_has_key(keyfile,groupname,key,&error);\
+		if (key_exists==FALSE) \
+			{ \
+				gchar *S;\
+				S = g_strdup_printf  ("Init var %s.%s (in file %s) is missing. Standard Value (%f) taken instead!\n",groupname,key,filename,std_value);\
+				PRINT_ERROR(S);\
+				g_free(S);\
+			}\
+		if (key_exists==FALSE)\
+			{\
+				var = std_value;\
+			} else\
+			{\
+				GET_INI_DOUBLE(var,groupname,key);\
+			}\
+	}\
+	
+    #define CHECK_LEN(var1,var2)\
 	{\
 		if (var1!=var2)\
 			{\
