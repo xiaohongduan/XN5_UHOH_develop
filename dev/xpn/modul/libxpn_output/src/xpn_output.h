@@ -149,7 +149,8 @@ struct _xpn_output
     
     //SG20200629: N Gaseous emissions
     double NH3CumVolat, N2OCumEmission,NOXCumEmission, N2CumEmission;
-    double NH3VolatR, N2OEmissionR,NOXEmissionR, N2EmissionR;
+    double NH3VolatDay, N2OEmissionDay,NOXEmissionDay, N2EmissionDay;
+    double NH3Volat_zwischen, N2OEmission_zwischen, NOXEmission_zwischen, N2Emission_zwischen;
 	
 	// Carbon
 	double CLitter,CManure,CHumus,NLitter,NManure,NHumus;

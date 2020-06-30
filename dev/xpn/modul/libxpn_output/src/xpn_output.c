@@ -448,11 +448,16 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NManureProf,"output.Nitrogen.N Pools in Profile.N Manure in entire Profile [kg/ha]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NHumusProf,"output.Nitrogen.N Pools in Profile.N Humus in entire Profile [kg/ha]",0.0);
 
-    //SG20200629: N Gaseous emissions
-    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NH3CumVolat,"output.Nitrogen.N Gaseous emissions.Cum NH3Volatilisation [kg (N)/ha]",0.0);
-    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->N2CumEmission,"output.Nitrogen.N Gaseous emissions.Cum N2 Emission [kg (N)/ha]",0.0);
-    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NOXCumEmission,"output.Nitrogen.N Gaseous emissions.Cum NOx Emission [kg (N)/ha]",0.0);
-    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->N2OCumEmission,"output.Nitrogen.N Gaseous emissions.Cum N2O Emission [kg (N)/ha]",0.0);
+    //SG20200629: N Gaseous emi dailyns
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NH3CumVolat,"output.Nitrogen.N Gaseous emissions cumulative.Cum NH3Volatilisation [kg (N)/ha]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->N2CumEmission,"output.Nitrogen.N Gaseous emissions cumulative.Cum N2 Emission [kg (N)/ha]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NOXCumEmission,"output.Nitrogen.N Gaseous emissions cumulative.Cum NOx Emission [kg (N)/ha]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->N2OCumEmission,"output.Nitrogen.N Gaseous emissions cumulative.Cum N2O Emission [kg (N)/ha]",0.0);
+    
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NH3VolatDay,"output.Nitrogen.N Gaseous emissions daily.NH3Volatilisation Day [kg (N)/ha/d]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->N2EmissionDay,"output.Nitrogen.N Gaseous emissions daily.N2 Emission Day [g (N)/ha/d]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NOXEmissionDay,"output.Nitrogen.N Gaseous emissions daily.NOx Emission Day [g (N)/ha/d]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->N2OEmissionDay,"output.Nitrogen.N Gaseous emissions daily.N2O Emission Day[g (N)/ha/d]",0.0);
 
 
 /*	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NLitter,"output.Nitrogen.N Pools in Profile.N Litter [kg/ha]",0.0);
@@ -2354,10 +2359,33 @@ int xpn_output_calc_var(xpn_output *self)
     
     /* muss noch über Output-Spanne integroert werden
      
-    self->NH3VolatR = xpn->pCh->pCProfile->fNH3VolatR;
-    self->N2EmissionR = xpn->pCh->pCProfile->fN2EmisR;
-    self->N2OEmissionR = xpn->pCh->pCProfile->fN2OEmisR;
-    self->NOXEmissionR = xpn->pCh->pCProfile->fNOEmisR; */
+    self->NH3VolatDay = xpn->pCh->pCProfile->fNH3VolatR;
+    self->N2EmissionDay = xpn->pCh->pCProfile->fN2EmisR;
+    self->N2OEmissionDay = xpn->pCh->pCProfile->fN2OEmisR;
+    self->NOXEmissionDay = xpn->pCh->pCProfile->fNOEmisR; */
+
+
+	/* set daily variables to zero */
+	if(NewDay(pTi))
+		{
+			self->NH3VolatDay = self->NH3Volat_zwischen;
+			self->N2OEmissionDay = self->N2OEmission_zwischen;
+			self->NOXEmissionDay = self->NOXEmission_zwischen;
+			self->N2EmissionDay = self->N2Emission_zwischen;
+
+			// set zwischen values to zero
+			self->NH3Volat_zwischen = 0.0;
+			self->N2OEmission_zwischen = 0.0;
+			self->NOXEmission_zwischen = 0.0;
+			self->N2Emission_zwischen = 0.0;
+        }
+
+    self->NH3Volat_zwischen += xpn->pCh->pCProfile->fNH3VolatR*dt;
+    self->N2OEmission_zwischen += xpn->pCh->pCProfile->fN2OEmisR*24e-5*dt; //µg m-2 h-1 --> kg ha-1 d-1
+    self->NOXEmission_zwischen += xpn->pCh->pCProfile->fNOEmisR*24e-5*dt; //µg m-2 h-1 --> kg ha-1 d-1
+    self->N2Emission_zwischen += xpn->pCh->pCProfile->fN2EmisR*24e-5*dt; //µg m-2 h-1 --> gk ha-1 d-1
+
+//end SG20200629
 
 // special output Profiles:
 	for (i=0; i<self->spec_vars_profile_count; i++)
