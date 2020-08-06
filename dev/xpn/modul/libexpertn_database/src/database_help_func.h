@@ -80,7 +80,13 @@ PRINT_ERROR("No pedotransfer functions defined!");\
         (double)pSW->fVanGenN2,\
         (double)pSW->fVanGenM2,\
         (double)pSW->fBiModWeight1,\
-        (double)pSW->fBiModWeight2) 
+        (double)pSW->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+        pSW) 
 //End of Hong
 #define WATER_CONTENT_H(x) (*self->WCont)((double)x,\
                                         (double)pWL->fContAct,\
@@ -101,7 +107,13 @@ PRINT_ERROR("No pedotransfer functions defined!");\
                                         (double)pSW->fVanGenN2,\
                                         (double)pSW->fVanGenM2,\
                                         (double)pSW->fBiModWeight1,\
-                                        (double)pSW->fBiModWeight2)
+                                        (double)pSW->fBiModWeight2,\
+         (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+       pSW)
 
 #define MATRIX_POTENTIAL_H(x) (float) (*MPotl)((double)pWL->fMatPotAct,\
         (double)x,\
@@ -122,7 +134,13 @@ PRINT_ERROR("No pedotransfer functions defined!");\
         (double)pSW->fVanGenN2,\
         (double)pSW->fVanGenM2,\
         (double)pSW->fBiModWeight1,\
-        (double)pSW->fBiModWeight2)
+        (double)pSW->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+        pSW)
 
 #define C_DEBUG(var) \
 	if CHECK_DOUBLE_INVALID(var) \

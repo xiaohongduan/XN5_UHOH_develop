@@ -490,7 +490,10 @@ int ceres_PlantLeafNumber_MZ(ceres *self)
 
 		//pCan->fLeafAppearR=pDev->fDTT/((float)38.9*fPhyllFac);
 		//SG20140910: Phyllochron-Intervall aus Maize.gtp
-		pCan->fLeafAppearR=pDev->fDTT/(pPl->pGenotype->fPhyllochronInterval*fPhyllFac);
+		if(pPl->pGenotype->fPhyllochronInterval>(double)1.0)
+            pCan->fLeafAppearR=pDev->fDTT/(pPl->pGenotype->fPhyllochronInterval*fPhyllFac);
+        else
+            pCan->fLeafAppearR=pDev->fDTT/((float)38.9*fPhyllFac);
 
 	}
 	//else

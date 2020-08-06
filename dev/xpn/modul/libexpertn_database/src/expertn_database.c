@@ -1572,7 +1572,13 @@ int expertn_database_readBewegungMineralduengung(expertn_database *self) {
                                         (double)pSW->fVanGenN2,\
                                         (double)pSW->fVanGenM2,\
                                         (double)pSW->fBiModWeight1,\
-                                        (double)pSW->fBiModWeight2)
+        (double)pSW->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+        pSW)
 
 #define MATRIX_POTENTIAL(x) (float) (*self->MPotl)((double)pWL->fMatPotAct,\
         (double)x,\
@@ -1593,7 +1599,13 @@ int expertn_database_readBewegungMineralduengung(expertn_database *self) {
         (double)pSW->fVanGenN2,\
         (double)pSW->fVanGenM2,\
         (double)pSW->fBiModWeight1,\
-        (double)pSW->fBiModWeight2)
+        (double)pSW->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+       pSW)
 
 
 

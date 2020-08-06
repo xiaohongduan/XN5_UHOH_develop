@@ -205,13 +205,24 @@ int schaaf_mineral_fertilization(schaaf* self) //Hong: =TSFertilizer()?
 		pCh->pCProfile->fUreaNSurf    += pMa->pNFertilizer->fUreaN;
 		pCh->pCProfile->fNManureSurf  += (float)0.18*pMa->pNFertilizer->fNorgManure;
 		pCh->pCProfile->fCManureSurf  += (float)0.18*pMa->pNFertilizer->fCorgManure;
-		pCh->pCProfile->fCNManureSurf += pMa->pNFertilizer->fOrgManureCN;
+		//pCh->pCProfile->fCNManureSurf += pMa->pNFertilizer->fOrgManureCN;
 		pCh->pCProfile->fNLitterSurf  += (float)0.72*pMa->pNFertilizer->fNorgManure;
 		pCh->pCProfile->fCLitterSurf  += (float)0.72*pMa->pNFertilizer->fCorgManure;
-		pCh->pCProfile->fCNLitterSurf += pMa->pNFertilizer->fOrgManureCN;
+		//pCh->pCProfile->fCNLitterSurf += pMa->pNFertilizer->fOrgManureCN;
 		pCh->pCProfile->fNHumusSurf  += (float)0.1*pMa->pNFertilizer->fNorgManure;
 		pCh->pCProfile->fCHumusSurf  += (float)0.1*pMa->pNFertilizer->fCorgManure;
-		pCh->pCProfile->fCNHumusSurf += pMa->pNFertilizer->fOrgManureCN;
+		//pCh->pCProfile->fCNHumusSurf += pMa->pNFertilizer->fOrgManureCN;
+        
+        //SG20200508
+		pCh->pCProfile->fCNManureSurf = (pCh->pCProfile->fNManureSurf > EPSILON)?
+    	pCh->pCProfile->fCManureSurf / pCh->pCProfile->fNManureSurf:(double)0.1; 
+
+		pCh->pCProfile->fCNLitterSurf = (pCh->pCProfile->fNLitterSurf > EPSILON)?
+    	pCh->pCProfile->fCLitterSurf / pCh->pCProfile->fNLitterSurf:(double)0.1; 
+
+		pCh->pCProfile->fCNHumusSurf = (pCh->pCProfile->fNHumusSurf > EPSILON)?
+    	pCh->pCProfile->fCHumusSurf / pCh->pCProfile->fNHumusSurf:(double)0.1; 
+
 		
 		pCh->pCProfile->fCLeafLitterSurf  += (float)0.72*pMa->pNFertilizer->fCorgManure; //Hong for century_n
 		pCh->pCProfile->fCMicLitterSurf   += (float)0.1*pMa->pNFertilizer->fCorgManure;//Hong for century_n

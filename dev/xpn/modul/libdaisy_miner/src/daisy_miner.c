@@ -959,6 +959,11 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   pCP->fCNManureSurf = (pCP->fNManureSurf > EPSILON)?
     	pCP->fCManureSurf / pCP->fNManureSurf
       	:(double)0.1; 
+        
+//SG20200508
+  pCP->fCNHumusSurf = (pCP->fNHumusSurf > EPSILON)?
+    	pCP->fCHumusSurf / pCP->fNHumusSurf
+      	:(double)0.1; 
 
   /*Mineralisierungs bzw. Immobilisierungsfaktor*/
    if (pCP->fCNLitterSurf > (double)0.1)
@@ -1204,19 +1209,26 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   fNO3ToLitterR = fNToLitterR * RelAnteil(pCP->fNO3NSurf,pCP->fNH4NSurf);
 
   /* 3. Bildung von mikrobieller Biomasse */
-  fNManureToLitterR = fCManureToLitterR / fMicBiomCN;
-  fNLitterToManureR = fCLitterToManureR / fMicBiomCN;//Moritz
+  //fNManureToLitterR = fCManureToLitterR / fMicBiomCN;
+ // fNLitterToManureR = fCLitterToManureR / fMicBiomCN;//Moritz
+
+//SG20200508: use CN ratio of Surface Litter and Surface Manure pools
+  fNManureToLitterR = fCManureToLitterR / pCP->fCNManureSurf;
+  fNLitterToManureR = fCLitterToManureR / pCP->fCNLitterSurf;
+
 
   /* 4. Humifizierung im Humus-Pool */
   if(!NoImmLit)
    fNLitterToHumusR = (double)0.0;
   else
-   fNLitterToHumusR = fCLitterToHumusR / fMicBiomCN;
+  // fNLitterToHumusR = fCLitterToHumusR / fMicBiomCN;
+  fNLitterToHumusR = fCLitterToHumusR / pCP->fCNLitterSurf;
 
   if(!NoImmMan)
    fNManureToHumusR = (double)0.0;
   else
-   fNManureToHumusR = fCManureToHumusR / fMicBiomCN;
+   //fNManureToHumusR = fCManureToHumusR / fMicBiomCN;
+    fNManureToHumusR = fCManureToHumusR / pCP->fCNManureSurf;
    
    
          

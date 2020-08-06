@@ -1,13 +1,14 @@
 #This file defines the order and availability of the different modules and sub modules
 # !!! DON'T CHANGE THIS FILE  !!!, if you don't know what you are doing!
 # module.submodule
-water.hydraulic functions
+#water.hydraulic functions - moved below control.database by SG, 08.06.2020
 control.pedotransfer
 control.input
 other.wrf
 other.wrf chem
 other.ogs
 control.database
+water.hydraulic functions
 management.loss volatilization
 management.irrigation
 control.balance

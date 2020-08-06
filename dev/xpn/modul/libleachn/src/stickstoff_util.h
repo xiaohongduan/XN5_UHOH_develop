@@ -44,7 +44,13 @@ struct ncorr  {
         (double)pSW->fVanGenN2,\
         (double)pSW->fVanGenM2,\
         (double)pSW->fBiModWeight1,\
-        (double)pSW->fBiModWeight2)
+        (double)pSW->fBiModWeight2,\
+         (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+       pSW)
 
 #define CONDUCTIVITY(x) (\
                      (double)(*self->HCond)((double)x,\
@@ -66,7 +72,13 @@ struct ncorr  {
                      (double)pSW->fVanGenN2,\
                      (double)pSW->fVanGenM2,\
                      (double)pSW->fBiModWeight1,\
-                     (double)pSW->fBiModWeight2))
+                     (double)pSW->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+        pSW))
 
 /* function call for hydraulic conductivity of next layer:                       */
 ///*
@@ -90,7 +102,13 @@ struct ncorr  {
                      (double)pSW->pNext->fVanGenN2,\
                      (double)pSW->pNext->fVanGenM2,\
                      (double)pSW->pNext->fBiModWeight1,\
-                     (double)pSW->pNext->fBiModWeight2))
+                     (double)pSW->pNext->fBiModWeight2,\
+         (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+       pSW))
 
 /* function call for water capacity:  */
 ///*
@@ -113,7 +131,13 @@ struct ncorr  {
                      (double)pSW->fVanGenN2,\
                      (double)pSW->fVanGenM2,\
                      (double)pSW->fBiModWeight1,\
-                     (double)pSW->fBiModWeight2)
+                     (double)pSW->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+        pSW)
 
 /***********************************************************************************/
 /*  function abspowerDBL(..)                                                       */

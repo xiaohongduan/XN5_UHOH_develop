@@ -23,7 +23,13 @@
         (double)pSW->fVanGenN2,\
         (double)pSW->fVanGenM2,\
         (double)pSW->fBiModWeight1,\
-        (double)pSW->fBiModWeight2)
+        (double)pSW->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+        pSW)
 
 #define WATER_CONTENT(x)  (float)(*self->WCont)((double)x,\
         (double)pWL->fContAct,\
@@ -44,7 +50,13 @@
         (double)pSW->fVanGenN2,\
         (double)pSW->fVanGenM2,\
         (double)pSW->fBiModWeight1,\
-        (double)pSW->fBiModWeight2)
+        (double)pSW->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+        pSW)
 
 #define CONDUCTIVITY(x) (\
                          (float)(*self->HCond)((double)x,\
@@ -66,7 +78,13 @@
                                  (double)pSW->fVanGenN2,\
                                  (double)pSW->fVanGenM2,\
                                  (double)pSW->fBiModWeight1,\
-                                 (double)pSW->fBiModWeight2))
+                                 (double)pSW->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+        pSW))
 
 
 #define NEXT_CONDUCTIVITY(x)  (\
@@ -89,7 +107,13 @@
                                        (double)pSW->pNext->fVanGenN2,\
                                        (double)pSW->pNext->fVanGenM2,\
                                        (double)pSW->pNext->fBiModWeight1,\
-                                       (double)pSW->pNext->fBiModWeight2))
+                                       (double)pSW->pNext->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+        pSW))
 
 
 /* function call for water capacity:  */
@@ -113,7 +137,13 @@
         (double)pSW->fVanGenN2,\
         (double)pSW->fVanGenM2,\
         (double)pSW->fBiModWeight1,\
-        (double)pSW->fBiModWeight2)
+        (double)pSW->fBiModWeight2,\
+        (double)pSW->fTau,\
+        (double)pSW->fContSat_c,\
+        (double)pSW->fContRes_c,\
+        (double)pSW->fCondSat_c,\
+        (double)pSW->fCondSat_nc,\
+        pSW)
 
 
 #define H2O_FIRST_LAYER \

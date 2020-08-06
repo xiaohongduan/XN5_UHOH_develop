@@ -146,6 +146,11 @@ struct _xpn_output
 	double fUreaHydroDay,fNHumusMinerDay, fNH4NitrDay,fNO3DenitDay,fNImmobDay,fNLitterMinerDay,fNManureMinerDay;
 	
 	double fNLitterImmobDay,fNHumusImmobDay,fNManureImmobDay;
+    
+    //SG20200629: N Gaseous emissions
+    double NH3CumVolat, N2OCumEmission,NOXCumEmission, N2CumEmission;
+    double NH3VolatDay, N2OEmissionDay,NOXEmissionDay, N2EmissionDay;
+    double NH3Volat_zwischen, N2OEmission_zwischen, NOXEmission_zwischen, N2Emission_zwischen;
 	
 	// Carbon
 	double CLitter,CManure,CHumus,NLitter,NManure,NHumus;

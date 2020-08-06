@@ -33,19 +33,19 @@ struct _daisy_miner
 	double (*WCont)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2);
+                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
 	double (*HCond)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2);
+                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
 	double (*DWCap)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2);
+                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
     double (*MPotl)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2);
+                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
 	
     //Hong: Temperaturabhängigkeit für DAISY Abbauraten (für Scott Demyan)
 	int     iTempCorr;

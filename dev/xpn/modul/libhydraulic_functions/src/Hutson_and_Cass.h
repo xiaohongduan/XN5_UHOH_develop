@@ -1,6 +1,8 @@
 #ifndef __HUTSON_AND_CASS_H__
 #define __HUTSON_AND_CASS_H__
 
+#include <expertn_modul_base.h>
+#include <xsoil.h>
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /*  Name     : HC_WCont()                                 */
 /*                                                        */
@@ -14,7 +16,8 @@
 double HC_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2);
+                double Alpha2, double N2, double M2, double W1, double W2, 
+                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
 				
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /*  Name     : HC_DWCap()                                 */
@@ -28,7 +31,8 @@ double HC_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 double HC_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2);
+                double Alpha2, double N2, double M2, double W1, double W2, 
+                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
 				
 				
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -41,7 +45,8 @@ double HC_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 double HC_MPotl(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2);
+                double Alpha2, double N2, double M2, double W1, double W2, 
+                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
 				
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /*  Name     : HC_HCond()                                 */
@@ -57,7 +62,8 @@ double HC_MPotl(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 double HC_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2);
+                double Alpha2, double N2, double M2, double W1, double W2, 
+                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
 
 
 #endif

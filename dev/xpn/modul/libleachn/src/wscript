@@ -10,6 +10,7 @@ SOURCE_FILES=  [
                  'miner.c',
                  'denit.c',
                  'hydro.c',
+                 'NH3Volat.c',
                  'nitrification.c',
                  'plant.c',
                  'stickstoff_load.c',

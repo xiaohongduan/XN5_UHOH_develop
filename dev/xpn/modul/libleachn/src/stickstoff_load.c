@@ -213,7 +213,13 @@ int stickstoff_load_config(stickstoff *self)
 	GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fDenitThaw,"thawing","denitrification events",PCPARAM,xpn->pCh->pCParam);
 	GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fDenitReWet,"rewet","denitrification events",PCPARAM,xpn->pCh->pCParam);
 	
-	
+	//SG20200629
+    //marker: 20013
+	//[volatilisation]
+	GET_INI_DOUBLE_OPTIONAL(pCProfile->fNH3VolatMaxR,"volatilisation","MaxNH3Volatilisation",0.1);
+
+
+
 	G_FREE_IF_NOT_0(layers);
 	layers_len=0;
 
