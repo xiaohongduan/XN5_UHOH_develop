@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="lib/mysql_db_1.0.0.jar"/>
-	<classpathentry kind="lib" path="lib/mysql-connector-java-5.0.7-bin.jar"/>
+	<classpathentry excluding="uni/hh/mapmaker/|uni/hh/|uni/" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/usr/share/java/jline.jar"/>
+	<classpathentry kind="lib" path="/usr/share/java/mysql.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

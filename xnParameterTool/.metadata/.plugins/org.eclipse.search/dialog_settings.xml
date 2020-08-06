@@ -13,8 +13,8 @@
 	<section name="DialogBounds_SearchDialog">
 		<item value="595" key="DIALOG_WIDTH"/>
 		<item value="130" key="DIALOG_Y_ORIGIN"/>
-		<item value="407" key="DIALOG_X_ORIGIN"/>
 		<item value="561" key="DIALOG_HEIGHT"/>
+		<item value="407" key="DIALOG_X_ORIGIN"/>
 		<item value="1|Ubuntu|11.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
 	</section>
 	<section name="Search">
@@ -36,44 +36,11 @@
 		<item value="false" key="CASE_SENSITIVE"/>
 		<item value="false" key="REG_EX_SEARCH"/>
 		<item value="false" key="SEARCH_DERIVED"/>
-		<item value="5" key="HISTORY_SIZE"/>
-		<section name="HISTORY2">
-			<item value="false" key="isRegExSearch"/>
-			<item value="elevationCorrectionClassSize" key="textPattern"/>
-			<item value="0" key="scope"/>
-			<item value="true" key="ignoreCase"/>
-			<list key="fileNamePatterns">
-				<item value="*.java"/>
-			</list>
-			<list key="workingSets">
-			</list>
-		</section>
+		<item value="6" key="HISTORY_SIZE"/>
 		<section name="EXTENSIONS">
 			<item value="*.java" key="0"/>
 		</section>
-		<section name="HISTORY3">
-			<item value="false" key="isRegExSearch"/>
-			<item value="simulation_projects_bems_cells_management" key="textPattern"/>
-			<item value="0" key="scope"/>
-			<item value="true" key="ignoreCase"/>
-			<list key="fileNamePatterns">
-				<item value="*.java"/>
-			</list>
-			<list key="workingSets">
-			</list>
-		</section>
-		<section name="HISTORY0">
-			<item value="false" key="isRegExSearch"/>
-			<item value="xn5_date" key="textPattern"/>
-			<item value="0" key="scope"/>
-			<item value="true" key="ignoreCase"/>
-			<list key="fileNamePatterns">
-				<item value="*.java"/>
-			</list>
-			<list key="workingSets">
-			</list>
-		</section>
-		<section name="HISTORY1">
+		<section name="HISTORY2">
 			<item value="false" key="isRegExSearch"/>
 			<item value="^" key="textPattern"/>
 			<item value="0" key="scope"/>
@@ -84,9 +51,53 @@
 			<list key="workingSets">
 			</list>
 		</section>
-		<section name="HISTORY4">
+		<section name="HISTORY3">
+			<item value="false" key="isRegExSearch"/>
+			<item value="elevationCorrectionClassSize" key="textPattern"/>
+			<item value="0" key="scope"/>
+			<item value="true" key="ignoreCase"/>
+			<list key="fileNamePatterns">
+				<item value="*.java"/>
+			</list>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY0">
+			<item value="false" key="isRegExSearch"/>
+			<item value="selectProjectsDialog" key="textPattern"/>
+			<item value="0" key="scope"/>
+			<item value="true" key="ignoreCase"/>
+			<list key="fileNamePatterns">
+				<item value="*.java"/>
+			</list>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY1">
+			<item value="false" key="isRegExSearch"/>
+			<item value="xn5_date" key="textPattern"/>
+			<item value="0" key="scope"/>
+			<item value="true" key="ignoreCase"/>
+			<list key="fileNamePatterns">
+				<item value="*.java"/>
+			</list>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY5">
 			<item value="false" key="isRegExSearch"/>
 			<item value="simulation_projects_xn5_cells" key="textPattern"/>
+			<item value="0" key="scope"/>
+			<item value="true" key="ignoreCase"/>
+			<list key="fileNamePatterns">
+				<item value="*.java"/>
+			</list>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY4">
+			<item value="false" key="isRegExSearch"/>
+			<item value="simulation_projects_bems_cells_management" key="textPattern"/>
 			<item value="0" key="scope"/>
 			<item value="true" key="ignoreCase"/>
 			<list key="fileNamePatterns">

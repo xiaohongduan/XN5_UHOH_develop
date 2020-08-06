@@ -4,6 +4,7 @@
 	<item value="filter_imports;" key="filters_last_used"/>
 	<item value="/usr/share/java" key="org.eclipse.jdt.ui.lastextjar"/>
 	<item value="500" key="CallHierarchyViewPart.ratio3"/>
+	<item value="500" key="CallHierarchyViewPart.ratio0"/>
 	<item value="500" key="CallHierarchyViewPart.ratio1"/>
 	<item value="3" key="CallHierarchyViewPart.orientation"/>
 	<item value="false" key="TypeHierarchyViewPart.qualifiednames"/>
@@ -16,6 +17,7 @@
 	<list key="SearchScopeActionGroup.working_set">
 	</list>
 	<section name="OptionalMessageDialog.hide.">
+		<item value="false" key="RunnableJar.export.ipwarning"/>
 		<item value="true" key="org.eclipse.jdt.ui.typecomment.deprecated"/>
 	</section>
 	<section name="JarPackageWizard">
@@ -49,7 +51,7 @@
 		<item value="XnParameterTool - XN_tool" key="FatJarPackageWizardPage.LAUNCH_CONFIGURATION_SELECTION_NAME"/>
 		<item value="/home/troost/Dropbox/XnFilemaker/workspace.xml" key="FatJarPackageWizardPage.ANTSCRIPT_LOCATION"/>
 		<item value="false" key="FatJarPackageWizardPage.ANTSCRIPT_SAVE"/>
-		<item value="2" key="FatJarPackageWizardPage.LIBRARY_HANDLING"/>
+		<item value="1" key="FatJarPackageWizardPage.LIBRARY_HANDLING"/>
 		<list key="FatJarPackageWizardPage.DESTINATION_NAMES_ID">
 			<item value="/home/troost/bwSyncAndShare/XN_simulations/XnFilemaker/FOR1695_XnParameterTool_v1/xnParameterTool.jar"/>
 			<item value="/home/troost/Dropbox/XnFilemaker/FOR1695_XnParameterTool_v1/xnParameterTool.jar"/>
@@ -92,6 +94,9 @@
 		</section>
 	</section>
 	<section name="quick_assist_proposal_size">
+	</section>
+	<section name="ClasspathContainerSelectionPage">
+		<item value="3" key="index"/>
 	</section>
 	<section name="BreadcrumbItemDropDown">
 	</section>

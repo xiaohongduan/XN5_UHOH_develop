@@ -2,6 +2,8 @@ package de.uhoh.for1695;
 
 import java.sql.*;
 
+import javax.swing.JOptionPane;
+
 
 
 public class MySQLConnection {
@@ -76,6 +78,13 @@ public class MySQLConnection {
 		stmt.executeUpdate(SQLString);
 		return true;
 	  } 
+	  catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, "Error in database update:\n " + e.getMessage()+"\n\n"
+					+"For query: " + SQLString+"\n"
+					
+					);
+			return false;
+	  }
 	  catch (Exception e) 
 	  {
 		  e.printStackTrace();
