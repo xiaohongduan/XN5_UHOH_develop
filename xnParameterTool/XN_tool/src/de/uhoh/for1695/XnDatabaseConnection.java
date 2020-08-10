@@ -4855,7 +4855,7 @@ class	XnDatabaseConnection {
 				"VALUES ("+ projectId+", "+ startYear +", "+endYear+","+startMonth+","+startDay+","
 				+endMonth+","+endDay+","+plotSize+","+adaptive+","+max_daily_precip+",'"+xn5cells+"','"+ bemsManag
 				+"',"+ elevationCorrectionType+","+ elevationCorrectionClassSize+", '"+elevationInfoTableWeatherCells+"', '"+co2Table+"', " +
-						""+kc_param_id+"', " +numGrids+");";
+						""+kc_param_id+", " +numGrids+");";
 		    //System.out.println(s);
 		return myConnection.updateDb(s);
 	}
