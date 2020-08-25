@@ -1,0 +1,3 @@
+# additional models
+# e.g., ./waf configure --debug --USE_OPENMP --add_project=add_module.txt
+xpn/modul/libgecros_h/src

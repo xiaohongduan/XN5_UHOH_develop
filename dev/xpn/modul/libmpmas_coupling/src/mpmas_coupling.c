@@ -706,7 +706,7 @@ if (NewDay(pTi))
 				 
 					 //1.1.2 in case of using crop model CERES/SPASS, crop ini file has to be reloaded. 	
 				
-					if(strcmp(self->cropModel,"GECROS BiomassGrowth")!=0) //added by Hong on 20180319
+					if(strcmp(self->cropModel,"CERES") == 0 ||  strcmp(self->cropModel,"SPASS") == 0) //added by Hong on 20180319
 					{ 
 						S  = g_strdup_printf("Config.ceres.%s", pPl->pGenotype->acCropName);
 						read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
@@ -802,7 +802,8 @@ if (NewDay(pTi))
 					 //1.1.1 in case of using crop model GECROS, just go on
 				 
 					 //1.1.2 in case of using crop model CERES/SPASS, crop ini file has to be reloaded. 	      
-					if(strcmp(self->cropModel,"GECROS BiomassGrowth")!=0) //added by Hong on 20180319
+//					if(strcmp(self->cropModel,"GECROS BiomassGrowth")!=0) //added by Hong on 20180319
+					if(strcmp(self->cropModel,"CERES") == 0 ||  strcmp(self->cropModel,"SPASS") == 0)
 					{ 
 						S  = g_strdup_printf("Config.ceres.%s", pPl->pGenotype->acCropName);
 						read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);

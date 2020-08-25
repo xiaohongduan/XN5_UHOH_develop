@@ -32,7 +32,6 @@
 <fullyQualifiedTypeName name="de.uhoh.for1695.XnParameterToolConfig"/>
 <fullyQualifiedTypeName name="de.uhoh.for1695.XnParameterSoilPanel"/>
 <fullyQualifiedTypeName name="de.uhoh.for1695.XnParameterManagementPanel"/>
-<fullyQualifiedTypeName name="de.uhoh.for1695.simProject"/>
 <fullyQualifiedTypeName name="java.lang.String"/>
 <fullyQualifiedTypeName name="javax.swing.JFrame"/>
 <fullyQualifiedTypeName name="java.awt.Dimension"/>
@@ -47,4 +46,6 @@
 <fullyQualifiedTypeName name="java.util.HashMap"/>
 <fullyQualifiedTypeName name="javax.swing.JSeparator"/>
 <fullyQualifiedTypeName name="javax.swing.SwingConstants"/>
+<fullyQualifiedTypeName name="de.uhoh.for1695.simProject"/>
+<fullyQualifiedTypeName name="javax.swing.JProgressBar"/>
 </qualifiedTypeNameHistroy>

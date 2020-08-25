@@ -26,6 +26,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.*;
 import java.awt.Font;
+import java.awt.Cursor;
 
 import de.uhoh.for1695.XnDatabaseConnection;
 import de.uhoh.for1695.ImportXn3Dialog.xn3ImportType;
@@ -48,7 +49,7 @@ public class XnParameterTool {
 	//String mysqlconfig = "./config/mysql_config.txt";
 
 	static XnParameterToolConfig myConfig;
-	
+	static XnDatabaseConnection myConnection;
 	
 	public static void main(String[] args) {
 	
@@ -62,7 +63,7 @@ public class XnParameterTool {
 		}*/
 		initConfig();
 
-		XnDatabaseConnection myConnection = new XnDatabaseConnection(myConfig.dbHost, myConfig.dbSchema, myConfig.dbUser, myConfig.dbPwd);
+		/*XnDatabaseConnection*/ myConnection = new XnDatabaseConnection(myConfig.dbHost, myConfig.dbSchema, myConfig.dbUser, myConfig.dbPwd);
 
 		while (!myConnection.isValid())
 		{
@@ -83,9 +84,16 @@ public class XnParameterTool {
 		}
 		
 		
-		XnParameterToolMainWindow mainFrame = new XnParameterToolMainWindow("FOR1695 XnParameterTool", myConfig, myConnection);
-		mainFrame.pack();
-        mainFrame.setVisible(true);
+	    SwingUtilities.invokeLater(new Runnable() {
+	        public void run() {
+	        	XnParameterToolMainWindow mainFrame = new XnParameterToolMainWindow("FOR1695 XnParameterTool", myConfig, myConnection);
+	    		mainFrame.pack();
+	            mainFrame.setVisible(true);
+	        }
+	      });
+		
+		
+		
 		
 		//myConnection.loop_importDaisyPoolsFromXnm();
 	}
@@ -102,6 +110,45 @@ public class XnParameterTool {
     	myConfig.askForConfigEntries();
    }
 }	 
+class ProgressBarFrame extends JFrame  {
+	
+	
+	private JProgressBar progressBar;
+	
+	public ProgressBarFrame(int progresBarMax, String title){
+		
+		;
+
+		progressBar = new JProgressBar(0, progresBarMax);
+		progressBar.setPreferredSize(new Dimension(500,50));
+
+		progressBar.setValue(1);
+		progressBar.setStringPainted(true);
+		progressBar.setVisible(true);
+		JPanel pBPanel = new JPanel();
+		pBPanel.setPreferredSize(new Dimension(600,200));
+		pBPanel.setLayout( new javax.swing.BoxLayout(
+				pBPanel, javax.swing.BoxLayout.Y_AXIS ) );
+		pBPanel.add(new JLabel("Progress:"));
+		pBPanel.add(progressBar);
+
+		this.setSize(600, 200);
+		this.setTitle(title);
+		this.setLayout( new javax.swing.BoxLayout(
+				this.getContentPane(), javax.swing.BoxLayout.Y_AXIS ) );
+		
+		this.getContentPane().add(pBPanel);
+		
+		this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		
+	}
+	void setProgress(int i)
+	{
+		progressBar.setValue(i);
+	}
+}
+
+
 class XnParameterToolMainWindow extends JFrame implements ActionListener {
 	
 	//Menu
@@ -123,7 +170,9 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
 	private JMenuItem menuItemImportSoilDataAll;
 	private JMenuItem menuItemImportFull;
 	private JMenuItem menuItemImportManECloop;
+	
 	private JMenuItem menuItemExportXn5Input;
+	private JMenuItem menuItemExportXn5InputMany;
 	private JMenuItem menuItemExportGecrosIni;
 	private JMenuItem menuItemExportCellCfg;
 	private JMenuItem menuItemExportCellManagement;
@@ -154,7 +203,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
 	public XnParameterToolConfig myConfig;
 	public XnDatabaseConnection myConnection;
 	
-	
+	private ProgressBarFrame pBFrame;
 	
 	
 	public XnParameterToolMainWindow(String title, XnParameterToolConfig config, XnDatabaseConnection conn ) {
@@ -268,7 +317,9 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
         menuItemExportXn5Input.addActionListener(this);
         menuExport.add(menuItemExportXn5Input);
         
-        
+        menuItemExportXn5InputMany = new JMenuItem("Generate list of XN5 or XN5-MPMAS datasets ...");
+        menuItemExportXn5InputMany.addActionListener(this);
+        menuExport.add(menuItemExportXn5InputMany);
         menuExport.add(new JSeparator());
         
         menuItemExportGecrosIni = new JMenuItem("Export XN5 gecros.ini ...");
@@ -463,23 +514,69 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     		}
     		String prefix = dir + "/"+ getCurrentProjectName();
     		
+    		
+    		
     		if (currentProject.project_type >= 1) { 
-    			createXnmpmasCouplingIni(prefix,getCurrentProjectName(), currentProject.project_type, dir); 
+    			createXnmpmasCouplingIni(prefix, currentProject, dir); 
     			// includes check for consistency of XN and coupling timing
     		}
     		
-    		createGecrosIni(prefix);
-    		createSoilCells(prefix);
-    		createManagementFiles(prefix);
-    		createXpn(prefix,getCurrentProjectName());
-    		createXpis(prefix,getCurrentProjectName());
-    		createOutputVarlist(prefix,getCurrentProjectName());
-    		createSpecialOutputDef(prefix,getCurrentProjectName());
+    		createGecrosIni(prefix, currentProject);
+    		createSoilCells(prefix, currentProject);
+    		createManagementFiles(prefix,currentProject);
+    		createXpn(prefix,currentProject);
+    		createXpis(prefix,currentProject);
+    		createOutputVarlist(prefix,currentProject);
+    		createSpecialOutputDef(prefix,currentProject);
 
-    		createWeatherFilesForProject(dir, getCurrentProjectName(), currentProject.project_type );
+    		createWeatherFilesForProject(dir, currentProject );
     		System.out.println("Finished.");
 
-    	}  
+    	}
+    	else if (e.getSource() == menuItemExportXn5InputMany)
+    	{
+    		selectProjectsDialog dlg = new selectProjectsDialog();
+    		List<simProject> projectList =  dlg.showDialog(myConfig, myConnection);
+    		
+    		if (projectList.isEmpty()) {
+    			return;
+    		}
+    		
+    		String dir = askForOutputDirectory();
+    		if (dir.equals("")) {
+    			return;
+    		}
+    		
+    		multiExportDialog mdlg = new multiExportDialog();
+    		List<String> folderList = mdlg.showDialog(myConfig, myConnection,projectList); 
+    		
+    		
+    		if (folderList.isEmpty()) {
+    			return;
+    		}
+    		
+    		pBFrame = new ProgressBarFrame (projectList.size(), "Creating input files ...");
+    		pBFrame.setProgress(1);
+    		pBFrame.setLocationRelativeTo(this);
+    		pBFrame.setVisible(true);
+    		
+    		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    		
+    		
+    //		Thread writeThread = new Thread() {
+    //		      public void run() {
+    		    	  writeProjects(dir,projectList, folderList);
+    //		      }
+		//    };
+		//    writeThread.start();	
+	    	setCursor(null);
+    		      
+    		//pBFrame.setVisible(false);
+    		pBFrame.dispose();
+    		
+    	} 
+    	
+    	
     	else if (e.getSource() == menuItemExportGecrosIni)
     	{
     		String prefix = askForOutputDirectory();
@@ -487,7 +584,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     			return;
     		}
     		prefix += "/"+ getCurrentProjectName();
-    		createGecrosIni(prefix);
+    		createGecrosIni(prefix, currentProject);
     	}  
     	else if (e.getSource() == menuItemExportCellCfg)
     	{
@@ -496,7 +593,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     			return;
     		}
     		prefix += "/"+ getCurrentProjectName();
-    		createSoilCells(prefix);
+    		createSoilCells(prefix, currentProject);
     	} 
     	else if (e.getSource() == menuItemExportCellManagement)
     	{
@@ -505,7 +602,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     			return;
     		}
     		prefix += "/"+ getCurrentProjectName();
-    		createManagementFiles(prefix);
+    		createManagementFiles(prefix, currentProject);
     	} 
     	else if (e.getSource() == menuItemExportWeatherFiles)
     	{
@@ -558,6 +655,48 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     	}
 
     }
+    public void writeProjects (String dir, List<simProject> projectList, List<String>folderList){
+    	for (int i = 0; i < projectList.size(); ++i )  		
+		{
+			simProject sp = projectList.get(i);
+		    String projoutdir= dir + "/"+ folderList.get(i)+"/";
+		    
+		    File directory = new File(projoutdir);
+		    if (! directory.exists()){
+		       if (! directory.mkdirs()) {
+					JOptionPane.showMessageDialog(null, "Error: Could not create directory\n"+ projoutdir 
+							+ "\nSkipping simulation project\n"+ sp.simulation_project_code+"\n");
+		       }
+		    }
+			String prefix = projoutdir + sp.simulation_project_code;
+		
+    		if (sp.project_type >= 1) { 
+    			createXnmpmasCouplingIni(prefix,sp, projoutdir); 
+    			// includes check for consistency of XN and coupling timing
+    		}
+    		updateProgress(i * 10 + 2);
+    		createGecrosIni(prefix, sp);
+    		updateProgress(i * 10 + 3);
+    		createSoilCells(prefix, sp);
+    		updateProgress(i * 10 + 4);
+    		createManagementFiles(prefix, sp);
+    		updateProgress(i * 10 + 5);
+    		createXpn(prefix,sp);
+    		updateProgress(i * 10 + 6);
+    		createXpis(prefix,sp);
+    		updateProgress(i * 10 + 7);
+    		createOutputVarlist(prefix,sp);
+    		updateProgress(i * 10 + 8);
+    		createSpecialOutputDef(prefix,sp);
+    		updateProgress(i * 10 + 9);
+    		createWeatherFilesForProject(projoutdir, sp );
+    		updateProgress(i * 10 + 10);
+    		System.out.println("Finished"+ sp.simulation_project_code + ".");
+		}
+    }
+    
+    
+    
     public void switchProject(simProject sp) {
     	currentProject = sp;
     	myConfig.currentProjectId = sp.simulation_project_id;
@@ -582,6 +721,16 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     	}
     		
     }
+    private void updateProgress(final int i) {
+    	  SwingUtilities.invokeLater(new Runnable() {
+    	    public void run() {
+    	      // Here, we can safely update the GUI
+    	      // because we'll be called from the
+    	      // event dispatch thread
+    	      pBFrame.setProgress(i);
+    	    }
+    	  });
+    	}
     public void updateCurrentProjectInfo() {
     	
     	
@@ -691,14 +840,14 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     
 
     
-    private void createGecrosIni (String xn5FilePrefixGecros) {
+    private void createGecrosIni (String xn5FilePrefixGecros, simProject sp) {
 
     	boolean createGridAssoc = false;
-    	if (currentProject.project_type >= 1){
+    	if (sp.project_type >= 1){
     		createGridAssoc = true;
     	}
 
-    	ResultSet rs = myConnection.getGecrosParameterizationSelectionOnly(myConfig.currentProjectId);
+    	ResultSet rs = myConnection.getGecrosParameterizationSelectionOnly(sp.simulation_project_id);
     	try {
     		
     		
@@ -732,17 +881,17 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     		return;
     	}
     }
-    private void createSoilCells (String xn5FilePrefix) {
-    	myConnection.writeXn5CellCfgFiles(xn5FilePrefix, myConfig.currentProjectId, currentProject.xn5_cells_table);
+    private void createSoilCells (String xn5FilePrefix, simProject sp) {
+    	myConnection.writeXn5CellCfgFiles(xn5FilePrefix, sp.simulation_project_id, sp.xn5_cells_table);
     }
-    private void createManagementFiles (String xn5FilePrefix) {
-    	if (currentProject.project_type == 0) {
-    		myConnection.writeXn5CropManagementFiles(xn5FilePrefix, myConfig.currentProjectId);
+    private void createManagementFiles (String xn5FilePrefix, simProject sp) {
+    	if (sp.project_type == 0) {
+    		myConnection.writeXn5CropManagementFiles(xn5FilePrefix, sp.simulation_project_id);
     	}
-    	else if (currentProject.project_type > 0){
+    	else if (sp.project_type > 0){
     		int adaptive = 0;
     		try {
-    			ResultSet rs = myConnection.getGeneralInfoForProject(myConfig.currentProjectId);
+    			ResultSet rs = myConnection.getGeneralInfoForProject(sp.simulation_project_id);
     			if ( rs.first())
     				adaptive = rs.getInt("adaptive");
     			rs.close();
@@ -751,31 +900,31 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     			e.printStackTrace();
     		}
     		
-        	myConnection.writeBemsCropManagementInfo(xn5FilePrefix, myConfig.currentProjectId, adaptive);
-        	myConnection.writeXn5CropManagementFileDummies(xn5FilePrefix, myConfig.currentProjectId, currentProject.xn5_cells_table);
+        	myConnection.writeBemsCropManagementInfo(xn5FilePrefix, sp.simulation_project_id, adaptive);
+        	myConnection.writeXn5CropManagementFileDummies(xn5FilePrefix, sp.simulation_project_id, sp.xn5_cells_table);
         	
-        	if (currentProject.project_type == 1) {
-        		myConnection.writeBEMSCropManagementMaps(xn5FilePrefix, myConfig.currentProjectId, currentProject.xn5_cells_table, currentProject.bems_cells_management_table);
+        	if (sp.project_type == 1) {
+        		myConnection.writeBEMSCropManagementMaps(xn5FilePrefix, sp.simulation_project_id, sp.xn5_cells_table, sp.bems_cells_management_table);
         	}
     	}
     }
-    private void createXpn (String xn5FilePrefix, String projectName) {
-    	myConnection.writeXn5XpnFile(xn5FilePrefix, myConfig.currentProjectId, projectName, currentProject.xn5_cells_table);
+    private void createXpn (String xn5FilePrefix,  simProject sp) {
+    	myConnection.writeXn5XpnFile(xn5FilePrefix, sp.simulation_project_id, sp.simulation_project_code, sp.xn5_cells_table);
     }
-    private void createXpis (String xn5FilePrefix, String projectName) {
-    	myConnection.writeXn5XpiFiles(xn5FilePrefix, myConfig.currentProjectId, projectName, currentProject.project_type, currentProject.xn5_cells_table);
+    private void createXpis (String xn5FilePrefix, simProject sp) {
+    	myConnection.writeXn5XpiFiles(xn5FilePrefix, sp.simulation_project_id,  sp.simulation_project_code, sp.project_type, sp.xn5_cells_table);
     }
-    private void createOutputVarlist (String xn5FilePrefix, String projectName) {
-    	myConnection.writeXn5GenericContentFile(xn5FilePrefix, myConfig.currentProjectId, projectName, panelOutputVarlist.table, panelOutputVarlist.contentColumn, panelOutputVarlist.title);
+    private void createOutputVarlist (String xn5FilePrefix, simProject sp) {
+    	myConnection.writeXn5GenericContentFile(xn5FilePrefix, sp.simulation_project_id, sp.simulation_project_code, panelOutputVarlist.table, panelOutputVarlist.contentColumn, panelOutputVarlist.title);
     }
-    private void createSpecialOutputDef (String xn5FilePrefix, String projectName) {
-    	myConnection.writeXn5GenericContentFile(xn5FilePrefix, myConfig.currentProjectId, projectName, panelSpecialOutputDef.table, panelSpecialOutputDef.contentColumn, panelSpecialOutputDef.title);
+    private void createSpecialOutputDef (String xn5FilePrefix, simProject sp) {
+    	myConnection.writeXn5GenericContentFile(xn5FilePrefix, sp.simulation_project_id, sp.simulation_project_code, panelSpecialOutputDef.table, panelSpecialOutputDef.contentColumn, panelSpecialOutputDef.title);
     }
-    private void createXnmpmasCouplingIni (String xn5FilePrefix, String projectName, int projectType, String projectDir) {
-    	myConnection.writeXnMpmasCouplingIni(xn5FilePrefix, myConfig.currentProjectId, projectName, projectType, projectDir);
+    private void createXnmpmasCouplingIni (String xn5FilePrefix, simProject sp, String projectDir) {
+    	myConnection.writeXnMpmasCouplingIni(xn5FilePrefix, sp.simulation_project_id,  sp.simulation_project_code, sp.project_type, projectDir);
     }
-    private void createWeatherFilesForProject(String directory,  String projectName, int projectType) {
-    	myConnection.writeWeatherFilesForProject(directory, myConfig.currentProjectId, projectName, projectType, currentProject.xn5_cells_table);
+    private void createWeatherFilesForProject(String directory,  simProject sp) {
+    	myConnection.writeWeatherFilesForProject(directory, sp.simulation_project_id,  sp.simulation_project_code, sp.project_type, sp.xn5_cells_table);
     }
 	/*private List<cropToExport> selectCropsToExport() {
 		List<cropToExport> list = ;
@@ -1077,8 +1226,12 @@ class XnParameterProjectPanel extends JPanel implements ActionListener, RowSetLi
 	private XnParameterToolMainWindow myMainWindow ;
 	
 	private JTable projectGeneralTable;
+	private JTable projectGridsTable;
 	private CachedRowSet projectGeneral;
 	private ProjectGeneralTableModel projectGeneralTM;
+	private ProjectGridsTableModel projectGridsTM;
+	private CachedRowSet projectGrids;
+
 	
 	public XnParameterProjectPanel(XnParameterToolMainWindow mainWindow) {
 		super();
@@ -1086,11 +1239,18 @@ class XnParameterProjectPanel extends JPanel implements ActionListener, RowSetLi
 		myMainWindow = mainWindow;
 	    
 		JPanel panel = new JPanel();
+		panel.setLayout( new java.awt.BorderLayout() );
+
 	
 	    try {
 	    	projectGeneral =  RowSetProvider.newFactory().createCachedRowSet();
 	    	
 	    	projectGeneralTable = new JTable();
+	    	
+	    	projectGrids =  RowSetProvider.newFactory().createCachedRowSet();
+	    	
+	    	projectGridsTable = new JTable();
+	    	
 	    	refreshTableInfo();
 	    }
 	    catch(Exception e) {
@@ -1101,11 +1261,23 @@ class XnParameterProjectPanel extends JPanel implements ActionListener, RowSetLi
 	    JScrollPane tableViewScrollPaneLeft = new JScrollPane (projectGeneralTable, 
 	            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
 	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		Dimension preferredSize = new Dimension(800,400);
+		Dimension preferredSize = new Dimension(1000,100);
 		tableViewScrollPaneLeft.setPreferredSize(preferredSize);
 	    panel.add(tableViewScrollPaneLeft, java.awt.BorderLayout.CENTER);
-
+	    
+	    JScrollPane tableGridViewScrollPaneLeft = new JScrollPane (projectGridsTable, 
+	            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		Dimension preferredSize2 = new Dimension(100,100);
+		tableGridViewScrollPaneLeft.setPreferredSize(preferredSize2);
+	    panel.add(tableGridViewScrollPaneLeft, java.awt.BorderLayout.SOUTH);
+	    
+	    
 	    this.add(panel);
+	    
+	    
+	    
+	    
 	    
 	}
 	private void refreshTableInfo() {
@@ -1128,6 +1300,25 @@ class XnParameterProjectPanel extends JPanel implements ActionListener, RowSetLi
 		    	//projectGeneralTable.setPreferredSize(new Dimension(600,600));
 
 		    	XnParameterToolMainWindow.initColumnSizes(projectGeneralTable);
+		    	
+		    	
+	    		projectGrids.close();
+		    	ResultSet rs3 = myMainWindow.myConnection.getGridsInfoForProject(myMainWindow.myConfig.currentProjectId);
+		    	projectGrids.populate(rs3);
+	    		
+	
+		    	projectGridsTM =
+		                  new ProjectGridsTableModel (projectGrids,  myMainWindow.myConnection, myMainWindow.myConfig );
+		    	projectGridsTM.addEventHandlersToRowSet(this);
+		    	projectGridsTable.setModel(projectGridsTM);
+				
+		    	projectGridsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		    	projectGridsTable.setPreferredScrollableViewportSize(new Dimension(100,100));
+		    	//projectGeneralTable.setPreferredSize(new Dimension(600,600));
+
+		    	XnParameterToolMainWindow.initColumnSizes(projectGridsTable);
+		    	
+		    	
 	    	}
 	    	
 	    }
@@ -1337,14 +1528,14 @@ class ProjectGeneralTableModel implements TableModel {
 							myRowSet.getString("xn5_cells_table"), myRowSet.getString("bems_cells_management_table"),
 							myRowSet.getString("elevationCorrectionType"),	myRowSet.getString("elevationCorrectionClassSize"),
 							myRowSet.getString("elevationInfoTableWeatherCells"),myRowSet.getString("co2_table"), myRowSet.getString("kc_param_id")
-							
+							, myRowSet.getString("numGrids")
 							)) {
 	
-		    			JOptionPane.showMessageDialog(null, "Error: Changing general simulation project info failed.");
-		    			//rollback changes in view if database failed
-						myRowSet.absolute(row + 1);
-						myRowSet.updateString(col +1, oldV);
-						myRowSet.updateRow();
+				    			JOptionPane.showMessageDialog(null, "Error: Changing general simulation project info failed.");
+				    			//rollback changes in view if database failed
+								myRowSet.absolute(row + 1);
+								myRowSet.updateString(col +1, oldV);
+								myRowSet.updateRow();
 	
 		    			
 		    			return;
@@ -1984,7 +2175,14 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
       	}
       	else if (e.getSource() == buttonUpdate) {
       		try {
-	      		myMainWindow.myConnection.userUpdateSoilsTable(myMainWindow.currentProject.xn5_cells_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText() );
+      			if(updateSETstring.getText().equals("") || updateWHEREstring.getText().equals(""))
+      			{
+	    			JOptionPane.showMessageDialog(null, "Error in table UPDATE: Strings for SET and for WHERE cannot be empty.");
+
+      			}
+      			else {
+      				myMainWindow.myConnection.userUpdateTable(myMainWindow.currentProject.xn5_cells_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText() );
+      			}
       		}
       		catch(Exception ex) {
       			ex.printStackTrace();
@@ -2521,6 +2719,10 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 	private JLabel l4thFieldLabel;
 	private JScrollPane tableViewScrollPaneLeft;
 	
+	private JButton buttonUpdate;
+	private JTextArea updateSETstring;
+	private JTextArea updateWHEREstring;
+	
 	public JCheckBox cbAdaptiveManagements;
 	
 	public XnParameterManagementPanel(XnParameterToolMainWindow mainWindow) {
@@ -2603,7 +2805,34 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 	    lpanel.add(buttonDeleteRow);
 	    panel.add(lpanel, java.awt.BorderLayout.WEST);
 	    
+	    lpanel.add(new JLabel());
+	    lpanel.add(new JSeparator(SwingConstants.HORIZONTAL));
+	    lpanel.add(new JLabel("UPDATE ... SET "));
+	    updateSETstring = new JTextArea();
+	    JScrollPane tableViewScrollPaneLeft2 = new JScrollPane (updateSETstring, 
+	            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+	    Dimension preferredSize2 = new Dimension(100,200);
+		tableViewScrollPaneLeft2.setPreferredSize(preferredSize2);
+		updateSETstring.setText("");
+		updateSETstring.setEditable(true);
+		lpanel.add(tableViewScrollPaneLeft2);
+
+	    lpanel.add(new JLabel("WHERE "));
+	    updateWHEREstring = new JTextArea();
+	    JScrollPane tableViewScrollPaneLeft3 = new JScrollPane (updateWHEREstring, 
+	            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+	    Dimension preferredSize3 = new Dimension(100,200);
+		tableViewScrollPaneLeft3.setPreferredSize(preferredSize3);
+		updateWHEREstring.setText("");
+		updateWHEREstring.setEditable(true);
+		lpanel.add(tableViewScrollPaneLeft3);
+		
 	    
+	    buttonUpdate = new JButton("Update");
+	    buttonUpdate.addActionListener(this);
+	    lpanel.add(buttonUpdate);
 
 	    
 	    this.add(panel);
@@ -2626,21 +2855,32 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 		    			
 		    			tNewYear.setEnabled(false);
 		    			tNewPosition.setEnabled(false);
-		    			if (! myMainWindow.currentProject.bems_cells_management_table.equals("simulation_projects_bems_cells_management"))
-		    			{
+		    			if (myMainWindow.currentProject.bems_cells_management_table.equals("simulation_projects_bems_cells_management")) {			    				
+		    				buttonAddRow.setEnabled(true);
+	    					buttonDeleteRow.setEnabled(true);
+	    					tNewX.setEnabled(true);
+	    					tNewY.setEnabled(true);
+		    				buttonUpdate.setEnabled(true);
+		    			}
+			    		else if( myMainWindow.myConnection.checkTableIsNotView("for1695_expertN", myMainWindow.currentProject.bems_cells_management_table)) {
+		    			
 		    				buttonAddRow.setEnabled(false);
 		    				buttonDeleteRow.setEnabled(false);
 			    			tNewX.setEnabled(false);
 			    			tNewY.setEnabled(false);
-		    				editable = false;
+		    				editable = true;
+		    				buttonUpdate.setEnabled(true);
 		    			}
-		    			else {
-		    				buttonAddRow.setEnabled(true);
-		    				buttonDeleteRow.setEnabled(true);
-		    				tNewX.setEnabled(true);
-			    			tNewY.setEnabled(true);
-		    			}
-		    			
+			    		else {
+			    			editable = false;
+			    			buttonAddRow.setEnabled(false);
+			    			buttonDeleteRow.setEnabled(false);
+			    			tNewX.setEnabled(false);
+			    			tNewY.setEnabled(false);
+			    			buttonUpdate.setEnabled(false);
+
+			    		}
+	
 		    		}
 		    		else {
 		    			rs2 = myMainWindow.myConnection.getManagementInfoForProject(myMainWindow.myConfig.currentProjectId);
@@ -2648,6 +2888,8 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 		    			l4thFieldLabel.setEnabled(true);
 		    			tNewYear.setEnabled(true);
 		    			tNewPosition.setEnabled(true);
+		    			buttonUpdate.setEnabled(false);
+
 		    		}  		
 		    		
 			    	managements.populate(rs2);
@@ -2731,6 +2973,29 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
       		}
       		
       		refresh();
+      	}
+      	else if (e.getSource() == buttonUpdate) {
+      		try {
+	      		if (myMainWindow.currentProject.project_type == 1) {
+	      			if(updateSETstring.getText().equals("") || updateWHEREstring.getText().equals(""))
+	      			{
+		    			JOptionPane.showMessageDialog(null, "Error in table UPDATE: Strings for SET and for WHERE cannot be empty.");
+
+	      			}
+	      			else {
+	      				myMainWindow.myConnection.userUpdateTable(myMainWindow.currentProject.bems_cells_management_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText() );
+	      			}
+	      		}
+	      		else if (myMainWindow.currentProject.project_type == 0) {
+	      			myMainWindow.myConnection.userUpdateTable("simulation_projects_xn5_cells_management", myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText() );
+	      		}
+	      		
+      		}
+      		catch(Exception ex) {
+      			ex.printStackTrace();
+      		}
+      		
+      		myMainWindow.refreshAll();
       	}
     }
 
@@ -3415,14 +3680,14 @@ class openProjectDialog  extends JDialog  implements ActionListener {
 		
 		simProjectListView = new JList(simProjectList);
 		simProjectListView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		//simProjectListView.setSize(200,200);
 		
 		JScrollPane plistScroll = new JScrollPane(simProjectListView, ScrollPaneLayout.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneLayout.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		plistScroll.setPreferredSize(new Dimension(320,350));
 		panel.add(plistScroll);
 		
         JPanel bottom = new JPanel();
-        bottom.setLayout( new java.awt.GridLayout(1,2 )  );
-        bottom.setBorder(new EmptyBorder(5, 50, 5, 50));
+        bottom.setLayout( new java.awt.FlowLayout()  );
+        //bottom.setBorder(new EmptyBorder(5, 50, 5, 50));
 
 		buttonSwitchProject = new JButton("Open");
 		buttonSwitchProject.addActionListener(this);
@@ -3461,6 +3726,224 @@ class openProjectDialog  extends JDialog  implements ActionListener {
     	}
  }
 }
+class selectProjectsDialog  extends JDialog  implements ActionListener {
+	   
+	private List<simProject> result;
+	private boolean finished;
+	private XnDatabaseConnection myConnection;
+	private XnParameterToolConfig myConfig;
+	
+	private JButton buttonSwitchProject;
+	private JButton buttonCancel;
+	
+	private JList simProjectListView;
+	private simProjectListModel simProjectList;
+	
+	public List<simProject> showDialog(XnParameterToolConfig conf, XnDatabaseConnection conn) {
+	
+		myConfig = conf;
+		myConnection = conn;
+		finished = false;
+		
+		this.setSize(400,800);
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		
+		JPanel panel = new JPanel();
+        panel.setLayout( new javax.swing.BoxLayout(
+                panel, javax.swing.BoxLayout.Y_AXIS ) );
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+		 
+		JLabel header = new JLabel("Choose simulation project: ");
+		this.add(header);
+		
+		simProjectList = new simProjectListModel();
+		
+		try {
+			simProjectList.clear();
+		
+			ResultSet projectList = myConnection.getListOfSimulationProjects();
+			
+			while(projectList.next()) 
+			{
+				//System.out.println(projectList.getString("simulation_project_code"));
+
+				simProjectList.addElement(new simProject(projectList));
+			}
+			projectList.beforeFirst();
+			projectList.close();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		simProjectListView = new JList(simProjectList);
+		simProjectListView.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		//simProjectListView.setSize(200,200);
+		
+		JScrollPane plistScroll = new JScrollPane(simProjectListView, ScrollPaneLayout.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneLayout.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		plistScroll.setPreferredSize(new Dimension(350,720));
+
+		panel.add(plistScroll);
+		
+        JPanel bottom = new JPanel();
+        bottom.setLayout(  new java.awt.FlowLayout()  );
+        //bottom.setBorder(new EmptyBorder(5, 50, 5, 50));
+
+		buttonSwitchProject = new JButton("Open");
+		buttonSwitchProject.addActionListener(this);
+
+		buttonCancel = new JButton("Cancel");
+		buttonCancel.addActionListener(this);	
+		bottom.add(buttonSwitchProject);
+		bottom.add(buttonCancel);
+		panel.add(bottom);
+		
+    	this.add(panel);
+    	this.setModal(true);
+    	
+    	result = new ArrayList<simProject>();
+    	while(!finished)
+    	{	
+    		this.setVisible(true);
+    	}
+    	
+    	return result;
+	}
+	public void actionPerformed(ActionEvent e){
+    	
+    	if (e.getSource() == buttonSwitchProject) 	{
+    		int[] indices = simProjectListView.getSelectedIndices();
+    		if (indices.length > 0)
+    		{	for (int index = 0; index < indices.length; ++index)
+    			{
+    				result.add(simProjectList.getProjectAt(indices[index]));
+    			}
+    			finished = true;
+    	    	dispose();
+    		}	    		
+    		return;
+    	}
+    	if (e.getSource() == buttonCancel) {
+    		finished = true;
+    		result.clear();
+        	dispose();
+    		return;
+    	}
+ }
+}
+
+class multiExportDialog  extends JDialog  implements ActionListener {
+	   
+	private List<simProject> simulationProjects;
+	private List<String> folders;
+
+	private boolean finished;
+	private XnDatabaseConnection myConnection;
+	private XnParameterToolConfig myConfig;
+	private List<JLabel> projectLabels;
+	private List<JTextField> projectFolders;
+	private JButton buttonExport;
+	private JButton buttonCancel;
+	
+	
+	public List<String> showDialog(XnParameterToolConfig conf, XnDatabaseConnection conn, List<simProject> projectList) {
+	
+		myConfig = conf;
+		myConnection = conn;
+		simulationProjects = projectList;
+		finished = false;
+		
+		
+		
+		this.setSize(1200,600);
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		
+		JPanel panel = new JPanel();
+        panel.setLayout( new javax.swing.BoxLayout(
+                panel, javax.swing.BoxLayout.Y_AXIS ) );
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+		 
+		JLabel header = new JLabel("Choose simulation project subfolder names: ");
+		this.add(header);
+		
+		JPanel innerPanel = new JPanel();
+		innerPanel.setLayout( new java.awt.GridLayout(simulationProjects.size(),2 )  );
+		innerPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		
+		projectLabels = new ArrayList<JLabel>();
+		projectFolders = new ArrayList<JTextField>();
+		List<JPanel> innerPanels2  = new ArrayList<JPanel>();
+		List<JPanel> innerPanels3  = new ArrayList<JPanel>();
+		
+		for (int i = 0; i < simulationProjects.size(); ++i) {
+				
+			innerPanels2.add(new JPanel());
+			innerPanels3.add(new JPanel());
+			projectLabels.add( new JLabel(simulationProjects.get(i).simulation_project_code + ":") );
+			projectFolders.add(new JTextField(simulationProjects.get(i).simulation_project_code + "/", 30));
+			innerPanels2.get(i).add(projectLabels.get(i));
+			innerPanels3.get(i).add(projectFolders.get(i));
+			innerPanel.add(innerPanels2.get(i));
+			innerPanel.add(innerPanels3.get(i));
+		}
+		
+		JScrollPane plistScroll = new JScrollPane(innerPanel, ScrollPaneLayout.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneLayout.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		plistScroll.setPreferredSize(new Dimension(1120,550));
+		panel.add(plistScroll);
+		
+		
+		JPanel bottom = new JPanel();
+        bottom.setLayout( new java.awt.FlowLayout( )  );
+        //bottom.setBorder(new EmptyBorder(50, 100, 50, 100));
+
+        
+        
+        buttonExport = new JButton("Export");
+        buttonExport.addActionListener(this);
+
+		buttonCancel = new JButton("Cancel");
+		buttonCancel.addActionListener(this);	
+		bottom.add(buttonExport);
+		bottom.add(buttonCancel);
+		panel.add(bottom);
+		
+    	this.add(panel);
+    	this.setModal(true);
+    	
+    	folders = new ArrayList<String>();
+    	
+    	while(!finished)
+    	{
+    		this.setVisible(true);
+    	}
+    	
+    	return folders;
+	}
+	public void actionPerformed(ActionEvent e){
+    	
+    	if (e.getSource() == buttonExport) 	{
+    		
+    		for (int i = 0; i < projectFolders.size();++i) {
+    			folders.add(projectFolders.get(i).getText());
+    		}
+    		finished = true;
+    	    dispose();    	    			
+    		
+    		return;
+    	}
+    	if (e.getSource() == buttonCancel) {
+    		finished = true;
+    		folders.clear();
+        	dispose();
+    		return;
+    	}
+ }
+}
+
+
 
 class  createNewProjectDialog extends JDialog  implements ActionListener {
 	   
@@ -3896,7 +4379,6 @@ class ImportGecrosDialogIni extends JDialog implements ActionListener {
 	
 	
 	
-	
 	private JButton buttonImportGecrosOk;
 	private JButton buttonImportGecrosCancel;
 	private JButton buttonImportGecrosChooseFile;
@@ -3960,6 +4442,7 @@ class ImportGecrosDialogIni extends JDialog implements ActionListener {
         JScrollBar bar = plistScroll.getVerticalScrollBar();
         bar.setPreferredSize(new Dimension(20, 60));
         panel.add(plistScroll);
+
 
         
         buttonImportGecrosNewParamId = new JButton("Add Parameterization...");
@@ -5223,6 +5706,9 @@ class  createNewPlantParamDialog extends JDialog  implements ActionListener {
 	private DefaultListModel lfAuthorModel;
 	private XnDatabaseConnection myConnection;
 	private XnParameterToolConfig myConfig ;
+	
+	private JCheckBox cbDailyTimeStep;
+
 
 	private boolean finished;
 	
@@ -5236,7 +5722,7 @@ class  createNewPlantParamDialog extends JDialog  implements ActionListener {
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 	    JPanel panel = new JPanel();
-	    panel.setLayout( new java.awt.GridLayout(5, 3, 1,40) );
+	    panel.setLayout( new java.awt.GridLayout(6, 3, 1,40) );
 	    panel.setBorder(new EmptyBorder(10, 10, 10, 10));
     
 	    JLabel codeLabel = new JLabel("Plant parameterization code");
@@ -5251,9 +5737,16 @@ class  createNewPlantParamDialog extends JDialog  implements ActionListener {
 	    panel.add(tfDesc);
 	    panel.add(new JLabel());
 	    
+        panel.add(new JLabel("For daily time steps?"));
+        cbDailyTimeStep = new JCheckBox();
+        panel.add(cbDailyTimeStep);
+	    panel.add(new JLabel());
+
+	    
 	    JLabel schemaLabel = new JLabel("Author:");
 	    panel.add(schemaLabel);
 	    
+
 	    
 	    lfAuthorModel = new DefaultListModel();
         ResultSet rs =  myConnection.getListOfAuthors();
@@ -5320,7 +5813,7 @@ class  createNewPlantParamDialog extends JDialog  implements ActionListener {
     			return;
     		}
     		
-    		int rc = myConnection.addPlantParameterization(code, description, authorToCheck);
+    		int rc = myConnection.addPlantParameterization(code, description, authorToCheck, cbDailyTimeStep.isSelected());
     		if (rc == -2)
     		{
     			JOptionPane.showMessageDialog(null, "Error: Plant parameterization name already used.");
@@ -5958,3 +6451,159 @@ class author {
 }
 
 
+class ProjectGridsTableModel implements TableModel {
+	
+	  XnDatabaseConnection myConnection;
+	  XnParameterToolConfig myConfig;
+	  CachedRowSet myRowSet; 
+	  ResultSetMetaData metadata;
+	  int numcols, numrows;
+
+	  public CachedRowSet getRowSet() {
+	    return myRowSet;
+	  }
+	  public ProjectGridsTableModel() throws SQLException {
+
+		    myRowSet = null;
+		    metadata = null;
+		    numcols = 0;
+		    numrows = 0;
+		    
+		  }
+
+
+	  public ProjectGridsTableModel(CachedRowSet _rowSet, XnDatabaseConnection conn, XnParameterToolConfig config) throws SQLException {
+
+	    myRowSet = _rowSet;
+	    metadata = myRowSet.getMetaData();
+	    numcols = metadata.getColumnCount();
+	    myConnection = conn;
+	    myConfig = config;
+	    
+	    
+	    // Retrieve the number of rows.
+	    myRowSet.beforeFirst();
+	    numrows = 0;
+	    while (myRowSet.next()) {
+	     numrows++;
+	    }
+	    myRowSet.beforeFirst();
+	  }
+
+	  public void addEventHandlersToRowSet(RowSetListener listener) {
+		  myRowSet.addRowSetListener(listener);
+	  }
+
+	  public void close() {
+	    try {
+	      myRowSet.getStatement().close();
+	    } 
+	    catch (SQLException e) {
+	      e.printStackTrace();
+	    }
+	  }
+
+	  protected void finalize() {
+	    close();
+	  }
+
+	  public int getColumnCount() {
+	    return numcols;
+	  }
+
+	  public int getRowCount() {
+	    return numrows;
+	  }
+
+	  public String getColumnName(int column) {
+	    try {
+	      return metadata.getColumnLabel(column + 1);
+	    } 
+	    catch (SQLException e) {
+	      return e.toString();
+	    }
+	  }
+
+	  public Class getColumnClass(int column) {
+		  
+		switch (column) {	
+			case 1:
+					return String.class;
+			default:
+					return Integer.class;
+		}
+	    
+	  }
+
+
+
+	  public Object getValueAt(int rowIndex, int columnIndex) {
+
+	    try {
+	      myRowSet.absolute(rowIndex + 1);
+	      
+	  	  if (columnIndex == 1) 
+	  	  {
+	  		   String objS = myRowSet.getString(columnIndex + 1);
+	  		   return objS;	  		   
+	  	  }
+	  	  else
+	  	  {	  Integer objI = myRowSet.getInt(columnIndex + 1);	  
+	  		  return objI;
+	  	  }  
+	    } 
+	    catch (SQLException e) {
+	       e.toString();
+	       return null;
+	    }
+	  }
+
+	  public boolean isCellEditable(int rowIndex, int columnIndex) {
+	  	  if (columnIndex == 1) 
+	  	  {		
+	  		  return true;
+	  	  }
+	  	  return false;
+	  }
+	
+	  public void setValueAt(Object value, int row, int col) {
+		  	  
+			try {
+	
+					myRowSet.absolute(row + 1);
+			  
+					String oldV = (String) myRowSet.getString(col+1);
+					
+					String newV = String.valueOf(value);
+					myRowSet.updateString(col +1, newV);
+					myRowSet.updateRow();
+					myRowSet.absolute(row + 1);
+
+					if (! myConnection.updateGridsInfoForProject(myConfig.currentProjectId,
+							 myRowSet.getString(1)
+							, myRowSet.getString(2)
+							)) {
+	
+				    			JOptionPane.showMessageDialog(null, "Error: Changing grids info failed.");
+				    			//rollback changes in view if database failed
+								myRowSet.absolute(row + 1);
+								myRowSet.updateString(col +1, oldV);
+								myRowSet.updateRow();
+	
+		    			
+		    			return;
+					}
+			}							
+			catch(Exception e) {			
+				e.printStackTrace();
+			}
+	  }
+
+	  public void addTableModelListener(TableModelListener l) {
+	  }
+
+	  public void removeTableModelListener(TableModelListener l) {
+	  }
+
+	
+}

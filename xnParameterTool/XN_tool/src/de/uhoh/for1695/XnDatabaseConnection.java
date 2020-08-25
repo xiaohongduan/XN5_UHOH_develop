@@ -2209,6 +2209,7 @@ class	XnDatabaseConnection {
 		try {
 			int numGrids = 1;
 			boolean gecros = true;
+			boolean gecros_h = false;
 			boolean ceres = false;
 
 			int batchSize = 10000;
@@ -2232,7 +2233,12 @@ class	XnDatabaseConnection {
 			int elevCorrectionClassSize = projectInfo.getInt("elevationCorrectionClassSize");
 			
 			
-			
+			ResultSet gridInfo = getGridsInfoForProject(projectId);	
+			if (! gridInfo.first()) {
+				JOptionPane.showMessageDialog(null, "Error: Missing grid information for simulation project.");
+
+				throw new Exception("Error: Missing grid information for simulation project.");
+			}
 			
 			while (! everything_retrieved)  { //RETRIEVING BATCH BY BATCH TO AVOID MEMORY PROBLEMS FOR LARGE MAPS
 			
@@ -2259,10 +2265,25 @@ class	XnDatabaseConnection {
 				
 				cellList.first();
 	
-	
+				gridInfo.beforeFirst();
+				
 				for (int curGrid = 0; curGrid < numGrids; ++curGrid)
 				{
 					cellList.beforeFirst();
+					gridInfo.next();
+					if(gridInfo.getString("plant_model").equalsIgnoreCase("gecros")) {
+						gecros_h = ceres = false;
+						gecros = true;
+					}
+					else if(gridInfo.getString("plant_model").equalsIgnoreCase("gecros_h")) {
+						gecros = ceres = false;
+						gecros_h = true;
+					}
+					else {
+						JOptionPane.showMessageDialog(null, "Error: Invalid plant_model in grid info.");
+
+						throw new Exception("Error: Invalid plant_model in grid info.");
+					}
 					while (cellList.next())
 					{
 		
@@ -2340,6 +2361,41 @@ class	XnDatabaseConnection {
 							out.println("");
 	
 							out.println("[GECROS Root System Formation]");
+							out.println("");
+	
+						}
+						else if (gecros_h) {
+							out.println("");
+							out.println("[plant]");
+							out.println("potential transpiration = Penman Monteith");
+							out.println("phenological development = GECROS_h Development");
+							out.println("biomass growth = GECROS_h BiomassGrowth");
+							out.println("canopy gross photosynthesis = GECROS_h Gross Photosynthesis");
+							out.println("canopy formation = GECROS_h Canopy Formation");
+							out.println("root length growth = GECROS_h Root System Formation");
+							out.println("crop senescence = GECROS_h Crop Senescence");
+							out.println("nitrogen demand = GECROS_h Nitrogen Demand");
+							out.println("nitrogen uptake = GECROS_h Nitrogen Uptake");
+							out.println("actual transpiration = GECROS_h Actual Transpiration");						
+							out.println("");
+							
+							out.println("[GECROS_h Development]");
+							out.println("");
+	
+							out.println("[gecros]");
+							out.println("filename = $<$PROJECT_PATH/$PROJECT_NAME_$REG_STR_crop_rotation.ini$>");
+							out.println("");
+							
+							out.println("[GECROS_h BiomassGrowth]");
+							out.println("");
+	
+							out.println("[GECROS_h Nitrogen Demand]");
+							out.println("");
+	
+							out.println("[GECROS_h Nitrogen Uptake]");
+							out.println("");
+	
+							out.println("[GECROS_h Root System Formation]");
 							out.println("");
 	
 						}
@@ -3502,7 +3558,7 @@ class	XnDatabaseConnection {
 							+ " `t2`.`first_layer`,    `t2`.`layers`,    `t2`.`clay`,    `t2`.`silt`,    `t2`.`sand`,    `t2`.`organic_matter`,"
 							+ " `t2`.`bulk_density`,    `t2`.`rock_fraction`,    `t2`.`ph`,    `t2`.`soil_type`,    `t2`.`wilting_point`,"
 							+ " `t2`.`field_capacity`,    `t2`.`porosity`,    `t2`.`cond_sat`,    `t2`.`res_water_cont`,    `t2`.`cont_sat`,"
-							+ " `t2`.`camp_a`,    `t2`.`camp_b`,    `t2`.`van_gen_a`,    `t2`.`van_gen_n`,    `t2`.`van_gen_m`" 
+							+ " IFNULL(`t2`.`camp_a`,-99) as camp_a,    IFNULL(`t2`.`camp_b`,-99) as camp_b,    `t2`.`van_gen_a`,    `t2`.`van_gen_n`,    `t2`.`van_gen_m`" 
 							+ "	 FROM `"+xn5_cells_table_name+"` t1	 "
 							+ " JOIN soil_parameterization t2	ON t1.profileID = t2.profileID	AND t1.soil_param_id = t2.soil_param_id "
 							+ "	WHERE simulation_project_id =   " + projectID
@@ -4306,7 +4362,7 @@ class	XnDatabaseConnection {
 				return -1;
 			}
 
-			s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30,'simulation_projects_xn5_cells', 'simulation_projects_bems_cells_management',0,NULL,NULL,NULL, 1);";
+			s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30,'simulation_projects_xn5_cells', 'simulation_projects_bems_cells_management',0,NULL,NULL,NULL, 1,1);";
 			if(! myConnection.updateDb(s) ) {
 				myConnection.updateDb("ROLLBACK;");
 				return -1;
@@ -4336,7 +4392,7 @@ class	XnDatabaseConnection {
 			s= "REPLACE INTO simulation_projects_general " +
 			" SELECT " + toId + ", startYear, endYear, startMonth, startDay, endMonth, endDay, plotSize, adaptive, max_daily_precip " +
 					", xn5_cells_table, bems_cells_management_table, elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells,  " +
-					"co2_table, kc_param_id " +
+					" co2_table, kc_param_id, numGrids " +
 					" FROM simulation_projects_general WHERE simulation_project_id = " + fromId + ";";
 			
 			if(!  myConnection.updateDb(s)) {
@@ -4354,10 +4410,10 @@ class	XnDatabaseConnection {
 				String cellsTableNameTest = temp.getString("xn5_cells_table");
 				String managTableNameTest = temp.getString("bems_cells_management_table");
 				
-				if (! managTableNameTest.isEmpty())	
+				if (! managTableNameTest.isEmpty() && checkTableExists("for1695_expertN", managTableNameTest) && checkTableIsNotView("for1695_expertN", managTableNameTest))	
 					managTableName = managTableNameTest;
 			
-				if (! cellsTableNameTest.isEmpty())	
+				if (! cellsTableNameTest.isEmpty() && checkTableExists("for1695_expertN", cellsTableNameTest) && checkTableIsNotView("for1695_expertN", cellsTableNameTest))	
 					cellsTableName = cellsTableNameTest;
 				
 			}
@@ -4436,6 +4492,13 @@ class	XnDatabaseConnection {
 			s = "REPLACE INTO simulation_projects_xnmpmas_coupling " +
 					" SELECT " + toId + ",  `firstSowingDay`, `firstSowingMonth`, `firstSowingRelativeYear`, `lastHarvestDay`, `lastHarvestMonth`, `lastHarvestRelativeYear`, `MPMAS_commandline`, XN_basedir, simulation_basedir, history_link_map_xllcorner,  history_link_map_yllcorner,  history_link_map_cellsize "
 					+" FROM simulation_projects_xnmpmas_coupling " +
+					"  WHERE simulation_project_id = " + fromId + ";";
+			if(!  myConnection.updateDb(s)) {
+				return false;
+			}
+			s = "REPLACE INTO simulation_projects_grids " +
+					" SELECT " + toId + ",  grid_id, plant_model"
+					+" FROM simulation_projects_grids " +
 					"  WHERE simulation_project_id = " + fromId + ";";
 			if(!  myConnection.updateDb(s)) {
 				return false;
@@ -4697,7 +4760,7 @@ class	XnDatabaseConnection {
 				return -1;
 			}
 	}
-	public int addPlantParameterization (String code, String description, String author) {
+	public int addPlantParameterization (String code, String description, String author, boolean daily_timestep) {
 		try {
 			
 			String s = "SELECT plant_param_id " +
@@ -4718,7 +4781,7 @@ class	XnDatabaseConnection {
 			}
 			
 			s = "INSERT INTO info_plant_parameterizations VALUES ( " + id + ", '" + author
-					+ "', '" + code   + "', '" + description + "');";
+					+ "', '" + code   + "', '" + description + "', "+ daily_timestep +");";
 			boolean rc = myConnection.updateDb(s);
 			rs.close();
 			if (!rc) 
@@ -4775,7 +4838,7 @@ class	XnDatabaseConnection {
 	//PROJECT GENERAL INFO
 	public ResultSet getGeneralInfoForProject( int projectId ) {
 		String s = "SELECT startDay, startMonth, startYear, endDay, endMonth, endYear, plotSize, adaptive, max_daily_precip, xn5_cells_table, bems_cells_management_table" 
-				+ ", elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells , co2_table, kc_param_id"	+
+				+ ", elevationCorrectionType, elevationCorrectionClassSize, elevationInfoTableWeatherCells , co2_table, kc_param_id, numGrids"	+
 				" FROM simulation_projects_general WHERE simulation_project_id = " + projectId + ";";
 				
 		return myConnection.query(s);
@@ -4787,16 +4850,38 @@ class	XnDatabaseConnection {
 			String endMonth, String endDay,
 			String plotSize , String adaptive, String max_daily_precip, String xn5cells, String bemsManag,
 			String elevationCorrectionType, String elevationCorrectionClassSize, 
-			String elevationInfoTableWeatherCells, String co2Table, String kc_param_id) {
+			String elevationInfoTableWeatherCells, String co2Table, String kc_param_id, String numGrids) {
 		    String s = "REPLACE INTO simulation_projects_general " +
 				"VALUES ("+ projectId+", "+ startYear +", "+endYear+","+startMonth+","+startDay+","
 				+endMonth+","+endDay+","+plotSize+","+adaptive+","+max_daily_precip+",'"+xn5cells+"','"+ bemsManag
-				+"',"+ elevationCorrectionType+","+ elevationCorrectionClassSize+", '"+elevationInfoTableWeatherCells+"', '"+co2Table+"', "+kc_param_id+");";
+				+"',"+ elevationCorrectionType+","+ elevationCorrectionClassSize+", '"+elevationInfoTableWeatherCells+"', '"+co2Table+"', " +
+						""+kc_param_id+", " +numGrids+");";
 		    //System.out.println(s);
 		return myConnection.updateDb(s);
 	}
 	
-	
+	//PROJECT GRIDS INFO
+		public ResultSet getGridsInfoForProject( int projectId ) {
+			String s = "SELECT number as grid_id, IFNULL(plant_model, 'gecros') as plant_model "	+
+					" FROM  simulation_projects_general t1 " +
+					" JOIN aux_integers t2 " +
+						" ON t1.simulation_project_id = " + projectId  +
+						" AND t2.number BETWEEN 0 AND t1.numGrids -1 " +
+					" LEFT JOIN simulation_projects_grids t3 "+
+					"     ON t1.simulation_project_id = t3.simulation_project_id " +
+					"		AND t2.number = t3.grid_id  "+		
+					" ORDER BY grid_id;";
+		
+			return myConnection.query(s);
+		
+		}
+		public boolean updateGridsInfoForProject( int projectId,
+				String grid_id, String plant_model ) {
+			    String s = "REPLACE INTO simulation_projects_grids " +
+					"VALUES ("+ projectId+", "+ grid_id +", '"+plant_model+"');";
+			    //System.out.println(s);
+			return myConnection.updateDb(s);
+		}
 	//PROJECT COUPLING INFO
 	public ResultSet getCouplingInfoForProject( int projectId ) {
 		String s = "SELECT firstSowingDay, firstSowingMonth, firstSowingRelativeYear, lastHarvestDay, lastHarvestMonth, lastHarvestRelativeYear, MPMAS_commandline," +
@@ -4827,7 +4912,7 @@ class	XnDatabaseConnection {
 	//GECROS selection
 	public ResultSet getGecrosParameterizationSelection (int simprojectID) {
 		String s =
-			" SELECT IFNULL(t3.include,0) AS selected, t1.crop_code, t1.variety, t2.plant_param_name, t1.plant_param_id  "
+			" SELECT IFNULL(t3.include,0) AS selected, t1.crop_code, t1.variety, t2.plant_param_name, t1.plant_param_id, daily_timestep  "
 			+" FROM plant_parameterization_gecros t1"
 			+" JOIN info_plant_parameterizations t2 ON t1.plant_param_id = t2.plant_param_id"
 			+" LEFT JOIN simulation_projects_gecros_crops_included t3 "
@@ -4840,7 +4925,7 @@ class	XnDatabaseConnection {
 	}
 	public String getGecrosParameterizationSelectionString (int simprojectID) {
 		String s =
-			" SELECT IFNULL(t3.include,0) AS selected, t1.crop_code, t1.variety, t2.plant_param_name, t1.plant_param_id  "
+			" SELECT IFNULL(t3.include,0) AS selected, t1.crop_code, t1.variety, t2.plant_param_name, t1.plant_param_id, daily_timestep  "
 			+" FROM plant_parameterization_gecros t1"
 			+" JOIN info_plant_parameterizations t2 ON t1.plant_param_id = t2.plant_param_id"
 			+" LEFT JOIN simulation_projects_gecros_crops_included t3 "
@@ -4853,7 +4938,7 @@ class	XnDatabaseConnection {
 	}
 	public ResultSet getGecrosParameterizationSelectionOnly (int simprojectID) {
 		String s =
-			" SELECT  t1.crop_code, t1.variety, t2.plant_param_id, t4.crop_name  "
+			" SELECT  t1.crop_code, t1.variety, t2.plant_param_id, t4.crop_name, daily_timestep  "
 			+" FROM plant_parameterization_gecros t1"
 			+" JOIN info_plant_parameterizations t2 ON t1.plant_param_id = t2.plant_param_id"
 			+" JOIN simulation_projects_gecros_crops_included t3 "
@@ -4942,10 +5027,10 @@ class	XnDatabaseConnection {
 			+ ";";
 		return  myConnection.updateDb(s2);
 	}
-    public boolean userUpdateSoilsTable(String xn5_cells_table, int simulation_project_id, String updateSETstring, String updateWHEREstring ) {
+    public boolean userUpdateTable(String table, int simulation_project_id, String updateSETstring, String updateWHEREstring ) {
   		try {
       		String sqlString = 
-      				"UPDATE  " + xn5_cells_table + " SET " 
+      				"UPDATE  " + table + " SET " 
       				+   updateSETstring
       				+ " WHERE  simulation_project_id = " + simulation_project_id 
       				+ " AND " + updateWHEREstring + ";"
@@ -4955,9 +5040,7 @@ class	XnDatabaseConnection {
   		catch(Exception ex) {
   			ex.printStackTrace();
   			return false;
-  		}
-    	
-    	
+  		}	
     }
 	
 	public ResultSet getManagementInfoForProject(int id) {
