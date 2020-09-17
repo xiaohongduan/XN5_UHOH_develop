@@ -20,6 +20,7 @@ xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fTillerNumSq,"pPl.pCanopy
 xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fMainStemTillers,"pPl.pCanopy.fMainStemTillers",0.01);\
 xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fLeafAppearR,"pPl.pCanopy.fLeafAppearR",0.01);\
 xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fExpandLeafNum,"pPl.pCanopy.fExpandLeafNum",0.01);\
+xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fGrainNum,"pPl.pCanopy.fGrainNum",0.01);\
 xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fPlantHeight,"pPl.pCanopy.fPlantHeight",1.0e-34);\
 xpn_register_var_init_pdouble( var_list, pPl->pPltWater->fPotUptake,"pPl.pPltWater.fPotUptake",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pDevelop->fStageXCERES,"pPl.pDevelop.fStageXCERES",0.0);\
