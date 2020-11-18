@@ -2392,7 +2392,7 @@ int Photosynthesis_GECROS(gecros_h *self)
           DDTR,TMPA,HOUR,DVP,WNM,C3C4,LAIC,TLAI,HT,self->LWIDTH,RD,self->SD1,self->RSS,self->BLD,NLV,TNLV,self->SLNMIN,
           DWSUP,CO2A,LS,self->EAJMAX,self->XVN,self->XJN,self->THETA,WCUL,FVPD, &PPCAN,&APCANS,&APCANN,&APCAN,
                  &PTCAN,&ATCAN,&PESOIL,&AESOIL,&DIFS,&DIFSU,&DIFSH,&DAPAR);
-
+                 
 /*
 //%** output ***
       pGPltC->fGrossStdgCropPhotosynR  = (double)APCANS;
@@ -4560,7 +4560,7 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros_h *self,double SC,double SIN
 		 DTR = DDTR/24/3600 * (self->DSINB/DSINBE);		
 		 //DTR = DDTR/24/3600;		
 		 //End of Hong
-		 
+         		 
 		 //C_DEBUG(DTR);
 			
          //%---daytime course of air temperature 

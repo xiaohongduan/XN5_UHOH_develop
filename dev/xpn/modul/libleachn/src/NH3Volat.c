@@ -62,7 +62,7 @@ int leachn_NH3Volat1_load(stickstoff *self)
 // 5.e-002				12.				6.				
 
 	// kg N /ha / a
-	NH3VolatMaxR = xpn_register_var_get_pointer_convert_to_double(self->parent.pXSys->var_list,"Config.volatilization.maxNH3Volat",0.1);
+//	NH3VolatMaxR = xpn_register_var_get_pointer_convert_to_double(self->parent.pXSys->var_list,"Config.volatilization.  ",0.1);
 
 /*	// kg N /ha / a
 	fNO3NImisRa = xpn_register_var_get_pointer_convert_to_double(self->parent.pXSys->var_list,"Config.Constant Deposition.no3",0.0);
@@ -73,7 +73,7 @@ int leachn_NH3Volat1_load(stickstoff *self)
 	// kg N /ha / a -> kg N /ha / d
 	pCh->pCProfile->fNO3NImisR = fNO3NImisRa / 365.25;*/
 
-	pCh->pCProfile->fNH3VolatMaxR = NH3VolatMaxR;
+//	pCh->pCProfile->fNH3VolatMaxR = NH3VolatMaxR;
 
     
     return RET_SUCCESS;
