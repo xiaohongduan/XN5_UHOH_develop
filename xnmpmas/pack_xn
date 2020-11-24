@@ -2,5 +2,5 @@ DIR="expertn50"
 mkdir $HOME/$DIR -p
 cp -r ../built $HOME/$DIR
 
-tar czf $HOME/xn5_for_bwUniCluster.tar.gz -C $HOME $DIR
+tar czf $HOME/xn5_for_bwForCluster.tar.gz -C $HOME $DIR
 
