@@ -128,15 +128,49 @@ int		spass_PlantWaterStress(spass *self)
 
 	//Stress factor on carbohydrate partitioning
 	pPl->pPltWater->fStressFacPartition = min((double)1.0,(double)0.5+pPltW->fStressFacPhoto);
-
-	if (pPl->pDevelop->iStageCERES<2)
+    
+    if((strcmp(pPl->pGenotype->acCropCode,"WH")==0)
+			||(strcmp(pPl->pGenotype->acCropCode,"BA")==0)
+			||(strcmp(pPl->pGenotype->acCropCode,"S")==0))
+    {
+            if (pPl->pDevelop->iStageCERES<2)
+            {
+            pPltW->fStressFacPhoto		=(double)1.0;
+            pPltW->fStressFacLeaf		=(double)1.0;
+            pPltW->fStressFacTiller		=(double)1.0;
+            pPl->pPltWater->fStressFacPartition			=(double)1.0;
+            }
+    }
+    
+    if(strcmp(pPl->pGenotype->acCropCode,"PT")==0)
+    {
+        if (pPl->pDevelop->fStageXCERES<1)
 		{
-		pPltW->fStressFacPhoto		=(double)1.0;
-		pPltW->fStressFacLeaf		=(double)1.0;
-		pPltW->fStressFacTiller		=(double)1.0;
-		pPl->pPltWater->fStressFacPartition			=(double)1.0;
+            pPltW->fStressFacPhoto		=(double)1.0;
+            pPltW->fStressFacLeaf		=(double)1.0;
+            pPltW->fStressFacTiller		=(double)1.0;
+            pPl->pPltWater->fStressFacPartition			=(double)1.0;
 		}
+    }
 
+    if(strcmp(pPl->pGenotype->acCropCode,"MZ")==0)
+    {
+            if (pPl->pDevelop->fStageSUCROS < 0.4)
+            {
+            pPltW->fStressFacPhoto		=(double)1.0;
+            pPltW->fStressFacLeaf		=(double)1.0;
+            pPltW->fStressFacTiller		=(double)1.0;
+            pPl->pPltWater->fStressFacPartition			=(double)1.0;
+            }
+            else
+            {
+            pPltW->fStressFacPhoto		=  pow(max(0.001,pPltW->fStressFacPhoto),0.5);
+            pPltW->fStressFacLeaf		=  pow(max(0.001,pPltW->fStressFacPhoto),0.5);
+            pPltW->fStressFacTiller		=  pow(max(0.001,pPltW->fStressFacPhoto),0.5);
+            pPl->pPltWater->fStressFacPartition			=  pow(max(0.001,pPltW->fStressFacPhoto),0.5);
+            }
+    }
+   
 	return RET_SUCCESS;
 	}
 
