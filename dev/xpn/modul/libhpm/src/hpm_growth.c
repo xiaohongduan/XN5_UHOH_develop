@@ -713,10 +713,10 @@ double calculateBiomassSubstrateCShootOuput_for_sh_maintenace(hpm *self,double *
 double calculateBiomassSubstrateCRootOuput_for_rt_maintenace(hpm *self,double *Mrt4, double MCSrt,double MXrt,double fTrt, double fWrt, double fCplX) { // --> 3.3g
     double OCSrt_mai; //ret
     double fTWrt;
-    //double kmai_rt4[4];
+    double kmai_rt4[4];
     double Crt;
     double MNXrt;
-    double kmai20 = 0.3;
+    double kmai20 = 0.015;
 
     // const:
 //  double kmai_rt120 = 0.02;   //day-1. Maintenance respiration coefficients of root and shoot structural components at 20 °C.
@@ -739,14 +739,24 @@ double calculateBiomassSubstrateCRootOuput_for_rt_maintenace(hpm *self,double *M
     OCSrt_mai = fCplX * ( Crt / ( Crt + parameter.plant.KCmai ) ) *
                 ( kmai_rt4[0] * Mrt4[0] + kmai_rt4[1] * Mrt4[1]
                   + kmai_rt4[2] * Mrt4[2] + kmai_rt4[3] * Mrt4[3] ); // kg C m-2 day-1.*/
+                  
+//SG20201128:  wieder wie im Buch Gleichung 3.3g
+     kmai_rt4[0] = self->parameter.plant.kmai_rt120*fTWrt;             
+     kmai_rt4[1] = self->parameter.plant.kmai_rt220*fTWrt;             
+     kmai_rt4[2] = self->parameter.plant.kmai_rt320*fTWrt;             
+     kmai_rt4[3] = self->parameter.plant.kmai_rt420*fTWrt;             
+     
+      OCSrt_mai = fCplX * ( Crt / (Crt + self->parameter.plant.KCmai)) *
+                ( kmai_rt4[0] * Mrt4[0] + kmai_rt4[1] * Mrt4[1]
+                  + kmai_rt4[2] * Mrt4[2] + kmai_rt4[3] * Mrt4[3] ); // kg C m-2 day-1*/
 
-    // Machen wir das mal so, wie es im orig. Source Code von Thornley gemacht wurde:
+   //SG20201128: auskommentiert - wieder wie im Buch
+  /*  // Machen wir das mal so, wie es im orig. Source Code von Thornley gemacht wurde:
 
     MNXrt = fNplX * MXrt;
 
-    
-
     OCSrt_mai = Crt / (Crt + self->parameter.plant.KCmai) * kmai20 * fTWrt * (self->Plant.MNSrt + MNXrt);
+*/
 
     // TODO: Rmrt/OCSrt_mai muss noch irgendwo reinfließen
     return OCSrt_mai;
