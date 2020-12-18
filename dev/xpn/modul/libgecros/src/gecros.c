@@ -4689,7 +4689,9 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
          PCDNIR = (double)0.389;          //canopy diffuse NIR reflection coefficient
 
          //%---turbulence resistance for canopy (RT) and for soil (RTS)
-         RT     = (double)0.74*pow(log((2.-0.7*HT)/(0.1*HT)),(double)2)/(pow((double)0.4,(double)2)*WND);
+ //        RT     = (double)0.74*pow(log((2.-0.7*HT)/(0.1*HT)),(double)2)/(pow((double)0.4,(double)2)*WND);
+ //SG20200505: for tall crops such as maize: measurement height of wind speed and temperature must always be higher than crop height:
+         RT     = (double)0.74*pow(log((max(2.,HT)-0.7*HT)/(0.1*HT)),(double)2)/(pow((double)0.4,(double)2)*WND);
          RTS    = (double)0.74*pow(log(56.),(double)2)/(pow((double)0.4,(double)2)*WND);
 
          //%---fraction of sunlit and shaded components in canopy

@@ -451,8 +451,13 @@ typedef struct cProfile
 	double  fCH4ImisR; // Deposition (Rate für CH4)
 	double  fNO3NImisR; // Deposition (Rate für NO3N)
 	double  fNH4NImisR; // Deposition (Rate für NH4)
+	double  fUreaLeachR;
+	double  fNH4LeachR;
 	double  fNO3LeachR;
-	double  fN2OEmisR;
+	double  fN2OLeachR;
+	double  fDOCLeachR;
+	double  fDONLeachR;
+ 	double  fN2OEmisR;
 	double  fNOEmisR;
 	double  fN2EmisR;
 	double  fNFertilizerR;

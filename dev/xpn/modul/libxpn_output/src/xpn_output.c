@@ -448,7 +448,7 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NManureProf,"output.Nitrogen.N Pools in Profile.N Manure in entire Profile [kg/ha]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NHumusProf,"output.Nitrogen.N Pools in Profile.N Humus in entire Profile [kg/ha]",0.0);
 
-    //SG20200629: N Gaseous emi dailyns
+    //SG20200629: N Gaseous emissions
     xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NH3CumVolat,"output.Nitrogen.N Gaseous emissions cumulative.Cum NH3Volatilisation [kg (N)/ha]",0.0);
     xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->N2CumEmission,"output.Nitrogen.N Gaseous emissions cumulative.Cum N2 Emission [kg (N)/ha]",0.0);
     xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NOXCumEmission,"output.Nitrogen.N Gaseous emissions cumulative.Cum NOx Emission [kg (N)/ha]",0.0);
@@ -459,6 +459,20 @@ int xpn_output_reg_var(xpn_output *self)
     xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NOXEmissionDay,"output.Nitrogen.N Gaseous emissions daily.NOx Emission Day [g (N)/ha/d]",0.0);
     xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->N2OEmissionDay,"output.Nitrogen.N Gaseous emissions daily.N2O Emission Day[g (N)/ha/d]",0.0);
 
+    //SG20200826: N leaching
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->UreaLeachCum,"output.Nitrogen.N Leaching cumulative.Urea cumulative [kg (N)/ha]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NH4LeachCum,"output.Nitrogen.N Leaching cumulative.NH4 cumulative [kg (N)/ha]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NO3LeachCum,"output.Nitrogen.N Leaching cumulative.NO3 cumulative [kg (N)/ha]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->N2ODrainCum,"output.Nitrogen.N Leaching cumulative.N2O cumulative [kg (N)/ha]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->DOCLeachCum,"output.Nitrogen.N Leaching cumulative.DOC cumulative [kg (C)/ha]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->DONLeachCum,"output.Nitrogen.N Leaching cumulative.DON cumulative [kg (N)/ha]",0.0);
+    
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->UreaLeachR,"output.Nitrogen.N Leaching daily.Urea daily [kg (N)/ha/d]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NH4LeachR,"output.Nitrogen.N Leaching daily.NH4 daily [kg (N)/ha/d]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NO3LeachR,"output.Nitrogen.N Leaching daily.NO3 daily [kg (N)/ha/d]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->N2ODrainR,"output.Nitrogen.N Leaching daily.N2O daily [kg (N)/ha/d]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->DOCLeachR,"output.Nitrogen.N Leaching daily.DOC daily [kg (C)/ha/d]",0.0);
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->DONLeachR,"output.Nitrogen.N Leaching daily.DON daily [kg (N)/ha/d]",0.0);
 
 /*	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NLitter,"output.Nitrogen.N Pools in Profile.N Litter [kg/ha]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->NManure,"output.Nitrogen.N Pools in Profile.N Manure [kg/ha]",0.0);
@@ -2357,12 +2371,23 @@ int xpn_output_calc_var(xpn_output *self)
     self->N2OCumEmission = xpn->pCh->pCProfile->dN2OEmisCum;
     self->NOXCumEmission = xpn->pCh->pCProfile->dNOEmisCum;
     
-    /* muss noch über Output-Spanne integroert werden
+    //SG20200826: Leaching
+    self->UreaLeachCum = xpn->pCh->pCProfile->dUreaLeachCum;
+    self->NH4LeachCum = xpn->pCh->pCProfile->dNH4LeachCum;
+    self->NO3LeachCum = xpn->pCh->pCProfile->dNO3LeachCum;
+    self->N2ODrainCum = xpn->pCh->pCProfile->dN2ODrainCum;
+    self->DOCLeachCum = xpn->pCh->pCProfile->dDOCLeachCum;
+    self->DONLeachCum = xpn->pCh->pCProfile->dDONLeachCum;
+    
+    /* muss noch über Output-Spanne integriert werden
      
     self->NH3VolatDay = xpn->pCh->pCProfile->fNH3VolatR;
     self->N2EmissionDay = xpn->pCh->pCProfile->fN2EmisR;
     self->N2OEmissionDay = xpn->pCh->pCProfile->fN2OEmisR;
-    self->NOXEmissionDay = xpn->pCh->pCProfile->fNOEmisR; */
+    self->NOXEmissionDay = xpn->pCh->pCProfile->fNOEmisR; 
+     
+      Genauso Leaching
+     */
 
 
 	/* set daily variables to zero */
@@ -2372,18 +2397,40 @@ int xpn_output_calc_var(xpn_output *self)
 			self->N2OEmissionDay = self->N2OEmission_zwischen;
 			self->NOXEmissionDay = self->NOXEmission_zwischen;
 			self->N2EmissionDay = self->N2Emission_zwischen;
+            
+            self->UreaLeachR = self->UreaLeach_zwischen;
+            self->NH4LeachR = self->NH4Leach_zwischen;
+            self->NO3LeachR = self->NO3Leach_zwischen;
+            self->N2ODrainR = self->N2ODrain_zwischen;
+            self->DOCLeachR = self->DOCLeach_zwischen;
+            self->DONLeachR = self->DONLeach_zwischen;
 
 			// set zwischen values to zero
 			self->NH3Volat_zwischen = 0.0;
 			self->N2OEmission_zwischen = 0.0;
 			self->NOXEmission_zwischen = 0.0;
 			self->N2Emission_zwischen = 0.0;
+            
+            self->UreaLeach_zwischen = 0.0;
+            self->NH4Leach_zwischen = 0.0;
+            self->NO3Leach_zwischen = 0.0;
+            self->N2ODrain_zwischen = 0.0;
+            self->DOCLeach_zwischen = 0.0;
+            self->DONLeach_zwischen = 0.0;
         }
 
     self->NH3Volat_zwischen += xpn->pCh->pCProfile->fNH3VolatR*dt;
     self->N2OEmission_zwischen += xpn->pCh->pCProfile->fN2OEmisR*24e-5*dt; //µg m-2 h-1 --> kg ha-1 d-1
     self->NOXEmission_zwischen += xpn->pCh->pCProfile->fNOEmisR*24e-5*dt; //µg m-2 h-1 --> kg ha-1 d-1
-    self->N2Emission_zwischen += xpn->pCh->pCProfile->fN2EmisR*24e-5*dt; //µg m-2 h-1 --> gk ha-1 d-1
+    self->N2Emission_zwischen += xpn->pCh->pCProfile->fN2EmisR*24e-5*dt; //µg m-2 h-1 --> kg ha-1 d-1
+    
+    self->UreaLeach_zwischen += xpn->pCh->pCProfile->fUreaLeachR;
+    self->NH4Leach_zwischen += xpn->pCh->pCProfile->fNH4LeachR;
+    self->NO3Leach_zwischen += xpn->pCh->pCProfile->fNO3LeachR;
+    self->N2ODrain_zwischen += xpn->pCh->pCProfile->fN2OLeachR;
+    self->DOCLeach_zwischen += xpn->pCh->pCProfile->fDOCLeachR;
+    self->DONLeach_zwischen += xpn->pCh->pCProfile->fDONLeachR;
+  
 
 //end SG20200629
 

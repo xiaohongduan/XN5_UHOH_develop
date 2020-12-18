@@ -151,7 +151,14 @@ struct _xpn_output
     double NH3CumVolat, N2OCumEmission,NOXCumEmission, N2CumEmission;
     double NH3VolatDay, N2OEmissionDay,NOXEmissionDay, N2EmissionDay;
     double NH3Volat_zwischen, N2OEmission_zwischen, NOXEmission_zwischen, N2Emission_zwischen;
-	
+    
+    //SG20200826: N Leaching
+    double UreaLeachCum,NH4LeachCum,NO3LeachCum, N2ODrainCum,DOCLeachCum,DONLeachCum;;
+    double UreaLeachR, NH4LeachR,NO3LeachR, N2ODrainR,DOCLeachR,DONLeachR;
+    double UreaLeach_zwischen, NH4Leach_zwischen, NO3Leach_zwischen, N2ODrain_zwischen,DOCLeach_zwischen,DONLeach_zwischen;
+    
+    
+  	
 	// Carbon
 	double CLitter,CManure,CHumus,NLitter,NManure,NHumus;
 	

@@ -444,7 +444,7 @@ if ((strcmp(pPl->pGenotype->acCropCode,"WH")==0)||
 
 	pBiom->fStovWeight = pPl->pBiomass->fTotLeafWeight+pPl->pBiomass->fTotStemWeight;
 
-	pBiom->fFruitWeight = pBiom->fGrainWeight;
+	pBiom->fFruitWeight = max(0.0,pBiom->fGrainWeight);
 
 	pBiom->fTotalBiomass		= pBiom->fBiomassAbvGround
  						  		 +pBiom->fRootWeight;

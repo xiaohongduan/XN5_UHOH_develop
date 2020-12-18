@@ -748,10 +748,10 @@ self->WCMIN=0.05; //Hong 20170628
 //Begin of Hong: changed for C. Troost in Oct. 2016
     
 	// Read from crop rotation INI File:
-	ini_filename = xpn_register_var_get_pointer(self->parent.pXSys->var_list,"Config.gecros.filename");
+	ini_filename = xpn_register_var_get_pointer(self->parent.pXSys->var_list,"Config.gecros_h.filename");
 
 	if (ini_filename==NULL) {
-		PRINT_ERROR("Missing entry 'gecros.filename' in your configuration!");
+		PRINT_ERROR("Missing entry 'gecros_h.filename' in your configuration!");
 	} else {
 
 		//char *S2;
@@ -805,49 +805,49 @@ int gecros_load_ini_file(gecros_h *self)
 
 //Begin of Hong:changed for C. Troost in Oct. 2016 
 
-	S  = g_strdup_printf("Config.gecros.%s_%s", pPl->pGenotype->acCropName, pPl->pGenotype->acVarietyName);
+	S  = g_strdup_printf("Config.gecros_h.%s_%s", pPl->pGenotype->acCropName, pPl->pGenotype->acVarietyName);
 	read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
 	g_free(S);
 	
 	// if _gecros_crop_variety.ini doesn't exist in libgecros_h.cfg				
 	if (read_filename==NULL)
 		{  			 
-			S  = g_strdup_printf("Missing entry 'gecros.%s_%s' in your options, if present 'gecros_%s_%s.ini'-file of the Global options is used", pPl->pGenotype->acCropName, pPl->pGenotype->acVarietyName,pPl->pGenotype->acCropName, pPl->pGenotype->acVarietyName);
+			S  = g_strdup_printf("Missing entry 'gecros_h.%s_%s' in your options, if present 'gecros_%s_%s.ini'-file of the Global options is used", pPl->pGenotype->acCropName, pPl->pGenotype->acVarietyName,pPl->pGenotype->acCropName, pPl->pGenotype->acVarietyName);
 		    PRINT_MESSAGE(xpn,4,S);
 			g_free(S);
 				 
 			//2. Search for _gecros_crop_variety.ini in .xpi file 
-			S  = g_strdup_printf("Global_Config.options.%s_%s_gecros", pPl->pGenotype->acCropName,pPl->pGenotype->acVarietyName);
+			S  = g_strdup_printf("Global_Config.options.%s_%s_gecros_h", pPl->pGenotype->acCropName,pPl->pGenotype->acVarietyName);
 		    read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
 			g_free(S);
 			
 			 if (read_filename==NULL)
 			   {
 			     //if _gecros_crop_variety.ini doesn't exist in .xpi file
-			     S  = g_strdup_printf("Entry 'global.%s_%s_gecros' is missing in your options!",pPl->pGenotype->acCropName, pPl->pGenotype->acVarietyName);
+			     S  = g_strdup_printf("Entry 'global.%s_%s_gecros_h' is missing in your options!",pPl->pGenotype->acCropName, pPl->pGenotype->acVarietyName);
 			     PRINT_MESSAGE(xpn,4,S);
 			     g_free(S);
 				 
 			     //3. Search for _gecros_crop.ini in libgecros_h.cfg
-		         S  = g_strdup_printf("Config.gecros.%s", pPl->pGenotype->acCropName);
+		         S  = g_strdup_printf("Config.gecros_h.%s", pPl->pGenotype->acCropName);
 		         read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
                  g_free(S);
 				 
 				  // if _gecros_crop.ini doesn't exist in libgecros_h.cfg
 				 if (read_filename==NULL)
 			      {				 
-		            S  = g_strdup_printf("Missing entry 'gecros.%s' in your options, if present '%s.ini'-file of the Global options is used", pPl->pGenotype->acCropName,pPl->pGenotype->acCropName);
+		            S  = g_strdup_printf("Missing entry 'gecros_h.%s' in your options, if present '%s.ini'-file of the Global options is used", pPl->pGenotype->acCropName,pPl->pGenotype->acCropName);
 		            PRINT_MESSAGE(xpn,4,S);
 		            g_free(S);
 				 
 				    //4. Search for _gecros_crop.ini in .xpi file
-		            S  = g_strdup_printf("Global_Config.options.%s_gecros", pPl->pGenotype->acCropName);
+		            S  = g_strdup_printf("Global_Config.options.%s_gecros_h", pPl->pGenotype->acCropName);
 				    read_filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,S);
 		            g_free(S);
 					
 					if (read_filename==NULL)
 		              {			          
-			           PRINT_ERROR("No INI file for GECROS found!")			           
+			           PRINT_ERROR("No INI file for GECROS_h found!")			           
 			          }
 					
 		           }				 
@@ -859,7 +859,7 @@ int gecros_load_ini_file(gecros_h *self)
 	if (read_filename!=NULL)
 		{
 			filename=expertn_modul_base_replace_std_templates_and_get_fullpath_from_relative(xpn,read_filename);
-			S= g_strdup_printf("INI file for GECROS: %s",filename);
+			S= g_strdup_printf("INI file for GECROS_h: %s",filename);
 			PRINT_MESSAGE(xpn,3, S);
 			g_free(S);
 		}	
@@ -878,7 +878,7 @@ int gecros_load_ini_file(gecros_h *self)
 	}
 //Begin of Hong:changed for C. Troost in Oct. 2016
     else
-        PRINT_MESSAGE(xpn,5,"read crop_gecros.ini");
+        PRINT_MESSAGE(xpn,5,"read crop_gecros_h.ini");
 // End of Hong
  
 	GET_INI_INT(option,"control","option");
@@ -2392,7 +2392,7 @@ int Photosynthesis_GECROS(gecros_h *self)
           DDTR,TMPA,HOUR,DVP,WNM,C3C4,LAIC,TLAI,HT,self->LWIDTH,RD,self->SD1,self->RSS,self->BLD,NLV,TNLV,self->SLNMIN,
           DWSUP,CO2A,LS,self->EAJMAX,self->XVN,self->XJN,self->THETA,WCUL,FVPD, &PPCAN,&APCANS,&APCANN,&APCAN,
                  &PTCAN,&ATCAN,&PESOIL,&AESOIL,&DIFS,&DIFSU,&DIFSH,&DAPAR);
-
+                 
 /*
 //%** output ***
       pGPltC->fGrossStdgCropPhotosynR  = (double)APCANS;
@@ -4560,7 +4560,7 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros_h *self,double SC,double SIN
 		 DTR = DDTR/24/3600 * (self->DSINB/DSINBE);		
 		 //DTR = DDTR/24/3600;		
 		 //End of Hong
-		 
+         		 
 		 //C_DEBUG(DTR);
 			
          //%---daytime course of air temperature 
@@ -4665,7 +4665,9 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros_h *self,double SC,double SIN
          PCDNIR = (double)0.389;          //canopy diffuse NIR reflection coefficient
 
          //%---turbulence resistance for canopy (RT) and for soil (RTS)
-         RT     = (double)0.74*pow(log((2.-0.7*HT)/(0.1*HT)),(double)2)/(pow((double)0.4,(double)2)*WND);
+ //        RT     = (double)0.74*pow(log((2.-0.7*HT)/(0.1*HT)),(double)2)/(pow((double)0.4,(double)2)*WND);
+ //SG20200505: for tall crops such as maize: measurement height of wind speed and temperature must always be higher than crop height:
+         RT     = (double)0.74*pow(log((max(2.,HT)-0.7*HT)/(0.1*HT)),(double)2)/(pow((double)0.4,(double)2)*WND);
          RTS    = (double)0.74*pow(log(56.),(double)2)/(pow((double)0.4,(double)2)*WND);
 
          //%---fraction of sunlit and shaded components in canopy

@@ -701,7 +701,7 @@ int spass_COMVR_TO_ZSTAGE_AND_CERES_WHEAT(spass *self)
 		pDev->fStageWang=(double)7.0+(pDev->fStageSUCROS-VR[7])/(VR[8]-VR[7]);
 	if ((pDev->fStageSUCROS>VR[8])&&(pDev->fStageSUCROS<=VR[9])) //  80 <= BBCH <= 90
 		pDev->fStageWang=(double)8.0+(pDev->fStageSUCROS-VR[8])/(VR[9]-VR[8]);
-	if ((pDev->fStageSUCROS>VR[9])&&(pDev->fStageSUCROS<=VR[10])) //  90 <= BBCH <= 20
+	if ((pDev->fStageSUCROS>VR[9])&&(pDev->fStageSUCROS<=VR[10])) //  90 <= BBCH <= 92
 		pDev->fStageWang=(double)9.0+(pDev->fStageSUCROS-VR[9])/(VR[10]-VR[9]);
 			
    	//--------------------------------------------------------------------
