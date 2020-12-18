@@ -2060,11 +2060,16 @@ class	XnDatabaseConnection {
 		    		String variety = gecrosCrops.getString("variety");
 		    		String crop_name = gecrosCrops.getString("crop_name");
 		    		String cropline;
+		    		String filesuffix = "gecros";
+		    		if (gecrosCrops.getInt("daily_timestep") == 0)
+		    			filesuffix = "gecros_h";
+		    		
+		    		
 		    		if (variety.equals("Default"))	{
-		    			cropline = crop_name + "_gecros = $<$PROJECT_PATH/$PROJECT_NAME__" + crop_name.toLowerCase() + "_gecros.ini$>";
+		    			cropline = crop_name + "_"+filesuffix +" = $<$PROJECT_PATH/$PROJECT_NAME__" + crop_name.toLowerCase() + "_" + filesuffix+ ".ini$>";
 		    		}
 		    		else {
-		    			cropline = crop_name + "_"+ variety +"_gecros = $<$PROJECT_PATH/$PROJECT_NAME__" + crop_name.toLowerCase() + "_"+ firstLetterToLowerCase(variety) + "_gecros.ini$>";
+		    			cropline = crop_name + "_"+ variety +"_" +filesuffix +" = $<$PROJECT_PATH/$PROJECT_NAME__" + crop_name.toLowerCase() + "_"+ firstLetterToLowerCase(variety) + "_" + filesuffix+ ".ini$>";
 		    		}
 		    		gecrosInis.add(cropline);
 		    	}
@@ -2382,7 +2387,7 @@ class	XnDatabaseConnection {
 							out.println("[GECROS_h Development]");
 							out.println("");
 	
-							out.println("[gecros]");
+							out.println("[gecros_h]");
 							out.println("filename = $<$PROJECT_PATH/$PROJECT_NAME_$REG_STR_crop_rotation.ini$>");
 							out.println("");
 							
@@ -2445,22 +2450,18 @@ class	XnDatabaseConnection {
 		}
 		return ok;
 	}
-	public boolean writeXn5GecrosParametersFile(String xn5FilePrefixGecros, int plantParamId, String crop_code, String variety, String crop_name)
+	public boolean writeXn5GecrosParametersFile(String xn5FilePrefixGecros, int plantParamId, String crop_code, 
+			String variety, String crop_name)
 	{
 		boolean ok = false;
 		try {
 									
-			String xn5FileNameGecros;			
-			if (variety.equals("Default"))	{
-				xn5FileNameGecros = xn5FilePrefixGecros + "__" + crop_name.toLowerCase() + "_gecros.ini";
-			}
-			else {
-				xn5FileNameGecros = xn5FilePrefixGecros + "__" + crop_name.toLowerCase() + "_"+ firstLetterToLowerCase(variety) + "_gecros.ini";
-			}
+
 			
 			String s = "SELECT *, variety as varietyName FROM plant_parameterization_gecros t1"
 					+ " JOIN residue_partitioning t2 ON t1.crop_code = t2.crop_code "
-					+ " WHERE plant_param_id = " + plantParamId
+					+ " JOIN info_plant_parameterizations t3 ON t1.plant_param_id = t3.plant_param_id"
+					+ " WHERE t1.plant_param_id = " + plantParamId
 					+ " AND t1.crop_code =  '" + crop_code + "' AND variety = '" + variety + "'"
 					+";";
 			//System.out.println(s);
@@ -2468,6 +2469,20 @@ class	XnDatabaseConnection {
 			
 			if (rs.first())
 			{
+				
+				String xn5FileNameGecros;
+				String suffix = "_gecros.ini";
+				if (rs.getInt("daily_timestep") == 0)
+					suffix = "_gecros_h.ini";
+				
+				if (variety.equals("Default"))	{
+					xn5FileNameGecros = xn5FilePrefixGecros + "__" + crop_name.toLowerCase() + suffix;
+				}
+				else {
+					xn5FileNameGecros = xn5FilePrefixGecros + "__" + crop_name.toLowerCase() + "_"+ firstLetterToLowerCase(variety) + suffix;
+				}
+				
+				
 				PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(xn5FileNameGecros)));
 				out.println("[control]");
 				out.println("option = 1");
@@ -3646,7 +3661,7 @@ class	XnDatabaseConnection {
 				
 				String s8 = "SELECT xn5_cell_x, xn5_cell_y, " +
 						" t2.effic, t2.humf, t2.min_cn, t2.temp0, t2.miner_q10, t2.theta0, t2.MinerSatActiv, t2.NitrifNO3NH4Ratio," +
-						" t3. `leachn_param_id`, t3.`fn2Fraction`, t3.`fn2oeduction` as fn2oReduction , t3.`irewet`, t3.`ino3kin` "
+						" t3. `leachn_param_id`, t3.`fn2Fraction`, t3.`fn2oeduction` as fn2oReduction , t3.`irewet`, t3.`ino3kin`, t3.`MaxNH3Volatilisation` "
 						+ "	 FROM `"+xn5_cells_table_name+"` t1	 "
 						+ " JOIN daisy_parameterization t2	ON t1.profileID = t2.profileID	" +
 						"		AND t1.daisy_param_id = t2.daisy_param_id "
@@ -4037,6 +4052,7 @@ class	XnDatabaseConnection {
 					printNextRowInColToIniFile("irewet", outLeachn, leachnParam);
 					printNextRowInColToIniFile("ino3kin", outLeachn, leachnParam);
 					outLeachn.println("");
+
 					
 					leachnFieldList = Arrays.asList("layers", "ksno3", "ksc", "theta0", "biogrowth", "bio_mc"
 							);
@@ -4048,6 +4064,11 @@ class	XnDatabaseConnection {
 							"n2o_n2", "freezing", "thawing", "rewet" 
 							);
 					printLayersForCellToIniFile(leachnFieldList, outLeachn, leachnParamLayersDenitrifEvents, curX, curY);
+					outLeachn.println("");
+					
+
+					outLeachn.println("[volatilisation]");
+					printNextRowInColToIniFile("MaxNH3Volatilisation", outLeachn, leachnParam);
 					outLeachn.println("");
 					
 					
