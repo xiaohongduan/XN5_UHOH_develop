@@ -108,9 +108,9 @@ char *expertn_modul_base_replace_std_templates(expertn_modul_base *self,char *so
 {
 	/*Changed Troost 20201219 - Included defined environment variables XN_DIR1, XN_DIR2, XN_ENV1, XN_ENV2*/
 	
-	int len_templ = 14;
-	char *std_templates[14] = {"$PROJECT_PATH","$BASE_PATH","$REG_STR","$REG_ID","$REG_I","$REG_J","$PROJECT_NAME","$ID","$<","$>","$XN_ENV1","$XN_ENV2","$XN_ENV3","$XN_ENV4" };
-	char *std_expr[14];
+	int len_templ = 15;
+	char *std_templates[15] = {"$PROJECT_PATH","$BASE_PATH","$REG_STR","$REG_ID","$REG_I","$REG_J","$PROJECT_NAME","$ID","$<","$>","$XN_ENV1","$XN_ENV2","$XN_ENV3","$XN_ENV4", "$TMPDIR" };
+	char *std_expr[15];
 	char id[128];
 	char *S;
 	char *grid_id,*grid_i,*grid_j;
@@ -130,6 +130,7 @@ char *expertn_modul_base_replace_std_templates(expertn_modul_base *self,char *so
 	std_expr[11] = getenv("XN_ENV2");
 	std_expr[12] = getenv("XN_ENV3");
 	std_expr[13] = getenv("XN_ENV4");
+	std_expr[14] = getenv("TMPDIR");
 	S = replace_str_with_templates(source,std_templates,std_expr,len_templ);
 	g_free(grid_id);
 	g_free(grid_i);
