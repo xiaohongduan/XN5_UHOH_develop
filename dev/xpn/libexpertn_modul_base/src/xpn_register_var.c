@@ -14,7 +14,7 @@
 #include <gmodule.h>
 #include <math.h>
 #include "xinclexp.h"
-
+#include <errno.h>
 
 static void xpn_register_var_finalize  			(GObject *object);
 
@@ -642,7 +642,7 @@ void xpn_register_var_write_data(xpn_register_var *self, gboolean first, gboolea
 					/*Change Troost 2020-12-19: Added check for successful file opening */
 					if (self->txtout == NULL)
 					{						
-						fprintf(stdout,"ERROR (TXTOUTPUT): Could not open '%s'\n%s\n",self->txtfile, strerror (errno));
+						fprintf(stdout,"ERROR (TXTOUTPUT): Could not open '%s'\n%s\n",self->txtfile, strerror(errno));
 						exit(1);
 					}
 					
