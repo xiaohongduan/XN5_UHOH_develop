@@ -126,10 +126,10 @@ char *expertn_modul_base_replace_std_templates(expertn_modul_base *self,char *so
 	std_expr[7] = id;
 	std_expr[8] = "";
 	std_expr[9] = "";
-	std_expr[10] = getenv(XN_ENV1);
-	std_expr[11] = getenv(XN_ENV2);
-	std_expr[12] = getenv(XN_ENV3);
-	std_expr[13] = getenv(XN_ENV4);
+	std_expr[10] = getenv("XN_ENV1");
+	std_expr[11] = getenv("XN_ENV2");
+	std_expr[12] = getenv("XN_ENV3");
+	std_expr[13] = getenv("XN_ENV4");
 	S = replace_str_with_templates(source,std_templates,std_expr,len_templ);
 	g_free(grid_id);
 	g_free(grid_i);
