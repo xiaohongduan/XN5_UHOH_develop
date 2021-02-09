@@ -5378,9 +5378,9 @@ double gcrsw(double PLEAF,double RDLEAF,double TLEAF,double CO2A,double CO2I,dou
        double GC,RSW;
 
         //%---potential conductance for CO2
-        //GC  = (PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I);
+        GC  = (PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I);
         //SG20210203 nach !*ji 13.7.11 MAX routine faengt negative Leitfaehigkeiten ab
-        GC  = max(0.0018 ,(PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I));
+        //GC  = max(0.0018 ,(PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I));
 
         //%---potential stomatal resistance to water
         RSW = max((double)1E-10, (double)1./GC-RBW*(double)1.3-RT)/(double)1.6;
