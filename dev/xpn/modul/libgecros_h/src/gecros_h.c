@@ -3360,6 +3360,7 @@ int   BiomassGrowth_GECROS(gecros_h *self)
         
       TNLV   = max(0,TNLV+RTNLV*DELT);
       pGPltN->fNLeafTotCont = (double)TNLV;
+      pPltN->fTotalNPool = pGPltN->fNLeafTotCont;
         
       NSO    = max(0,NSO+RNSO*DELT);
       pGPltN->fNStorageCont = (double)NSO;
@@ -3543,7 +3544,9 @@ int   LeafAreaGrowth_GECROS(gecros_h *self)
 	  //%** output ***
       pCan->fLAGrowR     = (double)RLAI;
       pGCan->fLAICdeterm = (double)LAIC;
-	  pPl->pCanopy->fLAI = (double)TLAI;	  
+//	  pPl->pCanopy->fLAI = (double)TLAI;	  
+//SG20210202: output of living LAI
+	  pPl->pCanopy->fLAI = (double)LAI;	  
 
       /*
 	  pGCan->fLAINdeterm = (double)LAIN;
@@ -3721,7 +3724,7 @@ int   OrganSenescence_GECROS(gecros_h *self)
       //SG20191105: per day
       LWLVM  = (LAIC-min(LAIC,LAIN))/SLA0/1.0; // per day [g m-2 (soil)]
       //SG 20110801:
-	  //LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.01*WLV); //[g m-2 d-1 ], original 0.03 d-1
+     //LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.01*WLV); //[g m-2 d-1 ], original 0.03 d-1
      LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.03*WLV); //[g m-2 d-1 ]
 
       LCLV   = LWLV*CFV;
@@ -4568,13 +4571,14 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros_h *self,double SC,double SIN
          DAYTMP= TMPA;//Hong
          
 	     //%---daytime course of water supply  [mm d-1] --> [mm s-1]
-         WSUP  = DWSUP*(SINB*SC/1367.)/DSINBE; //original Gecros, daily time step, Gauss-integration
-		 //WSUP  = DWSUP/(24*3600);//Hong
-         WSUP1 = WSUP*SD1/RD;
+ 		 //WSUP  = DWSUP/(24*3600);//Hong
+       WSUP  = DWSUP*(SINB*SC/1367.)/DSINBE; //original Gecros, daily time step, Gauss-integration
+      // WSUP  = DWSUP*(SINB*SC/1367.)/DSINBE/self->DAYL; //original Gecros, daily time step, Gauss-integration
+	        WSUP1 = WSUP*SD1/RD;
          WSUP1 = min(WSUP,WSUP1);
          //%---daytime course of wind speed
          WND   = WNM;   //!no diurnal fluctuation is assumed here
-
+ 
          //%---total incoming PAR and NIR
          PAR   = 0.5*DTR;
          NIR   = 0.5*DTR;
@@ -5229,7 +5233,7 @@ double PotEvaporTransp_GECROS(double RSW,double RT,double RBW,double RBH,double 
 
         //%---intermediate variable related to resistances
         PSR    = PSYCH*(RBW+RT+RSW)/(RBH+RT);
-
+ 
         //%---radiation-determined term
         PTR    = NRADC*SLOPE        /(SLOPE+PSR)/LHVAP;
         //SG20200409: no negative evaporation/transpiration, if NRADC<0
@@ -5374,7 +5378,9 @@ double gcrsw(double PLEAF,double RDLEAF,double TLEAF,double CO2A,double CO2I,dou
        double GC,RSW;
 
         //%---potential conductance for CO2
-        GC  = (PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I);
+        //GC  = (PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I);
+        //SG20210203 nach !*ji 13.7.11 MAX routine faengt negative Leitfaehigkeiten ab
+        GC  = max(0.0018 ,(PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I));
 
         //%---potential stomatal resistance to water
         RSW = max((double)1E-10, (double)1./GC-RBW*(double)1.3-RT)/(double)1.6;

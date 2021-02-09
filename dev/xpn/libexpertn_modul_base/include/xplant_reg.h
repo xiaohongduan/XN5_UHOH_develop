@@ -100,4 +100,5 @@ xpn_register_var_init_pdouble( var_list, pPl->pPltNitrogen->fLeafTransNw,"pPl.pP
 xpn_register_var_init_pdouble( var_list, pPl->pPltNitrogen->fStemTransNw,"pPl.pPltNitrogen.fStemTransNw",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pPltNitrogen->fRootTransNw,"pPl.pPltNitrogen.fRootTransNw",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pPltNitrogen->fTotalTransNw,"pPl.pPltNitrogen.fTotalTransNw",0.0);\
+xpn_register_var_init_pdouble( var_list, pPl->pPltNitrogen->fTotalNPool,"pPl.pPltNitrogen.fTotalNPool",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pPltClimate->fPlantAlbedo,"pPl.pPltClimate.fPlantAlbedo",0.23);
