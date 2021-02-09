@@ -54,7 +54,7 @@ double DailyThermalDayUnit_GECROS(gecros_h *self, double DS,double TEMP,double D
 double Phenology_GECROS(gecros_h *self,double DS,double SLP,double DDLP,double SPSP,double EPSP, double PSEN,double MTDV,double MTDR,double TDU,double OptVernDays);//added double OptVernDays by Hong on 20170704
 double DailyCanopyGrossPhotosynthesis_GECROS(gecros_h *self,double SC,double SINLD,double COSLD,double DAYL,double DSINBE,
           double DDTR,double TMPA,double HOUR,double DVP,double WNM,double C3C4,double LAI,double TLAI,
-          double HT,double LWIDTH,double RD,double SD1,double RSS,double BLD,double NLV,double TNLV,
+          double HT,double LWIDTH,double RD,double SD1,double RSS,double GCMIN,double BLD,double NLV,double TNLV, //SG20210209: new optional parameter GCMIN
           double SLNMIN,double DWSUP,double CO2A,double LS,double EAJMAX,double XVN,double XJN,double THETA,
           double WCUL,double FVPD,double *PPCAN,double *APCANS,double *APCANN,double *APCAN,double *PTCAN,
           double *ATCAN,double *PESOIL,double *AESOIL,double *DIFS,double *DIFSU,double *DIFSH,double *DAPAR);
@@ -68,7 +68,7 @@ double pan(double SLNT,double SLNMIN,double LAI,double KN,double KB,int IW);
 double difla(double NRADC,double PT,double RBH,double RT);
 
 int    PotentialLeafPhotosynthesis_GECROS(double FRAC,double DAYTMP,double DVP,double CO2A,double C3C4,
-          double FVPD,double PAR,double NP,double RBW,double RBH,double RT, double ATRJ,double ATMTR,
+          double FVPD,double PAR,double NP,double RBW,double RBH,double RT ,double GCMIN, double ATRJ,double ATMTR,  //SG20210209: new optional parameter GCMIN
 		  double EAJMAX,double XVN,double XJN,double THETA, 
 		  double *PLF,double *PT,double *RSW,double *NRADC,double *SLOPEL);
 
@@ -82,7 +82,7 @@ double NetLeafAbsRad(double ATRJ,double ATMTR,double FRAC,double TLEAF,double DV
 
 double internalCO2(double TLEAF,double DVP,double FVPD,double CO2A,double C3C4);
 
-double gcrsw(double PLEAF,double RDLEAF,double TLEAF,double CO2A,double CO2I,double RBW,double RT);
+double gcrsw(double PLEAF,double RDLEAF,double TLEAF,double CO2A,double CO2I,double RBW,double RT, double GCMIN); //SG20210209: new optional parameter GCMIN
 
 double photo(double C3C4,double PAR,double TLEAF,double CO2I,double NP,
              double EAJMAX,double XVN,double XJN,double THETA);
@@ -703,6 +703,8 @@ self->XVN = 62.;//slope of lin.rel. btw. VCMAX and leaf N   (umol s-1 g-1 N) cro
 self->XJN = 124.;//slope of lin.rel. btw. VJMAX and leaf N  (umol s-1 g-1 N) crop specific ???
 self->THETA = 0.7;//convexity for light response electron 
                    //transport (J2) in photosynthesis              (-)        const table 1, p45 (photo)
+//SG20210209: new optional parameter GCMIN
+self->GCMIN = 0.0001; //minimum stomatal conductance (unit?)                   
 
 //%*********genotype specific parameters for cv. SOLARA ***********************************************
 self->SEEDW=0.215;//Seed weight                               (g seed-1)   
@@ -936,7 +938,8 @@ int gecros_load_ini_file(gecros_h *self)
 	GET_INI_DOUBLE(self->XVN,"photosynthesis","XVN");
 	GET_INI_DOUBLE(self->XJN,"photosynthesis","XJN");
 	GET_INI_DOUBLE(self->THETA,"photosynthesis","THETA");
-	
+	//SG20210209: new optional parameter GCMIN
+    GET_INI_DOUBLE_OPTIONAL(self->GCMIN,"photosynthesis","GCMIN",0.0001);
 
 	GET_INI_DOUBLE(self->SEEDW,"genotype","SEEDW");
 	GET_INI_DOUBLE(self->SEEDNC,"genotype","SEEDNC");
@@ -2388,8 +2391,9 @@ int Photosynthesis_GECROS(gecros_h *self)
                  &PTCAN,&ATCAN,&PESOIL,&AESOIL,&DIFS,&DIFSU,&DIFSH,&DAPAR);*/
   
    //SG20190212 (self->CO2A durch CO2A ersetzt)
+   //SG20210209: new optional parameter GCMIN
    pCbn->fGrossPhotosynR = (double)DailyCanopyGrossPhotosynthesis_GECROS(self,self->SC,self->SINLD,self->COSLD,self->DAYL,self->DSINBE,
-          DDTR,TMPA,HOUR,DVP,WNM,C3C4,LAIC,TLAI,HT,self->LWIDTH,RD,self->SD1,self->RSS,self->BLD,NLV,TNLV,self->SLNMIN,
+          DDTR,TMPA,HOUR,DVP,WNM,C3C4,LAIC,TLAI,HT,self->LWIDTH,RD,self->SD1,self->RSS,self->GCMIN,self->BLD,NLV,TNLV,self->SLNMIN, 
           DWSUP,CO2A,LS,self->EAJMAX,self->XVN,self->XJN,self->THETA,WCUL,FVPD, &PPCAN,&APCANS,&APCANN,&APCAN,
                  &PTCAN,&ATCAN,&PESOIL,&AESOIL,&DIFS,&DIFSU,&DIFSH,&DAPAR);
                  
@@ -4475,9 +4479,10 @@ int   ActualNitrogenUptake_GECROS(gecros_h *self)
 *----------------------------------------------------------------------*/
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+//SG20210209: new optional parameter GCMIN
 double DailyCanopyGrossPhotosynthesis_GECROS(gecros_h *self,double SC,double SINLD,double COSLD,double DAYL,double DSINBE,
           double DDTR,double TMPA,double HOUR,double DVP,double WNM,double C3C4,double LAI,double TLAI,
-            double HT,double LWIDTH,double RD,double SD1,double RSS,double BLD,double NLV,double TNLV,
+            double HT,double LWIDTH,double RD,double SD1,double RSS,double GCMIN,double BLD,double NLV,double TNLV,
             double SLNMIN,double DWSUP,double CO2A,double LS,double EAJMAX,double XVN,double XJN,double THETA,
             double WCUL,double FVPD,double *PPCAN,double *APCANS,double *APCANN,double *APCAN,double *PTCAN,
             double *ATCAN,double *PESOIL,double *AESOIL,double *DIFS,double *DIFSU,double *DIFSH,double *DAPAR)
@@ -4730,12 +4735,13 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros_h *self,double SC,double SIN
                  +(1.-PSNIR)*(NIRDR*exp(-KBPNIR*TLAI)+NIRDF*exp(-KDPNIR*TLAI));
 
          //%---instantaneous potential photosynthesis and transpiration
-         PotentialLeafPhotosynthesis_GECROS(FRSU,DAYTMP,DVP,CO2A,C3C4,FVPD,APARSU,NPSU,RBWSU,RBHSU,
-                                            RT*FRSU,ATRJSU,ATMTR,EAJMAX,XVN,XJN,THETA, 
+        //SG20210209: new optional parameter GCMIN
+        PotentialLeafPhotosynthesis_GECROS(FRSU,DAYTMP,DVP,CO2A,C3C4,FVPD,APARSU,NPSU,RBWSU,RBHSU,
+                                            RT*FRSU,GCMIN,ATRJSU,ATMTR,EAJMAX,XVN,XJN,THETA, 
                                             &PLFSU,&PTSU,&RSWSU,&NRADSU,&SLOPSU);
 
          PotentialLeafPhotosynthesis_GECROS(FRSH,DAYTMP,DVP,CO2A,C3C4,FVPD,APARSH,NPSH,RBWSH,RBHSH,
-                                           RT*FRSH,ATRJSH,ATMTR,EAJMAX,XVN,XJN,THETA, 
+                                           RT*FRSH,GCMIN,ATRJSH,ATMTR,EAJMAX,XVN,XJN,THETA, 
                                            &PLFSH,&PTSH,&RSWSH,&NRADSH,&SLOPSH);
          IPP    = PLFSU+ PLFSH;
          IPT    = PTSU + PTSH;
@@ -5098,9 +5104,9 @@ double difla(double NRADC,double PT,double RBH,double RT)
 *  SLOPEL  R4  Slope of saturated vapour pressure curve   kPa oC-1  O  *
 *----------------------------------------------------------------------*/
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+//SG20210209: new optional parameter GCMIN
 int  PotentialLeafPhotosynthesis_GECROS(double FRAC,double DAYTMP,double DVP,double CO2A,double C3C4,
-                                double FVPD,double PAR,double NP,double RBW,double RBH,double RT,
+                                double FVPD,double PAR,double NP,double RBW,double RBH,double RT,double GCMIN,
                                         double ATRJ,double ATMTR,double EAJMAX,double XVN,double XJN,double THETA, 
                                          double *PLF,double *PT,double *RSW,double *NRADC,double *SLOPEL)
     {
@@ -5115,7 +5121,7 @@ int  PotentialLeafPhotosynthesis_GECROS(double FRAC,double DAYTMP,double DVP,dou
       VPD     = max((double)0., SVP-DVP);
       SLOPE   = (double)4158.6*SVP/pow(DAYTMP+(double)239.,(double)2);
 
-      FRSW    = gcrsw(FPLF,FLRD,DAYTMP,CO2A,FCO2I,RBW,RT);
+      FRSW    = gcrsw(FPLF,FLRD,DAYTMP,CO2A,FCO2I,RBW,RT,GCMIN); //SG20210209: new optional parameter GCMIN
       FNRADC  = NetLeafAbsRad(ATRJ,ATMTR,FRAC,DAYTMP,DVP);
       FPT     = PotEvaporTransp_GECROS(FRSW,RT,RBW,RBH,ATRJ,ATMTR,FRAC,DAYTMP,DVP,SLOPE,VPD);
       FDIF    = difla(FNRADC,FPT,RBH,RT); 
@@ -5130,7 +5136,7 @@ int  PotentialLeafPhotosynthesis_GECROS(double FRAC,double DAYTMP,double DVP,dou
       SVPL    = (double)0.611*exp((double)17.4*TLEAF/(TLEAF+(double)239.));
       *SLOPEL = (SVPL-SVP)/NOTNUL(TLEAF-DAYTMP);
 
-      *RSW    = gcrsw(*PLF,LRD,TLEAF,CO2A,CO2I,RBW,RT);
+      *RSW    = gcrsw(*PLF,LRD,TLEAF,CO2A,CO2I,RBW,RT,GCMIN); //SG20210209: new optional parameter GCMIN
 
       *NRADC  = NetLeafAbsRad(ATRJ,ATMTR,FRAC,TLEAF,DVP);
       *PT     = PotEvaporTransp_GECROS(*RSW,RT,RBW,RBH,ATRJ,ATMTR,FRAC,TLEAF,DVP,*SLOPEL,VPD);
@@ -5373,14 +5379,14 @@ double internalCO2(double TLEAF,double DVP,double FVPD,double CO2A,double C3C4)
 *----------------------------------------------------------------------*/
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double gcrsw(double PLEAF,double RDLEAF,double TLEAF,double CO2A,double CO2I,double RBW,double RT)
+double gcrsw(double PLEAF,double RDLEAF,double TLEAF,double CO2A,double CO2I,double RBW,double RT, double GCMIN)
       {
        double GC,RSW;
 
         //%---potential conductance for CO2
-        GC  = (PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I);
-        //SG20210203 nach !*ji 13.7.11 MAX routine faengt negative Leitfaehigkeiten ab
-        //GC  = max(0.0018 ,(PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I));
+        //GC  = (PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I);
+        //SG20210209 new parameter GCMIN
+        GC  = max(GCMIN ,(PLEAF-RDLEAF)*((double)273.+TLEAF)/(double)0.53717/(CO2A-CO2I));
 
         //%---potential stomatal resistance to water
         RSW = max((double)1E-10, (double)1./GC-RBW*(double)1.3-RT)/(double)1.6;
