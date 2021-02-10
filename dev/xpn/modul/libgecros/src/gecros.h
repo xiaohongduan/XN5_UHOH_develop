@@ -368,6 +368,8 @@ struct _gecros
 	double LNCI;
     //[photosynthesis]                 
 	double EAJMAX,XVN,XJN,THETA;
+    //SG20210209: new optional parameter GCMIN
+    double GCMIN;
 	//[genotype] 
 	double SEEDW,SEEDNC,BLD,HTMX,MTDV,MTDR; 
     
