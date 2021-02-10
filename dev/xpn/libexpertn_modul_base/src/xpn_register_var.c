@@ -14,7 +14,7 @@
 #include <gmodule.h>
 #include <math.h>
 #include "xinclexp.h"
-
+#include <errno.h>
 
 static void xpn_register_var_finalize  			(GObject *object);
 
@@ -639,6 +639,13 @@ void xpn_register_var_write_data(xpn_register_var *self, gboolean first, gboolea
 			if (first==TRUE)
 				{
 					self->txtout = fopen(self->txtfile,"w");
+					/*Change Troost 2020-12-19: Added check for successful file opening */
+					if (self->txtout == NULL)
+					{						
+						fprintf(stdout,"ERROR (TXTOUTPUT): Could not open '%s'\n%s\n",self->txtfile, strerror(errno));
+						exit(1);
+					}
+					
 					xpn_register_var_write_header(self,self->txtout);
 					xpn_register_var_write_txt_row(self,self->txtout);
 					fflush(self->txtout);
