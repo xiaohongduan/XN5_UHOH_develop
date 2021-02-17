@@ -1,29 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<section name="ChooseWorkspaceDialogSettings">
-		<item value="211" key="DIALOG_Y_ORIGIN"/>
-		<item value="218" key="DIALOG_X_ORIGIN"/>
+		<item key="DIALOG_Y_ORIGIN" value="211"/>
+		<item key="DIALOG_X_ORIGIN" value="218"/>
 	</section>
 	<section name="WORKBENCH_SETTINGS">
 		<list key="ENABLED_TRANSFERS">
 		</list>
 	</section>
 	<section name="ExternalProjectImportWizard">
+		<item key="WizardProjectsImportPage.STORE_NESTED_PROJECTS" value="true"/>
+		<item key="WizardProjectsImportPage.STORE_COPY_PROJECT_ID" value="false"/>
+		<item key="WizardProjectsImportPage.STORE_ARCHIVE_SELECTED" value="false"/>
+		<item key="WizardProjectsImportPage.STORE_CLOSE_CREATED_PROJECTS_ID" value="false"/>
+		<item key="WizardProjectsImportPage.STORE_HIDE_CONFLICTING_PROJECTS_ID" value="false"/>
+		<list key="WizardProjectsImportPage.STORE_DIRECTORIES">
+			<item value="/home/troost/490d/XN5/xnParameterTool/XN_tool"/>
+		</list>
+		<list key="WizardProjectsImportPage.STORE_ARCHIVES">
+			<item value=""/>
+		</list>
 	</section>
 	<section name="SaveAsDialogSettings">
-		<item value="613" key="DIALOG_WIDTH"/>
-		<item value="4" key="DIALOG_Y_ORIGIN"/>
-		<item value="596" key="DIALOG_HEIGHT"/>
-		<item value="297" key="DIALOG_X_ORIGIN"/>
-		<item value="1|Ubuntu|11.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
+		<item key="DIALOG_WIDTH" value="613"/>
+		<item key="DIALOG_Y_ORIGIN" value="4"/>
+		<item key="DIALOG_HEIGHT" value="596"/>
+		<item key="DIALOG_X_ORIGIN" value="297"/>
+		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|11.0|0|GTK|1|"/>
 	</section>
 	<section name="NewWizardAction">
 	</section>
 	<section name="CleanDialogSettings">
-		<item value="411" key="DIALOG_WIDTH"/>
-		<item value="127" key="DIALOG_Y_ORIGIN"/>
-		<item value="307" key="DIALOG_X_ORIGIN"/>
-		<item value="361" key="DIALOG_HEIGHT"/>
-		<item value="false" key="TOGGLE_SELECTED"/>
+		<item key="DIALOG_WIDTH" value="411"/>
+		<item key="DIALOG_Y_ORIGIN" value="127"/>
+		<item key="DIALOG_X_ORIGIN" value="307"/>
+		<item key="DIALOG_HEIGHT" value="361"/>
+		<item key="TOGGLE_SELECTED" value="false"/>
 	</section>
 </section>

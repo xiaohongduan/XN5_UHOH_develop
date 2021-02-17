@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
-		<item value="412" key="DIALOG_WIDTH"/>
-		<item value="67" key="DIALOG_Y_ORIGIN"/>
-		<item value="0" key="DIALOG_X_ORIGIN"/>
-		<item value="801" key="DIALOG_HEIGHT"/>
-		<item value="1|Ubuntu|11.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
+		<item key="DIALOG_WIDTH" value="412"/>
+		<item key="DIALOG_Y_ORIGIN" value="98"/>
+		<item key="DIALOG_X_ORIGIN" value="614"/>
+		<item key="DIALOG_HEIGHT" value="801"/>
+		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|11.0|0|GTK|1|"/>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
-		<item value="true" key="wrap"/>
-		<item value="false" key="casesensitive"/>
-		<item value="false" key="isRegEx"/>
-		<item value="false" key="incremental"/>
-		<item value="false" key="wholeword"/>
-		<item value="leachnParam" key="selection"/>
+		<item key="wrap" value="true"/>
+		<item key="casesensitive" value="false"/>
+		<item key="isRegEx" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="wholeword" value="false"/>
+		<item key="selection" value="simulation_projects_xn5_cells"/>
 		<list key="findhistory">
+			<item value="simulation_projects_xn5_cells"/>
+			<item value="updateCell"/>
+			<item value="for1695_expertN"/>
+			<item value="simulation_project_xn5_cells"/>
 			<item value="leachnParam"/>
 			<item value="camp_a"/>
 			<item value="main"/>
@@ -25,6 +29,8 @@
 			<item value="cbCO2"/>
 		</list>
 		<list key="replacehistory">
+			<item value="&quot;+this.dbName+&quot;"/>
+			<item value="&quot;+myConnection.dbName+&quot;"/>
 			<item value=""/>
 			<item value="&quot; +  mpmasDb + &quot;"/>
 			<item value="&quot; + cropsDb + &quot;"/>
@@ -33,7 +39,7 @@
 		</list>
 	</section>
 	<section name="org.eclipse.ui.texteditor.GotoLineAction$GotoLineDialog_dialogBounds">
-		<item value="371" key="DIALOG_Y_ORIGIN"/>
-		<item value="541" key="DIALOG_X_ORIGIN"/>
+		<item key="DIALOG_Y_ORIGIN" value="371"/>
+		<item key="DIALOG_X_ORIGIN" value="541"/>
 	</section>
 </section>

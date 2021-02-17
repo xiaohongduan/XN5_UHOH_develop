@@ -178,6 +178,9 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
 	private JMenuItem menuItemExportCellManagement;
 	private JMenuItem menuItemExportWeatherFiles;
 	
+	private JMenuItem menuItemGridEmpty;
+	private JMenuItem menuItemGridBasic;
+	
 	
 	public simProject currentProject;
 	
@@ -211,6 +214,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
 		
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		myConfig = config;
+		myConfig.setParent(this);
 		myConnection = conn;
 		
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -340,12 +344,24 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
         menuItemExportWeatherFiles.addActionListener(this);
         menuExport.add(menuItemExportWeatherFiles);
 
+        JMenu menuGrid = new JMenu("Grid");
         
+        menuItemGridBasic = new JMenuItem("Create a basic grid ...");
+        menuItemGridBasic.addActionListener(this);
+        menuGrid.add(menuItemGridBasic);
+        
+        menuItemGridEmpty = new JMenuItem("Delete existing grid ...");
+        menuItemGridEmpty.addActionListener(this);
+        menuGrid.add(menuItemGridEmpty);
+        
+
         
         //put everything together
         bar.add(menuConfig);
         bar.add(menuImport);
         bar.add(menuExport);
+        bar.add(menuGrid);
+
         
         this.setJMenuBar(bar);
         
@@ -477,7 +493,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     		createNewProjectDialog dlg = new createNewProjectDialog();
     		simProject newP = dlg.showDialog(myConfig, myConnection);
     		
-    		boolean rc = myConnection.copyProjectSettings(temp.simulation_project_id, newP.simulation_project_id);
+    		boolean rc = myConnection.copyProjectSettings(temp.simulation_project_id, newP.simulation_project_id, newP.project_type);
     		
 			if (!rc) {
 				JOptionPane.showMessageDialog(null, "Error: Copying project information failed.");
@@ -653,7 +669,14 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     	{
     		myConnection.loop_importCropManagementFromECs();
     	}
-
+    	else if (e.getSource() == menuItemGridEmpty)
+    	{
+    		clearGrid();
+    	} 
+    	else if (e.getSource() == menuItemGridBasic)
+    	{
+    		createBasicGrid();
+    	} 
     }
     public void writeProjects (String dir, List<simProject> projectList, List<String>folderList){
     	for (int i = 0; i < projectList.size(); ++i )  		
@@ -741,8 +764,8 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
 		 		labelProjType.setText("");
 		 }
 		else {
-				labelDescription.setText(currentProject.simulation_project_description);
-			 	labelCode.setText(currentProject.simulation_project_code);
+				labelDescription.setText(currentProject.simulation_project_description );
+			 	labelCode.setText(currentProject.simulation_project_code + "(" + currentProject.simulation_project_id + ")");
 			 	labelAuthorCode.setText(currentProject.author_id);		
 			 	labelProjType.setText(String.valueOf(currentProject.project_type));		
 
@@ -834,6 +857,27 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     	}
     }
 
+    private void clearGrid () {
+    	ClearGridDialog dlg = new ClearGridDialog(this);
+    	int rc = dlg.showDialog();
+    	if (rc < 0 )
+    	{
+    		return;
+    	}
+    	refreshAll();
+    }
+    private void createBasicGrid () {
+    	
+       	CreateGridDialog dlg = new CreateGridDialog(this);
+    	int rc = dlg.showDialog();
+    	if (rc < 0 )
+    	{
+    		return;
+    	}
+    	refreshAll();
+    }
+    
+    
     public String getCurrentProjectName() {
     	return currentProject.simulation_project_code;
     }
@@ -886,7 +930,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     }
     private void createManagementFiles (String xn5FilePrefix, simProject sp) {
     	if (sp.project_type == 0) {
-    		myConnection.writeXn5CropManagementFiles(xn5FilePrefix, sp.simulation_project_id);
+    		myConnection.writeXn5CropManagementFiles(xn5FilePrefix, sp.simulation_project_id, sp.xn5_cells_table, sp.bems_cells_management_table);
     	}
     	else if (sp.project_type > 0){
     		int adaptive = 0;
@@ -1060,7 +1104,7 @@ class obsolete_XnParameterProjectPanel extends JPanel implements ActionListener 
 	    		simProject temp = currentProject;
 	    		createNewProject();
 	    		
-	    		boolean rc = myMainWindow.myConnection.copyProjectSettings(temp.simulation_project_id, currentProject.simulation_project_id);
+	    		boolean rc = myMainWindow.myConnection.copyProjectSettings(temp.simulation_project_id, currentProject.simulation_project_id, currentProject.project_type);
 	    		
     			if (!rc) {
     				JOptionPane.showMessageDialog(null, "Error: Copying project information failed.");
@@ -2097,7 +2141,7 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	    			editable = true;
 
 	    		}
-	    		else if( myMainWindow.myConnection.checkTableIsNotView("for1695_expertN", cellsTableName)) {
+	    		else if( myMainWindow.myConnection.checkTableIsNotView(myMainWindow.myConfig.dbSchema, cellsTableName)) {
 	    			editable = true;
 	    			buttonAddRow.setEnabled(false);
 	    			buttonDeleteRow.setEnabled(false);
@@ -2152,10 +2196,10 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
     public void actionPerformed(ActionEvent e){
       	if (e.getSource() == buttonAddRow) {
       		if (soilsTM.getRowCount() > 0) {
-      			myMainWindow.myConnection.addCell(myMainWindow.myConfig.currentProjectId,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText()));
+      			myMainWindow.myConnection.addCell(myMainWindow.myConfig.currentProjectId, myMainWindow.currentProject.project_type, myMainWindow.currentProject.xn5_cells_table, myMainWindow.currentProject.bems_cells_management_table,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText()));
       		}
       		else {
-      			myMainWindow.myConnection.addCellForProject(myMainWindow.myConfig.currentProjectId,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText())
+      			myMainWindow.myConnection.addCellForProject(myMainWindow.myConfig.currentProjectId,myMainWindow.currentProject.project_type, myMainWindow.currentProject.xn5_cells_table, myMainWindow.currentProject.bems_cells_management_table,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText())
       					,"", -1,-1,-1,-1,0,0,0,"S",0,0.0,0.0,1,"$<$PROJECT_PATH/$PROJECT_NAME_$REG_STR_climate.csv$>", "", -1);
       		}
       		refresh();
@@ -2165,7 +2209,7 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	      		soilsTM.myRowSet.moveToCurrentRow();
 	      		int x = soilsTM.myRowSet.getInt("xn5_cell_x");
 	      		int y = soilsTM.myRowSet.getInt("xn5_cell_y");
-	      		myMainWindow.myConnection.deleteCell(myMainWindow.myConfig.currentProjectId,x,y);
+	      		myMainWindow.myConnection.deleteCell(myMainWindow.myConfig.currentProjectId,myMainWindow.currentProject.project_type, myMainWindow.currentProject.xn5_cells_table, myMainWindow.currentProject.bems_cells_management_table,x,y);
       		}
       		catch(Exception ex) {
       			ex.printStackTrace();
@@ -2379,6 +2423,7 @@ class SoilsTableModel implements TableModel {
 					myRowSet.absolute(row + 1);
 
 					if (! myConnection.updateCellForProject( myConfig.currentProjectId,
+							myConfig.myMainWindow.currentProject.project_type, myConfig.myMainWindow.currentProject.xn5_cells_table,
 							myRowSet.getInt("xn5_cell_x"), myRowSet.getInt("xn5_cell_y"), myRowSet.getString("profileID"), 
 							myRowSet.getInt("soil_param_id"), myRowSet.getInt("daisy_param_id"), 
 							myRowSet.getInt("sompools_param_id"), myRowSet.getInt("soilinit_param_id"),
@@ -2862,7 +2907,7 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 	    					tNewY.setEnabled(true);
 		    				buttonUpdate.setEnabled(true);
 		    			}
-			    		else if( myMainWindow.myConnection.checkTableIsNotView("for1695_expertN", myMainWindow.currentProject.bems_cells_management_table)) {
+			    		else if( myMainWindow.myConnection.checkTableIsNotView(myMainWindow.myConfig.dbSchema, myMainWindow.currentProject.bems_cells_management_table)) {
 		    			
 		    				buttonAddRow.setEnabled(false);
 		    				buttonDeleteRow.setEnabled(false);
@@ -2883,12 +2928,29 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 	
 		    		}
 		    		else {
-		    			rs2 = myMainWindow.myConnection.getManagementInfoForProject(myMainWindow.myConfig.currentProjectId);
+		    			rs2 = myMainWindow.myConnection.getManagementInfoForProject(myMainWindow.myConfig.currentProjectId, myMainWindow.currentProject.bems_cells_management_table);
+		    			
 		    			l3rdFieldLabel.setEnabled(true);
 		    			l4thFieldLabel.setEnabled(true);
-		    			tNewYear.setEnabled(true);
-		    			tNewPosition.setEnabled(true);
-		    			buttonUpdate.setEnabled(false);
+		    			if( myMainWindow.myConnection.checkTableIsNotView(myMainWindow.myConfig.dbSchema, myMainWindow.currentProject.bems_cells_management_table)) {
+		    				buttonAddRow.setEnabled(true);
+		    				buttonDeleteRow.setEnabled(true);
+			    			tNewYear.setEnabled(true);
+			    			tNewPosition.setEnabled(true);
+		    				editable = true;
+		    				buttonUpdate.setEnabled(true);		    			
+		    			}
+			    		else {
+			    			editable = false;
+			    			buttonAddRow.setEnabled(false);
+			    			buttonDeleteRow.setEnabled(false);
+			    			tNewYear.setEnabled(false);
+			    			tNewPosition.setEnabled(false);
+			    			buttonUpdate.setEnabled(false);
+
+			    		}
+
+
 
 		    		}  		
 		    		
@@ -2933,20 +2995,20 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
       	if (e.getSource() == buttonAddRow) {
       		if (myMainWindow.currentProject.project_type == 1) {
 	      		if (managementsTM.getRowCount() > 0) {
-	      			myMainWindow.myConnection.addManagementRowBEMS(myMainWindow.myConfig.currentProjectId,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText()));
+	      			myMainWindow.myConnection.addManagementRowBEMS(myMainWindow.myConfig.currentProjectId, myMainWindow.currentProject.bems_cells_management_table,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText()));
 	      		}
 	      		else {
-	      			myMainWindow.myConnection.updateManagementForProjectBEMS(myMainWindow.myConfig.currentProjectId,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText())
+	      			myMainWindow.myConnection.updateManagementForProjectBEMS(myMainWindow.myConfig.currentProjectId,myMainWindow.currentProject.bems_cells_management_table,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText())
 	      					,-1, -1	);
 	
 	      		}
       		}
       		else {
 	      		if (managementsTM.getRowCount() > 0) {
-	      			myMainWindow.myConnection.addManagementRow(myMainWindow.myConfig.currentProjectId,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText()),Integer.valueOf(tNewYear.getText()), Integer.valueOf(tNewPosition.getText()) );
+	      			myMainWindow.myConnection.addManagementRow(myMainWindow.myConfig.currentProjectId,myMainWindow.currentProject.bems_cells_management_table, Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText()),Integer.valueOf(tNewYear.getText()), Integer.valueOf(tNewPosition.getText()) );
 	      		}
 	      		else {
-	      			myMainWindow.myConnection.addManagementForProject(myMainWindow.myConfig.currentProjectId,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText()),Integer.valueOf(tNewYear.getText()), Integer.valueOf(tNewPosition.getText()) 
+	      			myMainWindow.myConnection.addManagementForProject(myMainWindow.myConfig.currentProjectId,myMainWindow.currentProject.bems_cells_management_table,Integer.valueOf(tNewX.getText()),Integer.valueOf(tNewY.getText()),Integer.valueOf(tNewYear.getText()), Integer.valueOf(tNewPosition.getText()) 
 	      					,-1, "", ""	);
 	
 	      		}
@@ -2960,12 +3022,12 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 	      		int y = managementsTM.myRowSet.getInt("xn5_cell_y");
 	      		
 	      		if (myMainWindow.currentProject.project_type == 1) {
-	      			myMainWindow.myConnection.deleteManagementBEMS(myMainWindow.myConfig.currentProjectId,x,y);
+	      			myMainWindow.myConnection.deleteManagementBEMS(myMainWindow.myConfig.currentProjectId, myMainWindow.currentProject.bems_cells_management_table,x,y);
 	      		}
 	      		else {
 	      			int year = managementsTM.myRowSet.getInt("year");
 		      		int position = managementsTM.myRowSet.getInt("position");
-	      			myMainWindow.myConnection.deleteManagementRow(myMainWindow.myConfig.currentProjectId,x,y, year, position);
+	      			myMainWindow.myConnection.deleteManagementRow(myMainWindow.myConfig.currentProjectId,myMainWindow.currentProject.bems_cells_management_table,x,y, year, position);
 	      		}
       		}
       		catch(Exception ex) {
@@ -2987,7 +3049,7 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 	      			}
 	      		}
 	      		else if (myMainWindow.currentProject.project_type == 0) {
-	      			myMainWindow.myConnection.userUpdateTable("simulation_projects_xn5_cells_management", myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText() );
+	      			myMainWindow.myConnection.userUpdateTable(myMainWindow.currentProject.bems_cells_management_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText() );
 	      		}
 	      		
       		}
@@ -3174,13 +3236,13 @@ class ManagementsTableModel implements TableModel {
 					boolean rtcod = false;
 					if (projectType == 1) {
 					
-						rtcod =  myConnection.updateManagementForProjectBEMS(myConfig.currentProjectId,
+						rtcod =  myConnection.updateManagementForProjectBEMS(myConfig.currentProjectId,myConfig.myMainWindow.currentProject.bems_cells_management_table,
 								myRowSet.getInt("xn5_cell_x"), myRowSet.getInt("xn5_cell_y"),  
 								myRowSet.getInt("crop_sequence_id"), 
 								myRowSet.getInt("start_position") );
 					}		
 					else if (projectType == 0) {
-						rtcod =  myConnection.updateManagementForProject(myConfig.currentProjectId,
+						rtcod =  myConnection.updateManagementForProject(myConfig.currentProjectId,myConfig.myMainWindow.currentProject.bems_cells_management_table,
 							myRowSet.getInt("xn5_cell_x"), myRowSet.getInt("xn5_cell_y"),  
 							myRowSet.getInt("year"), myRowSet.getInt("position"), 
 							myRowSet.getInt("crop_management_id"), myRowSet.getString("crop_code"),
@@ -3943,8 +4005,208 @@ class multiExportDialog  extends JDialog  implements ActionListener {
  }
 }
 
+class ClearGridDialog extends JDialog implements ActionListener {
+	
+	private JTextField warningText;
+		
+	private JButton buttonClearGridOk;
+	private JButton buttonClearGridCancel;
 
 
+	private boolean finished = false;
+	private int rc;
+	
+	private XnParameterToolMainWindow myMainWindow;
+	
+	public ClearGridDialog (XnParameterToolMainWindow mainWindow){
+		
+		rc = -1;
+		myMainWindow = mainWindow;
+		
+		setTitle("Clear grid and crop management information...");
+		setSize(500,500);
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		
+        JPanel panel = new JPanel();
+        panel.setLayout( new java.awt.GridLayout(4, 3, 1,40) );
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        
+        JLabel warningText = new JLabel("Are you sure you want to delete the soil and crop management information and start again with an empty grid?");
+        panel.add(warningText);
+
+       
+        buttonClearGridOk = new JButton("Yes");
+        buttonClearGridOk.addActionListener(this);
+        buttonClearGridOk.setSelected(true);
+        panel.add(buttonClearGridOk);
+        
+        
+        buttonClearGridCancel = new JButton("Cancel");
+        buttonClearGridCancel.addActionListener(this);
+        panel.add(buttonClearGridCancel);
+        panel.add(new JLabel());
+
+        
+        this.add(panel);
+
+		
+	}
+	public int showDialog () {         
+		this.setModal(true);
+	
+		while(!finished) {
+			this.setVisible(true);
+		}
+		return rc;
+    }
+	
+
+	//Event handler
+    public void actionPerformed(ActionEvent ae) {
+    	 if(ae.getSource() == buttonClearGridCancel){
+    		 finished = true;
+    		 rc = -1;
+    		 dispose();
+    	 }
+    	 else if(ae.getSource() == buttonClearGridOk){
+    		
+    		 boolean ret = myMainWindow.myConnection.deleteGridAndManagement(myMainWindow.currentProject.simulation_project_id, 
+    				 			myMainWindow.currentProject.project_type,
+    				 			myMainWindow.currentProject.xn5_cells_table, myMainWindow.currentProject.bems_cells_management_table);
+    			
+    		 if(ret)
+    		 {	rc = 0;
+    		 	finished = true;
+    		 	dispose();
+    		 }
+    		 else {
+    			 JOptionPane.showMessageDialog(null, "Error: Deleting grid failed.");
+    			 finished = false;
+        		 rc = -1;
+
+    		 }
+    	 }
+    	 
+    }
+}
+class CreateGridDialog extends JDialog implements ActionListener {
+	
+	private JTextField warningText;
+		
+	private JButton buttonCreateGridOk;
+	private JButton buttonCreateGridCancel;
+	private JTextField xDimension;
+	private JTextField yDimension;
+
+	private boolean finished = false;
+	private int rc;
+	
+	private XnParameterToolMainWindow myMainWindow;
+	
+	public CreateGridDialog (XnParameterToolMainWindow mainWindow){
+		
+		rc = -1;
+		myMainWindow = mainWindow;
+		
+		setTitle("Create basic grid ...");
+		setSize(500,500);
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		
+        JPanel panel = new JPanel();
+        panel.setLayout( new java.awt.GridLayout(4, 3, 1,40) );
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        
+        JLabel warningText = new JLabel("Define grid dimensions:");
+        panel.add(warningText);
+
+	    JLabel xLabel = new JLabel("Number of columns (X):");
+	    panel.add(xLabel);
+	    xDimension = new JTextField("", 30);
+	    panel.add(xDimension);
+	    panel.add(new JLabel());
+	    JLabel yLabel = new JLabel("Number of rows (Y):");
+	    panel.add(yLabel);
+	    yDimension = new JTextField("", 30);
+	    panel.add(yDimension);
+	    panel.add(new JLabel());
+        
+       
+        buttonCreateGridOk = new JButton("Yes");
+        buttonCreateGridOk.addActionListener(this);
+        buttonCreateGridOk.setSelected(true);
+        panel.add(buttonCreateGridOk);
+        
+        
+        buttonCreateGridCancel = new JButton("Cancel");
+        buttonCreateGridCancel.addActionListener(this);
+        panel.add(buttonCreateGridCancel);
+        panel.add(new JLabel());
+
+        
+        this.add(panel);
+
+		
+	}
+	public int showDialog () {         
+		this.setModal(true);
+	
+		while(!finished) {
+			this.setVisible(true);
+		}
+		return rc;
+    }
+	
+
+	//Event handler
+    public void actionPerformed(ActionEvent ae) {
+    	 if(ae.getSource() == buttonCreateGridCancel){
+    		 finished = true;
+    		 rc = -1;
+    		 dispose();
+    	 }
+    	 else if(ae.getSource() == buttonCreateGridOk){
+    		
+    		 String xtext = xDimension.getText();
+    		 String ytext = yDimension.getText();
+    		 int x = -1; int y = -1;
+    		 try {
+    			 x = Integer.parseInt(xtext);
+    			 y = Integer.parseInt(ytext);
+    			 if (x < 1 || y < 1 ) {
+    				 JOptionPane.showMessageDialog(null, "Error: Input must be a positive integer.");
+        			 finished = false;
+            		 rc = -1;
+    			 }
+    				 
+    		 }
+    		 catch(Exception e) {
+    			 JOptionPane.showMessageDialog(null, "Error:"+ e.getMessage()+"\nNote: Input must be a positive integer.");
+    			 finished = false;
+        		 rc = -1;
+    		 }
+    		 
+    		 
+    		 boolean ret = myMainWindow.myConnection.createBasicGridAndManagement(myMainWindow.currentProject.simulation_project_id, 
+    				 			myMainWindow.currentProject.project_type,
+    				 		    myMainWindow.currentProject.xn5_cells_table, myMainWindow.currentProject.bems_cells_management_table,x,y);
+    			
+    		 if(ret)
+    		 {	rc = 0;
+    		 	finished = true;
+    		 	dispose();
+    		 }
+    		 else {
+    			 JOptionPane.showMessageDialog(null, "Error: Creating grid failed.");
+    			 finished = false;
+        		 rc = -1;
+
+    		 }
+    	 }
+    	 
+    }
+}
 class  createNewProjectDialog extends JDialog  implements ActionListener {
 	   
 	private simProject result; 
@@ -5208,6 +5470,8 @@ class ImportXn3Dialog extends JDialog implements ActionListener {
 
 		
 	}
+
+	
 	
 	
 	public int showDialog () {         
@@ -5539,7 +5803,7 @@ class ImportXn3Dialog extends JDialog implements ActionListener {
 
 
 //Tool configuration with dialogs
-class XnParameterToolConfig implements ActionListener {
+class XnParameterToolConfig  implements ActionListener {
 	public String dbUser = "";
 	public String dbHost = "144.41.15.33";
 	public String dbSchema = "for1695_expertN";
@@ -5547,7 +5811,7 @@ class XnParameterToolConfig implements ActionListener {
 	public String currentAuthor = "???";
 	public int currentProjectId = -1;
 	public String lastOutputDirectory = ".";
-	
+	public XnParameterToolMainWindow myMainWindow = null;
 	public String lastXnmInDirectory = ".";
 	public String lastXndInDirectory = ".";
 	
@@ -5560,6 +5824,9 @@ class XnParameterToolConfig implements ActionListener {
 	JButton	buttonSetConnInfo;
 	JButton	buttonLoadConfig;
 	
+	public XnParameterToolConfig () {
+		
+	}
 	
 	public boolean readConfig (String filename) {
 		
@@ -5690,6 +5957,9 @@ class XnParameterToolConfig implements ActionListener {
     			return;
         	}
         }
+    }
+    public void setParent(XnParameterToolMainWindow myMainWindow_) {
+    	myMainWindow = myMainWindow_;
     }
 }
 
@@ -6342,7 +6612,12 @@ class simProject {
 			author_id = author;		
 			project_type = type;
 			xn5_cells_table = "simulation_projects_xn5_cells";
-			bems_cells_management_table = "simulation_projects_bems_cells_management";
+			if (type == 0) {
+				bems_cells_management_table = "simulation_projects_xn5_cells_management";
+			}
+			else {
+				bems_cells_management_table = "simulation_projects_bems_cells_management";
+			}
 	}
 }
 class plantParam {

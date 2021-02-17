@@ -30,12 +30,12 @@ class	XnDatabaseConnection {
 	String var_txt_general_MCK001_xnd_line_six ="------------------------------------------------------------------------------------------------------------------";
 	String tab = "\t";
 	private MySQLConnection myConnection;
+	private String dbName;
 	
 	
 	
-	
-	public XnDatabaseConnection ( String host, String dbName , String userName, String password) {
-		
+	public XnDatabaseConnection ( String host, String dbName_ , String userName, String password) {
+		dbName = dbName_;
 		myConnection = new MySQLConnection(host, dbName, userName, password);
 		if ( myConnection.isValid())
 			myConnection.updateDb("SET NAMES utf8");
@@ -2099,7 +2099,7 @@ class	XnDatabaseConnection {
 
 			String s2 = "SELECT `kc_dev_stage`.`Crop`,`kc_dev_stage`.`VarietyName`, `kc_dev_stage`.`DevStage`, `kc_dev_stage`.`kc`" +
 					" , IF (`kc_dev_stage`.`VarietyName` = 'Default', 'AAAAAAAAAAAAA', `kc_dev_stage`.`VarietyName`)   AS VarietyNameForSort" +
-					" FROM `for1695_expertN`.`kc_dev_stage` WHERE `kc_dev_stage`.`kc_param_id` = "+ projectInfo.getInt("kc_param_id") 
+					" FROM `"+this.dbName+"`.`kc_dev_stage` WHERE `kc_dev_stage`.`kc_param_id` = "+ projectInfo.getInt("kc_param_id") 
 					+ " ORDER BY Crop, VarietyNameForSort, DevStage;"
 					;
 		    ResultSet kcData = myConnection.query(s2);	
@@ -2714,8 +2714,8 @@ class	XnDatabaseConnection {
 			String s1 = "( SELECT process_id, xn_crop_code, t3.crop_name as xn_crop_name, IFNULL(xn_variety, 'Default') as xn_variety" 
 						+ " FROM  for1695_mpmas.tbl_xp_process t1" 
 						+ " JOIN  for1695_mpmas.link_xn_crop_code t2 ON t1.crop_id = t2.crop_id "
-						+ " JOIN for1695_expertN.info_crops t3 ON t2.xn_crop_code = t3.crop_code "
-						+ " JOIN for1695_expertN.simulation_projects_gecros_crops_included t4 ON t4.simulation_project_id = " + projectId
+						+ " JOIN "+this.dbName+".info_crops t3 ON t2.xn_crop_code = t3.crop_code "
+						+ " JOIN "+this.dbName+".simulation_projects_gecros_crops_included t4 ON t4.simulation_project_id = " + projectId
 							+ " AND t3.crop_code = t4.crop_code "
 						+ " WHERE i2 > 0 )"
 						 + " UNION "
@@ -2756,7 +2756,7 @@ class	XnDatabaseConnection {
 						+ " JOIN for1695_mpmas.tbl_xp_crop_tillharvest t2" 
 						+ "		ON t1.crop_id = t2.crop_id AND t1.tillharvest_id = t2.tillharvest_id" 
 						+ "	JOIN for1695_mpmas.link_xn_tillage t3  ON t2.worktype_id = t3.worktype_id"
-						+ " JOIN for1695_expertN.codes_tillage_implements t4 ON t3.xn_soil_management_equipment_id = t4.soil_management_equipment_id "
+						+ " JOIN "+this.dbName+".codes_tillage_implements t4 ON t3.xn_soil_management_equipment_id = t4.soil_management_equipment_id "
 						+ " ORDER BY process_id, xn_year, xn_month, xn_day";
 			
 			ResultSet tillageList = myConnection.query(s3);
@@ -2773,7 +2773,7 @@ class	XnDatabaseConnection {
 					+ "		JOIN for1695_mpmas.tbl_xp_crop_fertilization t2" 
 					+ " 		ON t1.crop_id = t2.crop_id AND t1.fertilization_id = t2.fertilization_practice_id" 
 					+ "		JOIN for1695_mpmas.link_xn_fertilizer t3  ON t2.fertilizer_id = t3.goods_id"
-					+ "		JOIN for1695_expertN.codes_fertilizer_mineral t4 ON t3.xn_fertilizer_mineral_id = t4.fertilizer_mineral_id " +
+					+ "		JOIN "+this.dbName+".codes_fertilizer_mineral t4 ON t3.xn_fertilizer_mineral_id = t4.fertilizer_mineral_id " +
 					"			AND t4.skip != 1	"	
 					+ "    ORDER BY process_id, xn_year, xn_month, xn_day";
 			
@@ -2790,7 +2790,7 @@ class	XnDatabaseConnection {
 					+ "		JOIN for1695_mpmas.tbl_xp_crop_fertilization t2" 
 					+ " 		ON t1.crop_id = t2.crop_id AND t1.fertilization_id = t2.fertilization_practice_id" 
 					+ "		JOIN for1695_mpmas.link_xn_fertilizer t3  ON t2.fertilizer_id = t3.goods_id"
-					+ "		JOIN for1695_expertN.codes_fertilizer_organic t4 ON t3.xn_fertilizer_organic_id = t4.fertilizer_organic_id "	
+					+ "		JOIN "+this.dbName+".codes_fertilizer_organic t4 ON t3.xn_fertilizer_organic_id = t4.fertilizer_organic_id "	
 					+ "    ORDER BY process_id, xn_year, xn_month, xn_day";
 			
 			
@@ -2819,7 +2819,7 @@ class	XnDatabaseConnection {
 						+ " 			AND t2.tillharvest_phase_id = 10"
 						+ "		LEFT JOIN for1695_mpmas.tbl_consumables t3 ON t2.goods_id = t3.goods_id"
 						+ " 	LEFT JOIN for1695_mpmas.link_xn_crop_code t4 ON t2.goods_id = t4.crop_id"
-				        + "  	LEFT JOIN for1695_expertN.info_crops t5 ON t4.xn_crop_code = t5.crop_code"
+				        + "  	LEFT JOIN "+this.dbName+".info_crops t5 ON t4.xn_crop_code = t5.crop_code"
 
 						+ "		WHERE i2 > 0 " 
 						+ "		ORDER BY process_id";	
@@ -3125,11 +3125,11 @@ class	XnDatabaseConnection {
 				String s6 = "SELECT xn5_cell_x, xn5_cell_y, for1695_mpmas_process_id  " +
 						"		FROM `"+bemsManagTableName+"` t1" +
 						"					JOIN (SELECT crop_sequence_id, MAX(position) + 1 as N" +
-						"							FROM for1695_expertN.crop_sequence_bems" +
+						"							FROM "+this.dbName+".crop_sequence_bems" +
 						"								GROUP BY crop_sequence_id) s1" +
 						"							ON t1.crop_sequence_id = s1.crop_sequence_id" +
 						"								AND t1.simulation_project_id = " + projectID + 
-						"					JOIN for1695_expertN.crop_sequence_bems t2" +
+						"					JOIN "+this.dbName+".crop_sequence_bems t2" +
 						"						ON t1.crop_sequence_id = t2.crop_sequence_id" +
 						"								AND  MOD((t1.start_position + "+year+" ) , s1.N) = t2.position" +
 						"			ORDER BY xn5_cell_y DESC, xn5_cell_x";
@@ -3170,7 +3170,7 @@ class	XnDatabaseConnection {
 	}	
 		
 	
-	public boolean writeXn5CropManagementFiles(String xn5FilePrefix, int projectID)
+	public boolean writeXn5CropManagementFiles(String xn5FilePrefix, int projectID,  String xn5_cells_table, String bems_cells_management_table)
 	{
 		boolean ok = false;
 		try {
@@ -3194,7 +3194,7 @@ class	XnDatabaseConnection {
 			
 			
 			String s6 = "SELECT  xn5_cell_x, xn5_cell_y "
-					+ " FROM simulation_projects_xn5_cells_management t1"
+					+ " FROM "+ bems_cells_management_table + " t1"
 					
 					+ "   WHERE simulation_project_id = "+ projectID +
 					
@@ -3215,7 +3215,7 @@ class	XnDatabaseConnection {
 							"harvest_date_year, IF(max_biom_date_year = -99 OR max_biom_date_year IS NULL, harvest_date_year," +
 							"max_biom_date_year) AS max_biom_date_year , IF(max_ro_date_year = -99 OR max_ro_date_year IS NULL, harvest_date_year,max_ro_date_year) AS max_ro_date_year,  " +
 							"HTMX * 100 as max_plant_height "
-							+ " FROM simulation_projects_xn5_cells_management t1"
+							+ " FROM "+ bems_cells_management_table + " t1"
 							+ " JOIN crop_management_planting t2"
 							+ "  ON t1.crop_management_id = t2.crop_management_id"
 							+ "	   AND t1.crop_code = t2.crop_code"
@@ -3237,7 +3237,7 @@ class	XnDatabaseConnection {
 			String s2 = "SELECT  xn5_cell_x, xn5_cell_y, year, position, " 
 					+ " t1.crop_management_id, t1.crop_code, t1.variety, "
 					+ " event_id, date, code, fertilizer, n_tot_min, no3n, nh4n, urea, date_year"
-					+ " FROM simulation_projects_xn5_cells_management t1"
+					+ " FROM "+ bems_cells_management_table + " t1"
 					+ " JOIN crop_management_mineral_fertilization t2 "
 					+ "	ON t1.crop_management_id = t2.crop_management_id "
 					+ "  AND t1.crop_code = t2.crop_code "
@@ -3250,7 +3250,7 @@ class	XnDatabaseConnection {
 			String s3 = " SELECT  xn5_cell_x, xn5_cell_y, year, position," 
 						+ " t1.crop_management_id, t1.crop_code, t1.variety,"
 						+ " event_id, date, code, fertilizer, 1.0 as amount, dry_matter, org_subst, n_tot_org, nh4n, date_year"
-						+ " FROM simulation_projects_xn5_cells_management t1"
+						+ " FROM "+ bems_cells_management_table + " t1"
 						+ " JOIN crop_management_organic_fertilization t2 "
 						+ "  ON t1.crop_management_id = t2.crop_management_id "
 						+  "  AND t1.crop_code = t2.crop_code "
@@ -3263,7 +3263,7 @@ class	XnDatabaseConnection {
 			String s4 = "SELECT  xn5_cell_x, xn5_cell_y, year, position, " 
 						+ " t1.crop_management_id, t1.crop_code, t1.variety, "
 						+  " event_id, date, code, implement as fertilizer, amount, IFNULL(rate, -99) as rate, IFNULL(nh4n, -99) as nh4n, IFNULL(no3n, -99) as no3n , IFNULL(org_n, -99) as org_n, IFNULL(org_c, -99) as org_c, date_year "
-						+  " FROM simulation_projects_xn5_cells_management t1 " 
+						+  " FROM "+ bems_cells_management_table +" t1 " 
 						+	"	JOIN crop_management_irrigation t2 "
 						+  " ON t1.crop_management_id = t2.crop_management_id "
 						+  "  AND t1.crop_code = t2.crop_code "
@@ -3277,7 +3277,7 @@ class	XnDatabaseConnection {
 			String s5 = " SELECT xn5_cell_x, xn5_cell_y, year, position, " 
 					    + " t1.crop_management_id, t1.crop_code, t1.variety, "
 					    +  " event_id, date, depth, equipment as implement, code, date_year" 
-					    + "	FROM simulation_projects_xn5_cells_management t1 "
+					    + "	FROM "+ bems_cells_management_table +" t1 "
 					    + " JOIN crop_management_tillage t2 "
 					    + " ON t1.crop_management_id = t2.crop_management_id "
 					    +  " AND t1.crop_code = t2.crop_code "
@@ -4382,8 +4382,12 @@ class	XnDatabaseConnection {
 				myConnection.updateDb("ROLLBACK;");
 				return -1;
 			}
-
-			s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30,'simulation_projects_xn5_cells', 'simulation_projects_bems_cells_management',0,NULL,NULL,NULL, 1,1);";
+			if (type_of_project == 0) {
+				s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30,'simulation_projects_xn5_cells', 'simulation_projects_xn5_cells_management',0,NULL,NULL,NULL, 1,1);";
+			}
+			else {
+				s = "INSERT INTO simulation_projects_general VALUES ( " + id + ", 2009,2011,8,1,8,1,1,0,30,'simulation_projects_xn5_cells', 'simulation_projects_bems_cells_management',0,NULL,NULL,NULL, 1,1);";
+			}
 			if(! myConnection.updateDb(s) ) {
 				myConnection.updateDb("ROLLBACK;");
 				return -1;
@@ -4403,7 +4407,7 @@ class	XnDatabaseConnection {
 		}
 		
 	}
-	public boolean copyProjectSettings(int fromId, int toId) {
+	public boolean copyProjectSettings(int fromId, int toId, int project_type) {
 	
 			String s = "REPLACE INTO simulation_projects_gecros_crops_included " +
 					" SELECT " + toId + ", plant_param_id, crop_code, variety, include FROM simulation_projects_gecros_crops_included WHERE simulation_project_id = " + fromId + ";";
@@ -4431,10 +4435,10 @@ class	XnDatabaseConnection {
 				String cellsTableNameTest = temp.getString("xn5_cells_table");
 				String managTableNameTest = temp.getString("bems_cells_management_table");
 				
-				if (! managTableNameTest.isEmpty() && checkTableExists("for1695_expertN", managTableNameTest) && checkTableIsNotView("for1695_expertN", managTableNameTest))	
+				if (! managTableNameTest.isEmpty() && checkTableExists(this.dbName, managTableNameTest) && checkTableIsNotView(this.dbName, managTableNameTest))	
 					managTableName = managTableNameTest;
 			
-				if (! cellsTableNameTest.isEmpty() && checkTableExists("for1695_expertN", cellsTableNameTest) && checkTableIsNotView("for1695_expertN", cellsTableNameTest))	
+				if (! cellsTableNameTest.isEmpty() && checkTableExists(this.dbName, cellsTableNameTest) && checkTableIsNotView(this.dbName, cellsTableNameTest))	
 					cellsTableName = cellsTableNameTest;
 				
 			}
@@ -4456,27 +4460,28 @@ class	XnDatabaseConnection {
 				return false;
 			}
 			
-			
-			s = "REPLACE INTO simulation_projects_xn5_cells_management " +
-					" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
-					+"`year`, `position`,`crop_management_id`,`crop_code`,"
-					+"`variety`"
-					+" FROM simulation_projects_xn5_cells_management " +
-					"  WHERE simulation_project_id = " + fromId + ";";
-			if(!  myConnection.updateDb(s)) {
-				return false;
+			if (project_type == 0) {
+				s = "REPLACE INTO "+ managTableName +
+						" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
+						+"`year`, `position`,`crop_management_id`,`crop_code`,"
+						+"`variety`"
+						+" FROM "+ managTableName  +
+						"  WHERE simulation_project_id = " + fromId + ";";
+				if(!  myConnection.updateDb(s)) {
+					return false;
+				}
 			}
-			
-			s = "REPLACE INTO "+managTableName +
-					" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
-					+"`crop_sequence_id`,`start_position`"
-
-					+" FROM "+ managTableName +
-					"  WHERE simulation_project_id = " + fromId + ";";
-			if(!  myConnection.updateDb(s)) {
-				return false;
+			else if (project_type == 1) {
+				s = "REPLACE INTO "+managTableName +
+						" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
+						+"`crop_sequence_id`,`start_position`"
+	
+						+" FROM "+ managTableName +
+						"  WHERE simulation_project_id = " + fromId + ";";
+				if(!  myConnection.updateDb(s)) {
+					return false;
+				}
 			}
-			
 			
 			
 			s = "REPLACE INTO simulation_projects_xpn " +
@@ -5000,54 +5005,248 @@ class	XnDatabaseConnection {
 					+ " WHERE simulation_project_id = "+ id +";";
 		return  myConnection.query(s);
 	}
-	public boolean addCellForProject(int project_id, int xn5_cell_x, int xn5_cell_y, String profileID, int soil_param_id,
+	public boolean addCellForProject(int project_id, int project_type, String xn5_cells_table, String managTable, int xn5_cell_x, int xn5_cell_y, String profileID, int soil_param_id,
 				int daisy_param_id, int sompools_param_id, int soilinit_param_id, double lat, double lon, double alt, 
 				String exposition, double inclination, double AveYearTemp, double MonthTempAmp, int leachn_param_id, String climate_file ,
 				String weather_table_name, int weather_station_id
 				){
-		String s = "INSERT INTO `simulation_projects_xn5_cells`" +
-				"	   (simulation_project_id, `xn5_cell_x`, `xn5_cell_y`, `profileID`, `soil_param_id`, `daisy_param_id`, `sompools_param_id`,"
+		
+		if (checkTableExists(dbName, xn5_cells_table) && checkTableIsNotView(dbName, xn5_cells_table)
+				//&& checkTableExists(dbName, managTable) && checkTableIsNotView(dbName, managTable)
+				) { 
+				String s = "INSERT INTO `"+xn5_cells_table+"`" +
+						"	   (simulation_project_id, `xn5_cell_x`, `xn5_cell_y`, `profileID`, `soil_param_id`, `daisy_param_id`, `sompools_param_id`,"
 					+ " `soilinit_param_id`, `lat`,`lon`, `alt`, `exposition`, `inclination`, `AveYearTemp`, `MonthTempAmp`, leachn_param_id, " +
 					"climate_file, weather_table_name, weather_station_id)"
 					+ " VALUES ("+project_id+","+xn5_cell_x+","+xn5_cell_y+",'"+profileID+"',"+soil_param_id+","+daisy_param_id+","+sompools_param_id+","+
 							+ soilinit_param_id+","+lat+","+lon+","+alt+",'"+exposition+"',"+inclination+","+AveYearTemp+","+MonthTempAmp+","
 							+leachn_param_id+",'"+climate_file+"', '" + weather_table_name + "',"+  weather_station_id
 					+");";
-		return  myConnection.updateDb(s);
-	}
-	public boolean updateCellForProject(int project_id, int xn5_cell_x, int xn5_cell_y, String profileID, int soil_param_id,
-			int daisy_param_id, int sompools_param_id, int soilinit_param_id, double lat, double lon, double alt, 
-			String exposition, double inclination, double AveYearTemp, double MonthTempAmp, int leachn_param_id, String climate_file , String weather_table_name, int weather_station_id){
-			String s = "REPLACE INTO `simulation_projects_xn5_cells`" +
-			"	   (simulation_project_id, `xn5_cell_x`, `xn5_cell_y`, `profileID`, `soil_param_id`, `daisy_param_id`, `sompools_param_id`,"
-				+ " `soilinit_param_id`, `lat`,`lon`, `alt`, `exposition`, `inclination`, `AveYearTemp`, `MonthTempAmp`, leachn_param_id, climate_file, weather_table_name, weather_station_id)"
-				+ " VALUES ("+project_id+","+xn5_cell_x+","+xn5_cell_y+", '"+profileID+"',"+soil_param_id+","+daisy_param_id+","+sompools_param_id+","+
-						+ soilinit_param_id+","+lat+","+lon+","+alt+",'"+exposition+"',"+inclination+","+AveYearTemp+","+MonthTempAmp+","+leachn_param_id+",'"+climate_file+"'"
-						+ ", '"+ weather_table_name+"'," + weather_station_id
-				+");";
-		return  myConnection.updateDb(s);
-	}
-	public boolean addCell(int project_id, int xn5_cell_x, int xn5_cell_y) {
-		String s = "INSERT INTO `simulation_projects_xn5_cells`" +
-		"	   SELECT "+project_id+", "+xn5_cell_x+", "+xn5_cell_y+", `profileID`, `soil_param_id`, `daisy_param_id`, `sompools_param_id`,"
-			+ " `soilinit_param_id`, `lat`,`lon`, `alt`, `exposition`, `inclination`, `AveYearTemp`, `MonthTempAmp`, leachn_param_id, climate_file" +
-			"	, weather_table_name, weather_station_id"
-			+ " FROM simulation_projects_xn5_cells WHERE simulation_project_id = " + project_id + " ORDER BY `xn5_cell_x` DESC, `xn5_cell_y` DESC LIMIT 1"
-			+ ";";
-		return  myConnection.updateDb(s);
-	}
-	public boolean deleteCell(int project_id, int xn5_cell_x, int xn5_cell_y) {
-		String s = "DELETE FROM  `simulation_projects_xn5_cells_management`" +
-		"	    WHERE simulation_project_id = " + project_id + " AND `xn5_cell_x` = " + xn5_cell_x+ " AND  `xn5_cell_y` = "+xn5_cell_y
-			+ ";";
-		if (!myConnection.updateDb(s)) {
+				return  myConnection.updateDb(s);
+		}
+		else {
+			JOptionPane.showMessageDialog(null, "Error in addCell: Cannot delete cell because cells table "
+					//+ "or managment table "
+					+ "is a view (or does not exist at all).");
 			return false;
 		}
-		String s2 = "DELETE FROM  `simulation_projects_xn5_cells`" +
-		"	    WHERE simulation_project_id = " + project_id + " AND `xn5_cell_x` = " + xn5_cell_x+ " AND  `xn5_cell_y` = "+xn5_cell_y
-			+ ";";
-		return  myConnection.updateDb(s2);
+		
 	}
+	public boolean updateCellForProject(int project_id, int project_type, String xn5_cells_table, int xn5_cell_x, int xn5_cell_y, String profileID, int soil_param_id,
+			int daisy_param_id, int sompools_param_id, int soilinit_param_id, double lat, double lon, double alt, 
+			String exposition, double inclination, double AveYearTemp, double MonthTempAmp, int leachn_param_id, String climate_file , String weather_table_name, int weather_station_id){
+		
+			if ( checkTableExists(dbName, xn5_cells_table) && checkTableIsNotView(dbName, xn5_cells_table)
+			//&& checkTableExists(dbName, managTable) && checkTableIsNotView(dbName, managTable)
+					) {  
+					String s = "REPLACE INTO `"+xn5_cells_table+"`" +
+					"	   (simulation_project_id, `xn5_cell_x`, `xn5_cell_y`, `profileID`, `soil_param_id`, `daisy_param_id`, `sompools_param_id`,"
+						+ " `soilinit_param_id`, `lat`,`lon`, `alt`, `exposition`, `inclination`, `AveYearTemp`, `MonthTempAmp`, leachn_param_id, climate_file, weather_table_name, weather_station_id)"
+						+ " VALUES ("+project_id+","+xn5_cell_x+","+xn5_cell_y+", '"+profileID+"',"+soil_param_id+","+daisy_param_id+","+sompools_param_id+","+
+								+ soilinit_param_id+","+lat+","+lon+","+alt+",'"+exposition+"',"+inclination+","+AveYearTemp+","+MonthTempAmp+","+leachn_param_id+",'"+climate_file+"'"
+								+ ", '"+ weather_table_name+"'," + weather_station_id
+						+");";
+				return  myConnection.updateDb(s);
+			}
+			else {
+				JOptionPane.showMessageDialog(null, "Error in updateCell: Cannot delete cell because cells table "
+						//+ "or managment table "
+						+ "is a view (or does not exist at all).");
+				return false;
+			}
+	}
+	public boolean addCell(int project_id, int project_type, String xn5_cells_table, String managTable,int xn5_cell_x, int xn5_cell_y) {
+		
+		if (checkTableExists(dbName, xn5_cells_table) && checkTableIsNotView(dbName, xn5_cells_table)
+				&& checkTableExists(dbName, managTable) && checkTableIsNotView(dbName, managTable)
+				) { 
+			String s = "INSERT INTO `"+xn5_cells_table+"`" +
+			"	   SELECT "+project_id+", "+xn5_cell_x+", "+xn5_cell_y+", `profileID`, `soil_param_id`, `daisy_param_id`, `sompools_param_id`,"
+				+ " `soilinit_param_id`, `lat`,`lon`, `alt`, `exposition`, `inclination`, `AveYearTemp`, `MonthTempAmp`, leachn_param_id, climate_file" +
+				"	, weather_table_name, weather_station_id"
+				+ " FROM `"+xn5_cells_table+"` WHERE simulation_project_id = " + project_id + " ORDER BY `xn5_cell_x` DESC, `xn5_cell_y` DESC LIMIT 1"
+				+ ";";
+			return  myConnection.updateDb(s);
+		}
+		else {
+			JOptionPane.showMessageDialog(null, "Error in addCell: Cannot delete cell because cells table or managment table is a view (or does not exist at all).");
+			return false;
+		}
+	}
+	public boolean deleteCell(int project_id, int project_type, String xn5_cells_table, String bems_cells_management_table, int xn5_cell_x, int xn5_cell_y) {
+	
+		String managTable;
+     	String cellsTable ;
+	//	String managTable =  "simulation_projects_xn5_cells_management";
+	//	String cellsTable =  "simulation_projects_xn5_cells";
+	//	if (project_type > 0) {
+			managTable = bems_cells_management_table;
+			cellsTable = xn5_cells_table;
+	//	}
+		if (checkTableExists(dbName, cellsTable) && checkTableIsNotView(dbName, cellsTable)
+				&& checkTableExists(dbName, managTable) && checkTableIsNotView(dbName, managTable)
+				) { 
+			String s = "DELETE FROM  `"+ managTable + "`"+
+			"	    WHERE simulation_project_id = " + project_id + " AND `xn5_cell_x` = " + xn5_cell_x+ " AND  `xn5_cell_y` = "+xn5_cell_y
+				+ ";";
+			if (!myConnection.updateDb(s)) {
+				return false;
+			}
+
+			String s2 = "DELETE FROM  `"+cellsTable+"`" +
+				"	    WHERE simulation_project_id = " + project_id + " AND `xn5_cell_x` = " + xn5_cell_x+ " AND  `xn5_cell_y` = "+xn5_cell_y
+			+ ";";
+			if (!myConnection.updateDb(s2)) {
+				return false;
+			}
+		}
+		else {
+			JOptionPane.showMessageDialog(null, "Error in deleteCell: Cannot delete cell because cells table or managment table is a view (or does not exist at all).");
+			return false;
+		}
+		return true;
+	}
+	public boolean createBasicGridAndManagement(int project_id, int projectType, String soilTableName, String managementTableName,int x, int y) {
+		
+		if (checkTableExists(dbName, soilTableName) && checkTableIsNotView(dbName, soilTableName) && (projectType > 1 ||
+				 checkTableExists(dbName, managementTableName) && checkTableIsNotView(dbName, managementTableName) )
+				) 
+		{
+	
+
+			try {
+				String s = "SELECT * FROM  `"+soilTableName+"`" +
+						"	    WHERE simulation_project_id = " + project_id 
+							+ ";";
+				ResultSet rs =myConnection.query(s);
+				if (rs.next()) {
+					JOptionPane.showMessageDialog(null, "Error: Cannot create new grid because a grid already exists for this project. Please delete the existing grid first.).");
+					return false;
+				}
+
+
+			}
+			catch(Exception e) {
+				JOptionPane.showMessageDialog(null, "Error: "+e.getMessage());
+				return false;
+			}
+			
+			String s3 = "";
+			for (int i = 0; i< x; ++i) {
+				for (int j = 0; j< y; ++j) {
+					s3 = "INSERT INTO `"+soilTableName+"`" +
+							"	   (`simulation_project_id`, `xn5_cell_x`, `xn5_cell_y`, `profileID`, `soil_param_id`, `daisy_param_id`, `sompools_param_id`,"
+						+ " `soilinit_param_id`, `lat`,`lon`, `alt`, `exposition`, `inclination`, `AveYearTemp`, `MonthTempAmp`, leachn_param_id, " +
+						"climate_file, weather_table_name, weather_station_id)"
+						+ " VALUES ("+project_id+","+i+","+j+",'',-1,-1,-1,-1,0,0,0,'S',0,0.0,0.0,1,'$<$PROJECT_PATH/$PROJECT_NAME_$REG_STR_climate.csv$>', '', -1"
+						+"); ";
+					if (!myConnection.updateDb(s3)) {
+						return false;
+					}
+				}
+			}
+
+			if (projectType == 0) {
+				String s2 = "DELETE FROM  `"+ managementTableName+"`" +
+						"	    WHERE simulation_project_id = " + project_id 
+						+ ";";
+				if (!myConnection.updateDb(s2)) {
+					return false;
+				}
+				
+				int startyear = 0;
+				int endyear = 0;
+				try {
+					ResultSet rs = getGeneralInfoForProject(project_id);
+					rs.first();
+					startyear = rs.getInt("startYear");
+					endyear = rs.getInt("endYear");
+				}
+				catch(Exception e) {
+					JOptionPane.showMessageDialog(null, "Error: "+e.getMessage());
+					return false;
+				}
+				
+				String s4 = "";
+				for (int i = 0; i< x; ++i) {
+					for (int j = 0; j< y; ++j) {
+						for (int year = startyear; year <= endyear; ++year) {
+							s4 = "INSERT INTO `"+managementTableName+"`" +
+							"	   (simulation_project_id, `xn5_cell_x`, `xn5_cell_y`, `year`, `position`, `crop_management_id`, `crop_code`,"
+								+ " `variety`)"
+								+ " VALUES ("+project_id+","+i+","+j+", "+year+", 0, 0, '', ''"
+								+");";
+							if (!myConnection.updateDb(s4)) {
+								return false;
+							}
+						}
+					}
+				}
+				
+						
+			}
+			else if (projectType == 1) {
+				String s2 = "DELETE FROM  `"+ managementTableName+"`" +
+						"	    WHERE simulation_project_id = " + project_id 
+						+ ";";
+				if (!myConnection.updateDb(s2)) {
+					return false;
+				}
+				String s4 = "";
+				for (int i = 0; i< x; ++i) {
+					for (int j = 0; j< y; ++j) {
+						s4 = "INSERT INTO `"+managementTableName+"`" +
+								"	   (simulation_project_id, `xn5_cell_x`, `xn5_cell_y`)"
+									+ " VALUES ("+project_id+","+i+","+j
+									+"); ";
+						if (!myConnection.updateDb(s4)) {
+							return false;
+						}	
+					}
+				}
+				
+
+				
+			}
+			
+			
+		}
+		else {
+			JOptionPane.showMessageDialog(null, "Error: Cannot create grid because cells table and/or crop management table is a view (or does not exist at all).");
+			return false;
+		}
+		
+		return true;   
+		
+	}
+	public boolean  deleteGridAndManagement(int project_id, int projectType, String soilTableName, String managementTableName) {
+		
+		if (checkTableExists(dbName, soilTableName) && checkTableIsNotView(dbName, soilTableName)
+				&& checkTableExists(dbName, managementTableName) && checkTableIsNotView(dbName, managementTableName)
+				) 
+		{
+			String s = "DELETE FROM  `"+soilTableName+"`" +
+			"	    WHERE simulation_project_id = " + project_id 
+				+ ";";
+			if (!myConnection.updateDb(s)) {
+				return false;
+			}
+			String s2 = "DELETE FROM  `"+ managementTableName+"`" +
+					"	    WHERE simulation_project_id = " + project_id 
+					+ ";";
+				if (!myConnection.updateDb(s2)) {
+					return false;
+			}
+		}
+		else {
+			JOptionPane.showMessageDialog(null, "Error: Cannot delete cells because cells table and/or crop management table is a view (or does not exist at all).");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	
     public boolean userUpdateTable(String table, int simulation_project_id, String updateSETstring, String updateWHEREstring ) {
   		try {
       		String sqlString = 
@@ -5064,43 +5263,43 @@ class	XnDatabaseConnection {
   		}	
     }
 	
-	public ResultSet getManagementInfoForProject(int id) {
+	public ResultSet getManagementInfoForProject(int id, String tablename) {
 		String s = "SELECT  `xn5_cell_x`, `xn5_cell_y`, `year`, `position`, `crop_management_id`, `crop_code`,"
 				+ " `variety`"
-				+ " FROM `simulation_projects_xn5_cells_management`"
+				+ " FROM `"+tablename+"`"
 				+ " WHERE simulation_project_id = "+ id +";";
 		return  myConnection.query(s);
 	}
 	
 	
-	public boolean addManagementForProject(int project_id, int xn5_cell_x, int xn5_cell_y, int year, int position, int crop_management_id, String crop_code, String variety){
-	String s = "INSERT INTO `simulation_projects_xn5_cells_management`" +
+	public boolean addManagementForProject(int project_id, String tablename, int xn5_cell_x, int xn5_cell_y, int year, int position, int crop_management_id, String crop_code, String variety){
+	String s = "INSERT INTO `"+tablename+"`" +
 			"	   (simulation_project_id, `xn5_cell_x`, `xn5_cell_y`, `year`, `position`, `crop_management_id`, `crop_code`,"
 				+ " `variety`)"
 				+ " VALUES ("+project_id+","+xn5_cell_x+","+xn5_cell_y+", "+year+", "+position+", "+crop_management_id +", '"+crop_code+"', '"+variety+"'"
 				+");";
 		return  myConnection.updateDb(s);
 	}
-	public boolean updateManagementForProject(int project_id, int xn5_cell_x, int xn5_cell_y,  int year, int position, int crop_management_id, String crop_code, String variety){
-		String s = "REPLACE INTO `simulation_projects_xn5_cells_management`" +
+	public boolean updateManagementForProject(int project_id, String tablename, int xn5_cell_x, int xn5_cell_y,  int year, int position, int crop_management_id, String crop_code, String variety){
+		String s = "REPLACE INTO `"+tablename+"`" +
 			"	   (simulation_project_id, `xn5_cell_x`, `xn5_cell_y`, `year`, `position`, `crop_management_id`, `crop_code`,"
 				+ " `variety`)"
 				+ " VALUES ("+project_id+","+xn5_cell_x+","+xn5_cell_y+", "+year+", "+position+", "+crop_management_id +", '"+crop_code+"', '"+variety+"'"
 				+");";
 		return  myConnection.updateDb(s);
 	}
-	public boolean addManagementRow(int project_id, int xn5_cell_x, int xn5_cell_y, int year, int position){
-	String s = "INSERT INTO `simulation_projects_xn5_cells_management`" +
+	public boolean addManagementRow(int project_id, String tablename, int xn5_cell_x, int xn5_cell_y, int year, int position){
+	String s = "INSERT INTO `"+tablename+"`" +
 			"	  SELECT "+project_id+","+xn5_cell_x+","+xn5_cell_y+", "+year+", "+position+", `crop_management_id`, `crop_code`,"
 				+ " `variety` " +
-					" FROM  `simulation_projects_xn5_cells_management`" +
+					" FROM  `"+tablename+"`" +
 					" WHERE simulation_project_id = "+project_id+  
 					"		ORDER BY xn5_cell_x DESC, xn5_cell_y DESC, year DESC, position DESC LIMIT 1"
 				+";";
 		return  myConnection.updateDb(s);
 	}
-	public boolean deleteManagementRow(int project_id, int xn5_cell_x, int xn5_cell_y, int year, int position) {
-		String s = "DELETE FROM  `simulation_projects_xn5_cells_management`" +
+	public boolean deleteManagementRow(int project_id, String tablename, int xn5_cell_x, int xn5_cell_y, int year, int position) {
+		String s = "DELETE FROM  `"+tablename+"`" +
 		"	    WHERE simulation_project_id = " + project_id + " AND `xn5_cell_x` = " + xn5_cell_x+ " AND  `xn5_cell_y` = "+xn5_cell_y
 				+ " AND year = "+year+ " AND position = " + position 
 			+ ";";
@@ -5116,22 +5315,22 @@ class	XnDatabaseConnection {
 	}
 	
 	
-	public boolean addManagementForProjectBEMS(int project_id, int xn5_cell_x, int xn5_cell_y){
-	String s = "INSERT INTO `simulation_projects_bems_cells_management`" +
+	public boolean addManagementForProjectBEMS(int project_id, String bemsManagTableName, int xn5_cell_x, int xn5_cell_y){
+	String s = "INSERT INTO `"+bemsManagTableName+"`" +
 			"	   (simulation_project_id, `xn5_cell_x`, `xn5_cell_y`)"
 				+ " VALUES ("+project_id+","+xn5_cell_x+","+xn5_cell_y
 				+");";
 		return  myConnection.updateDb(s);
 	}
-	public boolean updateManagementForProjectBEMS(int project_id, int xn5_cell_x, int xn5_cell_y,  int crop_sequence_id, int start_position){
-		String s = "REPLACE INTO `simulation_projects_bems_cells_management`" +
+	public boolean updateManagementForProjectBEMS(int project_id, String bemsManagTableName, int xn5_cell_x, int xn5_cell_y,  int crop_sequence_id, int start_position){
+		String s = "REPLACE INTO `"+bemsManagTableName+"`" +
 			"	   (simulation_project_id, `xn5_cell_x`, `xn5_cell_y`, `crop_sequence_id`, `start_position`)"
 				+ " VALUES ("+project_id+","+xn5_cell_x+","+xn5_cell_y+", "+crop_sequence_id+","+start_position
 				+");";
 		return  myConnection.updateDb(s);
 	}
-	public boolean addManagementRowBEMS(int project_id, int xn5_cell_x, int xn5_cell_y){
-	String s = "INSERT INTO `simulation_projects_bems_cells_management`" +
+	public boolean addManagementRowBEMS(int project_id, String bemsManagTableName, int xn5_cell_x, int xn5_cell_y){
+	String s = "INSERT INTO `"+bemsManagTableName+"`" +
 			"	  SELECT "+project_id+","+xn5_cell_x+","+xn5_cell_y+", crop_sequence_id, start_position" +
 					" FROM  `simulation_projects_bems_cells_management`" +
 					" WHERE simulation_project_id = "+project_id+  
@@ -5139,8 +5338,8 @@ class	XnDatabaseConnection {
 				+";";
 		return  myConnection.updateDb(s);
 	}
-	public boolean deleteManagementBEMS(int project_id, int xn5_cell_x, int xn5_cell_y) {
-		String s = "DELETE FROM  `simulation_projects_bems_cells_management`" +
+	public boolean deleteManagementBEMS(int project_id, String bemsManagTableName, int xn5_cell_x, int xn5_cell_y) {
+		String s = "DELETE FROM  `"+bemsManagTableName+"`" +
 		"	    WHERE simulation_project_id = " + project_id + " AND `xn5_cell_x` = " + xn5_cell_x+ " AND  `xn5_cell_y` = "+xn5_cell_y
 				
 			+ ";";
