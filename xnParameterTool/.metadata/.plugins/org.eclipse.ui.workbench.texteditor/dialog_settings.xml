@@ -2,8 +2,8 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
 		<item key="DIALOG_WIDTH" value="412"/>
-		<item key="DIALOG_Y_ORIGIN" value="98"/>
-		<item key="DIALOG_X_ORIGIN" value="614"/>
+		<item key="DIALOG_Y_ORIGIN" value="148"/>
+		<item key="DIALOG_X_ORIGIN" value="1128"/>
 		<item key="DIALOG_HEIGHT" value="801"/>
 		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|11.0|0|GTK|1|"/>
 	</section>
@@ -13,8 +13,10 @@
 		<item key="isRegEx" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="wholeword" value="false"/>
-		<item key="selection" value="simulation_projects_xn5_cells"/>
+		<item key="selection" value="Delete cells by condition"/>
 		<list key="findhistory">
+			<item value="Delete cells by condition"/>
+			<item value="openProject"/>
 			<item value="simulation_projects_xn5_cells"/>
 			<item value="updateCell"/>
 			<item value="for1695_expertN"/>

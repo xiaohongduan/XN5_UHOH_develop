@@ -4407,6 +4407,62 @@ class	XnDatabaseConnection {
 		}
 		
 	}
+	public boolean copyGridAndManagement(simProject to, simProject from) {
+
+		
+		int toId = to.simulation_project_id;
+		int fromId = from.simulation_project_id;
+		int project_type = to.project_type;
+		String cellsTableName = to.xn5_cells_table;
+		String managTableName = to.bems_cells_management_table;
+				
+		if (!checkTableExists(this.dbName, cellsTableName) ||! checkTableIsNotView(this.dbName, cellsTableName))	
+		{
+			JOptionPane.showMessageDialog(null, "Error: Copying project information failed: Cells table for the project to copy to is a view or does not exist.");
+			return false;
+		}
+		
+		
+		String s = "REPLACE INTO  " + cellsTableName +
+				" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
+				+"`profileID`, `soil_param_id`,`daisy_param_id`,`sompools_param_id`,"
+				+"`soilinit_param_id`,`lat`,	`lon`,	`alt`,`exposition`, `inclination`,	`AveYearTemp`,"
+				+"`MonthTempAmp`, leachn_param_id, climate_file, weather_table_name, weather_station_id " 
+				+" FROM "+from.xn5_cells_table+" WHERE simulation_project_id = " + fromId + ";";
+		
+		if(!  myConnection.updateDb(s)) {
+			return false;
+		}
+		
+
+		if (checkTableExists(this.dbName, managTableName) && checkTableIsNotView(this.dbName, managTableName))	{
+					
+			if (project_type == 0 && from.project_type == 0) {
+				s = "REPLACE INTO "+ managTableName +
+						" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
+						+"`year`, `position`,`crop_management_id`,`crop_code`,"
+						+"`variety`"
+						+" FROM "+ from.bems_cells_management_table  +
+						"  WHERE simulation_project_id = " + fromId + ";";
+				if(!  myConnection.updateDb(s)) {
+					return false;
+				}
+			}
+			else if (project_type == 1 && from.project_type == 1) {
+				s = "REPLACE INTO "+managTableName +
+						" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
+						+"`crop_sequence_id`,`start_position`"
+	
+						+" FROM "+  from.bems_cells_management_table +
+						"  WHERE simulation_project_id = " + fromId + ";";
+				if(!  myConnection.updateDb(s)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
 	public boolean copyProjectSettings(int fromId, int toId, int project_type) {
 	
 			String s = "REPLACE INTO simulation_projects_gecros_crops_included " +
@@ -4427,6 +4483,13 @@ class	XnDatabaseConnection {
 			s= "SELECT xn5_cells_table, bems_cells_management_table FROM simulation_projects_general WHERE simulation_project_id = " + toId +";";
 			String cellsTableName = "simulation_projects_xn5_cells";
 			String managTableName = "simulation_projects_bems_cells_management";
+			if (project_type == 0) {
+				managTableName = "simulation_projects_xn5_cells_management";
+			}
+			else {
+				managTableName = "simulation_projects_bems_cells_management";
+			}
+
 			try {
 				ResultSet temp = myConnection.query(s);
 				if (!temp.first ()) {
@@ -4446,7 +4509,7 @@ class	XnDatabaseConnection {
 				return false;
 
 			}
-			
+
 			
 			
 			s = "REPLACE INTO  " + cellsTableName +
@@ -5247,12 +5310,16 @@ class	XnDatabaseConnection {
 	}
 	
 	
-    public boolean userUpdateTable(String table, int simulation_project_id, String updateSETstring, String updateWHEREstring ) {
+    public boolean userUpdateTable(String table, int simulation_project_id, String updateSETstring, String updateWHEREstring, String updateJOINString ) {
   		try {
       		String sqlString = 
-      				"UPDATE  " + table + " SET " 
+      				"UPDATE  " + table + " t1";
+      		if (! updateJOINString.trim().isEmpty()) {
+      			sqlString +=	" JOIN " + updateJOINString + " ";
+      		}
+      		sqlString += " SET " 
       				+   updateSETstring
-      				+ " WHERE  simulation_project_id = " + simulation_project_id 
+      				+ " WHERE  t1.simulation_project_id = " + simulation_project_id 
       				+ " AND " + updateWHEREstring + ";"
       				;
       		return myConnection.updateDb(sqlString );

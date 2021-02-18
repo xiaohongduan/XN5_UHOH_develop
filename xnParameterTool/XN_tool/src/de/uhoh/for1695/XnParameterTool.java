@@ -180,6 +180,8 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
 	
 	private JMenuItem menuItemGridEmpty;
 	private JMenuItem menuItemGridBasic;
+	private JMenuItem menuItemGridRemoveWhere;
+	private JMenuItem menuItemGridCopyFrom;
 	
 	
 	public simProject currentProject;
@@ -350,10 +352,17 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
         menuItemGridBasic.addActionListener(this);
         menuGrid.add(menuItemGridBasic);
         
+        menuItemGridCopyFrom = new JMenuItem("Copy grid from ...");
+        menuItemGridCopyFrom.addActionListener(this);
+        menuGrid.add(menuItemGridCopyFrom);
+        
         menuItemGridEmpty = new JMenuItem("Delete existing grid ...");
         menuItemGridEmpty.addActionListener(this);
         menuGrid.add(menuItemGridEmpty);
         
+     /*   menuItemGridRemoveWhere = new JMenuItem("Delete cells by condition ...");
+        menuItemGridRemoveWhere.addActionListener(this);
+        menuGrid.add(menuItemGridRemoveWhere);*/
 
         
         //put everything together
@@ -677,6 +686,21 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     	{
     		createBasicGrid();
     	} 
+    	else if (e.getSource() == menuItemGridCopyFrom)
+    	{
+    		openProjectDialog dlg = new openProjectDialog();
+    		simProject from = dlg.showDialog(myConfig, myConnection);
+    		
+    		boolean rc = myConnection.copyGridAndManagement(this.currentProject, from);
+			if (!rc) {
+				JOptionPane.showMessageDialog(null, "Error: Copying project information failed.");
+			}
+    		refreshAll();
+    	} 
+ /*   	else if (e.getSource() == menuItemGridRemoveWhere)
+    	{
+    		createBasicGrid();
+    	}*/ 
     }
     public void writeProjects (String dir, List<simProject> projectList, List<String>folderList){
     	for (int i = 0; i < projectList.size(); ++i )  		
@@ -876,7 +900,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     	}
     	refreshAll();
     }
-    
+
     
     public String getCurrentProjectName() {
     	return currentProject.simulation_project_code;
@@ -1200,7 +1224,7 @@ class simProjectListModel extends DefaultListModel {
 	public Object getElementAt(int index) {
 		simProject sp = (simProject) super.getElementAt(index);
 		try {
-			return  sp.simulation_project_code;
+			return  ( sp.simulation_project_code + "    ("+ sp.simulation_project_id + ")")   ;
 		}
 		catch(Exception e)
 		{
@@ -2019,6 +2043,7 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	private JTextField  tNewY;
 	
 	private JButton buttonUpdate;
+	private JTextArea updateJOINstring;
 	private JTextArea updateSETstring;
 	private JTextArea updateWHEREstring;
 	
@@ -2078,7 +2103,20 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 	    
 	    lpanel.add(new JLabel());
 	    lpanel.add(new JSeparator(SwingConstants.HORIZONTAL));
-	    lpanel.add(new JLabel("UPDATE ... SET "));
+	    lpanel.add(new JLabel("UPDATE t1 JOIN "));
+	    updateJOINstring = new JTextArea();
+	    JScrollPane tableViewScrollPaneLeft4 = new JScrollPane (updateJOINstring, 
+	            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+	    Dimension preferredSize4 = new Dimension(100,200);
+		tableViewScrollPaneLeft4.setPreferredSize(preferredSize4);
+		updateJOINstring.setText("");
+		updateJOINstring.setEditable(true);
+		lpanel.add(tableViewScrollPaneLeft4);
+
+	    
+	    lpanel.add(new JLabel("SET "));
+
 	    updateSETstring = new JTextArea();
 	    JScrollPane tableViewScrollPaneLeft2 = new JScrollPane (updateSETstring, 
 	            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
@@ -2225,7 +2263,7 @@ class XnParameterSoilPanel extends JPanel implements ActionListener, RowSetListe
 
       			}
       			else {
-      				myMainWindow.myConnection.userUpdateTable(myMainWindow.currentProject.xn5_cells_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText() );
+      				myMainWindow.myConnection.userUpdateTable(myMainWindow.currentProject.xn5_cells_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText(),updateJOINstring.getText()  );
       			}
       		}
       		catch(Exception ex) {
@@ -2369,7 +2407,12 @@ class SoilsTableModel implements TableModel {
 
 	  public Object getValueAt(int rowIndex, int columnIndex) {
 
+	
+		  
 	    try {
+	     if (!myRowSet.first()) //handle empty row set
+				  return null;
+	     
 	      myRowSet.absolute(rowIndex + 1);
 	      
 			switch (columnIndex) {
@@ -2767,6 +2810,7 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 	private JButton buttonUpdate;
 	private JTextArea updateSETstring;
 	private JTextArea updateWHEREstring;
+	private JTextArea updateJOINstring;
 	
 	public JCheckBox cbAdaptiveManagements;
 	
@@ -2852,7 +2896,19 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 	    
 	    lpanel.add(new JLabel());
 	    lpanel.add(new JSeparator(SwingConstants.HORIZONTAL));
-	    lpanel.add(new JLabel("UPDATE ... SET "));
+	    lpanel.add(new JLabel("UPDATE t1 JOIN "));
+	    updateJOINstring = new JTextArea();
+	    JScrollPane tableViewScrollPaneLeft4 = new JScrollPane (updateJOINstring, 
+	            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+	            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+	    Dimension preferredSize4 = new Dimension(100,200);
+		tableViewScrollPaneLeft4.setPreferredSize(preferredSize4);
+		updateJOINstring.setText("");
+		updateJOINstring.setEditable(true);
+		lpanel.add(tableViewScrollPaneLeft4);
+		
+		
+	    lpanel.add(new JLabel("SET "));
 	    updateSETstring = new JTextArea();
 	    JScrollPane tableViewScrollPaneLeft2 = new JScrollPane (updateSETstring, 
 	            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
@@ -3045,11 +3101,11 @@ class XnParameterManagementPanel extends JPanel implements ActionListener, RowSe
 
 	      			}
 	      			else {
-	      				myMainWindow.myConnection.userUpdateTable(myMainWindow.currentProject.bems_cells_management_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText() );
+	      				myMainWindow.myConnection.userUpdateTable(myMainWindow.currentProject.bems_cells_management_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText(),updateJOINstring.getText() ); 
 	      			}
 	      		}
 	      		else if (myMainWindow.currentProject.project_type == 0) {
-	      			myMainWindow.myConnection.userUpdateTable(myMainWindow.currentProject.bems_cells_management_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText() );
+	      			myMainWindow.myConnection.userUpdateTable(myMainWindow.currentProject.bems_cells_management_table, myMainWindow.currentProject.simulation_project_id,updateSETstring.getText(),updateWHEREstring.getText(),updateJOINstring.getText()  );
 	      		}
 	      		
       		}
@@ -4207,6 +4263,9 @@ class CreateGridDialog extends JDialog implements ActionListener {
     	 
     }
 }
+
+
+
 class  createNewProjectDialog extends JDialog  implements ActionListener {
 	   
 	private simProject result; 

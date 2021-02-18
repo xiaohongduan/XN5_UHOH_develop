@@ -45,12 +45,13 @@
 		<item key="pageIndex" value="2"/>
 	</section>
 	<section name="FatJarPackageWizard">
-		<item key="FatJarPackageWizardPage.DESTINATION_PATH_SELECTION" value="/home/troost/bwSyncAndShare/XN_simulations/XnFilemaker/FOR1695_XnParameterTool_v1/xnParameterTool.jar"/>
+		<item key="FatJarPackageWizardPage.DESTINATION_PATH_SELECTION" value="/home/troost/bwSyncShare/XN_simulations/XnFilemaker/FOR1695_XnParameterTool_v1/xnParameterTool.jar"/>
 		<item key="FatJarPackageWizardPage.LAUNCH_CONFIGURATION_SELECTION_NAME" value="XnParameterTool - XN_tool"/>
 		<item key="FatJarPackageWizardPage.ANTSCRIPT_LOCATION" value="/home/troost/Dropbox/XnFilemaker/workspace.xml"/>
 		<item key="FatJarPackageWizardPage.ANTSCRIPT_SAVE" value="false"/>
 		<item key="FatJarPackageWizardPage.LIBRARY_HANDLING" value="1"/>
 		<list key="FatJarPackageWizardPage.DESTINATION_NAMES_ID">
+			<item value="/home/troost/bwSyncShare/XN_simulations/XnFilemaker/FOR1695_XnParameterTool_v1/xnParameterTool.jar"/>
 			<item value="/home/troost/bwSyncAndShare/XN_simulations/XnFilemaker/FOR1695_XnParameterTool_v1/xnParameterTool.jar"/>
 			<item value="/home/troost/Dropbox/XnFilemaker/FOR1695_XnParameterTool_v1/xnParameterTool.jar"/>
 			<item value="/home/troost/Dropbox/XnFilemaker/FOR1695_XnFilemaker_v1/xnfilemaker_v6/xnfilemaker.jar"/>
