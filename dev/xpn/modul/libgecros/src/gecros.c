@@ -816,6 +816,10 @@ int gecros_load_ini_file(gecros *self)
 	int varietynum;	
 	double *dummy_in;
 	int dummy_in_size;
+    double *dummy_out; //SG20210302
+	int dummy_out_size; //SG20210302
+	int var_len; //SG20210302
+
 	int i;
 	PPLANT			pPl = xpn->pPl;
 	PGENOTYPE		pGe = pPl->pGenotype;
@@ -946,6 +950,29 @@ int gecros_load_ini_file(gecros *self)
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fTempMinVern,"phenology","TempMinDevVern",-1.0);
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fTempOptVern,"phenology","TempOptDevVern",2.0);
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fTempMaxVern,"phenology","TempMaxDevVern",15.0);
+
+//SG2021032: OPTIONAL - Read DS --> EC (BBCH) conversion from ini-file
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,-1.0,"phenology","DEV");
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_out,dummy_out_size,1,-1.0,"phenology","ECStadium");
+	pGe->DVR = (RESPONSE*)g_malloc0_n(1,sizeof(RESPONSE));
+	pGe->DVR[0].fInput = -1.0;
+	pGe->DVR[0].fOutput = -1.0;
+	pGe->DVR[0].iInLen = 1;
+	pGe->DVR[0].iOutLen = 1;
+	if ((dummy_in[0] != -1.0)&&(dummy_out[0] != -1.0))
+		{
+			g_free(pGe->DVR);
+			CHECK_LEN(dummy_in_size,dummy_out_size);
+			var_len = array_length(dummy_in_size,dummy_out_size);
+			pGe->DVR = (RESPONSE*)g_malloc0_n(var_len,sizeof(RESPONSE));
+			pGe->DVR[0].iInLen = dummy_in_size;
+			pGe->DVR[0].iOutLen = dummy_out_size;
+			for(i=0; i<var_len; i++)
+				{
+					pGe->DVR[i].fInput = dummy_in[i];
+					pGe->DVR[i].fOutput = dummy_out[i];
+				}
+		}
 
 	GET_INI_DOUBLE(self->NUPTX,"nitrogen","NUPTX");
 	GET_INI_DOUBLE(self->RNCMIN,"nitrogen","RNCMIN");
@@ -1746,6 +1773,7 @@ int PhasicDevelopment_GECROS(gecros *self)
 	  PPLANT pPl = xpn->pPl;
 
 	  PDEVELOP      pDev = pPl->pDevelop;
+      PGENOTYPE   pGe = pPl->pGenotype;
 	  PGECROSSOIL   pGS  = self->pGecrosPlant->pGecrosSoil;	  
 //Hong 2016-08-08: change for Sebastian Gayler and Arne Poyda
       //PMANAGEMENT pMa = xpn->pMa;
@@ -1942,7 +1970,20 @@ int PhasicDevelopment_GECROS(gecros *self)
        DS = (double)pDev->fStageSUCROS;   
        
 	  //output from fStageSUCROS to pDev->fStageWang
-      for (i=0;i<10;i++) VR[i]=(double)DVS[i];
+      //for (i=0;i<10;i++) VR[i]=(double)DVS[i];
+      //SG20210302: conversion DS --> EC (BBCH) can now be read from __gecros.ini
+        if(pGe->DVR[0].fInput<0.0)
+            {
+            g_free(pGe->DVR);
+            pGe->DVR = (RESPONSE*)g_malloc0_n(10,sizeof(RESPONSE));
+            for (i=0;i<=9;i++)  pGe->DVR[i].fInput=DVS[i];
+            }
+
+        for (i=0;i<=9;i++)  
+        {
+            VR[i]=(double)pGe->DVR[i].fInput;
+        }
+      
       if ((pDev->fStageSUCROS>=VR[0])&&(pDev->fStageSUCROS<=VR[1]))
             pDev->fDevStage=(double)(10.0*(1.0+(pDev->fStageSUCROS-VR[0])/(VR[1]-VR[0])));
       if ((pDev->fStageSUCROS>VR[1])&&(pDev->fStageSUCROS<=VR[2]))
