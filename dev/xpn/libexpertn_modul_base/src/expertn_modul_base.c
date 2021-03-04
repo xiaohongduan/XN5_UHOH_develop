@@ -1899,7 +1899,7 @@ int expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(expertn_modul_ba
 		{
 			if (pPl->pDevelop->fStageSUCROS>=(double)0.0)
 				pPl->pDevelop->iDayAftEmerg++;
-			if (pPl->pDevelop->fStageSUCROS>=(double)2.0)
+			if (pPl->pDevelop->fStageSUCROS>=(double)2.2) //2.0 /2.1?
 				{
 					pPl->pDevelop->bMaturity=TRUE;
 					expertn_modul_base_SetAllPlantRateToZero(self);

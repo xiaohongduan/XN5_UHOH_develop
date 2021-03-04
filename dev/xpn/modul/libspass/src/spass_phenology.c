@@ -286,6 +286,8 @@ int spass_phenological_development(spass *self)
 //        if (pDev->fStageSUCROS>=(double)0.0) //SG 20190703: out-commented to count for BBCH stages between 0 and 10
 //        {
 
+		pDev->fStageSUCROS	+= pDev->fDevR*pTi->pTimeStep->fAct;
+  
         //SG/17/05/99:////////////////////////////////////////////
         //
         //  Unterscheidung zwischen verschiedenen Pflanzenarten.
@@ -309,7 +311,7 @@ int spass_phenological_development(spass *self)
         // Änderung des internen Entwicklungsstadiums hinter die 
         // Umwandlung in EC-Stadium verlegt
 	
-		pDev->fStageSUCROS	+= pDev->fDevR*pTi->pTimeStep->fAct;
+		//pDev->fStageSUCROS	+= pDev->fDevR*pTi->pTimeStep->fAct;
         
  /*   // SG 20130516-----------------------------------------------------------------
 	// To fix the date of Emergence following SUCROS DEVELOPMENT MODEL
@@ -702,8 +704,9 @@ int spass_COMVR_TO_ZSTAGE_AND_CERES_WHEAT(spass *self)
 	if ((pDev->fStageSUCROS>VR[8])&&(pDev->fStageSUCROS<=VR[9])) //  80 <= BBCH <= 90
 		pDev->fStageWang=(double)8.0+(pDev->fStageSUCROS-VR[8])/(VR[9]-VR[8]);
 	if ((pDev->fStageSUCROS>VR[9])&&(pDev->fStageSUCROS<=VR[10])) //  90 <= BBCH <= 92
-		pDev->fStageWang=(double)9.0+(pDev->fStageSUCROS-VR[9])/(VR[10]-VR[9]);
-			
+		pDev->fStageWang=(double)9.0+0.2*(pDev->fStageSUCROS-VR[9])/(VR[10]-VR[9]);
+	 if (pDev->fStageSUCROS>VR[10])
+            pDev->fStageWang=(double)((9.2+0.7*(pDev->fStageSUCROS-VR[10])/(2.2-VR[10]))); 		
    	//--------------------------------------------------------------------
 	//Fromm fStageSUCROS to fXStage
    	//--------------------------------------------------------------------
@@ -780,7 +783,8 @@ int spass_COMVR_TO_ZSTAGE_AND_CERES_WHEAT(spass *self)
 		pDev->fDevStage=pDev->fStageWang;  
 	
 	if (pDev->fStageWang>(double)9.0)
-		pDev->fDevStage=(double)9.0+(double)0.2*(pDev->fStageWang-(double)9.0);  
+//		pDev->fDevStage=(double)9.0+(double)0.2*(pDev->fStageWang-(double)9.0);  
+		pDev->fDevStage=pDev->fStageWang;  
 
 	pDev->fDevStage *=(double)10.0;	
 
@@ -789,7 +793,8 @@ int spass_COMVR_TO_ZSTAGE_AND_CERES_WHEAT(spass *self)
 	//	Wird pPl->pGenotype->fMaxLfAppRate = 0 gesetzt (Zeile 2000040 in Plant.gtp)
 	//	erfolgt EC-Berechnung ohne Leaves, Tillers und nodes.
 	if(pPl->pGenotype->fMaxLfAppRate==(double)0.0)
-	pDev->fDevStage = min((double)92.0,pDev->fStageWang * (double)10.0);
+//	pDev->fDevStage = min((double)92.0,pDev->fStageWang * (double)10.0);
+	    pDev->fDevStage = min((double)99.0,pDev->fStageWang * (double)10.0);
 	
 	
 	

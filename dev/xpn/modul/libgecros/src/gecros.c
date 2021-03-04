@@ -2003,8 +2003,9 @@ int PhasicDevelopment_GECROS(gecros *self)
       if ((pDev->fStageSUCROS>VR[8])&&(pDev->fStageSUCROS<=VR[9]))
             pDev->fDevStage=(double)(10.0*(9.0+0.2*(pDev->fStageSUCROS-VR[8])/(VR[9]-VR[8])));
       if (pDev->fStageSUCROS>VR[9])
-            pDev->fDevStage=(double)92.0; 
-
+            pDev->fDevStage=(double)(10.0*(9.2+0.7*(pDev->fStageSUCROS-VR[9])/(2.2-VR[9]))); 
+            //pDev->fDevStage=(double)92.0; 
+ 
      }// if (pDev->fStageSUCROS>=0) else
 	
 //-------------------------------------------------------------------------------------
