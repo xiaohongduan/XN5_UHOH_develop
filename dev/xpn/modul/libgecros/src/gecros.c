@@ -1969,6 +1969,11 @@ int PhasicDevelopment_GECROS(gecros *self)
       {
        DS = (double)pDev->fStageSUCROS;   
        
+      DS   = max(0., DS + DVR*DELT);
+	  pDev->fStageSUCROS = (double)DS;
+	  //pDev->fDevStage    = (double)DS;
+
+       
 	  //output from fStageSUCROS to pDev->fStageWang
       //for (i=0;i<10;i++) VR[i]=(double)DVS[i];
       //SG20210302: conversion DS --> EC (BBCH) can now be read from __gecros.ini
@@ -3381,8 +3386,8 @@ int   BiomassGrowth_GECROS(gecros *self)
       pCan->fLAGrowR     = (double)RLAI;
       */
 
-	  DS   = max(0., DS + DVR*DELT);
-	  pDev->fStageSUCROS = (double)DS;
+//	  DS   = max(0., DS + DVR*DELT);
+//	  pDev->fStageSUCROS = (double)DS;
 	  //pDev->fDevStage    = (double)DS;
 
 	  CTDU   = max(0., CTDU  + TDU*DELT);
@@ -3616,7 +3621,8 @@ int   LeafAreaGrowth_GECROS(gecros *self)
 	  //%** output ***
       pCan->fLAGrowR     = (double)RLAI;
       pGCan->fLAICdeterm = (double)LAIC;
-	  pPl->pCanopy->fLAI = (double)TLAI;	  
+	  //pPl->pCanopy->fLAI = (double)TLAI;	  
+	  pPl->pCanopy->fLAI = (double)LAI;	  
 
       /*
 	  pGCan->fLAINdeterm = (double)LAIN;

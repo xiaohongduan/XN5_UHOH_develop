@@ -6,6 +6,7 @@ xpn_register_var_init_pdouble( var_list, pPl->pDevelop->fStageXCERES,"pPl.pDevel
 xpn_register_var_init_pint( var_list, pPl->pDevelop->iStageCERES,"pPl.pDevelop.iStageCERES",0);\
 xpn_register_var_init_pdouble( var_list, pPl->pDevelop->fStageWang,"pPl.pDevelop.fStageWang",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pDevelop->fStageSUCROS,"pPl.pDevelop.fStageSUCROS",0.0);\
+xpn_register_var_init_pdouble( var_list, pPl->pDevelop->fDevStage,"pPl.pDevelop.fDevStage",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pDevelop->fDevR,"pPl.pDevelop.fDevR",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pDevelop->fDaylengthEff,"pPl.pDevelop.fDaylengthEff",1.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pDevelop->fThermEffect,"pPl.pDevelop.fThermEff",1.0);\
