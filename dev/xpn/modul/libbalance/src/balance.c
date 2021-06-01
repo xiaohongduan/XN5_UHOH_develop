@@ -228,9 +228,11 @@ int balance_run(balance *self)
 
 	// corrected by Hong on 20181204 self->fBalance = self->fWaterStorage - self->waterstorage_init  + pWa->fPercolR* - pCl->pWeather->fPreciRate;
 	self->fBalance = self->fWaterStorage - self->waterstorage_init  + pWa->fPercolR*dt - pCl->pWeather->fPreciRate*dt;
-
+    self->fBalance = self->fCumInfilt - self->fActETCum - self->fCumLeaching - (self->fProfil-self->fProfilStart);
+    
 	self->fCumBalance = self->fWaterOutput-self->fWaterInput+self->fProfil-self->fProfilStart;
-	
+    //self->fCumBalance = self->fCumInfilt - self->fActETCum - self->fCumLeaching - (self->fProfil-self->fProfilStart);
+
 	fProfile = 0.0;
 	fProfileIce = 0.0;
 	fFluxDay = 0.0;

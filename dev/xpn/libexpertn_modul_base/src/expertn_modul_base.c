@@ -625,6 +625,27 @@ int expertn_modul_base_PlantVariableInitiation(PPLANT pPl, PSPROFILE pSo, PMSOWI
 			PRINT_ERROR(S);\
 			g_free(S);\
 		} \
+        
+#define GET_INI_DOUBLE_OPTIONAL(var,groupname,key,std_value)\
+{\
+		gboolean key_exists;\
+		error = NULL; \
+		key_exists = g_key_file_has_key(keyfile,groupname,key,&error);\
+		if (key_exists==FALSE) \
+			{ \
+				gchar *S;\
+				S = g_strdup_printf  ("Init var %s.%s (in file %s) is missing. Standard Value (%f) taken instead!\n",groupname,key,filename,std_value);\
+				PRINT_ERROR(S);\
+				g_free(S);\
+			}\
+		if (key_exists==FALSE)\
+			{\
+				var = std_value;\
+			} else\
+			{\
+				GET_INI_DOUBLE(var,groupname,key);\
+			}\
+	}\
 	 
 #define GET_INI_STRING(var,groupname,key) \
 	error = NULL; \
@@ -1770,6 +1791,8 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 		}
 	g_free(dummy_in);
 	g_free(dummy_out);
+    GET_INI_DOUBLE_OPTIONAL( pGe->dNUptH2OStress,"rootgrowth","dNUptH2OStress",2.0);
+    
 //senescence
 	GET_INI_DOUBLE(pGe->fBeginSenesDvs,"senescence","BeginSenesDvs")
 	GET_INI_DOUBLE(pGe->fBeginShadeLAI,"senescence","BeginShadeLAI")

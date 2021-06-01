@@ -168,6 +168,10 @@ int spass_nitrogen_uptake(spass *self)
 		fRFAC=pLR->fLengthDens*fSMDFR*fSMDFR*(double)0.1*pSL->fThickness*((double)100.0);
 		//SG 20111115: für AgMip nur linearer Stress bei Wasserknappheit
 		//fRFAC=pLR->fLengthDens*fSMDFR*(double)0.1*pSL->fThickness*((double)100.0);
+        
+       double ExpNuptH2OStress = xpn->pPl->pGenotype->dNUptH2OStress;
+       fRFAC=pLR->fLengthDens*pow(fSMDFR,ExpNuptH2OStress)*(double)0.1*pSL->fThickness*((double)100.0);
+
 		}
      
 		//SG/10/11/99
