@@ -911,6 +911,7 @@ int hydrus_water_flow_run(hydrus *self)
 		}*/
 
 	return RET_SUCCESS;
+//	return self->__ERROR; //Abbruch sobald für eine Variable CHECK_VALID(var) negativ ist (nur bei DEBUG_LEVEL > 2)
 }
 
 

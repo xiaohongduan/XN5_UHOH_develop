@@ -216,8 +216,8 @@ int stickstoff_load_config(stickstoff *self)
 	//SG20200629
     //marker: 20013
 	//[volatilisation]
-	GET_INI_DOUBLE_OPTIONAL(pCProfile->fNH3VolatMaxR,"volatilisation","MaxNH3Volatilisation",0.1);
-
+	//GET_INI_DOUBLE_OPTIONAL(pCProfile->fNH3VolatMaxR,"volatilisation","MaxNH3Volatilisation",0.1);
+    GET_INI_DOUBLE_OPTIONAL_WITHOUT_ERROR_MESSAGE(pCProfile->fNH3VolatMaxR,"volatilisation","MaxNH3Volatilisation",0.1);
 
 
 	G_FREE_IF_NOT_0(layers);
