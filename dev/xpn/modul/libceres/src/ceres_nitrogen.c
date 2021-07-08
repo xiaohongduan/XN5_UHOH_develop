@@ -19,8 +19,9 @@ int ceres_NitrogenConcentrationLimits(ceres *self)
 	PDEVELOP            pDev  = pPl->pDevelop;
 	PPLTNITROGEN        pPltN = pPl->pPltNitrogen;
 
-	//P1V=(double)pPl->pGenotype->iVernCoeff;
-    P1V=1.0/(double)pPl->pGenotype->iVernCoeff;
+	//P1V=1.0/(double)pPl->pGenotype->iVernCoeff;
+    //SG20210708
+    P1V=1.0/(double)pPl->pGenotype->VernCoeff;
     fStage = (double)0.1 * pDev->fDevStage;
 
 	//============================================================================

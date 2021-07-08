@@ -1241,9 +1241,13 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 	GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"phenology","OptDaylen");
 	pGe->fOptDaylen = dummy_in[i];
 	g_free(dummy_in);
-	GET_INI_INT_ARRAY(dummy_int,dummy_int_size,"phenology","VernCoeff");
-	pGe->iVernCoeff = dummy_int[i];
-	g_free(dummy_int);
+//	GET_INI_INT_ARRAY(dummy_int,dummy_int_size,"phenology","VernCoeff");
+//	pGe->iVernCoeff = dummy_int[i];
+//	g_free(dummy_int);
+    // SG20210708: Umstellung von int auf double
+	GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"phenology","VernCoeff");
+	pGe->VernCoeff = dummy_in[i];
+	g_free(dummy_in);
 	//SG 20190531: read PHINT from ini file
     GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,-99,"phenology","PHINT");
 	pGe->fPhyllochronInterval = dummy_in[i];

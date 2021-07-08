@@ -1076,7 +1076,9 @@ double ceres_Vernalization_CERES(ceres *self)
 	//SG/14/06/99:
 	//      wegen pPl->pGenotype->iVernCoeff = 0 VF immer gleich 1.
 	//VF=1.0-(double)pPl->pGenotype->iVernCoeff*(50.0-CumVD); //vernalization factor.
-	VF=min((double)1.0,1.0-(double)(1.0/pPl->pGenotype->iVernCoeff)*(50.0-CumVD)); //vernalization factor.
+	//VF=min((double)1.0,1.0-(double)(1.0/pPl->pGenotype->iVernCoeff)*(50.0-CumVD)); //vernalization factor.
+	//SG 20210708:
+    VF=min(1.0,1.0-(1.0/pPl->pGenotype->VernCoeff)*(50.0-CumVD)); //vernalization factor.
 
 	if (VF<=0.0)    VF=0.0;
 	if (VF>1.0)     VF=1.0;

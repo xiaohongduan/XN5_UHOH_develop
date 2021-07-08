@@ -182,6 +182,7 @@ typedef struct stgenotype
     //double    fCriticalDaylength;
     //int       iDaylengthTyp;
     int     iVernCoeff;
+    double VernCoeff;
     //double    fGrainNumCoeff;
     //double    fGrainFillCoeff;
     //double    fGrainFillStage;

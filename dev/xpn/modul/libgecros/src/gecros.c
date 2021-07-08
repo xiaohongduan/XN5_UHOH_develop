@@ -946,7 +946,9 @@ int gecros_load_ini_file(gecros *self)
 	GET_INI_DOUBLE(self->TCD,"phenology","TCD");
 	GET_INI_DOUBLE(self->TSEN,"phenology","TSEN");
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fOptVernDays,"phenology","OptVernDays",0.0);
-	GET_INI_INT_OPTIONAL(pPl->pGenotype->iVernCoeff,"phenology","VernCoeff",0);
+    //SG20210708
+//	GET_INI_INT_OPTIONAL(pPl->pGenotype->iVernCoeff,"phenology","VernCoeff",0);
+	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->VernCoeff,"phenology","VernCoeff",0);
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fTempMinVern,"phenology","TempMinDevVern",-1.0);
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fTempOptVern,"phenology","TempOptDevVern",2.0);
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fTempMaxVern,"phenology","TempMaxDevVern",15.0);
@@ -6167,7 +6169,9 @@ double gecros_Vernalization_CERES(gecros *self)
 	//SG/14/06/99:
 	//      wegen pPl->pGenotype->iVernCoeff = 0 VF immer gleich 1.
 	//VF=1.0-(double)pPl->pGenotype->iVernCoeff*(50.0-CumVD); //vernalization factor.
-	VF=min((double)1.0,1.0-(double)(1.0/pPl->pGenotype->iVernCoeff)*(50.0-CumVD)); //vernalization factor.
+    //	VF=min((double)1.0,1.0-(double)(1.0/pPl->pGenotype->iVernCoeff)*(50.0-CumVD)); //vernalization factor.
+	//SG 20210708:
+    VF=min(1.0,1.0-(1.0/pPl->pGenotype->VernCoeff)*(50.0-CumVD)); //vernalization factor.
 
 	if (VF<=0.0)    VF=0.0;
 	if (VF>1.0)     VF=1.0;
