@@ -154,7 +154,8 @@ typedef   struct xwater
 	double	 fCumInfiltration;
 	double	 fPondWater;
 	double	 fPercolR;
-	double	 fPotETDay;// Diese Variablen sollten, wenn dann lokal in der Bilanz oder zur Ausgabe erzeugt werden
+    double fCapillaryRiseR;	
+    double	 fPotETDay;// Diese Variablen sollten, wenn dann lokal in der Bilanz oder zur Ausgabe erzeugt werden
 //	double	 fActETDay;
 //	double	 fPotETCum;
 //	double	 fActETCum;

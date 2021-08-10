@@ -845,6 +845,7 @@ int hydrus_water_flow_run(hydrus *self)
 	
 	pWa->fPercolR     =  max(self->vBot,(double)0);
 	self->fCapillRiseR      = -min(self->vBot,(double)0);
+     pWa->fCapillaryRiseR = self->fCapillRiseR; //SG20210714
 //Maximal actual evaporation rate
 	pWL->pNext->fHydrCond = NEXT_CONDUCTIVITY(pWL->pNext->fMatPotAct); // first layer
 	pWL->fHydrCond        = pWL->pNext->fHydrCond;  // zero layer same value as first layer

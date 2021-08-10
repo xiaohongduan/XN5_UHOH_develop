@@ -374,178 +374,6 @@ int schaaf_organic_fertilization(schaaf* self) //Hong = LAFertilizer()
     return RET_SUCCESS;
 }
 
-/*********************************************************************************/
-/*  Name     : InitOrgDuenger                                                    */
-/*                                                                               */
-/*  Funktion : Fuer die organischen Duengemittel werden Parameter benoetigt      */
-/*             um deren Infiltration in den Boden zu berechnen. Diese werden     */
-/*             hier auf die entsprechenden Variablen geschrieben.                */
-/*  Autor    : Th. Schaaf                                                        */
-/*  Datum	 : 12.08.96                                                          */
-/*                                                                               */
-/*  Change   : Dokumentation der veraenderten globalen Variablen                 */
-/*             pFE->afInfParam[0]                                                */
-/*             pFE->afInfParam[1]                                                */
-/*             pFE->afInfParam[2]                                                */
-/*                                                                               */
-/*********************************************************************************/
-int InitOrgDuenger(schaaf* self)
-{
-    expertn_modul_base* xpn = &(self->parent);
-    PMANAGEMENT pMa = xpn->pMa;
-    PNFERTILIZER pFE = pMa->pNFertilizer;
-
-    // pFE->acCode korrekt voruebergehend acName
-    if (!strcmp(pFE->acCode, "RE005\0")) {
-        // Rindergülle 5% TS
-        pFE->afInfParam[0] = (double)0.23;
-        pFE->afInfParam[1] = (double)-0.25;
-        pFE->afInfParam[2] = (double)0.50;
-    }
-    else if (!strcmp(pFE->acCode, "RE006\0")) {
-        // Rindergülle 10% TS
-        pFE->afInfParam[0] = (double)0.43;
-        pFE->afInfParam[1] = (double)0.46;
-        pFE->afInfParam[2] = (double)0.185;
-    }
-    else if (!strcmp(pFE->acCode, "RE007\0")) {
-        // Rindergülle 15% TS
-        pFE->afInfParam[0] = (double)0.53;
-        pFE->afInfParam[1] = (double)0.56;
-        pFE->afInfParam[2] = (double)0.185;
-    }
-    else if (!strcmp(pFE->acCode, "RE008\0")) {
-        // Scheineguelle 3.5% TS
-        pFE->afInfParam[0] = (double)0.33;
-        pFE->afInfParam[1] = (double)-0.15;
-        pFE->afInfParam[2] = (double)0.38;
-    }
-    else if (!strcmp(pFE->acCode, "RE009\0")) {
-        // Scheineguelle 7% TS
-        pFE->afInfParam[0] = (double)0.43;
-        pFE->afInfParam[1] = (double)0.22;
-        pFE->afInfParam[2] = (double)0.135;
-    }
-    else if (!strcmp(pFE->acCode, "RE010\0")) {
-        // Scheineguelle 10.5% TS
-        pFE->afInfParam[0] = (double)0.50;
-        pFE->afInfParam[1] = (double)0.35;
-        pFE->afInfParam[2] = (double)0.155;
-    }
-    else if (!strcmp(pFE->acCode, "RE011\0")) {
-        // Scheineguelle 14% TS
-        pFE->afInfParam[0] = (double)0.6;
-        pFE->afInfParam[1] = (double)0.55;
-        pFE->afInfParam[2] = (double)0.185;
-    }
-    else if (!strcmp(pFE->acCode, "RE012\0")) {
-        // Gefluegelguelle 7% TS
-        pFE->afInfParam[0] = (double)0.15;
-        pFE->afInfParam[1] = (double)-0.15;
-        pFE->afInfParam[2] = (double)0.38;
-    }
-    else if (!strcmp(pFE->acCode, "RE013\0")) {
-        // Gefluegelguelle 14% TS
-        pFE->afInfParam[0] = (double)0.35;
-        pFE->afInfParam[1] = (double)0.35;
-        pFE->afInfParam[2] = (double)0.125;
-    }
-    else if (!strcmp(pFE->acCode, "RE014\0")) {
-        // Gefluegelguelle 21% TS
-        pFE->afInfParam[0] = (double)0.55;
-        pFE->afInfParam[1] = (double)0.55;
-        pFE->afInfParam[2] = (double)0.185;
-    }
-    else if (!strcmp(pFE->acCode, "RE015\0")) {
-        // Rindermist
-        pFE->afInfParam[0] = (double)0.0;
-        pFE->afInfParam[1] = (double)0.0;
-        pFE->afInfParam[2] = (double)0.0;
-    }
-    else if (!strcmp(pFE->acCode, "RE016\0")) {
-        // Schweinemist
-        pFE->afInfParam[0] = (double)0.0;
-        pFE->afInfParam[1] = (double)0.0;
-        pFE->afInfParam[2] = (double)0.0;
-    }
-    else if (!strcmp(pFE->acCode, "RE017\0")) {
-        // Haehnchenmist
-        pFE->afInfParam[0] = (double)0.0;
-        pFE->afInfParam[1] = (double)0.0;
-        pFE->afInfParam[2] = (double)0.0;
-    }
-    else if (!strcmp(pFE->acCode, "RE018\0")) {
-        // Putenmist
-        pFE->afInfParam[0] = (double)0.0;
-        pFE->afInfParam[1] = (double)0.0;
-        pFE->afInfParam[2] = (double)0.0;
-    }
-    else if (!strcmp(pFE->acCode, "RE019\0")) {
-        // Pferdemist
-        pFE->afInfParam[0] = (double)0.0;
-        pFE->afInfParam[1] = (double)0.0;
-        pFE->afInfParam[2] = (double)0.0;
-    }
-    else if (!strcmp(pFE->acCode, "RE020\0")) {
-        // Schafmist
-        pFE->afInfParam[0] = (double)0.0;
-        pFE->afInfParam[1] = (double)0.0;
-        pFE->afInfParam[2] = (double)0.0;
-    }
-    else if (!strcmp(pFE->acCode, "RE021\0")) {
-        // Huehnerfrischkot
-        pFE->afInfParam[0] = (double)0.1;
-        pFE->afInfParam[1] = (double)-0.1;
-        pFE->afInfParam[2] = (double)0.3;
-    }
-    else if (!strcmp(pFE->acCode, "RE022\0")) {
-        // Huehnertrockenkot
-        pFE->afInfParam[0] = (double)0.0;
-        pFE->afInfParam[1] = (double)0.0;
-        pFE->afInfParam[2] = (double)0.0;
-    }
-    else if (!strcmp(pFE->acCode, "RE023\0")) {
-        // Rinderjauche
-        pFE->afInfParam[0] = (double)0.85;
-        pFE->afInfParam[1] = (double)0.65;
-        pFE->afInfParam[2] = (double)0.10;
-    }
-    else if (!strcmp(pFE->acCode, "RE024\0")) {
-        // Schweinjauche
-        pFE->afInfParam[0] = (double)0.23;
-        pFE->afInfParam[1] = (double)-0.25;
-        pFE->afInfParam[2] = (double)0.50;
-    }
-    else if (!strcmp(pFE->acCode, "RE025\0")) {
-        // Klaerschlamm 5% TS
-        pFE->afInfParam[0] = (double)0.15;
-        pFE->afInfParam[1] = (double)-0.15;
-        pFE->afInfParam[2] = (double)0.38;
-    }
-    else if (!strcmp(pFE->acCode, "RE026\0")) {
-        // Klaerschlamm 35% TS
-        pFE->afInfParam[0] = (double)0.55;
-        pFE->afInfParam[1] = (double)0.65;
-        pFE->afInfParam[2] = (double)0.175;
-    }
-    else if (!strcmp(pFE->acCode, "RE027\0")) {
-        // Gruengutkompost
-        pFE->afInfParam[0] = (double)0.0;
-        pFE->afInfParam[1] = (double)0.0;
-        pFE->afInfParam[2] = (double)0.0;
-    }
-    /* Wenn fuer das gewaehlte Geraet keine Zuordnung stattgefunden
-     hat wird es hier mit Standarwerten belegt. */
-    //if ((pFE->afInfParam[0] == (double)0.0) && (pFE->afInfParam[1] == (double)0.0) &&
-    //    (pFE->afInfParam[2] == (double)0.0)) {
-     else {
-        pFE->afInfParam[0] = (double)0.1;
-        pFE->afInfParam[1] = (double)0.1;
-        pFE->afInfParam[2] = (double)0.1;
-    }
-
-    return RET_SUCCESS;
-} /*===== Ende der Initialisierung der Bodenbearbeitungsgeraete =============*/
 
 /*********************************************************************************/
 /*  Name     : InfiltrationOrgDuenger                                                  */
@@ -571,6 +399,7 @@ int InfiltrationOrgDuenger(schaaf* self)
     PHEAT pHe = xpn->pHe;
     PNFERTILIZER pFE = pMa->pNFertilizer;
 	PTIME pTi = xpn->pTi;
+	PCBALANCE	    pCB = xpn->pCh->pCBalance; //Added by Hong on 20190801
 
     double dT= pTi->pTimeStep->fAct;//Hong
     double infNH4, inforgN, inforgC, infFeuchte;
@@ -660,6 +489,11 @@ int InfiltrationOrgDuenger(schaaf* self)
         pCh->pCProfile->fCManureSurf -= inforgC*dT;
         pCh->pCLayer->pNext->fCManure += inforgC*dT;
 		
+		pCB->dCInputProfile += inforgC*dT; //Hong for C balance on 20190801
+		pCB->dCInputProfile_30 += inforgC*dT;
+		pCB->dNInputCum += inforgN*dT;
+		//pCB->dNInputCum += (inforgN+infNH4)*dT;
+		
 		
         if (pCh->pCLayer->pNext->fNManure > (double)0.0) {
             pCh->pCLayer->pNext->fManureCN = pCh->pCLayer->pNext->fCManure / pCh->pCLayer->pNext->fNManure;
@@ -694,6 +528,7 @@ int InfiltrationOrgDuengerRegen(schaaf* self)
     PCLIMATE pCl = xpn->pCl;
     PNFERTILIZER pFE = pMa->pNFertilizer;
 	PTIME pTi = xpn->pTi;
+	PCBALANCE	    pCB = xpn->pCh->pCBalance; //Added by Hong on 20190801
 
 
 
@@ -741,6 +576,8 @@ int InfiltrationOrgDuengerRegen(schaaf* self)
                     //pCh->pCLayer->pNext->fCManure += sickorgC;
 					pCh->pCProfile->fCManureSurf -= sickorgC*dT; //Hong changed on 20171128
                     pCh->pCLayer->pNext->fCManure += sickorgC*dT; //Hong changed on 20171128
+					pCB->dCInputProfile += sickorgC*dT; //Hong for C balance on 20190801
+		            pCB->dCInputProfile_30 += sickorgC*dT;
 									
                 }
             } 
@@ -768,7 +605,8 @@ int InfiltrationOrgDuengerRegen(schaaf* self)
                     //pCh->pCLayer->pNext->fCManure += sickorgC;
 					pCh->pCProfile->fCManureSurf -= sickorgC*dT; //Hong changed on 20171128
                     pCh->pCLayer->pNext->fCManure += sickorgC*dT; //Hong changed on 20171128
-											
+					pCB->dCInputProfile += sickorgC*dT; //Hong for C balance on 20190801
+		            pCB->dCInputProfile_30 += sickorgC*dT;						
                 }
             }
         }
@@ -802,6 +640,7 @@ int MinerOrgDuengHoff(schaaf* self)
     PSPROFILE pSo = xpn->pSo;
     PPLANT pPl = xpn->pPl;
     PTIME pTi = xpn->pTi;
+	PCBALANCE	pCB = pCh->pCBalance; //Added by Hong on 20190801
 
     double dT;
 
@@ -861,6 +700,9 @@ int MinerOrgDuengHoff(schaaf* self)
 
         pCh->pCProfile->fCManureSurf -= freeOrgC * dT;
         pSo->pSLayer->pNext->fCHumus += freeOrgC * dT;
+		pCB->dCInputProfile += freeOrgC * dT; //Hong added on 20190801 for C-balance
+	    pCB->dCInputProfile_30 += freeOrgC * dT;
+					
     }
 
     /*  Der organische Stickstoff an der Bodenoberflaeche
@@ -956,6 +798,7 @@ signed short int InfiltrationOrgDuengerBeregnung(EXP_POINTER)
 {
 
     PMIRRIGATION pIR = pMa->pIrrigation;
+	PCBALANCE	    pCB = pCh->pCBalance; //Added by Hong on 20190801
 
     double sicknh4, sickorgN, sickorgC, wirkNied;
     ;
@@ -983,6 +826,8 @@ signed short int InfiltrationOrgDuengerBeregnung(EXP_POINTER)
                 sickorgC = pCh->pCProfile->fCManureSurf * (double)0.02 * ((double)1.0 - wirkNied);
                 pCh->pCProfile->fCManureSurf -= sickorgC;
                 pCh->pCLayer->pNext->fCManure += sickorgC;
+				pCB->dCInputProfile += sickorgC; //Hong for C balance on 20190801
+				pCB->dCInputProfile_30 += sickorgC;
 				
             }
         }
@@ -1495,3 +1340,176 @@ int read_irrigation(schaaf* self)
 
     return RET_SUCCESS;
 }
+
+/*********************************************************************************/
+/*  Name     : InitOrgDuenger                                                    */
+/*                                                                               */
+/*  Funktion : Fuer die organischen Duengemittel werden Parameter benoetigt      */
+/*             um deren Infiltration in den Boden zu berechnen. Diese werden     */
+/*             hier auf die entsprechenden Variablen geschrieben.                */
+/*  Autor    : Th. Schaaf                                                        */
+/*  Datum	 : 12.08.96                                                          */
+/*                                                                               */
+/*  Change   : Dokumentation der veraenderten globalen Variablen                 */
+/*             pFE->afInfParam[0]                                                */
+/*             pFE->afInfParam[1]                                                */
+/*             pFE->afInfParam[2]                                                */
+/*                                                                               */
+/*********************************************************************************/
+int InitOrgDuenger(schaaf* self)
+{
+    expertn_modul_base* xpn = &(self->parent);
+    PMANAGEMENT pMa = xpn->pMa;
+    PNFERTILIZER pFE = pMa->pNFertilizer;
+
+    // pFE->acCode korrekt voruebergehend acName
+    if (!strcmp(pFE->acCode, "RE005\0")) {
+        // Rindergülle 5% TS
+        pFE->afInfParam[0] = (double)0.23;
+        pFE->afInfParam[1] = (double)-0.25;
+        pFE->afInfParam[2] = (double)0.50;
+    }
+    else if (!strcmp(pFE->acCode, "RE006\0")) {
+        // Rindergülle 10% TS
+        pFE->afInfParam[0] = (double)0.43;
+        pFE->afInfParam[1] = (double)0.46;
+        pFE->afInfParam[2] = (double)0.185;
+    }
+    else if (!strcmp(pFE->acCode, "RE007\0")) {
+        // Rindergülle 15% TS
+        pFE->afInfParam[0] = (double)0.53;
+        pFE->afInfParam[1] = (double)0.56;
+        pFE->afInfParam[2] = (double)0.185;
+    }
+    else if (!strcmp(pFE->acCode, "RE008\0")) {
+        // Scheineguelle 3.5% TS
+        pFE->afInfParam[0] = (double)0.33;
+        pFE->afInfParam[1] = (double)-0.15;
+        pFE->afInfParam[2] = (double)0.38;
+    }
+    else if (!strcmp(pFE->acCode, "RE009\0")) {
+        // Scheineguelle 7% TS
+        pFE->afInfParam[0] = (double)0.43;
+        pFE->afInfParam[1] = (double)0.22;
+        pFE->afInfParam[2] = (double)0.135;
+    }
+    else if (!strcmp(pFE->acCode, "RE010\0")) {
+        // Scheineguelle 10.5% TS
+        pFE->afInfParam[0] = (double)0.50;
+        pFE->afInfParam[1] = (double)0.35;
+        pFE->afInfParam[2] = (double)0.155;
+    }
+    else if (!strcmp(pFE->acCode, "RE011\0")) {
+        // Scheineguelle 14% TS
+        pFE->afInfParam[0] = (double)0.6;
+        pFE->afInfParam[1] = (double)0.55;
+        pFE->afInfParam[2] = (double)0.185;
+    }
+    else if (!strcmp(pFE->acCode, "RE012\0")) {
+        // Gefluegelguelle 7% TS
+        pFE->afInfParam[0] = (double)0.15;
+        pFE->afInfParam[1] = (double)-0.15;
+        pFE->afInfParam[2] = (double)0.38;
+    }
+    else if (!strcmp(pFE->acCode, "RE013\0")) {
+        // Gefluegelguelle 14% TS
+        pFE->afInfParam[0] = (double)0.35;
+        pFE->afInfParam[1] = (double)0.35;
+        pFE->afInfParam[2] = (double)0.125;
+    }
+    else if (!strcmp(pFE->acCode, "RE014\0")) {
+        // Gefluegelguelle 21% TS
+        pFE->afInfParam[0] = (double)0.55;
+        pFE->afInfParam[1] = (double)0.55;
+        pFE->afInfParam[2] = (double)0.185;
+    }
+    else if (!strcmp(pFE->acCode, "RE015\0")) {
+        // Rindermist
+        pFE->afInfParam[0] = (double)0.0;
+        pFE->afInfParam[1] = (double)0.0;
+        pFE->afInfParam[2] = (double)0.0;
+    }
+    else if (!strcmp(pFE->acCode, "RE016\0")) {
+        // Schweinemist
+        pFE->afInfParam[0] = (double)0.0;
+        pFE->afInfParam[1] = (double)0.0;
+        pFE->afInfParam[2] = (double)0.0;
+    }
+    else if (!strcmp(pFE->acCode, "RE017\0")) {
+        // Haehnchenmist
+        pFE->afInfParam[0] = (double)0.0;
+        pFE->afInfParam[1] = (double)0.0;
+        pFE->afInfParam[2] = (double)0.0;
+    }
+    else if (!strcmp(pFE->acCode, "RE018\0")) {
+        // Putenmist
+        pFE->afInfParam[0] = (double)0.0;
+        pFE->afInfParam[1] = (double)0.0;
+        pFE->afInfParam[2] = (double)0.0;
+    }
+    else if (!strcmp(pFE->acCode, "RE019\0")) {
+        // Pferdemist
+        pFE->afInfParam[0] = (double)0.0;
+        pFE->afInfParam[1] = (double)0.0;
+        pFE->afInfParam[2] = (double)0.0;
+    }
+    else if (!strcmp(pFE->acCode, "RE020\0")) {
+        // Schafmist
+        pFE->afInfParam[0] = (double)0.0;
+        pFE->afInfParam[1] = (double)0.0;
+        pFE->afInfParam[2] = (double)0.0;
+    }
+    else if (!strcmp(pFE->acCode, "RE021\0")) {
+        // Huehnerfrischkot
+        pFE->afInfParam[0] = (double)0.1;
+        pFE->afInfParam[1] = (double)-0.1;
+        pFE->afInfParam[2] = (double)0.3;
+    }
+    else if (!strcmp(pFE->acCode, "RE022\0")) {
+        // Huehnertrockenkot
+        pFE->afInfParam[0] = (double)0.0;
+        pFE->afInfParam[1] = (double)0.0;
+        pFE->afInfParam[2] = (double)0.0;
+    }
+    else if (!strcmp(pFE->acCode, "RE023\0")) {
+        // Rinderjauche
+        pFE->afInfParam[0] = (double)0.85;
+        pFE->afInfParam[1] = (double)0.65;
+        pFE->afInfParam[2] = (double)0.10;
+    }
+    else if (!strcmp(pFE->acCode, "RE024\0")) {
+        // Schweinjauche
+        pFE->afInfParam[0] = (double)0.23;
+        pFE->afInfParam[1] = (double)-0.25;
+        pFE->afInfParam[2] = (double)0.50;
+    }
+    else if (!strcmp(pFE->acCode, "RE025\0")) {
+        // Klaerschlamm 5% TS
+        pFE->afInfParam[0] = (double)0.15;
+        pFE->afInfParam[1] = (double)-0.15;
+        pFE->afInfParam[2] = (double)0.38;
+    }
+    else if (!strcmp(pFE->acCode, "RE026\0")) {
+        // Klaerschlamm 35% TS
+        pFE->afInfParam[0] = (double)0.55;
+        pFE->afInfParam[1] = (double)0.65;
+        pFE->afInfParam[2] = (double)0.175;
+    }
+    else if (!strcmp(pFE->acCode, "RE027\0")) {
+        // Gruengutkompost
+        pFE->afInfParam[0] = (double)0.0;
+        pFE->afInfParam[1] = (double)0.0;
+        pFE->afInfParam[2] = (double)0.0;
+    }
+    /* Wenn fuer das gewaehlte Geraet keine Zuordnung stattgefunden
+     hat wird es hier mit Standarwerten belegt. */
+    //if ((pFE->afInfParam[0] == (double)0.0) && (pFE->afInfParam[1] == (double)0.0) &&
+    //    (pFE->afInfParam[2] == (double)0.0)) {
+     else {
+        pFE->afInfParam[0] = (double)0.1;
+        pFE->afInfParam[1] = (double)0.1;
+        pFE->afInfParam[2] = (double)0.1;
+    }
+
+    return RET_SUCCESS;
+} /*===== Ende der Initialisierung der Bodenbearbeitungsgeraete =============*/

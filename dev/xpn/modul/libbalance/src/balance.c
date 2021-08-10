@@ -200,8 +200,12 @@ int balance_run(balance *self)
 	self->fWaterOutput = self->fActETCum + self->fCumLeaching;	
 	
 	//Water Input
-	if (pWa->fInfiltR > (double)0.0)
-		self->fWaterInput += pWa->fInfiltR*dt;//Hong: nur Bodenprofil bilanziert 
+//	if (pWa->fInfiltR > (double)0.0)
+//		self->fWaterInput += pWa->fInfiltR*dt;//Hong: nur Bodenprofil bilanziert 
+        
+    //SG20210714:
+    self->fWaterInput += max(0.0,pWa->fInfiltR)*dt + pWa->fCapillaryRiseR*dt;    
+
 /*	
 	if (xpn->pPl->pPltWater->fInterceptR>(double)0.0)
 	    self->fWaterInput += xpn->pPl->pPltWater->fInterceptR*dt;
@@ -216,6 +220,7 @@ int balance_run(balance *self)
 	for (pSL = pSo->pSLayer->pNext,pSW = pSo->pSWater->pNext,pWL = pWa->pWLayer->pNext,iLayer = 1;((pSL->pNext != NULL)&&(pSW->pNext != NULL)&&(pWL->pNext != NULL));pSL = pSL->pNext,pSW = pSW->pNext,pWL = pWL->pNext,iLayer++)
 {
 		self->fWaterStorage += (pWL->fContAct-pWL->fContOld) * pSL->fThickness;
+//		self->fWaterStorage = pWL->fContAct * pSL->fThickness;
 		self->fProfil += pWL->fContAct * pSL->fThickness;
 }
 	if (pTi->pSimTime->bFirstRound==1)
@@ -232,6 +237,9 @@ int balance_run(balance *self)
     
 	self->fCumBalance = self->fWaterOutput-self->fWaterInput+self->fProfil-self->fProfilStart;
     //self->fCumBalance = self->fCumInfilt - self->fActETCum - self->fCumLeaching - (self->fProfil-self->fProfilStart);
+    
+//debug:
+//   printf("time, %f, storage, %f, storage_init, %f, output, %f, input, %f, percolR, %f, balance, %f\n",pTi->pSimTime->fTimeY,self->fProfil,self->fProfilStart,self->fWaterOutput,self->fWaterInput, pWa->fPercolR, self->fCumBalance);
 
 	fProfile = 0.0;
 	fProfileIce = 0.0;
@@ -365,6 +373,7 @@ int balance_run(balance *self)
 	pCB->fCLitterProfile  = (double)0.0;
 	pCB->fCManureProfile  = (double)0.0;
 	pCB->fCHumusProfile   = (double)0.0;	
+    //pCB->fCsolProfile = (double)0.0; //SG20210715
 	pCB->dCProfile  = (double)0.0;
 	pCP->dCO2EmisCum =(double)0.0;
 //Hong 20190507: balance for 0-30 cm profile:	
@@ -372,10 +381,11 @@ int balance_run(balance *self)
 	pCB->fCLitterProfile_30  = (double)0.0;
 	pCB->fCManureProfile_30  = (double)0.0;
 	pCB->fCHumusProfile_30   = (double)0.0;	
+    //pCB->fCsolProfile_30 = (double)0.0; //SG20210715
 	pCB->dCProfile_30  = (double)0.0;
 	pCP->dCO2EmisCum_30 =(double)0.0;
 
-	pCL = pCh->pCLayer; //eingefügt, da sonst Programm nicht läuft (warum?)
+	pCL = pCh->pCLayer; 
 	pSL = xpn->pSo->pSLayer;
 	double fCumDepth; //Hong 20190507: balance for 0-30 cm profile
 
@@ -385,13 +395,15 @@ int balance_run(balance *self)
       pCB->fDOCProfile 	+= pCL->fDOC;
       pCB->fCLitterProfile 	+= pCL->fCLitter;
       pCB->fCManureProfile 	+= pCL->fCManure;
-	  //Hohng 20190507: balance for 0-30 cm profile:	
+      //pCB->fCsolProfile += pCL->fCsolC; //SG20210715
+	  //Hong 20190507: balance for 0-30 cm profile:	
 	  fCumDepth +=(double)0.1*pSL->fThickness; //cm
 	  if (fCumDepth <=30.0)
 	  {
 		  pCB->fDOCProfile_30 	+= pCL->fDOC;
           pCB->fCLitterProfile_30 	+= pCL->fCLitter;
           pCB->fCManureProfile_30 	+= pCL->fCManure;
+          //pCB->fCsolProfile_30 += pCL->fCsolC; //SG20210715
 		  }
 		  
      }
@@ -411,8 +423,8 @@ int balance_run(balance *self)
      }
 
 	//Gesamtkohlenstoff im Profil (ohne surface):  
-	pCB->dCProfile = pCB->fDOCProfile + pCB->fCLitterProfile + pCB->fCManureProfile + pCB->fCHumusProfile; //pCB->fCsolC = pCB->fDOC?
-	pCB->dCProfile_30 = pCB->fDOCProfile_30 + pCB->fCLitterProfile_30 + pCB->fCManureProfile_30 + pCB->fCHumusProfile_30; 
+	pCB->dCProfile = pCB->fDOCProfile + pCB->fCLitterProfile + pCB->fCManureProfile + pCB->fCHumusProfile + pCB->fCsolProfile; //pCB->fCsolC = pCB->fDOC?
+	pCB->dCProfile_30 = pCB->fDOCProfile_30 + pCB->fCLitterProfile_30 + pCB->fCManureProfile_30 + pCB->fCHumusProfile_30 + pCB->fCsolProfile_30; 
 	
 	//in daisy_miner.c: pCL->fCMicBiomSlow + pCL->fCMicBiomFast + pCL->fCHumusSlow + pCL->fCHumusFast =fCHumus
     if (pTi->pSimTime->bFirstRound==1)
@@ -422,7 +434,7 @@ int balance_run(balance *self)
 		}
 	
 	/******************************* CO2-Emission ************************************/
-	pCL = pCh->pCLayer; //eingefügt, da sonst Programm nicht läuft (warum?)
+	pCL = pCh->pCLayer; 
 			
     fCumDepth = 0.0;
 	for (SOIL_LAYERS1(pCL,pCL->pNext))
@@ -440,12 +452,25 @@ int balance_run(balance *self)
      }
 	
 	pCP->dCO2EmisCumSum = pCP->dCO2EmisCum;
-	
 	pCP->dCO2EmisCumSum_30 = pCP->dCO2EmisCum_30;
 	
-	pCB->dCOutputCum = pCP->dCO2EmisCumSum + pCP->dDOCLeachCum;	
-	pCB->dCOutputCum_30 = pCP->dCO2EmisCumSum_30 + pCP->dDOCLeachCum_30;
-		
+    //SG20210715: C-losses via denitrification	
+    pCL = pCh->pCLayer; 
+	fCumDepth = 0.0;
+	for (SOIL_LAYERS1(pCL,pCL->pNext))
+	{
+	   pCB->dCLossViaDenitrificationCum 	+= (pCL->fLitterDenitrifCC+ pCL->fManureDenitrifCC + pCL->fHumusDenitrifCC) * dt;
+	  //Hong 20190507: balance for 0-30 cm profile:	
+	  fCumDepth +=(double)0.1*pSL->fThickness; //cm
+	  if (fCumDepth <=30.0)
+	     {
+		  pCB->dCLossViaDenitrificationCum_30	+= (pCL->fLitterDenitrifCC+ pCL->fManureDenitrifCC + pCL->fHumusDenitrifCC) * dt;
+	     }
+     }
+
+	pCB->dCOutputCum = pCP->dCO2EmisCumSum + pCP->dDOCLeachCum + pCB->dCLossViaDenitrificationCum;	
+	pCB->dCOutputCum_30 = pCP->dCO2EmisCumSum_30 + pCP->dDOCLeachCum_30 + pCB->dCLossViaDenitrificationCum_30;
+ 	
 	//pCB->dCBalCorrect = pCP->dCO2EmisCum;
 	pCB->dCBalCorrect = 0.0; //Hong: nicht sicher!
 	

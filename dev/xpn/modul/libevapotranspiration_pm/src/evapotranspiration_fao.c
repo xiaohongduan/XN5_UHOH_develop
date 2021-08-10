@@ -173,7 +173,10 @@ int evapotranspiration_FAO_run(evapotranspiration *self)
 	           SolPartTime(pTi)
 	           : (double)1.0;
 
-	xpn->pWa->fPotETdt = EvTeiler * pWE->fPanEvap;
+
+//	xpn->pWa->fPotETdt = EvTeiler * pWE->fPanEvap;
+//SG20210726: bei negativemfPotETdt treten Wasserbilanzfehler auf. Warum? --> erstmal abgefangen!	
+    xpn->pWa->fPotETdt = EvTeiler * max(0.0,pWE->fPanEvap);
 	xpn->pWa->fPotETR = xpn->pWa->fPotETdt *pWa->kc_factor / DeltaT;
 
 	/***DAILY VARIABLES********************************************************************/

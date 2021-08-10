@@ -586,6 +586,10 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	if (pot_water_uptake <= 0.0)
 		{
 			*IWso_rt=0.0;
+            
+        //SG20210511 - für Bodenwaserbilanz wird Wasseraufnahme aus dem Boden benötigt, nicht Wasserabgabe der Blätter/Shoot an die Atmosphäre:
+		xpn->pPl->pPltWater->fActTranspR = *IWso_rt; // kg water / (m2 day) = mm / (m2 day)
+        
 			return -*OWrt_sh;
 		}
 	
@@ -596,7 +600,7 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	for (SOIL2_LAYERS1(pWL, xpn->pWa->pWLayer->pNext, pLR, xpn->pPl->pRoot->pLayerRoot)) {
 		fEffectPot[iLayer] = min(0.0,pWL->fMatPotOld);
 		
-		
+
 		fRootDensTotal += pLR->fLengthDens;
 	}  /* for */
 
