@@ -361,7 +361,7 @@ int spass_phenological_development(spass *self)
   } //end PLANT_IS_GROWING
 
             //debug
-            printf("time, %f, StageSUCROS, %f, DevR, %f, DevStage, %f, iDayAftSow, %i, iDayAftEmerg, %i\n",xpn->pTi->pSimTime->fTimeY,pDev->fStageSUCROS,pDev->fDevR,pDev->fDevStage,pDev->iDayAftSow,pDev->iDayAftEmerg);
+            //printf("time, %f, StageSUCROS, %f, DevR, %f, DevStage, %f, iDayAftSow, %i, iDayAftEmerg, %i\n",xpn->pTi->pSimTime->fTimeY,pDev->fStageSUCROS,pDev->fDevR,pDev->fDevStage,pDev->iDayAftSow,pDev->iDayAftEmerg);
 
 	expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(xpn);			
 

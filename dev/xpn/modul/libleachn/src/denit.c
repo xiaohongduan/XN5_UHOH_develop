@@ -611,6 +611,11 @@ int leachn_denit_run(stickstoff *self, double fN2Fraction, double fN2OReduction,
             /**** results ***/
 
             pCL->fNO3N -= pCL->fNO3DenitR * DeltaT;
+            
+            //debug
+            //printf("time, %f, layer, %i, NO3DenitR, %f, fCLimitDenR, %f, NO3DenitMaxR, %f, f2, %f, corr.Temp , %f,  corr.Feucht, %f, corr.NO3, %f, corr.Frost, %f, corr.WiederBefeucht, %f\n",pTi->pSimTime->fTimeY, iLayer, pCL->fNO3DenitR, fCLimitDenR, pCL->fNO3DenitMaxR, f2, corr.Temp, corr.Feucht,corr.NO3, corr.Frost, corr.WiederBefeucht);
+            //printf("time, %f, layer, %i, fNO3N, %f\n",pTi->pSimTime->fTimeY, iLayer, pCL->fNO3N);
+
 		
 			CHECK_VALID(pCL->fNO3N)
 		
