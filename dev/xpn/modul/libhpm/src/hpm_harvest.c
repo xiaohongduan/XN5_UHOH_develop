@@ -76,7 +76,9 @@ int hpm_harvest_run(hpm *self)
 			self->Harvest.OWsh_hv = harvm * self->Harvest.fharv * self->Water.Wsh;
 			self->Harvest.Sum_CSsh_hv += self->Harvest.OCSsh_hv * dt;
 			self->Harvest.Sum_NSsh_hv += self->Harvest.ONSsh_hv * dt;
-
+//SG20210922: Photosynthetic N (non-structural) in top leaves? N in structural biomass!
+//			self->Harvest.Sum_NSsh_hv += (self->Harvest.ONSsh_hv + self->Harvest.ONph_hv)* dt;
+            self->Harvest.Sum_NXsh_hv += self->parameter.plant.fNplX*(hpm_math_sum4(self->Harvest.OXLam_hv4) + hpm_math_sum4(self->Harvest.OXss_hv4))*dt;
 
 		}
 
@@ -117,11 +119,13 @@ int hpm_harvest_register_var(hpm *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Harvest.Sum_CSsh_hv,"output.hpm.harvest substrate cum day.CSsh harvest [kg C m-2]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Harvest.Sum_NSsh_hv,"output.hpm.harvest substrate cum day.NSsh harvest [kg N m-2]",0.0);
 
-	xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Harvest.Sum_Lam_hv4[i],varname,0.0),"output.hpm.harvest structural cum.lam harvest [kg N m-2]",4);
-	xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Harvest.Sum_ss_hv4[i],varname,0.0),"output.hpm.harvest structural cum.ss harvest [kg N m-2]",4);
+	xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Harvest.Sum_Lam_hv4[i],varname,0.0),"output.hpm.harvest structural cum.lam harvest [kg m-2]",4);
+	xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Harvest.Sum_ss_hv4[i],varname,0.0),"output.hpm.harvest structural cum.ss harvest [kg m-2]",4);
 	
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Output.cum_harvest_mass,"output.hpm.harvest cum mass.mass [kg m-2]",0.0);
-	
+    //SG20210930: total harvested nitrogen:
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Output.cum_harvest_N,"output.hpm.harvest cum mass.Nitrogen [kgN m-2]",0.0);
+
 
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Harvest.Pulseharv,"hpm.harvest.Pulseharv",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Harvest.fharv,"hpm.harvest.fharv",0.0);	

@@ -112,15 +112,18 @@ int init_hpm_model(hpm *self)
 	// '
 	//Gilt nur am Anfang
 	//xpn->pPl->pRoot->fDepth=(float) (self->Plant.MXrt/ 1.0 * 1.0e3); //TODO: strange ergibt 2 statt 20(Plant.MXrt/ 1.0 * 1.0e-3); ???
-  //SG20200120: restrict root depth to soil profile depth
-xpn->pPl->pRoot->fDepth=(float) min(xpn->pSo->fDepth * 1.0e-1,(self->Plant.MXrt/ 1.0 * 1.0e3)); //TODO: strange ergibt 2 statt 20(Plant.MXrt/ 1.0 * 1.0e-3); ???
+  //SG20200120: restrict root depth to soil profile depth [cm]
+xpn->pPl->pRoot->fDepth=(float) min(xpn->pSo->fDepth * 1.0e-1,(self->Plant.MXrt/ 1.0 * 1.0e2)); //TODO: strange ergibt 2 statt 20(Plant.MXrt/ 1.0 * 1.0e-3); ???
 
 	self->Plant.MCTrt=0.0;
 	self->Plant.MCTsh=0.0;
 	{
-		//double Nph_ul=0.005;
-		self->Plant.MNph_ul = 0.00133995;//= Nph_ul * (Plant.MXss+Plant.MXLam);
-		self->Plant.rort = 0.809533;
+		double Nph_ul=0.005;
+		//self->Plant.MNph_ul = 0.00133995;//= Nph_ul * (Plant.MXss+Plant.MXLam);
+		//SG20210922
+        self->Plant.MNph_ul = Nph_ul * (self->Plant.MXss+self->Plant.MXLam);
+		//self->Plant.rort = 0.809533;
+        self->Plant.rort = 1.0;
 	}
 
 

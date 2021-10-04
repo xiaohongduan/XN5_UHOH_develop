@@ -2290,6 +2290,10 @@ double Phenology_GECROS(gecros *self,double DS,double SLP,double DDLP,double SPS
 		  DVR = (double)1./MTDV*TDU*EFP;
 	  if (DS>=(double)1.0)                     
 		  DVR = (double)1./MTDR*TDU;		   		
+          
+        //debug:
+        //printf("time, %f, StageSUCROS, %f, DVR, %f, TDU, %f, EFP, %f, EFV, %f\n",xpn->pTi->pSimTime->fTimeY,pPl->pDevelop->fStageSUCROS,DVR,TDU,EFP,EFV);
+
   						   
       return DVR;
 }

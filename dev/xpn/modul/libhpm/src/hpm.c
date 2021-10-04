@@ -124,7 +124,9 @@ void create_output(hpm *self)
 	
 	// cum harvest mass
 	self->Output.cum_harvest_mass = self->Harvest.Sum_CSsh_hv * self->parameter.photosynthesis.rmmCS/12.0 + self->Harvest.Sum_NSsh_hv * self->parameter.photosynthesis.rmmNS/14.0 + hpm_math_sum4(self->Harvest.Sum_Lam_hv4) + hpm_math_sum4(self->Harvest.Sum_ss_hv4);
-	
+	//SG20210930: total harvested nitrogen:
+    self->Output.cum_harvest_N = self->Harvest.Sum_NSsh_hv + self->Harvest.Sum_NXsh_hv;
+    
 	// MSsh:
 	self->Output.MSsh = self->Plant.MCSsh * self->parameter.photosynthesis.rmmCS/12.0 + self->Plant.MNSsh * self->parameter.photosynthesis.rmmNS/14.0 + self->Plant.MNph_ul * 100.0 / 14.0;
 	//printf("%f %f %f %f %f %f %f\n",xpn->pTi->pSimTime->fTimeDay, self->Output.MSsh,  self->Plant.MCSsh, self->parameter.photosynthesis.rmmCS,  self->Plant.MNSsh, self->parameter.photosynthesis.rmmNS, self->Plant.MNph_ul);
