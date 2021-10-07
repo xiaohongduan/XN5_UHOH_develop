@@ -288,7 +288,7 @@ double Get_Rewet(int iLog, stickstoff *self)
 int Reduce_C_Via_Denit(stickstoff *self,double fDenitrifCC, double DeltaT, PSLAYER pSL, PCLAYER pCL)
 {
     expertn_modul_base *xpn = &(self->parent);
-	double fLitterDenitrifCC, fManureDenitrifCC, fHumusDenitrifCC;
+	// double fLitterDenitrifCC, fManureDenitrifCC, fHumusDenitrifCC;
 	
 
     /** Litter-C Abbau  */

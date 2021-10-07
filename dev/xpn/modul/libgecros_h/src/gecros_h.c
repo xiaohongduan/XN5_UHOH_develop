@@ -1770,7 +1770,9 @@ int PhasicDevelopment_GECROS(gecros_h *self)
 	  //double DELT = (double)1;
 	  double DELT = (double)xpn->pTi->pTimeStep->fAct;
 
-      double DVS[]={0.0, 0.4, 0.55, 0.656, 0.91, 1.00, 1.15, 1.50, 1.95, 2.0};
+//      double DVS[]={0.0, 0.4, 0.55, 0.656, 0.91, 1.00, 1.15, 1.50, 1.95, 2.0};
+//SG20211005
+      double DVS[]={0.0, 0.1425, 0.4, 0.656, 0.91, 1.00, 1.15, 1.50, 1.95, 2.0};
 	  double  VR[10];
       int i;
 

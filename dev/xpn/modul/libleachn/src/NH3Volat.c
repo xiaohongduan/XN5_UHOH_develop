@@ -50,8 +50,8 @@ int leachn_NH3Volat1_load(stickstoff *self)
 		}*/
     
     expertn_modul_base *xpn = &(self->parent);
-	PCHEMISTRY pCh = xpn->pCh;
-	double NH3VolatMaxR;
+	//PCHEMISTRY pCh = xpn->pCh;
+	//double NH3VolatMaxR;
 //	PTIME pTi = xpn->pTi;
 	
 	// in Expert-N 3.0 xnm File Marker: 20013
