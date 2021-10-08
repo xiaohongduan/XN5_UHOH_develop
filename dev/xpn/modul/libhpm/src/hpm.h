@@ -400,6 +400,9 @@ typedef struct {
     //SG20210928: additional variables for N in harvested structural biomass
     double Sum_NXsh_hv;
     
+    double Daily_mass_hv;
+    double Daily_N_hv;
+    
     
 
 	double fharv;  // fraction of the shoot material removed in a harvest
@@ -464,6 +467,8 @@ typedef struct{
 	
 	double cum_harvest_mass;
 	double cum_harvest_N; //SG20210930
+    double daily_harvest_mass;//SG20211008
+    double daily_harvest_N;//SG20211008
 	
 	double Nnit;
 	double Namm;

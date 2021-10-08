@@ -39,6 +39,13 @@ int hpm_harvest_run(hpm *self)
 	cmp=0;
 	self->Harvest.Pulseharv = 0.0;
 	dt = pTi->pTimeStep->fAct;
+    
+    if(pTi->pSimTime->fTimeDay < pTi->pTimeStep->fAct)
+    {
+        self->Harvest.Daily_mass_hv = 0.0;
+         self->Harvest.Daily_N_hv = 0.0;
+    }
+
 	if (self->Harvest.harvest_act_date != NULL) {
 		cmp = xpn_time_compare_date(pTi->pSimTime->year,pTi->pSimTime->mon,pTi->pSimTime->mday,self->Harvest.harvest_act_date->date.year,self->Harvest.harvest_act_date->date.mon,self->Harvest.harvest_act_date->date.mday);
 		if (cmp==0) {
@@ -79,6 +86,18 @@ int hpm_harvest_run(hpm *self)
 //SG20210922: Photosynthetic N (non-structural) in top leaves? N in structural biomass!
 //			self->Harvest.Sum_NSsh_hv += (self->Harvest.ONSsh_hv + self->Harvest.ONph_hv)* dt;
             self->Harvest.Sum_NXsh_hv += self->parameter.plant.fNplX*(hpm_math_sum4(self->Harvest.OXLam_hv4) + hpm_math_sum4(self->Harvest.OXss_hv4))*dt;
+            
+           // Daily harvest:
+            
+            self->Harvest.Daily_mass_hv += (self->Harvest.OCSsh_hv * self->parameter.photosynthesis.rmmCS/12.0 
+                                                                      + self->Harvest.ONSsh_hv * self->parameter.photosynthesis.rmmNS/14.0 
+                                                                      + hpm_math_sum4(self->Harvest.OXLam_hv4) 
+                                                                      + hpm_math_sum4(self->Harvest.OXss_hv4))*dt;
+                                                                      
+            self->Harvest.Daily_N_hv       += (self->Harvest.ONSsh_hv 
+                                                                        + self->parameter.plant.fNplX*(hpm_math_sum4(self->Harvest.OXLam_hv4) 
+                                                                        + hpm_math_sum4(self->Harvest.OXss_hv4)))*dt;
+
 
 		}
 
@@ -124,7 +143,11 @@ int hpm_harvest_register_var(hpm *self)
 	
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Output.cum_harvest_mass,"output.hpm.harvest cum mass.mass [kg m-2]",0.0);
     //SG20210930: total harvested nitrogen:
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Output.cum_harvest_N,"output.hpm.harvest cum mass.Nitrogen [kgN m-2]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Output.cum_harvest_N,"output.hpm.harvest cum mass.Nitrogen [kg N m-2]",0.0);
+    
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Output.daily_harvest_mass,"output.hpm.harvest mass.mass [kg m-2]",0.0);
+     xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Output.daily_harvest_N,"output.hpm.harvest mass.Nitrogen [kg N m-2]",0.0);
+    
 
 
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Harvest.Pulseharv,"hpm.harvest.Pulseharv",0.0);
