@@ -342,7 +342,7 @@ int xpn_output_reg_var(xpn_output *self)
 
 
 	// Evapotranspiration (ET)
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potET_Day,"output.Water.Evapotranspiration Day.Potential Evapotranspiration  [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potET_Day,"output.Water.Evapotranspiration Day.Potential Evapotranspiration [mm]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actET_Day,"output.Water.Evapotranspiration Day.Actual Evapotranspiration [mm]",0.0);
 
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potE_Day,"output.Water.Evaporation and Transpiration Day.Potential Evaporation [mm]",0.0);	
@@ -351,15 +351,15 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Water.Evaporation and Transpiration Day.Actual Transpiration [mm]",0.0);
 
 
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Potential Evapotranspiration  [mm/day]",&(xpn->pWa->fPotETR),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Actual Evapotranspiration  [mm/day]",&(xpn->pWa->fActETR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Potential Evapotranspiration [mm/day]",&(xpn->pWa->fPotETR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Actual Evapotranspiration [mm/day]",&(xpn->pWa->fActETR),-1,TRUE,TRUE);
 
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Potential Evaporation  [mm/day]",&(xpn->pWa->pEvap->fPotR),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Actual Evaporation  [mm/day]",&(xpn->pWa->pEvap->fActR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Potential Evaporation [mm/day]",&(xpn->pWa->pEvap->fPotR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Actual Evaporation [mm/day]",&(xpn->pWa->pEvap->fActR),-1,TRUE,TRUE);
 
 	self->fPotTranspR = 0.0;
     self->fActTranspR = 0.0;
-    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Potential Transpiration  [mm/day]",&(self->fPotTranspR),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Potential Transpiration [mm/day]",&(self->fPotTranspR),-1,TRUE,TRUE);
 	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Actual Transpiration [mm/day]",&(self->fActTranspR),-1,TRUE,TRUE);
     
     

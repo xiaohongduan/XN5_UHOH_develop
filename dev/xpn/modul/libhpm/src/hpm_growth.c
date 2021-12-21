@@ -218,6 +218,10 @@ int hpm_biomass_growth(hpm *self)
     self->Litter.MXli += (self->Litter.OXsh_li + self->Litter.OXrt_li) * dt;
     self->Litter.MXrt += self->Litter.OXrt_li*dt;
     self->Litter.MXsh += self->Litter.OXsh_li*dt;
+    
+    //SG20211215: root --> litter:
+    //self->Litter.ROCrt_li  = (self->Litter.OCSrt_so + self->parameter.plant.fCplX*self->Litter.OXrt_li)*dt;
+    //self->Litter.RONrt_li  = (self->Litter.ONSrt_so + self->parameter.plant.fNplX*self->Litter.OXrt_li)*dt;
 	
 	//Added by Hong
 	pCh->pCProfile->fCLitterSurf += self->Litter.OXsh_li*dt * mq_TO_ha_1;
