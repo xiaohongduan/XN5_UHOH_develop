@@ -638,12 +638,15 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->PlantDens,"output.Plant.Plant Density.Plant_Density [Plants/ha]",0.0);
     
     
-    //SG20220214: Photosynthesis, assimilation
+    //SG20220214: 
+    //Photosynthesis, assimilation
     xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fGrossPhotosynR,"output.Plant.Photosynthesis and Respiration Day.Gross Photosynthesis [kg (CO2)/ha/d]",0.0); 
     xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fGrossPhotosyn_Sum,"output.Plant.Photosynthesis and Respiration Cum.Gross Photosynthesis [kg (CO2)/ha]",0.0); 
     xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNetPhotosynR,"output.Plant.Photosynthesis and Respiration Day.Net Photosynthesis [kg (CO2)/ha/d]",0.0); 
     xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNetPhotosyn_Sum,"output.Plant.Photosynthesis and Respiration Cum.Net Photosynthesis [kg (CO2)/ha]",0.0); 
-
+   //Grain number
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Grain_number,"output.Plant.Grain Number.Grains per plant [#]",0.0); 
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Grain_number_sq,"output.Plant.Grain Number.Grains per square meter [#/m2]",0.0); 
 
 	//================================================================
 	//intfSolRad
@@ -2357,8 +2360,9 @@ int xpn_output_calc_var(xpn_output *self)
 	self->NRoot = xpn->pPl->pPltNitrogen->fRootActConc;
 
 	self->PlantDens = xpn->pPl->pCanopy->fPlantDensity;
-    //SG20200117: Notbehelf
-    //self->PlantDens = xpn->pPl->pCanopy->fGrainNumSq;
+    //SG20220215
+    self->Grain_number= xpn->pPl->pCanopy->fGrainNum;
+    self->Grain_number_sq= xpn->pPl->pCanopy->fGrainNumSq;
 
 	self->Height	= xpn->pPl->pCanopy->fPlantHeight;
     
