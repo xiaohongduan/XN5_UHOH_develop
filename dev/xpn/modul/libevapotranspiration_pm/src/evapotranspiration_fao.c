@@ -48,7 +48,19 @@ int evapotranspiration_FAO_run(evapotranspiration *self)
 	DeltaT = pTi->pTimeStep->fAct;
 
 	evapotranspiration_integrate_small_time_step_vars(self);
-
+    
+  //SG20220207: für Vergleich mit XN3 
+ /*
+  //  if(...){ //sollte immer gemacht werden, wenn Wetter-Tageswerte verwendet werden! -- wie abfragen???
+        self->weather.fWindSpeed = pWE->fWindSpeed;
+        self->weather.fTempMax = pWE->fTempMax;
+        self->weather.fTempMin = pWE->fTempMin;
+     //   self->weather.fTempAve = pWE->fTempAve;
+       self->weather.fTempAve = (pWE->fTempMax+pWE->fTempMin)/2.0;
+        self->weather.fDaylySolRad = pWE->fGlobalStrahlung;
+        self->weather.fDailyHumidity =  pWE->fHumidity;
+  //  }
+*/
 	if(SimStart(pTi))
 		self->fTempYesterday = (double)-99;
 
@@ -263,8 +275,9 @@ double SolPartTime(PTIME pTi)
 
 	DeltaT = pTi->pTimeStep->fAct;
 
-
-	if ((DayTime <= (double)0.3)||(DayTime > (double)0.8)) {
+ 
+	//if ((DayTime <= (double)0.3)||(DayTime > (double)0.8)) {
+    if ((DayTime<=(double)0.3)||((DayTime>(double)0.8)&&((DayTime-DeltaT)>=(double)0.8))){ //SG20220209, as in XN3!
 		T1 = (double)0.0;
 		T2 = (double)0.0;
 	} else {

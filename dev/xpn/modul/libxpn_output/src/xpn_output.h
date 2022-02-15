@@ -179,6 +179,9 @@ struct _xpn_output
     double fPotTranspR;
     double fActTranspR;
     double fSolRadDay, fPARDay, fSolRadDay_zwischen, fPARDay_zwischen;
+    //SG20220214
+    double fGrossPhotosynR, fGrossPhotosynR_zwischen, fGrossPhotosyn_Sum; 
+    double fNetPhotosynR, fNetPhotosynR_zwischen, fNetPhotosyn_Sum; 
 	
 	double *RLD;
 		

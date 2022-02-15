@@ -141,7 +141,7 @@ int gecros_Init_and_AllocMemory(gecros *self)
 
 	gecros_alloc_allocateGECROSVariables(self);	
 	gecros_Init_Vars(self); //Hong: only read once  
-	
+    
 	return RET_SUCCESS;
 }
 
@@ -243,6 +243,10 @@ int gecros_BiomassGrowth(gecros *self)
        //if ((pPl->pDevelop->iDayAftEmerg > 0)&&(xpn->pCl->pWeather->fSolRad > 0))
 	   if (pPl->pDevelop->iDayAftEmerg > 0)
        BiomassGrowth_GECROS(self);
+       
+       //debug:
+       //printf("time, %f, fGrossPhotosynR, %f, fNetPhotosynR, %f, fRootGrowR, %f, fStemGrowR, %f, fLeafGrowR, %f, fFruitGrowR, %f\n",pTi->pSimTime->fTimeY,pPl->pPltCarbon->fGrossPhotosynR,pPl->pPltCarbon->fNetPhotosynR,pPl->pBiomass->fRootGrowR,pPl->pBiomass->fStemGrowR,pPl->pBiomass->fLeafGrowR,pPl->pBiomass->fFruitGrowR);
+
       }
       
       return RET_SUCCESS;
@@ -828,7 +832,9 @@ int gecros_load_ini_file(gecros *self)
     //SG20180530
     char spec[30];
    strcpy(spec,pPl->pGenotype->acCropCode);
-    //end SG
+   
+    self->parent.pPl->pOutput->fValue3 = 1.0; //SG2022: to be used in xpn_output.c for recognizing the "Gecros" model
+	//end SG
 
 //Begin of Hong:changed for C. Troost in Oct. 2016 
 
@@ -2465,7 +2471,7 @@ int Photosynthesis_GECROS(gecros *self)
 
       FVPD = INSW(C3C4,(double)0.195127,(double)0.116214);
 
-//gross photosynthesis rate
+//gross photosynthesis rate [g (CO2) m-2 d-1]
 
  /*     pCbn->fGrossPhotosynR = (double)DailyCanopyGrossPhotosynthesis_GECROS(self,self->SC,self->SINLD,self->COSLD,self->DAYL,self->DSINBE,
           DDTR,TMPA,HOUR,DVP,WNM,C3C4,LAIC,TLAI,HT,self->LWIDTH,RD,self->SD1,self->RSS,self->BLD,NLV,TNLV,self->SLNMIN,
@@ -2478,6 +2484,10 @@ int Photosynthesis_GECROS(gecros *self)
           DDTR,TMAX,TMIN,DVP,WNM,C3C4,LAIC,TLAI,HT,self->LWIDTH,RD,self->SD1,self->RSS,self->GCMIN,self->BLD,NLV,TNLV,self->SLNMIN,
           DWSUP,CO2A,LS,self->EAJMAX,self->XVN,self->XJN,self->THETA,WCUL,FVPD, &PPCAN,&APCANS,&APCANN,&APCAN,
                  &PTCAN,&ATCAN,&PESOIL,&AESOIL,&DIFS,&DIFSU,&DIFSH,&DAPAR);
+                 
+//debug:
+//   printf("time, %f, fGrossPhotosynR, %f\n",pTi->pSimTime->fTimeY,pCbn->fGrossPhotosynR);
+
 
 /*
 //%** output ***
@@ -3293,7 +3303,7 @@ int   BiomassGrowth_GECROS(gecros *self)
       pGPltC->fCRootLossR = (double)LCRT;
       pGPltN->fNRootLossR = (double)LNRT;
 
-      RCLV   = 12./44.*ASSA*    FCSH *    FCLV  *YGV - LCLV;//rate  [g(C) m-2 s-1 ]
+      RCLV   = 12./44.*ASSA*    FCSH *    FCLV  *YGV - LCLV;//rate  [g(C) m-2 d-1 ]
       RCSST  = 12./44.*ASSA*    FCSH *    FCSST *YGV;//rate
 	  //SG 20180409: sugarbeet model J. Rabe - 'stem' is 'storage organ'
 	  if(!strcmp(spec,"SB")||!strcmp(spec,"OR"))
@@ -3343,10 +3353,13 @@ int   BiomassGrowth_GECROS(gecros *self)
       pGPltC->fCRootChangeR    = (double)RCSRT;
       pGPltC->fCStorageChangeR = (double)RCSO;
 
-      pPltB->fStemGrowR       = (double)RWST;
+      pPltB->fStemGrowR       = (double)RWST*10.0;
       pGPltB->fStorageGrowR   = (double)RWSO;
-      pPltB->fLeafGrowR       = (double)RWLV;
-      pPltB->fRootGrowR       = (double)RWRT;
+      pPltB->fLeafGrowR       = (double)RWLV*10.0;
+      pPltB->fRootGrowR       = (double)RWRT*10.0;
+      
+      //SG20220215
+      pPltB->fFruitGrowR = pGPltB->fStorageGrowR*10.0;
   
       pGPltC->fCRootRsrvChangeR = (double)RCRVR;
       pGPltC->fCStemRsrvChangeR = (double)RCRVS;
@@ -3571,7 +3584,7 @@ int   LeafAreaGrowth_GECROS(gecros *self)
       
       //%** Leaf area development
 	  ///*
-      RWLV   = (double)pPltB->fLeafGrowR;
+      RWLV   = (double)pPltB->fLeafGrowR/10.0;
       NLV    = (double)pPltN->fLeafCont;
       RNLV   = (double)pGPltN->fNLeafAccumR;
 	  TNLV   = (double)pGPltN->fNLeafTotCont;
@@ -3724,7 +3737,7 @@ int   RootSystemFormation_GECROS(gecros *self)
       //RRD    = (double)pPl->pRoot->fDepthGrowR;
 	  ///*
       //RDMX   = (double)pGecrosPlant->pGecrosParameter->fRootDepthMax;
-      RWRT   = (double)pPl->pBiomass->fRootGrowR;
+      RWRT   = (double)pPl->pBiomass->fRootGrowR/10.0;
       LWRT   = (double)self->pGecrosPlant->pGecrosBiomass->fRootWeightLossR;
       WRT    = (double)pPl->pBiomass->fRootWeight/10;//[g m-2] <-- [kg ha-1]
       WRTD   = (double)self->pGecrosPlant->pGecrosBiomass->fRootDeadWeight;
@@ -4943,7 +4956,7 @@ double DailyCanopyGrossPhotosynthesis_GECROS(gecros *self,double SC,double SINLD
 
        
 	   	  
-     return *APCAN;//DTGA;
+     return *APCAN;//DTGA; [g (CO2) m-2 d-1]
     }
 
 

@@ -112,6 +112,11 @@ int ceres_DailyCanopyPhotosynthesis_WH_BA(ceres *self)
                                                         *(double)PRFT*min(pPltW->fStressFacPhoto,pPltN->fNStressPhoto);
 
         pBiom->fBiomGrowR =max(pBiom->fBiomGrowR, (double)0.0001);
+       
+ //SG20220114 --> for output only
+        pPl->pPltCarbon->fGrossPhotosynR = pBiom->fBiomGrowR*44./30.; //[kg (CO2) ha-1 d-1]
+ //       pPl->pPltCarbon->fNetPhotosynR = pBiom->fBiomGrowR*44./30.; //[kg (CO2) ha-1 d-1]
+
 	return RET_SUCCESS;
 }
 int ceres_DailyCanopyPhotosynthesis_MZ(ceres *self)
@@ -199,6 +204,11 @@ int ceres_DailyCanopyPhotosynthesis_MZ(ceres *self)
                                                         *(double)(min(PRFT,min(pPltW->fStressFacPhoto,pPltN->fNStressPhoto)));
 
         pBiom->fBiomGrowR =max(pBiom->fBiomGrowR, (double)0.0001);
+        
+        //SG20220114 --> for output only
+         pPl->pPltCarbon->fGrossPhotosynR = pBiom->fBiomGrowR*44./30.; //[kg (CO2) ha-1 d-1]
+ //     pPl->pPltCarbon->fNetPhotosynR = pBiom->fBiomGrowR*44./30.; //[kg (CO2) ha-1 d-1]
+
 	return RET_SUCCESS;
 }
 int ceres_DailyCanopyPhotosynthesis_SF(ceres *self)
@@ -294,6 +304,9 @@ int ceres_DailyCanopyPhotosynthesis_SF(ceres *self)
 
         pBiom->fBiomGrowR =max(pBiom->fBiomGrowR, (double)0.0001);
 
+        //SG20220114 --> for output only
+        pPl->pPltCarbon->fGrossPhotosynR = pBiom->fBiomGrowR*44./30.; //[kg (CO2) ha-1 d-1]
+//        pPl->pPltCarbon->fNetPhotosynR = pBiom->fBiomGrowR*44./30.; //[kg (CO2) ha-1 d-1]
         
         //calculate a factor based on the red/far red - ratio to reduce 
         //potential leaf area growth:

@@ -806,6 +806,8 @@ int gecros_load_ini_file(gecros_h *self)
     //SG20180530
     char spec[30];
    strcpy(spec,pPl->pGenotype->acCropCode);
+   
+    self->parent.pPl->pOutput->fValue3 = 1.0; //SG2022: to be used in xpn_output.c for recognizing the "Gecros_h" model
     //end SG
 
 //Begin of Hong:changed for C. Troost in Oct. 2016 

@@ -964,7 +964,8 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
             //SG20200211: -99 abfangen
             pSLayer->fRockFrac = max(0,pSLayer->fRockFrac);
             
-			pSWater->fContSat = pSLayer->fPorosity;//self->cfg->cont_sat[i2];
+			//pSWater->fContSat = pSLayer->fPorosity;//self->cfg->cont_sat[i2]; //SG: why porosity?
+			pSWater->fContSat =self->cfg->cont_sat[i2]; //SG20220208: back to theat_sat!
 			pSWater->fContPWP = self->cfg->wilting_point[i2];
 			pSWater->fContFK = self->cfg->field_capacity[i2];
 			pSWater->fContRes = self->cfg->res_water_cont[i2];

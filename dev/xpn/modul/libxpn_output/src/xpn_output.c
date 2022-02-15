@@ -636,7 +636,13 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Height,"output.Plant.Height.Height [m]",0.0);
 	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Height,"output.XPlant.Diameter.diameter [m]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->PlantDens,"output.Plant.Plant Density.Plant_Density [Plants/ha]",0.0);
-
+    
+    
+    //SG20220214: Photosynthesis, assimilation
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fGrossPhotosynR,"output.Plant.Photosynthesis and Respiration Day.Gross Photosynthesis [kg (CO2)/ha/d]",0.0); 
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fGrossPhotosyn_Sum,"output.Plant.Photosynthesis and Respiration Cum.Gross Photosynthesis [kg (CO2)/ha]",0.0); 
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNetPhotosynR,"output.Plant.Photosynthesis and Respiration Day.Net Photosynthesis [kg (CO2)/ha/d]",0.0); 
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNetPhotosyn_Sum,"output.Plant.Photosynthesis and Respiration Cum.Net Photosynthesis [kg (CO2)/ha]",0.0); 
 
 
 	//================================================================
@@ -1662,6 +1668,14 @@ int xpn_output_calc_var(xpn_output *self)
 				}
 			self->heat.soil_temp_mean[i] = zwischen/(double)count;
 		}
+        
+    //SG20220215
+    /* set cumulative plant variables to zero  */    
+    if((pPl->pDevelop->bMaturity==TRUE)||(pPl->pDevelop->iDayAftEmerg<1))
+    {
+        self->fGrossPhotosyn_Sum = 0.0;
+        self->fNetPhotosyn_Sum = 0.0;
+    }
 
 	/* set daily variables to zero */
 	if(NewDay(pTi))
@@ -1683,6 +1697,10 @@ int xpn_output_calc_var(xpn_output *self)
 
             self->fSolRadDay = self->fSolRadDay_zwischen;
             self->fPARDay = self->fPARDay_zwischen;
+            
+            //SG20220214
+            self->fGrossPhotosynR = self->fGrossPhotosynR_zwischen; 
+            self->fNetPhotosynR = self->fNetPhotosynR_zwischen; 
 
 
 			// set zwischen values to zero
@@ -1702,6 +1720,9 @@ int xpn_output_calc_var(xpn_output *self)
 
             self->fSolRadDay_zwischen = 0.0;
             self->fPARDay_zwischen = 0.0;
+            //SG20220214
+            self->fGrossPhotosynR_zwischen = 0.0; 
+            self->fNetPhotosynR_zwischen = 0.0; 
 
 		}
 	//===========================================================
@@ -1771,6 +1792,20 @@ int xpn_output_calc_var(xpn_output *self)
     // Radiation
     self->fSolRadDay_zwischen += xpn->pCl->pWeather->fSolRad *dt;
     self->fPARDay_zwischen += xpn->pCl->pWeather->fPAR * dt;
+    
+    //SG20220214: Photosynthesis
+    if (xpn->pPl->pOutput->fValue3 < 0.001){ //Spass, Ceres
+        self->fGrossPhotosynR_zwischen +=xpn->pPl->pPltCarbon->fGrossPhotosynR * dt; 
+        self->fGrossPhotosyn_Sum +=xpn->pPl->pPltCarbon->fGrossPhotosynR * dt; 
+        self->fNetPhotosynR_zwischen +=xpn->pPl->pPltCarbon->fNetPhotosynR * dt; 
+        self->fNetPhotosyn_Sum +=xpn->pPl->pPltCarbon->fNetPhotosynR * dt; 
+    }
+    else{ //Gecros, Gecros_h
+        self->fGrossPhotosynR_zwischen +=xpn->pPl->pPltCarbon->fGrossPhotosynR * 10.0 * dt; 
+        self->fGrossPhotosyn_Sum +=xpn->pPl->pPltCarbon->fGrossPhotosynR * 10.0 * dt; 
+        self->fNetPhotosynR_zwischen +=xpn->pPl->pPltCarbon->fNetPhotosynR * 10.0 * dt; 
+        self->fNetPhotosyn_Sum +=xpn->pPl->pPltCarbon->fNetPhotosynR * 10.0 * dt;     
+    }
 
 	// Balance
 	self->water.BalanceXN = self->parent.pWa->pWBalance->fBalance;
