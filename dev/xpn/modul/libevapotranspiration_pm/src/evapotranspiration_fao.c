@@ -50,8 +50,10 @@ int evapotranspiration_FAO_run(evapotranspiration *self)
 	evapotranspiration_integrate_small_time_step_vars(self);
     
   //SG20220207: für Vergleich mit XN3 
- /*
+ ///*
   //  if(...){ //sollte immer gemacht werden, wenn Wetter-Tageswerte verwendet werden! -- wie abfragen???
+        if(pWE->fGlobalStrahlung > 0.001)
+        { 
         self->weather.fWindSpeed = pWE->fWindSpeed;
         self->weather.fTempMax = pWE->fTempMax;
         self->weather.fTempMin = pWE->fTempMin;
@@ -59,8 +61,8 @@ int evapotranspiration_FAO_run(evapotranspiration *self)
        self->weather.fTempAve = (pWE->fTempMax+pWE->fTempMin)/2.0;
         self->weather.fDaylySolRad = pWE->fGlobalStrahlung;
         self->weather.fDailyHumidity =  pWE->fHumidity;
-  //  }
-*/
+        }
+//*/
 	if(SimStart(pTi))
 		self->fTempYesterday = (double)-99;
 
