@@ -12,7 +12,7 @@ submodul=mixing incorporation,soil loosing compaction,application fertilizers,lo
 
 [water]
 icon=water.png
-submodul=interception,potential evapotranspiration,actual evaporation,potential evaporation,flow module,hydraulic functions,snow,kc factor
+submodul=interception,potential evapotranspiration,actual evaporation,potential evaporation,flow module,hydraulic functions,snow,kc factor,soil surface resistance
 
 [heat]
 icon=heat.png

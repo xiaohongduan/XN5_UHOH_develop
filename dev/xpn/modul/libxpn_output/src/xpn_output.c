@@ -363,6 +363,13 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Actual Transpiration [mm/day]",&(self->fActTranspR),-1,TRUE,TRUE);
     
     
+//SG20221702 - Von Alexander Schade:
+/*    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.ET resistances.soil surface resistance [s m-1]",&(xpn->pWa->rss),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.ET resistances.crop surface resistance [s m-1]",&(xpn->pWa->rsc),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.ET resistances.surface resistance [s m-1]",&(xpn->pWa->rs),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.ET resistances.aerodynamic resistance [s m-1]",&(xpn->pWa->ra),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Debugging.ET rs/ra [-]",&(xpn->pWa->rsra),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Debugging.PM numerator",&(xpn->pWa->PM_numerator),-1,TRUE,TRUE);*/
 
 	//Water Flux Density
 	//xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.FluxDens_Day[i],varname,0.0),"output.Water.Water_Flux.Water_Flux_Day [mm]",self->soil_numbers);

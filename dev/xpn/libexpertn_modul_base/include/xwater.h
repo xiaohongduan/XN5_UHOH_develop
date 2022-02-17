@@ -171,6 +171,8 @@ typedef   struct xwater
 	double    fGrdWatLevel;
 	double    fGrdWatLvlPot;
 	double    kc_factor; // kc factor for pm: 1 without model
+    //SG20220216 --> AS: added resistances to output:
+    double rss,rsc,rs,ra,rsra,PM_numerator;
 	PWLAYER	   pWLayer;
 	PWMEASURE  pWMeasure;
 	PEVAP	   pEvap;

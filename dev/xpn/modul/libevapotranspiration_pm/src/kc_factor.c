@@ -382,7 +382,7 @@ int kc_factor_dev_stage_run(kc_factor* self)
    //SG 20190626: use bare soil value (else_kc_arr[0]) until field emergence (including phase from sowing (fStageSUCROS= -1.0) until emergence (fStageSUCROS= 0.0) 
     if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,pSI->Year,pSI->Month,pSI->Day)<0)||(pPl->pDevelop->fStageSUCROS<= 0.0))
         {
-            xpn->pWa->kc_factor=self->crop[plant_nr].else_kc_arr[0];            
+            xpn->pWa->kc_factor=self->crop[plant_nr].else_kc_arr[0]; // before sowing             
             //printf("Using kc %.02f [else 0] for [%d] %s %s ...\n", self->crop[plant_nr].else_kc_arr[0], plant_nr, self->crop[plant_nr].acCropName, 
             //     self->crop[plant_nr].acVarietyName);
 
@@ -390,12 +390,12 @@ int kc_factor_dev_stage_run(kc_factor* self)
     else
     if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pPl->pModelParam->HarvestYear,xpn->pPl->pModelParam->HarvestMonth,xpn->pPl->pModelParam->HarvestDay)>=0)||(pPl->pDevelop->fStageSUCROS>= 2.0))
         {
-            xpn->pWa->kc_factor=self->crop[plant_nr].else_kc_arr[1];
+            xpn->pWa->kc_factor=self->crop[plant_nr].else_kc_arr[1]; // after harvest
             //printf("Using kc %.02f [else 1] for [%d] %s	%s ...\n", self->crop[plant_nr].else_kc_arr[1], plant_nr, self->crop[plant_nr].acCropName, self->crop[plant_nr].acVarietyName);
 
         }
     else
-        {
+        {  // Inbetween sowing and harvest interpolate kc factors depending on development stage:
             double m,t;
             double x1,x2,y1,y2;
             y2 = self->crop[plant_nr].kc_arr[devk_nr+1];

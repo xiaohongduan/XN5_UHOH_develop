@@ -1251,6 +1251,8 @@ void* xpn_register_var_get_pointer(xpn_register_var *self,char *varname)
 	int i;
 	for (i=0; i<self->size; i++)
 		{
+        //debug:
+//       printf("i:, %i, varname:, %s\n",i, self->vars[i]->varname);
 			//if (strcasecmp(self->vars[i]->varname,varname)==0) //SG "case-insensitive"
 			if (strcmp(self->vars[i]->varname,varname)==0)
 				{

@@ -13,6 +13,9 @@
 
 int evapotranspiration_FAO_load(evapotranspiration *self)
 {
+    expertn_modul_base *xpn = &(self->parent);
+    
+    self->counter = 0; //AS: used to check how many timesteps are used for daily averaging
 	self->ETpot_Day = 0.0;
 	self->ETpot_Day_=0.0;
 	self->ETpot_Year = 0.0;
@@ -21,6 +24,15 @@ int evapotranspiration_FAO_load(evapotranspiration *self)
 	self->Epot_Year = 0.0;	
 	self->fcumtrad = 0.0;
 	self->fcumaero = 0.0;
+    
+    //AS: added information about weather data resolution
+    char *S;
+	S = xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.Expert N Standard Read INI.use high resolution climate data");
+	if ((S==NULL) || (atoi(S)==0))
+		{self->high_res_weather=0;} 
+    else 
+        {self->high_res_weather=1;}
+
 	
 	return RET_SUCCESS;
 }
@@ -47,25 +59,30 @@ int evapotranspiration_FAO_run(evapotranspiration *self)
 
 	DeltaT = pTi->pTimeStep->fAct;
 
-	evapotranspiration_integrate_small_time_step_vars(self);
-    
-  //SG20220207: für Vergleich mit XN3 
- ///*
+	//SG20220217: Unterscheidung Wetter-Tageswerte vs. hochaufgelöst
+    if(self->high_res_weather==1)
+        evapotranspiration_integrate_small_time_step_vars(self);
+    else
+    {
   //  if(...){ //sollte immer gemacht werden, wenn Wetter-Tageswerte verwendet werden! -- wie abfragen???
-        if(pWE->fGlobalStrahlung > 0.001)
-        { 
-        self->weather.fWindSpeed = pWE->fWindSpeed;
+  //     if(pWE->fGlobalStrahlung > 0.001)
+  //      { 
+ 
+       self->weather.fWindSpeed = pWE->fWindSpeed;
         self->weather.fTempMax = pWE->fTempMax;
         self->weather.fTempMin = pWE->fTempMin;
-     //   self->weather.fTempAve = pWE->fTempAve;
-       self->weather.fTempAve = (pWE->fTempMax+pWE->fTempMin)/2.0;
+     //self->weather.fTempAve = pWE->fTempAve;
+        self->weather.fTempAve = (pWE->fTempMax+pWE->fTempMin)/2.0;//SG20220207: für Vergleich mit XN3 
         self->weather.fDaylySolRad = pWE->fGlobalStrahlung;
         self->weather.fDailyHumidity =  pWE->fHumidity;
         }
-//*/
+
 	if(SimStart(pTi))
 		self->fTempYesterday = (double)-99;
 
+/*	//AS: added check to skip calculation at SimStart as the model needs to average the weather data over the day
+	// and hence has no sensible weather values to calculate with at stim start
+	if((NewDay(pTi)) && (SimStart(pTi)==FALSE)) { */
 	if(NewDay(pTi)) {
 		fP     = (double)101.3;										//equation (6) const.
 		flamda = (double)2.45;										//equation (2)
@@ -96,8 +113,8 @@ int evapotranspiration_FAO_run(evapotranspiration *self)
 		fea_Tmin = (double)0.611*(double)exp((double)17.27*self->weather.fTempMin / (self->weather.fTempMin+(double)237.3));
 		//equation (10)
 	
-		fea = (double)0.5*(fea_Tmax + fea_Tmin);					    //equation (17)
-		fed = (double)2.0*self->weather.fDailyHumidity*(double)0.01/( (double)1/fea_Tmin + (double)1/fea_Tmax );
+		fea = (double)0.5*(fea_Tmax + fea_Tmin); //equation (17) (saturation vapor pressure)
+		fed = (double)2.0*self->weather.fDailyHumidity*(double)0.01/( (double)1/fea_Tmin + (double)1/fea_Tmax ); // actual vapor pressure
 		//equation (14)
 		fea_Tave = (double)0.611*(double)exp((double)17.27*self->weather.fTempAve / (self->weather.fTempAve+(double)237.3));
 		fDelta = (double)4098*fea_Tave/SQR(self->weather.fTempAve+(double)237.3); //equation (3
@@ -124,6 +141,7 @@ int evapotranspiration_FAO_run(evapotranspiration *self)
 		                        + (double)cos(fphi)*(double)cos(fdelta)*(double)sin(fomegas));
 		fN  = (double)24/(double)PI * fomegas;							   //equation (25)
 
+        /*AS: commented out for correction of the Rn calculation
 		if(self->weather.fDaylySolRad >= (double)0) {
 			// Berechnung der aktuellen Sonnenscheindauer //equation (52)
 			if (fRa != (double)0) fn  = self->weather.fDaylySolRad/fRa;
@@ -156,13 +174,46 @@ int evapotranspiration_FAO_run(evapotranspiration *self)
 			fRnl = (double)0;
 		}
 
-		fRn = fRns - fRnl;	//equation (50)
+		fRn = fRns - fRnl;	//equation (50) [MJ m-2 -d]
+        pWE->fcd = (double)0.9*fn/fN + (double)0.1;
+        */
+        
+        //AS: correction of the net radiation part:
+        // net solar radiation:
+        double Rs0, Rs_Rs0, fcd;
+        fRns = 0.77*self->weather.fDaylySolRad;
+        //Clear-sky solar radiation Rs0
+        Rs0 = (0.75+2.0e-5*xpn->pLo->pFarm->fAltitude)*fRa;
+        Rs_Rs0 = self->weather.fDaylySolRad/Rs0;
+        if(Rs_Rs0 < 0.3)
+            {
+                Rs_Rs0 = 0.3;
+            }
+        else if(Rs_Rs0 > 1.0)
+            {
+                Rs_Rs0 = 1.0;
+            }
+        // cloudiness function:
+        fcd= 1.35*Rs_Rs0 -0.35;
+        fcd = MAX(fcd,0.05);
+        fcd = MIN(fcd,1.0);
+//        xpn->pCl->pWeather->fcd = fcd;
+        // long wave net radiation:
+		fRnl =  2.45e-9*fcd *(0.34 - 0.14*sqrt(fed))*(pow(273.0+self->weather.fTempMax, 4.0)+pow(273.0+self->weather.fTempMin, 4.0));
+        // net radiation:
+        fRn = fRns - fRnl; // [MJ m-2 -d]
+        xpn->pHe->pHEBalance->fNetRad = fRn*1.0e6/(24*3600); // [MJ m-2 -d -> W m-2]
+        xpn->pHe->pHEBalance->fLongNetRad = fRnl*1.0e6/(24*3600);
+        xpn->pHe->pHEBalance->fShortNetRad = fRns*1.0e6/(24*3600);
+//        xpn->pHe->pHEBalance->fExtRad = fRa*1.0e6/(24*3600);
+        // End of correction by AS
 		
 		fG = (double)0;
 		if(self->fTempYesterday != (double)-99)
 			fG = (double)0.38*(self->weather.fTempAve - self->fTempYesterday);	//equation (65)
 
 		self->fTempYesterday = self->weather.fTempAve;	//da alle Berechnungen nur tageweise
+        xpn->pHe->pHEBalance->fGroundHeat = -fG*1.0e6/(24*3600); // AS: added to xpn structure for comparison to other gh models; [MJ m-2 d-1 -> W m-2]
 		//ist kein if(EndDay) nötig
 
 		//if (fRn > fG)
@@ -247,7 +298,9 @@ int evapotranspiration_integrate_small_time_step_vars(evapotranspiration *self)
 		self->__weather.fDaylySolRad=0.0;
 		self->__weather.fWindSpeed = 0.0;
 		self->__weather.fDailyHumidity = 0.0;
+        self->counter = 0;
 	} else {
+        self->counter++; // counts number of timesteps used for daily averaging
 		if ((pWe->fTempAir_daily_models > self->__weather.fTempMax)&&(pTi->pSimTime->fTimeDay > 0.5)) {
 			self->__weather.fTempMax = pWe->fTempAir_daily_models;
 		}
