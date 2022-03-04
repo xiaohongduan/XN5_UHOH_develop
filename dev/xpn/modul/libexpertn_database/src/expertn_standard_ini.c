@@ -162,7 +162,7 @@ int expertn_standard_ini_load(expertn_standard_ini *self)
 	self->global_radiation=0.0;
 	self->precipitation=0.0;
 	self->sunshine_duration=0.0;
-	self->rel_himidity=0.0;
+	self->rel_humidity=0.0;
 	self->windspeed=0.0;
 	self->dewpoint=0.0;
 	self->kesselverdunstung=0.0;
@@ -1101,7 +1101,7 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 		{
 			expertn_standard_ini_run_climate_high_res_interpol(self->global_radiation,1)
 			expertn_standard_ini_run_climate_high_res_interpol(self->precipitation,2)
-			expertn_standard_ini_run_climate_high_res_interpol(self->rel_himidity,3)
+			expertn_standard_ini_run_climate_high_res_interpol(self->rel_humidity,3)
 			expertn_standard_ini_run_climate_high_res_interpol(self->windspeed,4)
 			expertn_standard_ini_run_climate_high_res_interpol(self->Tair,5)
 			if (self->climate_values_small_ts->size_of_values>6)
@@ -1117,7 +1117,7 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 		{
 			self->global_radiation = self->climate_values_small_ts->valuelist[i][1];
 			self->precipitation = self->climate_values_small_ts->valuelist[i][2];
-			self->rel_himidity = self->climate_values_small_ts->valuelist[i][3];
+			self->rel_humidity = self->climate_values_small_ts->valuelist[i][3];
 			self->windspeed = self->climate_values_small_ts->valuelist[i][4];
 			self->Tair = self->climate_values_small_ts->valuelist[i][5];
 			if (self->climate_values_small_ts->size_of_values>5)
@@ -1138,7 +1138,7 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 	xpn->pCl->pWeather->fPreciRate = self->precipitation;		// open land precip. until interception model is executed!
 	xpn->pCl->pWeather->fLiquPreciRate = self->precipitation;	// open land precip. until interception model is executed!
 	xpn->pCl->pWeather->fBulkPreciRate = self->precipitation;	// open land precip.
-	xpn->pCl->pWeather->fHumidity = self->rel_himidity;
+	xpn->pCl->pWeather->fHumidity = self->rel_humidity;
 	xpn->pCl->pWeather->fWindSpeed = self->windspeed;
 	xpn->pCl->pWeather->fSolRad = (60.0*60.0*24.0) * self->global_radiation * 1.0e-6;
 	if (self->par < -9998.0)
@@ -1199,7 +1199,7 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 		{
 			expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->global_radiation,1)
 			expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->precipitation,2)
-			expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->rel_himidity,3)
+			expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->rel_humidity,3)
 			expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->windspeed,4)
 			expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->Tair,5)
 			if (self->climate_values_small_ts->size_of_values>6)
@@ -1215,7 +1215,7 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 		{
 			self->global_radiation = self->climate_values_small_ts->valuelist[i][1];
 			self->precipitation = self->climate_values_small_ts->valuelist[i][2];
-			self->rel_himidity = self->climate_values_small_ts->valuelist[i][3];
+			self->rel_humidity = self->climate_values_small_ts->valuelist[i][3];
 			self->windspeed = self->climate_values_small_ts->valuelist[i][4];
 			self->Tair = self->climate_values_small_ts->valuelist[i][5];
 			if (self->climate_values_small_ts->size_of_values>5)
@@ -1232,7 +1232,7 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 			self->precipitation = 0.0;
 		}
 	xpn->pCl->pWeather->fPreciRate_daily_models = self->precipitation;		// open land precip. until interception model is executed!
-	xpn->pCl->pWeather->fHumidity_daily_models = self->rel_himidity;
+	xpn->pCl->pWeather->fHumidity_daily_models = self->rel_humidity;
 	xpn->pCl->pWeather->fWindSpeed_daily_models = self->windspeed;
 	xpn->pCl->pWeather->fSolRad_daily_models = (60.0*60.0*24.0) * self->global_radiation * 1.0e-6;
 	if (self->pressure >= -9998.0)
@@ -1278,7 +1278,7 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
 			self->Tairmin = self->climate_values->valuelist[i][3];
 			self->precipitation = self->climate_values->valuelist[i][4];
 			self->sunshine_duration = self->climate_values->valuelist[i][5];
-			self->rel_himidity = self->climate_values->valuelist[i][6];
+			self->rel_humidity = self->climate_values->valuelist[i][6];
 			self->windspeed = self->climate_values->valuelist[i][7];
 			self->meantemp = self->climate_values->valuelist[i][8];
 			self->dewpoint = self->climate_values->valuelist[i][9];
@@ -1298,11 +1298,15 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
             //self->SoilT50 = self->climate_values->valuelist[i][18];
         
              if(self->climate_values->size_of_values>19) //wenn Spalte CO2 vorhanden vorhanden
+             {    
                  self->AtmCO2ppm =   self->climate_values->valuelist[i][19];//SG20190211 - Provisorium für Rajina! Später "Throughfall" [19]; Groundwater [20]; "Atm. CO2" [21];
-             
-            //self->CnpyDrn = self->climate_values->valuelist[i][20];
-            //self->WatTbl= self->climate_values->valuelist[i][21];
-            
+                 
+                 if(self->climate_values->size_of_values==22) //wenn Spalte CO2 vorhanden vorhanden
+                 { 
+                     self->CnpyDrn = self->climate_values->valuelist[i][20]; //SG20220304 - "Throughfall" [20]
+                     self->WatTbl= self->climate_values->valuelist[i][21]; //SG20220304 - "Groundwater" [21]
+                 }
+             }            
             
             //Berechnung fehlender Globalstrahlung, falls Sonnenscheindauer gegeben ist:
             if ((self->global_radiation < -9)||(self->global_radiation>=99))
@@ -1340,7 +1344,7 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
 				{
 					self->TairNextDayMin = self->climate_values->valuelist[i][3];
 				}
-			xpn->pCl->pWeather->fHumidity = self->rel_himidity; // ist nur Tageswert --> vlt. sollte man auch eine Sinusartige Funktion durchlegen
+			xpn->pCl->pWeather->fHumidity = self->rel_humidity; // ist nur Tageswert --> vlt. sollte man auch eine Sinusartige Funktion durchlegen
 			xpn->pCl->pWeather->fWindSpeed = self->windspeed;
 		}
 	if (self->no_rain==1)
@@ -1374,6 +1378,9 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
     //SG20190211:
    if((self->AtmCO2ppm>199.999)&&(self->AtmCO2ppm<2000.01))
         xpn->pCl->pWeather->fAtmCO2ppm =     self->AtmCO2ppm;
+        
+     xpn->pCl->pWeather->fThroughfall = self->CnpyDrn;
+     xpn->pCl->pWeather->fWaterTable = self->WatTbl;
     //end of SG
 	
 	xpn->pCl->pWeather->fTempAir_zlvl = xpn->pCl->pWeather->fTempAir;
@@ -1390,7 +1397,7 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
 	C_DEBUG(laenge);*/
 	// Write values for daily models without interpolation
 	xpn->pCl->pWeather->fPreciRate_daily_models = self->precipitation;		// open land precip. until interception model is executed!
-	xpn->pCl->pWeather->fHumidity_daily_models = self->rel_himidity;
+	xpn->pCl->pWeather->fHumidity_daily_models = self->rel_humidity;
 	xpn->pCl->pWeather->fWindSpeed_daily_models = self->windspeed;
 	xpn->pCl->pWeather->fSolRad_daily_models = xpn->pCl->pWeather->fSolRad;
 	if (self->pressure >= -9998.0)

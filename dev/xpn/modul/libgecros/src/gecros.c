@@ -115,7 +115,7 @@ int    rnacc(double FNSH,double NUPT,double RWST,double STEMNC,double LNCMIN,dou
              double LNRT,double *RNRT,double *RNST,double *RNLV,double *RTNLV,double *RNSO);
 
 
-int gecros_integrate_small_time_step_vars(gecros *self);
+//int gecros_integrate_small_time_step_vars(gecros *self);  //auskommentieren? SG20220301 - Gecros runs with daily weather data only
 
 G_DEFINE_TYPE(gecros, gecros, EXPERTN_MODUL_BASE_TYPE);
 
@@ -162,7 +162,7 @@ int gecros_Development(gecros *self)
 	  PMANAGEMENT pMa = xpn->pMa;
 	  PPLANT pPl = xpn->pPl;
 
-      gecros_integrate_small_time_step_vars(self);
+//      gecros_integrate_small_time_step_vars(self); //auskommentiert: SG20220301 - Gecros runs with daily weather data only
 
       if ((xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,
 		    pMa->pSowInfo->Year,pMa->pSowInfo->Month,pMa->pSowInfo->Day)<0))
@@ -209,7 +209,7 @@ int gecros_Photosynthesis(gecros *self)
 	  PPLANT pPl = xpn->pPl;
 	  PTIME pTi = xpn->pTi;
 
-      gecros_integrate_small_time_step_vars(self);
+ //     gecros_integrate_small_time_step_vars(self);  //auskommentiert: SG20220301 - Gecros runs with daily weather data only
 
 	  if NewDayAndPlantGrowing
      // if ((pPl->pDevelop->bPlantGrowth==TRUE)&&(pPl->pDevelop->bMaturity==FALSE))
@@ -234,7 +234,7 @@ int gecros_BiomassGrowth(gecros *self)
 	  PPLANT pPl = xpn->pPl;
 	  PTIME pTi = xpn->pTi;
 
-      gecros_integrate_small_time_step_vars(self);
+      //gecros_integrate_small_time_step_vars(self);  //auskommentiert: SG20220301 - Gecros runs with daily weather data only
 
 	  if NewDayAndPlantGrowing
       //if ((pPl->pDevelop->bPlantGrowth==TRUE)&&(pPl->pDevelop->bMaturity==FALSE))
@@ -259,7 +259,7 @@ int gecros_CanopyFormation(gecros *self)
 	  PPLANT pPl = xpn->pPl;
 	  PTIME pTi = xpn->pTi;
 
-      gecros_integrate_small_time_step_vars(self);
+      //gecros_integrate_small_time_step_vars(self);  //auskommentiert: SG20220301 - Gecros runs with daily weather data only
 
     if NewDayAndPlantGrowing
 	//if ((pPl->pDevelop->bPlantGrowth==TRUE)&&(pPl->pDevelop->bMaturity==FALSE))
@@ -281,7 +281,7 @@ int gecros_RootSytem(gecros *self)
 	  PPLANT pPl = xpn->pPl;
 	  PTIME pTi = xpn->pTi;
 
-      gecros_integrate_small_time_step_vars(self);
+     // gecros_integrate_small_time_step_vars(self);  //auskommentiert: SG20220301 - Gecros runs with daily weather data only
 
     if NewDayAndPlantGrowing
     //if ((pPl->pDevelop->bPlantGrowth==TRUE)&&(pPl->pDevelop->bMaturity==FALSE))
@@ -322,7 +322,7 @@ int gecros_CropSenescence(gecros *self)
     double fCumDepth,fThickness,TRLDF;//
 	double fDeadRootC,fDeadRootN;
 
-      gecros_integrate_small_time_step_vars(self);
+     // gecros_integrate_small_time_step_vars(self);  //auskommentiert: SG20220301 - Gecros runs with daily weather data only
 
     if NewDayAndPlantGrowing
     //if ((pPl->pDevelop->bPlantGrowth==TRUE)&&(pPl->pDevelop->bMaturity==FALSE))
@@ -420,7 +420,7 @@ int gecros_NitrogenDemand(gecros *self)
 	  PPLANT pPl = xpn->pPl;
 	  PTIME pTi = xpn->pTi;
 
-      gecros_integrate_small_time_step_vars(self);
+      //gecros_integrate_small_time_step_vars(self);  //auskommentiert: SG20220301 - Gecros runs with daily weather data only
 
     if NewDayAndPlantGrowing
    // if ((pPl->pDevelop->bPlantGrowth==TRUE)&&(pPl->pDevelop->bMaturity==FALSE))
@@ -447,7 +447,7 @@ int gecros_NitrogenUptake(gecros *self)
     double DELT = (double)xpn->pTi->pTimeStep->fAct;
     //double DELT = 1.0;
 	
-      gecros_integrate_small_time_step_vars(self);
+      //gecros_integrate_small_time_step_vars(self);  //auskommentiert: SG20220301 - Gecros runs with daily weather data only
 
     if NewDayAndPlantGrowing
    // if ((pPl->pDevelop->bPlantGrowth==TRUE)&&(pPl->pDevelop->bMaturity==FALSE))
@@ -499,7 +499,7 @@ int gecros_ActualTranspiration(gecros *self)
 	PSPROFILE  pSo = xpn->pSo;
     //PTIME pTi = xpn->pTi;
 
-      gecros_integrate_small_time_step_vars(self);
+     // gecros_integrate_small_time_step_vars(self);  //auskommentiert: SG20220301 - Gecros runs with daily weather data only
 
 	if ((pPl!=NULL)) pPl->pRoot->fUptakeR =(double)0;
 	
@@ -1782,6 +1782,7 @@ int PhasicDevelopment_GECROS(gecros *self)
 
 	  PDEVELOP      pDev = pPl->pDevelop;
       PGENOTYPE   pGe = pPl->pGenotype;
+      PWEATHER     pWe = xpn->pCl->pWeather;
 	  PGECROSSOIL   pGS  = self->pGecrosPlant->pGecrosSoil;	  
 //Hong 2016-08-08: change for Sebastian Gayler and Arne Poyda
       //PMANAGEMENT pMa = xpn->pMa;
@@ -1819,8 +1820,8 @@ int PhasicDevelopment_GECROS(gecros *self)
 	  {
 		  
 //		  if(pPl->pModelParam->iEmergenceDay>0) //Wenn "Date of Emergence" in croprotation.ini angegeben ist,  erfolgt Feldaufgang spätestens an diesem Tag		    
-			   if (xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,pPl->pModelParam->EmergenceYear,pPl->pModelParam->EmergenceMonth,pPl->pModelParam->EmergenceDay)==0)
-		    {
+        if (xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,pPl->pModelParam->EmergenceYear,pPl->pModelParam->EmergenceMonth,pPl->pModelParam->EmergenceDay)==0)
+        {
 			  iGermination = 1;
               iEmerg = -1;
 			  pDev->fStageSUCROS= (double)-0.5;
@@ -1842,10 +1843,9 @@ int PhasicDevelopment_GECROS(gecros *self)
 
 				   iEmerg = 1;
 			  }
-		     }
-		  
-		  else //SG 20160706: Berechnung von Keimung (Germination) und Feldaufgang (Emergence) in Abhängigkeit von Umwelteinflüssen nach CERES
-		  {
+        }
+        else //SG 20160706: Berechnung von Keimung (Germination) und Feldaufgang (Emergence) in Abhängigkeit von Umwelteinflüssen nach CERES
+        {
 			  if (pDev->fStageSUCROS < -0.51)
 			  {
 				  //Germination (nach Ceres):
@@ -1870,7 +1870,8 @@ int PhasicDevelopment_GECROS(gecros *self)
 				  if (iEmerg == 1)
 				  {
 					pDev->fStageSUCROS= (double)0.0;
-					pDev->iDayAftEmerg = 0;
+					//pDev->iDayAftEmerg = 0;
+					pDev->iDayAftEmerg = 1; //SG20220302, weil DevelopmentChekAndPostHarvestManagement in XN5 schon vor dem Phenologie-Modul aufgerufen wird
 					pDev->fCumTDU = (double)0.0;
 	   
 					CTDU =(double)0;
@@ -1878,7 +1879,7 @@ int PhasicDevelopment_GECROS(gecros *self)
 				  }
 			  }
 				
-		  } //Ende der Berechnung von Keimung und Feldaufgang nach CERES
+        } //Ende der Berechnung von Keimung und Feldaufgang nach CERES
 		  			  
 		  if (iEmerg <1)
 		  {
@@ -1905,10 +1906,10 @@ int PhasicDevelopment_GECROS(gecros *self)
       DS   = (double)pDev->fStageSUCROS;
 	  
 	  //Begin of Hong
-      TMAX = (double) self->weather.fTempMax;     //[°C]
-      TMIN = (double) self->weather.fTempMin;     //[°C]	  
-	  //TMAX = (double)xpn->pCl->pWeather->fTempMax;    //[°C] //Hong for test
-      //TMIN = (double)xpn->pCl->pWeather->fTempMin;    //[°C]
+      //TMAX = (double) self->weather.fTempMax;     //[°C]
+      //TMIN = (double) self->weather.fTempMin;     //[°C]	  
+	  TMAX = (double)pWe->fTempMax;    //[°C] //Hong for test
+      TMIN =  (double)pWe->fTempMin;    //[°C]
 	  //TEMP= pCl->pWeather->fTempAir;                 //[°C]
 	  //End of Hong
 	  
@@ -1941,10 +1942,10 @@ int PhasicDevelopment_GECROS(gecros *self)
 	  if (self->VERN > (double)0)
 	  {
 	  //Begin of Hong
-      TMAX = (double) self->weather.fTempMax;     //[°C]
-      TMIN = (double) self->weather.fTempMin;     //[°C]	  
-	  //TMAX = (double)xpn->pCl->pWeather->fTempMax;    //[°C] //Hong for test
-      //TMIN = (double)xpn->pCl->pWeather->fTempMin;    //[°C]
+      //TMAX = (double) self->weather.fTempMax;     //[°C]
+      //TMIN = (double) self->weather.fTempMin;     //[°C]	  
+	  TMAX = (double)pWe->fTempMax;    //[°C] //Hong for test
+      TMIN =  (double)pWe->fTempMin;    //[°C]
 	  //End of Hong
 	   fMinTemp= pPl->pGenotype->fTempMinVern;	
 	   fOptTemp= pPl->pGenotype->fTempOptVern;
@@ -2314,6 +2315,7 @@ int Photosynthesis_GECROS(gecros *self)
       expertn_modul_base *xpn = &(self->parent);
 	  PTIME pTi = xpn->pTi;
       PCLIMATE pCl = xpn->pCl;
+      PWEATHER pWe = pCl->pWeather;
 	  PPLANT pPl = xpn->pPl;
 	  PSPROFILE pSo = xpn->pSo;	
 	  PWATER pWa = xpn->pWa;
@@ -2356,11 +2358,14 @@ int Photosynthesis_GECROS(gecros *self)
 
 //input parameters
       //Begin of Hong
-//      DDTR = (double) pCl->pWeather->fSolRad*1E6; //[J/(m2*d)]
-      DDTR = (double) self->weather.fDaylySolRad*1E6; //[J/(m2*d)]
-	  TMAX = (double) self->weather.fTempMax; //[°C]
-	  TMIN = (double) self->weather.fTempMin;  //[°C]
-//	  TMPA = (double) pCl->pWeather->fTempAir; //[°C]
+//  DDTR = (double) pCl->pWeather->fSolRad*1E6; //[J/(m2*d)]
+//  DDTR = (double) self->weather.fDaylySolRad*1E6; //[J/(m2*d)]
+     DDTR = (double) pCl->pWeather->fGlobalStrahlung*1E6; //[J/(m2*d)]
+// TMAX = (double) self->weather.fTempMax; //[°C]
+// TMIN = (double) self->weather.fTempMin;  //[°C]
+	TMAX = (double) pWe->fTempMax; //[°C]
+	TMIN =  (double) pWe->fTempMin;  //[°C]
+// TMPA = (double) pCl->pWeather->fTempAir; //[°C]
        //End of Hong
       d1   = (double)0.611 * exp((double)17.269*TMAX/((double)237.3+TMAX));
       d2   = (double)0.611 * exp((double)17.269*TMIN/((double)237.3+TMIN));
@@ -2563,6 +2568,7 @@ int   BiomassGrowth_GECROS(gecros *self)
 	  
 	  PMANAGEMENT pMa = xpn->pMa;
 	  PPLANT      pPl = xpn->pPl;
+      PWEATHER pWe = xpn->pCl->pWeather;
     //  PWLAYER      pWL   = xpn->pWa->pWLayer;
 
       PPLTCARBON   pPltC = pPl->pPltCarbon;
@@ -2801,8 +2807,10 @@ int   BiomassGrowth_GECROS(gecros *self)
 	  TDU  = (double)pDev->fDTT;
 	  CTDU = (double)pDev->fCumTDU;
 	//Begin of Hong
-	  TMAX = (double) self->weather.fTempMax;     //[°C]
-      TMIN = (double) self->weather.fTempMin;     //[°C]	  
+//	  TMAX = (double) self->weather.fTempMax;     //[°C]
+//      TMIN = (double) self->weather.fTempMin;     //[°C]	  
+	  TMAX = (double) pWe->fTempMax;     //[°C]
+      TMIN = (double)  pWe->fTempMin;     //[°C]	  
 	//End of Hong
 	  DIFS = (double)pGS->fDiffSoilAirTemp;       //[°C]
 	  TBD  = (double)self->TBD;//base temperature for phenology     [°C]  crop  table 3, p47 
@@ -2952,7 +2960,7 @@ int   BiomassGrowth_GECROS(gecros *self)
       LNRT   = LWRT*RNCMIN;  //rate [g(N) m-2 d-1]*/
       
   //%** intput (from OrganSenescence_GECROS)
-     CSRTN  = (double)pGPltC->fCStrctRootN;
+    // CSRTN  = (double)pGPltC->fCStrctRootN;
      LWRT = (double)pGPltB->fRootWeightLossR;
      LCRT  = (double)pGPltC->fCRootLossR;
      LNRT  = (double)pGPltN->fNRootLossR;
@@ -2986,8 +2994,8 @@ int   BiomassGrowth_GECROS(gecros *self)
 
       //DS   = (double)pDev->fStageSUCROS;
       //Begin of Hong
-	  TMAX = (double) self->weather.fTempMax;     //[°C]
-      TMIN = (double) self->weather.fTempMin;     //[°C]	  
+	  //TMAX = (double) self->weather.fTempMax;     //[°C]
+      //TMIN = (double) self->weather.fTempMin;     //[°C]	  
 	  //End of Hong
 	  DIFS = (double)pGS->fDiffSoilAirTemp;       //[°C]
 	  /*
@@ -3049,8 +3057,8 @@ int   BiomassGrowth_GECROS(gecros *self)
 
 //*/   
       //Begin of Hong
-	  TMAX = (double) self->weather.fTempMax;     //[°C]
-      TMIN = (double) self->weather.fTempMin;     //[°C]	  
+	  //TMAX = (double) self->weather.fTempMax;     //[°C]
+      //TMIN = (double) self->weather.fTempMin;     //[°C]	  
 	  //End of Hong
 	  DIFS   = (double)pGS->fDiffSoilAirTemp;       //[°C]
 	  DAVTMP = 0.29*TMIN + 0.71*TMAX;
@@ -3126,22 +3134,27 @@ int   BiomassGrowth_GECROS(gecros *self)
       
 //-----------------------------------------------------------------------------------------
 
-      //NCR   = INSW(SLNT-SLNMIN,0.,min(NUPTX,NDEMA))
-      //       /(YGV*(double)pGPltC->fNetStdgCropPhotosynR*12./44.);
-      //SG 20191115
-      NCR   = INSW(SLNT-SLNMIN,0.,min(NUPTX,max(0.0	,NDEMA)))
-             /(YGV*max(1.e-6,(double)pGPltC->fNetStdgCropPhotosynR)*12./44.);
+      NCR   = INSW(SLNT-SLNMIN,0.,min(NUPTX,NDEMA))
+             /(YGV*(double)pGPltC->fNetStdgCropPhotosynR*12./44.);
+      //SG 20191115 für Gecros_h:
+      //NCR   = INSW(SLNT-SLNMIN,0.,min(NUPTX,max(0.0	,NDEMA)))
+      //       /(YGV*max(1.e-6,(double)pGPltC->fNetStdgCropPhotosynR)*12./44.);
+      
+      //XN3:
+      FNSH  = 1./(1.+NCR*DERI/NOTNUL(SHSA)*CSH/CRT*NRT/NSH);
+      FCSH  = 1./(1.+NCR*DERI/NOTNUL(SHSA));
       //FNSH  = 1./(1.+NCR*DERI/NOTNUL(SHSA)*CSH/max(1.e-2,CRT)*NRT/max(1.e-2,NSH));
       //FCSH  = 1./(1.+NCR*DERI/NOTNUL(SHSA));
+
 //Test_SG
-    if(APCAN>=0.1)
+/*    if(APCAN>=0.1)
     {
         FNSH  = 1./(1.+NCR*DERI/max(1.e-2,SHSA)*CSH/max(1.e-2,CRT)*NRT/max(1.e-2,NSH));
         FCSH  = 1./(1.+NCR*DERI/max(1.e-2,SHSA));
         
-/*        FNSH  = max(0.2,min(0.8,FNSH));
-        FCSH  = max(0.2,min(0.8,FCSH));
- */       
+  //      FNSH  = max(0.2,min(0.8,FNSH));
+ //       FCSH  = max(0.2,min(0.8,FCSH));
+        
         FNSHP = FNSH;
         FCSHP = FCSH;
     }
@@ -3152,6 +3165,7 @@ int   BiomassGrowth_GECROS(gecros *self)
         //FNSH  = FNSHP;
         //FCSH  = FCSHP;
     }
+        */
         
 /*      FNSH  = max(0.2,min(0.8,1./(1.+NCR*DERI/max(1.e-2,SHSA)*CSH/max(1.e-2,CRT)*NRT/max(1.e-2,NSH))));
       FCSH  = max(0.2,min(0.8,1./(1.+NCR*DERI/max(1.e-2,SHSA))));*/
@@ -3171,7 +3185,7 @@ int   BiomassGrowth_GECROS(gecros *self)
       RMUS   = 0.06* 0.05/0.454*YGV*ASSA;
       RMLD   = 0.06*(1.-FCSH)*ASSA;
       //RRMUL  = (RMUN+RMUA+RMUS+RMLD-RMUL)/DELT;//rate
-      //SG 20191108
+      //SG 20191108 für Gecros_h:
       RRMUL  = (RMUN+RMUA+RMUS+RMLD-RMUL)/1.0;//per day [g(CO2) m-2 d-1]
 	  pGPltC->fUptRespCostR = (double)RRMUL;
       
@@ -3627,6 +3641,10 @@ int   LeafAreaGrowth_GECROS(gecros *self)
 
 	  LAIN   = log(1.+KN*max(0.,NLV)/SLNMIN)/KN;
 	  LAI    = min(LAIN, LAIC);
+      
+      //debug:
+   printf("time, %f, LAIC, %f, LAIN, %f, TLAI, %f, KN, %f, KW, %f, NLV, %f\n",xpn->pTi->pSimTime->fTimeY,LAIC,LAIN,TLAI,KN, KW, NLV);
+
 
 	  //CFV  = (double)pGPltC->fCFracVegetative;
       //SLA    = LAI/WLV;
@@ -3821,8 +3839,8 @@ int   OrganSenescence_GECROS(gecros *self)
       //SG20191105: per day
       LWLVM  = (LAIC-min(LAIC,LAIN))/SLA0/1.0; // per day [g m-2 (soil)]
       //SG 20110801:
-	  //LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.01*WLV); //[g m-2 d-1 ], original 0.03 d-1
-     LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.03*WLV); //[g m-2 d-1 ]
+	  LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.01*WLV); //[g m-2 d-1 ], original 0.03 d-1
+      //LWLV   = min(WLV-1.E-5, LWLVM+REANOR(ESD-DS,LWLVM)*0.03*WLV); //[g m-2 d-1 ]
 
       LCLV   = LWLV*CFV;
       LNLV   = min(LWLV,LWLVM)*LNCMIN + (LWLV-min(LWLV,LWLVM))*LNC;
@@ -4015,53 +4033,33 @@ int     PotentialNitrogenUptake_GECROS(gecros *self)
  //Test_SG:
      //RMN    = max(0., min(APCAN-1.E-2,RMUL) + max(RMN, 0.));
      //RM     = max(0., min(APCAN-1.E-2,RMUL) + RMRE);
-     RMN = min(RMN,RM); //andernfalls kann DERI negativ werden
+     //RMN = min(RMN,RM); //andernfalls kann DERI negativ werden
 
-/*	  SHSA   = 12./44. * YGV*(APCAN -RM -RX)/ CSH;  // [g g(C)-1 d-1]
-      SHSAN  = 12./44. * YGV*(APCANN-RMN-RX)/ CSH;
-      DERI   = max(0.,(SHSAN - SHSA)/(0.001*NTOT/CTOT));  // [g g(N-1 d-1]*/
-      //DERI   = (double)fabs((SHSAN - SHSA)/(0.001*NTOT/CTOT));
-      
-//SG 20191115:
 	  SHSA   = 12./44. * YGV*(APCAN -RM -RX)/ CSH;  // [g g(C)-1 d-1]
       SHSAN  = 12./44. * YGV*(APCANN-RMN-RX)/ CSH;
+      DERI   = max(0.,(SHSAN - SHSA)/(0.001*NTOT/CTOT));  // [g g(N-1 d-1]
+      //DERI   = (double)fabs((SHSAN - SHSA)/(0.001*NTOT/CTOT));
+      
+//SG 20191115 für Gecros_h:
+/*	  SHSA   = 12./44. * YGV*(APCAN -RM -RX)/ CSH;  // [g g(C)-1 d-1]
+      SHSAN  = 12./44. * YGV*(APCANN-RMN-RX)/ CSH;
       DERI   = max(0.01,(SHSAN - SHSA)/(0.001*max(1.e-2,NTOT)/max(1.e-1,CTOT)));  // [g g(N-1 d-1]
-      //DERI   = max(1.e-12,(SHSAN - SHSA)/(0.001*NTOT/CTOT));  // [g g(N-1 d-1]
-
-        //%-- Nitrogen partitioning between shoots and roots
+*/
+    
+      //%-- Nitrogen partitioning between shoots and roots
       HNCCR  = LNCI*exp(-0.4*DS);
       //NDEMD  = INSW(DS-1., WSH*(HNCCR-HNC)*(1.+NRT/NSH)/DELT, 0.);//original, not correct!!! NDEMD is per day. 
 	  NDEMD  = INSW(DS-1., WSH*(HNCCR-HNC)*(1.+NRT/NSH)/1.0, 0.);//changed by Hong, NUPTX has the unit (g N m-2 d-1) 
-      //NDEMA  = CRT * SHSA*SHSA/NOTNUL(DERI); // (g N m-2 d-1)
-//SG 20191115:
-//      NDEMA  = max(1.e-6,CRT * SHSA*SHSA/NOTNUL(DERI)); // (g N m-2 d-1)
-      NDEMA  = max(1.e-4,CRT * SHSA*SHSA/max(0.01,DERI)); // (g N m-2 d-1)
+      NDEMA  = CRT * SHSA*SHSA/NOTNUL(DERI); // (g N m-2 d-1)
+      //SG 20191115 für Gecros_h:
+      //NDEMA  = max(1.e-4,CRT * SHSA*SHSA/max(0.01,DERI)); // (g N m-2 d-1)
 
+     NDEMAD = INSW(LNC-1.5*LNCI, max(NDEMA, NDEMD), 0.); 
+     //SG 20191115 für Gecros_h:
+     //NDEMAD = INSW(LNC-1.5*LNCI, max(NDEMA/self->DAYL*24.0, NDEMD), 0.); //SG20191119: NDEMA per daytime
      
-     
-     //NDEMAD = INSW(LNC-1.5*LNCI, max(NDEMA, NDEMD), 0.); 
-     NDEMAD = INSW(LNC-1.5*LNCI, max(NDEMA/self->DAYL*24.0, NDEMD), 0.); //SG20191119: NDEMA per daytime
      NDEM   = INSW(SLNMIN-SLN+1.E-5, min(NUPTX,NDEMAD), 0.);
  
-			 
-//Hong 2016-08-08: change for Sebastian Gayler and Arne Poyda
-
-/*
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	// SG20140312:
-	// Vorschlag von Joachim Ingwersen zur Simulation der Winterung
-    if((!lstrcmp((LPSTR)pPl->pGenotype->acCropCode,(LPSTR)"WH"))             // here we have to 
-				||(!lstrcmp((LPSTR)pPl->pGenotype->acCropCode,(LPSTR)"BA"))  // distinguish between
-				||(!lstrcmp((LPSTR)pPl->pGenotype->acCropCode,(LPSTR)"WR"))) // winter and summer crops --> DB!!!
-	{
-		//	if (DS < 0.25) // DSCRIT = 0.25
-		if ((fparVERN > -0.1) && (DS < 0.25)) // DSCRIT = 0.25
-    		NDEM   = INSW(SLNMIN-SLN+1.E-5, min(NUPTX,0.01*NDEMAD), 0.);
-		else
-    		NDEM   = INSW(SLNMIN-SLN+1.E-5,  min(NUPTX,NDEMAD), 0.);
-	}
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*/
 /*
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// SG20140312:
@@ -4083,8 +4081,9 @@ int     PotentialNitrogenUptake_GECROS(gecros *self)
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// SG20140312:
 	// Vorschlag von Joachim Ingwersen zur Simulation der Winterung
-	if((strcmp(pPl->pGenotype->acCropCode,"WH")==0)||(strcmp(pPl->pGenotype->acCropCode,"BA")==0)) // here we have to distinguish between winter and summer crops!!!
-									
+	if((strcmp(pPl->pGenotype->acCropCode,"WH")==0)     // here we have
+        ||(strcmp(pPl->pGenotype->acCropCode,"BA")==0)  // to distinguish between 
+    ||(strcmp(pPl->pGenotype->acCropCode,"WR")==0))   // winter and summer crops!!
 	{
 		//	if (DS < 0.25) // DSCRIT = 0.25
 		if ((self->VERN > -0.1) && (DS < 0.25)) // DSCRIT = 0.25
@@ -4097,7 +4096,7 @@ int     PotentialNitrogenUptake_GECROS(gecros *self)
 	
     // AP20171030
 	{
-		if ((self->VERN > -0.1) && (DS < 0.30))
+		if ((self->VERN > -0.1) && (DS < 0.30))// DSCRIT = 0.3
     		NDEM   = INSW(SLNMIN-SLN+1.E-5, min(NUPTX,0.01*NDEMAD), 0.);
 		else
     		NDEM   = INSW(SLNMIN-SLN+1.E-5, min(NUPTX,NDEMAD), 0.);
@@ -5841,7 +5840,7 @@ int rnacc(double FNSH,double NUPT,double RWST,double STEMNC,double LNCMIN,double
 return 1;
 }
 
-int gecros_integrate_small_time_step_vars(gecros *self)
+/*int gecros_integrate_small_time_step_vars(gecros *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
 	PTIME pTi = xpn->pTi;
@@ -5896,12 +5895,12 @@ int gecros_integrate_small_time_step_vars(gecros *self)
 	}
 
 
-	/*self->weather.fTempAve = *(self->TairMean);
-	self->weather.fTempMin = *(self->TairMin);
-	self->weather.fTempMax = *(self->TairMax);
-	self->weather.fDaylySolRad = *(self->fSolRad);*/
-	return RET_SUCCESS;
-}
+	//self->weather.fTempAve = *(self->TairMean);
+	//self->weather.fTempMin = *(self->TairMin);
+	//self->weather.fTempMax = *(self->TairMax);
+	//self->weather.fDaylySolRad = *(self->fSolRad);
+	//return RET_SUCCESS;
+}*/
 
 
 //Hong 2016-08-08: change for Sebastian Gayler and Arne Poyda:
@@ -6002,6 +6001,8 @@ int gecros_Germination(gecros *self)
   int Emergence_GECROS(gecros *self)
   {
 	  expertn_modul_base *xpn = &(self->parent);
+      
+      PWEATHER pWe= xpn->pCl->pWeather; //SG20220301
 	  
 	  //double DELT = (double)xpn->pTi->pTimeStep->fAct; //Hong
 	  double DELT = 1.0; //Hong
@@ -6079,18 +6080,23 @@ int gecros_Germination(gecros *self)
 	//=========================================================================================
 	//Calculate Emergence Information
 	//=========================================================================================
-//		pCl->pWeather->fTempAve = (pCl->pWeather->fTempAve > 0? pCl->pWeather->fTempAve:(pCl->pWeather->fTempMax+pCl->pWeather->fTempMin/2));
-		
-		self->weather.fTempAve = (self->weather.fTempAve > 0? self->weather.fTempAve:(self->weather.fTempMax+self->weather.fTempMin)/2);
+	//	pCl->pWeather->fTempAve = (pCl->pWeather->fTempAve > 0? pCl->pWeather->fTempAve:(pCl->pWeather->fTempMax+pCl->pWeather->fTempMin/2));
+
+    //SG20220301:
+		//pWe->fTempAve = (pWe->fTempAve > 0? pWe->fTempAve:(pWe->fTempMax+pWe->fTempMin)/2.0);
+        pWe->fTempAve = (pWe->fTempMax+pWe->fTempMin)/2.0;//Anpassung an XN3 - dort bereits beim Einlesen vom Wetter-File gesetzt!
+		// self->weather.fTempAve = (self->weather.fTempAve > 0? self->weather.fTempAve:(self->weather.fTempMax+self->weather.fTempMin)/2);
 
 		if (fP9>(double)150.0)
 			self->fEmergValue=(double)-1.0;
 		else
 		{
-			if(self->weather.fTempAve < fTbase_Emerg)
+			//if(self->weather.fTempAve < fTbase_Emerg)
+			if(pWe->fTempAve < fTbase_Emerg)
 				fDTT = 0;
 			else
-				fDTT = self->weather.fTempAve - fTbase_Emerg;
+//			fDTT = self->weather.fTempAve - fTbase_Emerg;
+				fDTT = pWe->fTempAve - fTbase_Emerg;
 
 			self->fEmergValue += fDTT/fP9*DELT;
 		}
@@ -6115,6 +6121,8 @@ double gecros_Vernalization_CERES(gecros *self)
 	expertn_modul_base *xpn = &(self->parent);
 
 	PPLANT pPl = xpn->pPl;
+    PWEATHER pWe= xpn->pCl->pWeather; //SG20220301
+
 	//=========================================================================================
 	//Variable Declaration and Intitiation
 	//=========================================================================================
@@ -6126,8 +6134,10 @@ double gecros_Vernalization_CERES(gecros *self)
 	//Begin of Hong
 	 //fTempMax = (double)xpn->pCl->pWeather->fTempMax;
 	 //fTempMin = (double)xpn->pCl->pWeather->fTempMin;	 
-	 fTempMax = (double)self->weather.fTempMax;
-	 fTempMin = (double)self->weather.fTempMin;
+	 fTempMax = (double)pWe->fTempMax;
+	 fTempMin = (double)pWe->fTempMin;	 
+	 //fTempMax = (double)self->weather.fTempMax;
+	 //fTempMin = (double)self->weather.fTempMin;
 //	 double DELT = (double)xpn->pTi->pTimeStep->fAct;
 	 double DELT = 1.0;
 	 //end of Hong
@@ -6282,11 +6292,14 @@ double gecros_PlantTemperature(gecros *self)
      //Variable Declaration and Intitiation
 //=========================================================================================
      expertn_modul_base *xpn = &(self->parent);
-	 
+     PWEATHER pWe= xpn->pCl->pWeather; //SG20220301
+
 	 double fTempMinCrop,fTempMaxCrop,fTempAveCrop;
     // char *lpCropType    =xpn->pPl->pGenotype->acCropCode;
-     double fTempMax        =(double) self->weather.fTempMax; 
-     double fTempMin        =(double) self->weather.fTempMin;
+//     double fTempMax        =(double) self->weather.fTempMax; 
+//     double fTempMin        =(double) self->weather.fTempMin;
+     double fTempMax        =(double)pWe->fTempMax; 
+     double fTempMin        =(double) pWe->fTempMin;
      double fSnow            =xpn->pCl->pWeather->fSnow;
 	 //Begin of Hong
 	 //fTempMax = (double)xpn->pCl->pWeather->fTempMax;

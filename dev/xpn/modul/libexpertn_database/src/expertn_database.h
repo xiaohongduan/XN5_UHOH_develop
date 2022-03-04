@@ -90,7 +90,7 @@ struct _expertn_database
 	double global_radiation;
 	double precipitation; //[mm];
 	double sunshine_duration;
-	double rel_himidity;
+	double rel_humidity;
 	double windspeed;
 	double dewpoint;
 	double kesselverdunstung;

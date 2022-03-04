@@ -25,7 +25,7 @@ int evapotranspiration_FAO_load(evapotranspiration *self)
 	self->fcumtrad = 0.0;
 	self->fcumaero = 0.0;
     
-    //AS: added information about weather data resolution
+    //SG20220222: added information about weather data resolution
     char *S;
 	S = xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.Expert N Standard Read INI.use high resolution climate data");
 	if ((S==NULL) || (atoi(S)==0))
