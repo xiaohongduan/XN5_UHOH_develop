@@ -96,6 +96,11 @@ typedef struct
 	//Water Flux Density
 	double *FluxDens_Day, *FluxDensZwischen_Day;
 	//double FluxDens_dt, FluxDens_Day, FluxDens_Sum;
+    
+    //SG20220311: Capillary rise
+    double CapillaryRise_Day;
+    double CapillaryRise_Sum;
+    double caprise_zwischen;
 	
 } struct_Water;
 

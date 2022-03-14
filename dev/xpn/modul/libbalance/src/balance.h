@@ -38,6 +38,7 @@ struct _balance
 	double fWaterInput, fWaterOutput;
 	double fActETCum;
 	double fProfil, fProfilStart;
+    double CumCapillaryRise; //SG20220311
 	
     double fGroundHeatNeg;
     double fGroundHeatDay, fHeatLatentDay, fHeatSensDay, fNetRadDay, fResDay;

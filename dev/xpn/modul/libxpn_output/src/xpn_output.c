@@ -680,15 +680,17 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Sum,"output.Water.Water Compartments Cumulative.Runoff [mm]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Sum,"output.Water.Water Compartments Cumulative.Infiltration [mm]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Sum,"output.Water.Water Compartments Cumulative.Drainage [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.CapillaryRise_Sum,"output.Water.Water Compartments Cumulative.Capillary Rise [mm]",0.0); //SG20220311
 
 	// cumulative water flows (day)
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.Water.Water Compartments Day.Precipitation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Day,"output.Water.Water Compartments Day.Actual Evaporation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Water.Water Compartments Day.Actual Transpiration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Day,"output.Water.Water Compartments Day.Interception Loss [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Day,"output.Water.Water Compartments Day.Runoff [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Day,"output.Water.Water Compartments Day.Infiltration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Day,"output.Water.Water Compartments Day.Drainage [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.Water.Water Compartments Day.Precipitation [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Day,"output.Water.Water Compartments Day.Actual Evaporation [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Water.Water Compartments Day.Actual Transpiration [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Day,"output.Water.Water Compartments Day.Interception Loss [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Day,"output.Water.Water Compartments Day.Runoff [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Day,"output.Water.Water Compartments Day.Infiltration [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Day,"output.Water.Water Compartments Day.Drainage [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.CapillaryRise_Day,"output.Water.Water Compartments Day.Capillary Rise [mm/d]",0.0); //SG20220311
 
 	// soil water balance
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Balance,"output.Water.Water Storage.Water Storage in Profile [mm]",0.0); //reloacted to output.Water. by Hong on 20181218
@@ -1700,6 +1702,8 @@ int xpn_output_calc_var(xpn_output *self)
 			self->water.Infiltration_Day = self->water.infiltration_zwischen;		// Infiltration
 			self->water.Runoff_Day = self->water.runoff_zwischen;			// Runoff
 			self->water.Drain_Day = self->water.drain_zwischen;			// Drainage/Ground Water Leaching
+            //SG20220311:
+            self->water.CapillaryRise_Day = self->water.caprise_zwischen; //Capillary rise
 
 			self->water.potET_Day = self->water.pot_evapotransp_zwischen;	// pot. Evapotransp.
 			self->water.potE_Day = self->water.pot_evapo_zwischen;		// pot. Evaporation
@@ -1723,6 +1727,7 @@ int xpn_output_calc_var(xpn_output *self)
 			self->water.infiltration_zwischen = 0.0;
 			self->water.runoff_zwischen = 0.0;
 			self->water.drain_zwischen = 0.0;
+            self->water.caprise_zwischen = 0.0; //SG20220311
 
 			self->water.pot_transp_zwischen = 0.0;
 			self->water.pot_evapotransp_zwischen = 0.0;
@@ -1798,6 +1803,11 @@ int xpn_output_calc_var(xpn_output *self)
 	// Drainage
 	self->water.drain_zwischen += (self->parent.pWa->fPercolR*dt);
 	self->water.Drain_Sum += (self->parent.pWa->fPercolR*dt);
+    
+    //SG20220311:
+    //Capillary rise 
+    self->water.caprise_zwischen += xpn->pWa->fCapillaryRiseR*dt;
+    self->water.CapillaryRise_Sum += xpn->pWa->fCapillaryRiseR*dt;
 
     // Radiation
     self->fSolRadDay_zwischen += xpn->pCl->pWeather->fSolRad *dt;

@@ -25,6 +25,7 @@ static void balance_init(balance *self)
 	self->fRunOffCum=0.0;
 	self->fLeaching=0.0;
 	self->fCumLeaching=0.0;
+    self->CumCapillaryRise= 0.0; //SG20220311
 	self->fBalance=0.0;
 	self->fCumBalance=0.0;	
 	self->fWaterStorage = 0.0;
@@ -54,6 +55,9 @@ int balance_load(balance *self)
 	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumRain,"output.Water.Soil Water Balance.Cum Rain [mm]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumLeaching,"output.Balance.Soil Water Balance.Leaching [mm]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fActETCum,"output.Balance.Soil Water Balance.Evapotranspiration [mm]",0.0);	
+    //SG20220311:
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->CumCapillaryRise,"output.Balance.Soil Water Balance.Capillary Rise [mm]",0.0);	
+    
 	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fBalance,"output.Water.Soil Water Balance.Balance [mm]",0.0); //Hong 20190507: not necessary
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fCumBalance,"output.Balance.Soil Water Balance.Water Balance [mm]",0.0);
 
@@ -205,6 +209,7 @@ int balance_run(balance *self)
         
     //SG20210714:
     self->fWaterInput += max(0.0,pWa->fInfiltR)*dt + pWa->fCapillaryRiseR*dt;    
+    self->CumCapillaryRise += pWa->fCapillaryRiseR*dt;
 
 /*	
 	if (xpn->pPl->pPltWater->fInterceptR>(double)0.0)
