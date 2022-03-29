@@ -1143,7 +1143,7 @@ int hydrus_water_flow_setBC(hydrus *self)
             
            //SG20220304: dynamic groundwater table:
            if (pWa->iBotBC == (int)5) 
-               self->hBot=-pCl->pWeather->fWaterTable + pSo->fDeltaZ/(float)2;
+               self->hBot= pSo->fDepth - pCl->pWeather->fWaterTable + pSo->fDeltaZ/(float)2;
 		}
 
 	return RET_SUCCESS;

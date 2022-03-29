@@ -871,8 +871,8 @@ int LagerungNeu(schaaf_manag *self)
 		pCP->fCMicLitterSurf = restMenge;//Hong for century_n
 		
 		//Begin of Hong: change in XN3
-		//SG 20161009: For DAISY model - 100% of fCorgManure that is partitioned to "fCHumusSurf" are SOM2 (see TSFertilizer, manage.c line 334-349)
-		//pCL->fCHumusFast   += (pCP->fCHumusSurf - restMenge);
+		//SG 20161009: For DAISY model - 100% of fCorgManure that is partitioned to "fCHumusSurf" are SOM2 (see XN3: TSFertilizer, manage.c line 334-349)
+		pCL->fCHumusFast   += (pCP->fCHumusSurf - restMenge);
 
         pSL->fHumusCN    =pSL->fCHumus/pSL->fNHumus;
 		//End of Hong
@@ -911,6 +911,11 @@ int LagerungNeu(schaaf_manag *self)
     double	bearbTiefe,aktTiefe,obereTiefe,anteilschicht,anteil,no3ges,
     		nh4ges,ureages,humCges,humNges,humges,litterCges,litterNges,manureNges,
     		manureCges,mischeffekt;
+            
+	//SG20161009 - Mixing of DAISY pools			
+	float   FOMFastCges, FOMSlowCges, MicBiomDenitCges, MicBiomFastCges, MicBiomSlowCges, HumusFastCges, HumusSlowCges;
+	float   FOMFastNges, FOMSlowNges, MicBiomDenitNges, MicBiomFastNges, MicBiomSlowNges, HumusFastNges, HumusSlowNges;
+
 
 		mischeffekt = pMa->pTillage->fEffMix;
 		
@@ -924,6 +929,21 @@ int LagerungNeu(schaaf_manag *self)
 		litterNges = (double)0.0;
 		manureNges = (double)0.0;
 		manureCges = (double)0.0;
+		//SG20161009 - Mixing of DAISY pools			
+		FOMFastCges = (float)0.0;
+		FOMFastNges = (float)0.0;
+		FOMSlowCges = (float)0.0;
+		FOMSlowNges = (float)0.0;
+		MicBiomDenitCges = (float)0.0;
+		MicBiomDenitNges = (float)0.0;
+		MicBiomFastCges = (float)0.0;
+		MicBiomFastNges = (float)0.0;
+		MicBiomSlowCges = (float)0.0;
+		MicBiomSlowNges = (float)0.0;
+		HumusFastCges = (float)0.0;
+		HumusFastNges = (float)0.0;
+		HumusSlowCges = (float)0.0;
+		HumusSlowNges = (float)0.0;
 
 		/* Berechnung des anteils eine Bodenschicht 
 				an dem bearbeiteten Bodenvolumen. */
@@ -981,7 +1001,23 @@ int LagerungNeu(schaaf_manag *self)
 			manureNges += pCL->fNManure * anteil;
 			manureCges += pCL->fCManure * anteil;
 
-        } 	/* Ende der Schleife zum Summieren */
+ 			//SG20161009 - Mixing of DAISY pools			
+			FOMFastCges += pCL->fCFOMFast * anteil;
+			FOMFastNges += pCL->fNFOMFast * anteil;
+			FOMSlowCges += pCL->fCFOMSlow * anteil;
+			FOMSlowNges += pCL->fNFOMSlow * anteil;
+			MicBiomDenitCges += pCL->fCMicBiomDenit * anteil;
+			MicBiomDenitNges += pCL->fNMicBiomDenit * anteil;
+			MicBiomFastCges += pCL->fCMicBiomFast * anteil;
+			MicBiomFastNges += pCL->fNMicBiomFast * anteil;
+			MicBiomSlowCges += pCL->fCMicBiomSlow * anteil;
+			MicBiomSlowNges += pCL->fNMicBiomSlow * anteil;
+			HumusFastCges += pCL->fCHumusFast * anteil;
+			HumusFastNges += pCL->fNHumusFast * anteil;
+			HumusSlowCges += pCL->fCHumusSlow * anteil;
+			HumusSlowNges += pCL->fNHumusSlow * anteil;
+
+       } 	/* Ende der Schleife zum Summieren */
 
 
 		/* Gleichmaessige Verteilung der Gesamtmengen auf die betroffenen
@@ -1019,7 +1055,37 @@ int LagerungNeu(schaaf_manag *self)
 											+ (anteilschicht * mischeffekt * humCges);
 			pSL->fNHumus  = (((double)1.0 - mischeffekt) * pSL->fNHumus) 
 											+ (anteilschicht * mischeffekt * humNges);											
-		   } /* Ende der Schleife wenn akt. Schicht komplett bearbeitet */
+		   
+            //SG20161009 - Mixing of DAISY pools			
+			pCL->fCFOMFast = (((float)1.0 - mischeffekt) * pCL->fCFOMFast) 
+											+ (anteilschicht * mischeffekt * FOMFastCges);
+			pCL->fNFOMFast = (((float)1.0 - mischeffekt) * pCL->fNFOMFast) 
+											+ (anteilschicht * mischeffekt * FOMFastNges);
+			pCL->fCFOMSlow = (((float)1.0 - mischeffekt) * pCL->fCFOMSlow) 
+											+ (anteilschicht * mischeffekt * FOMSlowCges);
+			pCL->fNFOMSlow = (((float)1.0 - mischeffekt) * pCL->fNFOMSlow) 
+											+ (anteilschicht * mischeffekt * FOMSlowNges);
+			pCL->fCMicBiomDenit = (((float)1.0 - mischeffekt) * pCL->fCMicBiomDenit) 
+											+ (anteilschicht * mischeffekt * MicBiomDenitCges);
+			pCL->fNMicBiomDenit = (((float)1.0 - mischeffekt) * pCL->fNMicBiomDenit) 
+											+ (anteilschicht * mischeffekt * MicBiomDenitNges);
+			pCL->fCMicBiomFast = (((float)1.0 - mischeffekt) * pCL->fCMicBiomFast) 
+											+ (anteilschicht * mischeffekt * MicBiomFastCges);
+			pCL->fNMicBiomFast = (((float)1.0 - mischeffekt) * pCL->fNMicBiomFast) 
+											+ (anteilschicht * mischeffekt * MicBiomFastNges);
+			pCL->fCMicBiomSlow = (((float)1.0 - mischeffekt) * pCL->fCMicBiomSlow) 
+											+ (anteilschicht * mischeffekt * MicBiomSlowCges);
+			pCL->fNMicBiomSlow = (((float)1.0 - mischeffekt) * pCL->fNMicBiomSlow) 
+											+ (anteilschicht * mischeffekt * MicBiomSlowNges);
+			pCL->fCHumusFast = (((float)1.0 - mischeffekt) * pCL->fCHumusFast) 
+											+ (anteilschicht * mischeffekt * HumusFastCges);
+			pCL->fNHumusFast = (((float)1.0 - mischeffekt) * pCL->fNHumusFast) 
+											+ (anteilschicht * mischeffekt * HumusFastNges);
+			pCL->fCHumusSlow = (((float)1.0 - mischeffekt) * pCL->fCHumusSlow) 
+											+ (anteilschicht * mischeffekt * HumusSlowCges);
+			pCL->fNHumusSlow = (((float)1.0 - mischeffekt) * pCL->fNHumusSlow) 
+											+ (anteilschicht * mischeffekt * HumusSlowNges);
+           } /* Ende der Schleife wenn akt. Schicht komplett bearbeitet */
 		   else
 		   {
 			pCL->fNO3N    = (pCL->fNO3N * ((double)1.0 - anteil ))
@@ -1052,6 +1118,50 @@ int LagerungNeu(schaaf_manag *self)
 			pSL->fCHumus  = (pSL->fCHumus * ((double)1.0 - anteil ))
                                  +  (( (1 - mischeffekt) * ( pSL->fCHumus * anteil ))
                                             +  (anteilschicht * mischeffekt * humCges));
+
+			//SG20161009 - Mixing of DAISY pools			
+			pCL->fCFOMFast = (pCL->fCFOMFast * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fCFOMFast * anteil ))
+                                            +  (anteilschicht * mischeffekt * FOMFastCges));
+			pCL->fNFOMFast = (pCL->fNFOMFast * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fNFOMFast * anteil ))
+                                            +  (anteilschicht * mischeffekt * FOMFastNges));
+			pCL->fCFOMSlow = (pCL->fCFOMSlow * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fCFOMSlow * anteil ))
+                                            +  (anteilschicht * mischeffekt * FOMSlowCges));
+			pCL->fNFOMSlow = (pCL->fNFOMSlow * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fNFOMSlow * anteil ))
+                                            +  (anteilschicht * mischeffekt * FOMSlowNges));
+			pCL->fCMicBiomDenit = (pCL->fCMicBiomDenit * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fCMicBiomDenit * anteil ))
+                                            +  (anteilschicht * mischeffekt * MicBiomDenitCges));
+			pCL->fNMicBiomDenit = (pCL->fNMicBiomDenit * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fNMicBiomDenit * anteil ))
+                                            +  (anteilschicht * mischeffekt * MicBiomDenitNges));
+			pCL->fCMicBiomFast = (pCL->fCMicBiomFast * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fCMicBiomFast * anteil ))
+                                            +  (anteilschicht * mischeffekt * MicBiomFastCges));
+			pCL->fNMicBiomFast = (pCL->fNMicBiomFast * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fNMicBiomFast * anteil ))
+                                            +  (anteilschicht * mischeffekt * MicBiomFastNges));
+			pCL->fCMicBiomSlow = (pCL->fCMicBiomSlow * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fCMicBiomSlow * anteil ))
+                                            +  (anteilschicht * mischeffekt * MicBiomSlowCges));
+			pCL->fNMicBiomSlow = (pCL->fNMicBiomSlow * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fNMicBiomSlow * anteil ))
+                                            +  (anteilschicht * mischeffekt * MicBiomSlowNges));
+			pCL->fCHumusFast = (pCL->fCHumusFast * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fCHumusFast * anteil ))
+                                            +  (anteilschicht * mischeffekt * HumusFastCges));
+			pCL->fNHumusFast = (pCL->fNHumusFast * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fNHumusFast * anteil ))
+                                            +  (anteilschicht * mischeffekt * HumusFastNges));
+			pCL->fCHumusSlow = (pCL->fCHumusSlow * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fCHumusSlow * anteil ))
+                                            +  (anteilschicht * mischeffekt * HumusSlowCges));
+			pCL->fNHumusSlow = (pCL->fNHumusSlow * ((float)1.0 - anteil ))
+                                 +  (( (1 - mischeffekt) * ( pCL->fNHumusSlow * anteil ))
+                                            +  (anteilschicht * mischeffekt * HumusSlowNges));
 
 		   } /* Ende der Schleife wenn akt. Schicht teilweise bearbeitet */
 

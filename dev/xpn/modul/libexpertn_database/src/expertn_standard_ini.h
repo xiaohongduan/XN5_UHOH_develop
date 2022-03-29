@@ -36,6 +36,9 @@ typedef struct
 	double size; // [ha]
 	double wind_measure_height;
 	double temp_measure_height;
+    
+    //SG20220329
+    double mean_ground_water_level;
 	
 	//climate:
 	double AveYearTemp;

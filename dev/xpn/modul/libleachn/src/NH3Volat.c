@@ -116,6 +116,8 @@ int leachn_NH3Volat1_run(stickstoff *self)
                    (pCh->pCProfile->fNH3VolatMaxR * pCh->pCLayer->pNext->fNH4N))
 // betrachtet wird der gelöste Anteil des NH4:
              		* pWa->pWLayer->pNext->fContAct /f1; 
+                    
+      pCh->pCProfile->fNH3VolatR  = max(0.0,pCh->pCProfile->fNH3VolatR );              
                
     pCh->pCLayer->pNext->fNH4N   -= pCh->pCProfile->fNH3VolatR * pTi->pTimeStep->fAct;
 

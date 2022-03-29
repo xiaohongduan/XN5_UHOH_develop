@@ -443,7 +443,10 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->temp_measure_height,"location","temp_measure_height",2.0);
 	//GET_INI_DOUBLE(self->cfg->wind_measure_height,"location","wind_measure_height");
 	//GET_INI_DOUBLE(self->cfg->temp_measure_height,"location","temp_measure_height");
-	// climate:
+    //SG20220329
+    GET_INI_DOUBLE_OPTIONAL(self->cfg->mean_ground_water_level,"location","ground_water_level",200.0);
+	
+    // climate:
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->AveYearTemp,"climate","AveYearTemp",7.4);
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->MonthTempAmp,"climate","MonthTempAmp",6.0);
 	
@@ -893,6 +896,11 @@ void expertn_standard_ini_set_location(expertn_standard_ini *self)
 	/*char* exposition;
 	double inclination; // Hang Neigung[%]
 	double size; // [ha]*/
+
+    //SG20220329: mean groundwater level
+	xpn->pLo->pFieldplot->AveGroundWaterTable = self->cfg->mean_ground_water_level;
+    xpn->pWa->fGrdWatLevel = xpn->pLo->pFieldplot->AveGroundWaterTable * 10.0; //cm -> mm
+
 }
 void expertn_standard_ini_set_climate_Ave(expertn_standard_ini *self)
 {
@@ -965,7 +973,7 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
             pSLayer->fRockFrac = max(0,pSLayer->fRockFrac);
             
 			//pSWater->fContSat = pSLayer->fPorosity;//self->cfg->cont_sat[i2]; //SG: why porosity?
-			pSWater->fContSat =self->cfg->cont_sat[i2]; //SG20220208: back to theat_sat!
+			pSWater->fContSat =self->cfg->cont_sat[i2]; //SG20220208: back to theta_sat!
 			pSWater->fContPWP = self->cfg->wilting_point[i2];
 			pSWater->fContFK = self->cfg->field_capacity[i2];
 			pSWater->fContRes = self->cfg->res_water_cont[i2];
@@ -985,7 +993,7 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
             pSWater->fContRes_c= self->cfg->res_water_cont_c[i2];
             pSWater->fCondSat_c= self->cfg->cond_sat_c[i2];
             pSWater->fCondSat_nc= self->cfg->cond_sat_nc[i2];
-
+            
 /* 		//Added by Hong Dec.2018
 			int f1, f2;
 			f1= (double)-150000;

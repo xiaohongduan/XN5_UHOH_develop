@@ -3643,7 +3643,7 @@ int   LeafAreaGrowth_GECROS(gecros *self)
 	  LAI    = min(LAIN, LAIC);
       
       //debug:
-   printf("time, %f, LAIC, %f, LAIN, %f, TLAI, %f, KN, %f, KW, %f, NLV, %f\n",xpn->pTi->pSimTime->fTimeY,LAIC,LAIN,TLAI,KN, KW, NLV);
+  // printf("time, %f, LAIC, %f, LAIN, %f, TLAI, %f, KN, %f, KW, %f, NLV, %f\n",xpn->pTi->pSimTime->fTimeY,LAIC,LAIN,TLAI,KN, KW, NLV);
 
 
 	  //CFV  = (double)pGPltC->fCFracVegetative;

@@ -71,11 +71,12 @@ int ceres_ActualTranspiration_run(ceres *self)
 	double TRWU,WUF,TLL,RWUMX,fExtWater,fTotSoilWater,fThickness,fContAct;
 	double DUL, fRAT, fPAW;
 
-	PSLAYER                 pSL             =pSo->pSLayer;
-	PSWATER                 pSWL    =pSo->pSWater;
-	PWLAYER                 pSLW    =pWa->pWLayer;
-	PLAYERROOT              pLR             =pPl->pRoot->pLayerRoot;
-	PPLTWATER           pPltW   =pPl->pPltWater;
+	PSLAYER                 pSL        = pSo->pSLayer;
+	PSWATER               pSWL    = pSo->pSWater;
+	PWLAYER               pSLW    = pWa->pWLayer;
+	PLAYERROOT         pLR       = pPl->pRoot->pLayerRoot;
+	PPLTWATER           pPltW   = pPl->pPltWater;
+//    PTIME                    pTi		  = xpn->pTi; 
 
 
 	//RWUMX =(double)0.03;
@@ -208,8 +209,8 @@ int ceres_ActualTranspiration_run(ceres *self)
 		pPl->pPltWater->fActUptakedt += pLR->fActLayWatUpt;
 		TLL   += pSWL->fContPWP*fThickness*(double)10.0;
 		DUL   += pSWL->fContFK*fThickness*(double)10.0;
-
-		pSL =pSL ->pNext;
+        
+ 		pSL =pSL ->pNext;
 		pSWL=pSWL->pNext;
 		pSLW=pSLW->pNext;
 		pLR =pLR ->pNext;
