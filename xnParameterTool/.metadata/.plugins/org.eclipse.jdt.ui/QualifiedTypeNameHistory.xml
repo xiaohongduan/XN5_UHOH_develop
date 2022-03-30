@@ -41,11 +41,11 @@
     <fullyQualifiedTypeName name="de.uhoh.for1695.XnParameterContentEditorPanel"/>
     <fullyQualifiedTypeName name="java.lang.System"/>
     <fullyQualifiedTypeName name="java.rmi.activation.ActivateFailedException"/>
-    <fullyQualifiedTypeName name="javax.swing.JCheckBox"/>
     <fullyQualifiedTypeName name="java.lang.Integer"/>
     <fullyQualifiedTypeName name="java.util.HashMap"/>
     <fullyQualifiedTypeName name="javax.swing.JSeparator"/>
     <fullyQualifiedTypeName name="javax.swing.SwingConstants"/>
     <fullyQualifiedTypeName name="javax.swing.JProgressBar"/>
     <fullyQualifiedTypeName name="de.uhoh.for1695.simProject"/>
+    <fullyQualifiedTypeName name="javax.swing.JCheckBox"/>
 </qualifiedTypeNameHistroy>

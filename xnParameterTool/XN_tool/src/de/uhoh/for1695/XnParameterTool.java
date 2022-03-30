@@ -502,7 +502,7 @@ class XnParameterToolMainWindow extends JFrame implements ActionListener {
     		createNewProjectDialog dlg = new createNewProjectDialog();
     		simProject newP = dlg.showDialog(myConfig, myConnection);
     		
-    		boolean rc = myConnection.copyProjectSettings(temp.simulation_project_id, newP.simulation_project_id, newP.project_type);
+    		boolean rc = myConnection.copyProjectSettings(temp.simulation_project_id, newP.simulation_project_id, newP.project_type, newP.emptyGrid);
     		
 			if (!rc) {
 				JOptionPane.showMessageDialog(null, "Error: Copying project information failed.");
@@ -1128,7 +1128,7 @@ class obsolete_XnParameterProjectPanel extends JPanel implements ActionListener 
 	    		simProject temp = currentProject;
 	    		createNewProject();
 	    		
-	    		boolean rc = myMainWindow.myConnection.copyProjectSettings(temp.simulation_project_id, currentProject.simulation_project_id, currentProject.project_type);
+	    		boolean rc = myMainWindow.myConnection.copyProjectSettings(temp.simulation_project_id, currentProject.simulation_project_id, currentProject.project_type, currentProject.emptyGrid);
 	    		
     			if (!rc) {
     				JOptionPane.showMessageDialog(null, "Error: Copying project information failed.");
@@ -4280,6 +4280,7 @@ class  createNewProjectDialog extends JDialog  implements ActionListener {
 	private DefaultListModel lfTypeModel;
 	private XnDatabaseConnection myConnection;
 	private XnParameterToolConfig myConfig;
+	private JCheckBox emptyGrid;
 	private boolean finished;
 	
 	public simProject showDialog(XnParameterToolConfig conf, XnDatabaseConnection conn) {
@@ -4293,7 +4294,7 @@ class  createNewProjectDialog extends JDialog  implements ActionListener {
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 	    JPanel panel = new JPanel();
-	    panel.setLayout( new java.awt.GridLayout(5, 3, 1,40) );
+	    panel.setLayout( new java.awt.GridLayout(6, 3, 1,40) );
 	    panel.setBorder(new EmptyBorder(10, 10, 10, 10));
     
 	    JLabel codeLabel = new JLabel("Simulation project code");
@@ -4353,7 +4354,13 @@ class  createNewProjectDialog extends JDialog  implements ActionListener {
         panel.add(tlistScroll);
 	    panel.add(new JLabel());
 
-       	
+	    JLabel gridChoiceLabel = new JLabel("Do not copy grid:");
+	    panel.add(gridChoiceLabel);
+	    emptyGrid = new JCheckBox();
+	    emptyGrid.setSelected(false);
+	    panel.add(emptyGrid);
+	    panel.add(new JLabel());
+
         
     	buttonDialogNewProjectOk = new JButton("OK"); 
     	buttonDialogNewProjectOk.addActionListener(this);
@@ -4410,7 +4417,7 @@ class  createNewProjectDialog extends JDialog  implements ActionListener {
     			JOptionPane.showMessageDialog(null, "New project '" + code +  "' has been created.");
     		}
     		
-    		simProject sp = new simProject(rc, code , description, authorToCheck, typeOfProject);
+    		simProject sp = new simProject(rc, code , description, authorToCheck, typeOfProject, emptyGrid.isSelected());
     		result = sp;
     		finished = true;
     		dispose();
@@ -5159,7 +5166,8 @@ class ExportWeatherDialog extends JDialog implements ActionListener {
     		 
 
      		 prefix += "/"+ filename;
-     		 boolean ret = myMainWindow.myConnection.writeWeatherData(prefix, tablename, Integer.valueOf(stationid), Integer.valueOf(first_year), Integer.valueOf(last_year), cbInits.isSelected() ? 1 : 0, false, "", maxDailyPrecip, cbElevationCorr.isSelected() ? 1:0, newAltitude, origAltitudeInfo
+     		 boolean ret = myMainWindow.myConnection.writeWeatherData(prefix, tablename, Integer.valueOf(stationid), Integer.valueOf(first_year), 
+     				 Integer.valueOf(last_year), cbInits.isSelected() ? 1 : 0, false, "", maxDailyPrecip, cbElevationCorr.isSelected() ? 1:0, newAltitude, origAltitudeInfo
      				, cbCO2.isSelected(), co2Table );
     		     			
     		 if(ret)
@@ -6644,6 +6652,7 @@ class simProject {
 	
 	String xn5_cells_table;
 	String bems_cells_management_table;
+	Boolean emptyGrid;
 	
 	public simProject (ResultSet rs)
 	{
@@ -6656,14 +6665,14 @@ class simProject {
 			
 			xn5_cells_table = rs.getString("xn5_cells_table");
 			bems_cells_management_table  = rs.getString("bems_cells_management_table");
-			
+			emptyGrid = false;
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
 		
 	}
-	public simProject (int id, String code, String description, String author, int type)
+	public simProject (int id, String code, String description, String author, int type, Boolean empty)
 	{
 			simulation_project_id = id;
 			simulation_project_code = code;
@@ -6677,6 +6686,7 @@ class simProject {
 			else {
 				bems_cells_management_table = "simulation_projects_bems_cells_management";
 			}
+			emptyGrid = empty;
 	}
 }
 class plantParam {

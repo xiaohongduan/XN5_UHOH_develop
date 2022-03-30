@@ -2,8 +2,8 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
 		<item key="DIALOG_WIDTH" value="412"/>
-		<item key="DIALOG_Y_ORIGIN" value="148"/>
-		<item key="DIALOG_X_ORIGIN" value="1128"/>
+		<item key="DIALOG_Y_ORIGIN" value="131"/>
+		<item key="DIALOG_X_ORIGIN" value="45"/>
 		<item key="DIALOG_HEIGHT" value="801"/>
 		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|11.0|0|GTK|1|"/>
 	</section>
@@ -13,8 +13,13 @@
 		<item key="isRegEx" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="wholeword" value="false"/>
-		<item key="selection" value="Delete cells by condition"/>
+		<item key="selection" value="HashMap"/>
 		<list key="findhistory">
+			<item value="HashMap"/>
+			<item value="station_id"/>
+			<item value="history_filename"/>
+			<item value="Error when writing weather history for BEMS: weather_station_id not unique over used datasets"/>
+			<item value="before-sowing"/>
 			<item value="Delete cells by condition"/>
 			<item value="openProject"/>
 			<item value="simulation_projects_xn5_cells"/>
@@ -25,10 +30,6 @@
 			<item value="camp_a"/>
 			<item value="main"/>
 			<item value="pack"/>
-			<item value="selectProjectsDialog"/>
-			<item value="gecros_h"/>
-			<item value="JCheckBox"/>
-			<item value="cbCO2"/>
 		</list>
 		<list key="replacehistory">
 			<item value="&quot;+this.dbName+&quot;"/>

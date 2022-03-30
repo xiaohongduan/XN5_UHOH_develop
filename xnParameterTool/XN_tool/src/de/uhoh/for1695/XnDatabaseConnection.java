@@ -4463,7 +4463,7 @@ class	XnDatabaseConnection {
 		return true;
 	}
 	
-	public boolean copyProjectSettings(int fromId, int toId, int project_type) {
+	public boolean copyProjectSettings(int fromId, int toId, int project_type, boolean doNotCopyGrid) {
 	
 			String s = "REPLACE INTO simulation_projects_gecros_crops_included " +
 					" SELECT " + toId + ", plant_param_id, crop_code, variety, include FROM simulation_projects_gecros_crops_included WHERE simulation_project_id = " + fromId + ";";
@@ -4480,72 +4480,73 @@ class	XnDatabaseConnection {
 				return false;
 			}
 			
-			s= "SELECT xn5_cells_table, bems_cells_management_table FROM simulation_projects_general WHERE simulation_project_id = " + toId +";";
-			String cellsTableName = "simulation_projects_xn5_cells";
-			String managTableName = "simulation_projects_bems_cells_management";
-			if (project_type == 0) {
-				managTableName = "simulation_projects_xn5_cells_management";
-			}
-			else {
-				managTableName = "simulation_projects_bems_cells_management";
-			}
-
-			try {
-				ResultSet temp = myConnection.query(s);
-				if (!temp.first ()) {
-					return false;
+			if (! doNotCopyGrid) {
+				s= "SELECT xn5_cells_table, bems_cells_management_table FROM simulation_projects_general WHERE simulation_project_id = " + toId +";";
+				String cellsTableName = "simulation_projects_xn5_cells";
+				String managTableName = "simulation_projects_bems_cells_management";
+				if (project_type == 0) {
+					managTableName = "simulation_projects_xn5_cells_management";
 				}
-				String cellsTableNameTest = temp.getString("xn5_cells_table");
-				String managTableNameTest = temp.getString("bems_cells_management_table");
-				
-				if (! managTableNameTest.isEmpty() && checkTableExists(this.dbName, managTableNameTest) && checkTableIsNotView(this.dbName, managTableNameTest))	
-					managTableName = managTableNameTest;
-			
-				if (! cellsTableNameTest.isEmpty() && checkTableExists(this.dbName, cellsTableNameTest) && checkTableIsNotView(this.dbName, cellsTableNameTest))	
-					cellsTableName = cellsTableNameTest;
-				
-			}
-			catch (Exception e) {
-				return false;
-
-			}
-
-			
-			
-			s = "REPLACE INTO  " + cellsTableName +
-					" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
-					+"`profileID`, `soil_param_id`,`daisy_param_id`,`sompools_param_id`,"
-					+"`soilinit_param_id`,`lat`,	`lon`,	`alt`,`exposition`, `inclination`,	`AveYearTemp`,"
-					+"`MonthTempAmp`, leachn_param_id, climate_file, weather_table_name, weather_station_id " 
-					+" FROM "+cellsTableName+" WHERE simulation_project_id = " + fromId + ";";
-			
-			if(!  myConnection.updateDb(s)) {
-				return false;
-			}
-			
-			if (project_type == 0) {
-				s = "REPLACE INTO "+ managTableName +
-						" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
-						+"`year`, `position`,`crop_management_id`,`crop_code`,"
-						+"`variety`"
-						+" FROM "+ managTableName  +
-						"  WHERE simulation_project_id = " + fromId + ";";
-				if(!  myConnection.updateDb(s)) {
-					return false;
+				else {
+					managTableName = "simulation_projects_bems_cells_management";
 				}
-			}
-			else if (project_type == 1) {
-				s = "REPLACE INTO "+managTableName +
-						" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
-						+"`crop_sequence_id`,`start_position`"
 	
-						+" FROM "+ managTableName +
-						"  WHERE simulation_project_id = " + fromId + ";";
+				try {
+					ResultSet temp = myConnection.query(s);
+					if (!temp.first ()) {
+						return false;
+					}
+					String cellsTableNameTest = temp.getString("xn5_cells_table");
+					String managTableNameTest = temp.getString("bems_cells_management_table");
+					
+					if (! managTableNameTest.isEmpty() && checkTableExists(this.dbName, managTableNameTest) && checkTableIsNotView(this.dbName, managTableNameTest))	
+						managTableName = managTableNameTest;
+				
+					if (! cellsTableNameTest.isEmpty() && checkTableExists(this.dbName, cellsTableNameTest) && checkTableIsNotView(this.dbName, cellsTableNameTest))	
+						cellsTableName = cellsTableNameTest;
+					
+				}
+				catch (Exception e) {
+					return false;
+	
+				}
+	
+				
+				
+				s = "REPLACE INTO  " + cellsTableName +
+						" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
+						+"`profileID`, `soil_param_id`,`daisy_param_id`,`sompools_param_id`,"
+						+"`soilinit_param_id`,`lat`,	`lon`,	`alt`,`exposition`, `inclination`,	`AveYearTemp`,"
+						+"`MonthTempAmp`, leachn_param_id, climate_file, weather_table_name, weather_station_id " 
+						+" FROM "+cellsTableName+" WHERE simulation_project_id = " + fromId + ";";
+				
 				if(!  myConnection.updateDb(s)) {
 					return false;
 				}
+				
+				if (project_type == 0) {
+					s = "REPLACE INTO "+ managTableName +
+							" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
+							+"`year`, `position`,`crop_management_id`,`crop_code`,"
+							+"`variety`"
+							+" FROM "+ managTableName  +
+							"  WHERE simulation_project_id = " + fromId + ";";
+					if(!  myConnection.updateDb(s)) {
+						return false;
+					}
+				}
+				else if (project_type == 1) {
+					s = "REPLACE INTO "+managTableName +
+							" SELECT " + toId + ", " + "`xn5_cell_x`, `xn5_cell_y`,"
+							+"`crop_sequence_id`,`start_position`"
+		
+							+" FROM "+ managTableName +
+							"  WHERE simulation_project_id = " + fromId + ";";
+					if(!  myConnection.updateDb(s)) {
+						return false;
+					}
+				}
 			}
-			
 			
 			s = "REPLACE INTO simulation_projects_xpn " +
 					" SELECT " + toId + ", " + "xpnText"
@@ -5562,6 +5563,32 @@ class	XnDatabaseConnection {
 				return true;
 			}
 			
+			//the following checks whether it is necessary to have a prefix before the station_id in the weather history file
+			// if there are several spatially distinct tables from which weather is read, then station ids might not be unique.
+			// a prefix for the table wil than have to be added to indicated the table from which it should be read 
+			//[does not concern chained tables for different years, only when different cells linkt to the same station_id, but in different tables
+			HashMap<String, Integer> historyFileTablePrefix = new HashMap<String, Integer>();
+			Boolean prefixStationIdsWithTable = false;
+			if (writeHistory > 0) {
+							
+				String sc = 
+						"   SELECT DISTINCT weather_table_name" +
+						"		FROM `"+xn5_cells_table_name+"` t1" +
+						"			WHERE simulation_project_id = " + projectId + 
+						" 		ORDER BY weather_table_name";
+						
+				ResultSet listWeatherTables = myConnection.query(sc);
+				int c = 0;
+				while (listWeatherTables.next()) {
+					historyFileTablePrefix.put(listWeatherTables.getString("weather_table_name"), ++c);
+					if (c > 1) {
+						prefixStationIdsWithTable = true;
+					}
+				}
+			
+			}
+			
+			
 			boolean doCO2 = false;
 			ResultSet co2Series = null;
 			
@@ -5603,35 +5630,41 @@ class	XnDatabaseConnection {
 					filename += String.format("%04d", cellList.getInt("alt") );
 					
 				}
+				String historyPrefix = ""; 
+				if(prefixStationIdsWithTable) {
+					historyPrefix = historyFileTablePrefix.get(cellList.getString("weather_table_name")).toString();
+				}
+					
 				boolean rc = writeWeatherData(filename, cellList.getString("weather_table_name") , cellList.getInt("weather_station_id"), 
 														startYear, endYear, writeHistory, !is_first, 
 															directory + "/"+ projectName + "_init_weather_history.txt", maxDailyPrecip, 
 															elevationCorrectionType, 
 															elevationCorrectionType > 0 && elevCorrectionClassSize > -1 ?  	cellList.getDouble("alt") : 0, 
-														elevationInfoTableForWeatherCells, doCO2, co2Series);
+														elevationInfoTableForWeatherCells, doCO2, co2Series, historyPrefix);
 				
 				if (!rc) {
 					throw new Exception("Error when writing weather data and weather history for BEMS");
 				}
 				is_first = false;
 			}
-			if (writeHistory > 0) {
+			if(writeHistory > 0) {
 				
-				String sc = " SELECT weather_station_id, COUNT(*) as N " +
-						"FROM " +
-						"  ( SELECT DISTINCT weather_table_name, weather_station_id" +
-						"		FROM `"+xn5_cells_table_name+"` t1" +
-						"			WHERE simulation_project_id = " + projectId +
-						"   ) u1 GROUP BY weather_station_id " +
-						"	HAVING N > 1;";
+				//220330 removed, now possible to deal with repeating weather station ids across tables
+				/*String sc = " SELECT weather_station_id, COUNT(*) as N " +
+				"FROM " +
+				"  ( SELECT DISTINCT weather_table_name, weather_station_id" +
+				"		FROM `"+xn5_cells_table_name+"` t1" +
+				"			WHERE simulation_project_id = " + projectId +
+				"   ) u1 GROUP BY weather_station_id " +
+				"	HAVING N > 1;";
 				ResultSet testUniqueness = myConnection.query(sc);
-
+		
 				if ( testUniqueness.first()) {
 					JOptionPane.showMessageDialog(null, "Error when writing weather history for BEMS: weather_station_id not unique over used datasets");
 					throw new Exception("Error when writing weather history for BEMS: weather_station_id not unique over used datasets");
 				}
 				testUniqueness.close();
-				
+				*/
 				
 				String s3 = "SELECT xn5_cell_x, xn5_cell_y, weather_station_id "
 						+" FROM `"+xn5_cells_table_name+"` t1"
@@ -5641,11 +5674,13 @@ class	XnDatabaseConnection {
 				ResultSet testAssoc = myConnection.query(s3);
 				
 				if ( testAssoc.first()) {
-    				JOptionPane.showMessageDialog(null, "Error when writing weather history for BEMS: no weather_station_id defined for cell " + testAssoc.getInt("xn5_cell_x") +","+testAssoc.getInt("xn5_cell_y"));
+					JOptionPane.showMessageDialog(null, "Error when writing weather history for BEMS: no weather_station_id defined for cell " + testAssoc.getInt("xn5_cell_x") +","+testAssoc.getInt("xn5_cell_y"));
 					throw new Exception("Error when writing weather history for BEMS: no weather_station_id defined for cell " + testAssoc.getInt("xn5_cell_x") +","+testAssoc.getInt("xn5_cell_y"));
 				}
 				
 				testAssoc.close();
+				
+				
 				String s4 = "SELECT MAX(xn5_cell_x) as maxX, MAX(xn5_cell_y) as maxY, MIN(xn5_cell_x) as minX, MIN(xn5_cell_y) as minY "
 						+" FROM `"+xn5_cells_table_name+"` t1"
 						+" WHERE simulation_project_id = " + projectId
@@ -5653,14 +5688,14 @@ class	XnDatabaseConnection {
 					;
 				ResultSet xnDims = myConnection.query(s4);
 				
-				String s2 = "SELECT xn5_cell_x, xn5_cell_y, weather_station_id  "
+				String s2 = "SELECT xn5_cell_x, xn5_cell_y, weather_table_name, weather_station_id  "
 						+" FROM `"+xn5_cells_table_name+"` t1"
 						+" WHERE simulation_project_id = " + projectId
 						+" ORDER BY xn5_cell_y DESC, xn5_cell_x ;"				
 						;
 				
 				if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
-					s2 = "SELECT xn5_cell_x, xn5_cell_y, weather_station_id , ROUND(alt / "+ elevCorrectionClassSize+") * "+ elevCorrectionClassSize +" AS alt  "
+					s2 = "SELECT xn5_cell_x, xn5_cell_y, weather_table_name, weather_station_id , ROUND(alt / "+ elevCorrectionClassSize+") * "+ elevCorrectionClassSize +" AS alt  "
 							+" FROM `"+xn5_cells_table_name+"` t1"
 							+" WHERE simulation_project_id = " + projectId
 							+" ORDER BY xn5_cell_y DESC, xn5_cell_x ;"				
@@ -5714,11 +5749,15 @@ class	XnDatabaseConnection {
 						
 					}
 					else {
+						String historyPrefix = ""; 
+						if(prefixStationIdsWithTable) {
+							historyPrefix = historyFileTablePrefix.get(xn5cellList.getString("weather_table_name")).toString();
+						}
 						if (elevationCorrectionType > 0 && elevCorrectionClassSize > -1) {
-							out.print(xn5cellList.getString("weather_station_id")  +  String.format("%04d",xn5cellList.getInt("alt")));
+							out.print(historyPrefix + xn5cellList.getString("weather_station_id")  +  String.format("%04d",xn5cellList.getInt("alt")));
 						}
 						else {
-							out.print(xn5cellList.getString("weather_station_id"));
+							out.print(historyPrefix + xn5cellList.getString("weather_station_id"));
 						}
 						xn5cellList.next();
 					}
@@ -5785,7 +5824,7 @@ class	XnDatabaseConnection {
 			}
 			writeWeatherData(filename, tableName, station_id, first_year, last_year, 
 					write_init_history_file, appendHistory, history_filename, maxDailyPrecip,  
-					elevationCorrectionType, altitude, elevationInfoTable,  doCO2,  co2Series);
+					elevationCorrectionType, altitude, elevationInfoTable,  doCO2,  co2Series,"");
 			
 		}	
 		catch(Exception e) {
@@ -5800,7 +5839,7 @@ class	XnDatabaseConnection {
 	
 	public boolean writeWeatherData(String filename, String tableName, int station_id, int first_year, int last_year, 
 					int write_init_history_file, boolean appendHistory, String history_filename, double maxDailyPrecip,  
-					int elevationCorrectionType, double altitude, String elevationInfoTable, boolean doCO2, ResultSet co2Series) {
+					int elevationCorrectionType, double altitude, String elevationInfoTable, boolean doCO2, ResultSet co2Series, String historyFileTablePrefix) {
 
 //Note: write_init_history_file 0 = no, 1 = yes, 2 = only history no normal file
 		System.out.println("Writing "+filename+"...");
@@ -6115,10 +6154,10 @@ class	XnDatabaseConnection {
 					out2.write(tab);
 					
 					if (elevationCorrectionType > 0 ) {
-						out2.write(String.valueOf(station_id) + String.format("%04d", Math.round( altitude) ) );
+						out2.write(historyFileTablePrefix + String.valueOf(station_id) + String.format("%04d", Math.round( altitude) ) );
 					}
 					else {
-						out2.write(String.valueOf(station_id) );
+						out2.write(historyFileTablePrefix + String.valueOf(station_id) );
 					}
 			
 					

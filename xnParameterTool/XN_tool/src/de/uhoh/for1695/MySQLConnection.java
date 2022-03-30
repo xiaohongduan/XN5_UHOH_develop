@@ -15,14 +15,14 @@ public class MySQLConnection {
 	public MySQLConnection ( String host, String dbName , String userName, String password)
 	{
 		  conn = null;
-		  String url = "jdbc:mysql://" + host;
+		  String url = "jdbc:mysql://" + host; //true&sslMode=VERIFY_IDENTITY&tlsVersions=TLSv1.2&";
 		  String driver = "com.mysql.jdbc.Driver";
-
+		  String optionstring = "?useSSL=false";
 		  try 
 		  {
 			  Class.forName(driver).newInstance();
 			  System.out.println("Trying to connect to " + url + "/" + dbName + " on " + host + " as " + userName );
-			  conn = DriverManager.getConnection(url+ "/"+dbName,userName,password);
+			  conn = DriverManager.getConnection(url+ "/"+dbName+optionstring,userName,password);
 			  System.out.println("Connected to " + dbName + " on " + host );
 			  valid = true;
 		  } 
