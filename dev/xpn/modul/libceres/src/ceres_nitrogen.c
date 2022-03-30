@@ -19,8 +19,9 @@ int ceres_NitrogenConcentrationLimits(ceres *self)
 	PDEVELOP            pDev  = pPl->pDevelop;
 	PPLTNITROGEN        pPltN = pPl->pPltNitrogen;
 
-	//P1V=(double)pPl->pGenotype->iVernCoeff;
-    P1V=1.0/(double)pPl->pGenotype->iVernCoeff;
+	//P1V=1.0/(double)pPl->pGenotype->iVernCoeff;
+    //SG20210708
+    P1V=1.0/(double)pPl->pGenotype->VernCoeff;
     fStage = (double)0.1 * pDev->fDevStage;
 
 	//============================================================================
@@ -390,6 +391,7 @@ int ceres_NitrogenUptake_run(ceres *self)
 		pLR->fActLayNH4NUpt=(double)0.0;
 		pLR=pLR->pNext;
 	}
+    //pPltN->fActNUptR =(float)0.0; //SG20220324
 
 	//======================================================================================
 	//Potential Nitrogen Uptake
@@ -412,6 +414,14 @@ int ceres_NitrogenUptake_run(ceres *self)
 
 		//The last layer of root:
 		L1=L;
+        
+		// SG20140604: for further plant species (e.g. catch crops)
+		fFNO3=(float)(1.0-exp(-0.030*((double)(pSLN->fNO3N/pSLN->fNO3Nmgkg))));
+		fFNH4=(float)(1.0-exp(-0.030*(((double)(pSLN->fNH4N/pSLN->fNH4Nmgkg))-0.5)));
+
+		if (fFNO3<(float)0.01) fFNO3=(float)0.0;
+		if (fFNH4<(float)0.01) fFNH4=(float)0.0;
+
 
 		//Potential nitrogen availability fFACTOR for NO3 (fFNO3) and NH4 (fFNH4) (0-1):
 		if ((strcmp(pPl->pGenotype->acCropCode,"MZ")==0)
@@ -460,13 +470,13 @@ int ceres_NitrogenUptake_run(ceres *self)
 		fRFAC=pLR->fLengthDens*fSMDFR*fSMDFR*(double)0.1*pSL->fThickness*((double)100.0);
 
 		//Potential nitrogen uptake from layer L: RNO3[L],RNH4U[L](kg N/ha)
-		RNO3U[L]=fRFAC*fFNO3*((double)0.006);
+/*		RNO3U[L]=fRFAC*fFNO3*((double)0.006);
 		RNH4U[L]=fRFAC*fFNH4*((double)0.006);
 
 		if (strcmp(pPl->pGenotype->acCropCode,"WH")==0) {
 			RNO3U[L]=fRFAC*fFNO3*((double)0.009);
 			RNH4U[L]=fRFAC*fFNH4*((double)0.009);
-		}
+		}*/ //auskommmentiert SG20220324
 
 		RNO3U[L]=fRFAC*fFNO3*pPl->pGenotype->fMaxNuptRate;
 		RNH4U[L]=fRFAC*fFNH4*pPl->pGenotype->fMaxNuptRate;
@@ -504,11 +514,11 @@ int ceres_NitrogenUptake_run(ceres *self)
 	pPltN->fActNH4NUpt =(double)0.0;
 	pPltN->fActNUptR    =(double)0.0;
 
-	pSL             =pSo->pSLayer->pNext;
-	pSWL    =pSo->pSWater->pNext;
-	pSLW    =pWa->pWLayer->pNext;
-	pSLN    =pCh->pCLayer->pNext;
-	pLR             =pPl->pRoot->pLayerRoot;
+	pSL       = pSo->pSLayer->pNext;
+	pSWL   = pSo->pSWater->pNext;
+	pSLW   = pWa->pWLayer->pNext;
+	pSLN    = pCh->pCLayer->pNext;
+	pLR      = pPl->pRoot->pLayerRoot;
 
 	for (L=1; L<=L1; L++) {
 		//Possible plant uptake from a layer:fUNO3,fUNH4(Kg N/ha)
@@ -645,7 +655,10 @@ int ceres_PlantNitrogenStress_run(ceres *self)
 		if (pPltN->fGrainDemand!=(double)0.0) {
 			if (pPltN->fGrainDemand>pPltN->fStovNLabile) {
 				pPltN->fStovCont        -=  pPltN->fStovNLabile;
-				pPltN->fRootCont        -= (pPltN->fGrainDemand-pPltN->fStovNLabile);
+//			pPltN->fRootCont        -= (pPltN->fGrainDemand-pPltN->fStovNLabile);
+				//SG20220324
+                pPltN->fRootCont        -= min(pPltN->fRootNLabile,pPltN->fGrainDemand-pPltN->fStovNLabile); 
+                
 				pPltN->fRootActConc             =  pPltN->fRootCont/pBiom->fRootWeight;
 				pPltN->fVegActConc              = pPltN->fStovCont/pBiom->fStovWeight;
 				pPltN->fTopsActConc             = pPltN->fVegActConc;
@@ -662,6 +675,7 @@ int ceres_PlantNitrogenStress_run(ceres *self)
 		//======================================================================================
 		pPltN->fGrainCont += pPltN->fGrainDemand;
 		pPltN->fGrainConc  = pPltN->fGrainCont/(pBiom->fGrainWeight+(double)1.0E-9);
+        pPltN->fFruitActConc = pPltN->fGrainConc;
 
 		//============================================================================
 		//              Nitrogen Factors affecting Growth
@@ -792,7 +806,9 @@ int ceres_PlantNitrogenStress_run(ceres *self)
 
 			if(pPltN->fGrainDemand > pPltN->fStovNLabile) {
 				pPltN->fStovCont -= pPltN->fStovNLabile;
-				pPltN->fRootCont -= (pPltN->fGrainDemand - pPltN->fStovNLabile);
+//			pPltN->fRootCont -= (pPltN->fGrainDemand - pPltN->fStovNLabile);
+				//SG20220324
+                pPltN->fRootCont -= min(pPltN->fRootNLabile,pPltN->fGrainDemand - pPltN->fStovNLabile);
 
 				pPltN->fRootActConc = pPltN->fRootCont/pBiom->fRootWeight;
 			} else {
@@ -804,13 +820,11 @@ int ceres_PlantNitrogenStress_run(ceres *self)
 		}
 
 		//======================================================================================
-		//      Grain Nitrogne Content
+		//      Grain Nitrogen Content
 		//======================================================================================
 		pPltN->fGrainCont += pPltN->fGrainDemand;
 		pPltN->fGrainConc  = pPltN->fGrainCont/(pBiom->fGrainWeight+(double)1.0E-9);
-
-
-
+        pPltN->fFruitActConc = pPltN->fGrainConc;
 
 
 		//============================================================================

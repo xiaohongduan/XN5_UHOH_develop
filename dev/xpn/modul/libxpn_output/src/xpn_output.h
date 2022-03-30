@@ -96,6 +96,11 @@ typedef struct
 	//Water Flux Density
 	double *FluxDens_Day, *FluxDensZwischen_Day;
 	//double FluxDens_dt, FluxDens_Day, FluxDens_Sum;
+    
+    //SG20220311: Capillary rise
+    double CapillaryRise_Day;
+    double CapillaryRise_Sum;
+    double caprise_zwischen;
 	
 } struct_Water;
 
@@ -179,7 +184,10 @@ struct _xpn_output
     double fPotTranspR;
     double fActTranspR;
     double fSolRadDay, fPARDay, fSolRadDay_zwischen, fPARDay_zwischen;
-	
+    //SG20220214
+    double fGrossPhotosynR, fGrossPhotosynR_zwischen, fGrossPhotosyn_Sum; 
+    double fNetPhotosynR, fNetPhotosynR_zwischen, fNetPhotosyn_Sum; 
+	double Grain_number, Grain_number_sq;
 	double *RLD;
 		
 		// Plant Nitrogen

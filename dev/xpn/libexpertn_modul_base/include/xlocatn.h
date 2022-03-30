@@ -91,6 +91,7 @@ typedef struct Fieldplot
 	float	fTopSoilDepth;
 	float	fSubSoilDepth;
 	float	fAveGroundWaterTable;
+	double	AveGroundWaterTable;
 	float	fDrainDepth;
 	float	fDrainDistance;
 	char	acConfigFileName	[MAX_FILE_STRINGLEN];

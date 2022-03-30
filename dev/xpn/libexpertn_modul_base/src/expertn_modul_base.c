@@ -625,7 +625,42 @@ int expertn_modul_base_PlantVariableInitiation(PPLANT pPl, PSPROFILE pSo, PMSOWI
 			PRINT_ERROR(S);\
 			g_free(S);\
 		} \
+        
+#define GET_INI_DOUBLE_OPTIONAL(var,groupname,key,std_value)\
+{\
+		gboolean key_exists;\
+		error = NULL; \
+		key_exists = g_key_file_has_key(keyfile,groupname,key,&error);\
+		if (key_exists==FALSE) \
+			{ \
+				gchar *S;\
+				S = g_strdup_printf  ("Init var %s.%s (in file %s) is missing. Standard Value (%f) taken instead!\n",groupname,key,filename,std_value);\
+				PRINT_ERROR(S);\
+				g_free(S);\
+			}\
+		if (key_exists==FALSE)\
+			{\
+				var = std_value;\
+			} else\
+			{\
+				GET_INI_DOUBLE(var,groupname,key);\
+			}\
+	}\
 	 
+#define GET_INI_DOUBLE_OPTIONAL_WITHOUT_ERROR_MESSAGE(var,groupname,key,std_value)\
+{\
+		gboolean key_exists;\
+		error = NULL; \
+		key_exists = g_key_file_has_key(keyfile,groupname,key,&error);\
+		if (key_exists==FALSE)\
+			{\
+				var = std_value;\
+			} else\
+			{\
+				GET_INI_DOUBLE(var,groupname,key);\
+			}\
+	}\
+
 #define GET_INI_STRING(var,groupname,key) \
 	error = NULL; \
 	var = g_key_file_get_string (keyfile,groupname,key,&error); \
@@ -1206,9 +1241,13 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 	GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"phenology","OptDaylen");
 	pGe->fOptDaylen = dummy_in[i];
 	g_free(dummy_in);
-	GET_INI_INT_ARRAY(dummy_int,dummy_int_size,"phenology","VernCoeff");
-	pGe->iVernCoeff = dummy_int[i];
-	g_free(dummy_int);
+//	GET_INI_INT_ARRAY(dummy_int,dummy_int_size,"phenology","VernCoeff");
+//	pGe->iVernCoeff = dummy_int[i];
+//	g_free(dummy_int);
+    // SG20210708: Umstellung von int auf double
+	GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"phenology","VernCoeff");
+	pGe->VernCoeff = dummy_in[i];
+	g_free(dummy_in);
 	//SG 20190531: read PHINT from ini file
     GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,-99,"phenology","PHINT");
 	pGe->fPhyllochronInterval = dummy_in[i];
@@ -1770,6 +1809,8 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 		}
 	g_free(dummy_in);
 	g_free(dummy_out);
+    GET_INI_DOUBLE_OPTIONAL_WITHOUT_ERROR_MESSAGE( pGe->dNUptH2OStress,"rootgrowth","dNUptH2OStress",2.0);
+    
 //senescence
 	GET_INI_DOUBLE(pGe->fBeginSenesDvs,"senescence","BeginSenesDvs")
 	GET_INI_DOUBLE(pGe->fBeginShadeLAI,"senescence","BeginShadeLAI")
@@ -1899,7 +1940,7 @@ int expertn_modul_base_DevelopmentCheckAndPostHarvestManagement(expertn_modul_ba
 		{
 			if (pPl->pDevelop->fStageSUCROS>=(double)0.0)
 				pPl->pDevelop->iDayAftEmerg++;
-			if (pPl->pDevelop->fStageSUCROS>=(double)2.0)
+			if (pPl->pDevelop->fStageSUCROS>=(double)2.2) //2.0 /2.1?
 				{
 					pPl->pDevelop->bMaturity=TRUE;
 					expertn_modul_base_SetAllPlantRateToZero(self);

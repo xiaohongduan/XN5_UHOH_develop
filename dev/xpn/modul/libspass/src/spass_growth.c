@@ -416,7 +416,8 @@ if ((strcmp(pPl->pGenotype->acCropCode,"WH")==0)||
 	//Total respiration and net carbon gain
 	pPltC->fGrowthRespR = fGrwRespLv+fGrwRespSt+fGrwRespRt+fGrwRespSo+fGrwRespRes;
 	pPltC->fTotRespR    = pPltC->fGrowthRespR + pPltC->fMaintRespR;
-	pPltC->fNetPhotosynR= max((double)0.0, pPltC->fGrossPhotosynR-pPltC->fTotRespR);
+//	pPltC->fNetPhotosynR= max((double)0.0, pPltC->fGrossPhotosynR-pPltC->fTotRespR);
+	pPltC->fNetPhotosynR = pPltC->fGrossPhotosynR-pPltC->fTotRespR;
 
 	//Dry weight of different organs	                          
 	pBiom->fLeafWeight 		+= pBiom->fLeafGrowR*pTi->fAct; 

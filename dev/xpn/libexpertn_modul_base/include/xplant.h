@@ -182,6 +182,7 @@ typedef struct stgenotype
     //double    fCriticalDaylength;
     //int       iDaylengthTyp;
     int     iVernCoeff;
+    double VernCoeff;
     //double    fGrainNumCoeff;
     //double    fGrainFillCoeff;
     //double    fGrainFillStage;
@@ -194,6 +195,7 @@ typedef struct stgenotype
     double   fTempOpt;
     double   fTempMax;
     double   fTempBase;
+    double dNUptH2OStress;
 //  double  fTempQ10;
 //  char    acStageName[MAX_FILE_STRINGLEN];
 

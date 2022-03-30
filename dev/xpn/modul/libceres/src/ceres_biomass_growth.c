@@ -25,19 +25,35 @@ int ceres_biomass_growth_run(ceres *self)
 		                                *((double)1.0-pCan->fPlantSenesLA/pCan->fPlantLA);
 		pPl->pBiomass->fLeafDeathRate = max((double)0.0,pPl->pBiomass->fLeafDeathRate);
 		pPl->pBiomass->fStemDeathRate = pBiom->fStemWeight*((double)0.000267)*pDev->fDTT;
-		pPl->pBiomass->fRootDeathRate = ((double)0.4)*pBiom->fRootGrowR
-		                                +((double)0.005)*pBiom->fRootWeight;
+/*		pPl->pBiomass->fRootDeathRate = ((double)0.4)*pBiom->fRootGrowR
+		                                +((double)0.005)*pBiom->fRootWeight;*/
+        //SG20220325: N content of dead biomass
+		pPl->pBiomass->fRootDeathRate = ((double)0.005)*pBiom->fRootWeight;
 
 		pPl->pBiomass->fDeadLeafWeight += pPl->pBiomass->fLeafDeathRate;
 		pPl->pBiomass->fDeadStemWeight += pPl->pBiomass->fStemDeathRate;
-		pPl->pBiomass->fDeadRootWeight += pPl->pBiomass->fRootDeathRate;
+		pPl->pBiomass->fDeadRootWeight += pPl->pBiomass->fRootDeathRate + ((double)0.4)*pBiom->fRootGrowR;
+//		pPl->pBiomass->fDeadRootWeight += (double)0.005*pBiom->fRootWeight;
+
+  
+        //SG20220325: N content of dead biomass
+        pPl->pPltNitrogen->fDeadLeafNw += pPl->pBiomass->fLeafDeathRate*pPl->pPltNitrogen->fLeafMinConc;
+        pPl->pPltNitrogen->fDeadStemNw += pPl->pBiomass->fStemDeathRate*pPl->pPltNitrogen->fStemMinConc;
+        pPl->pPltNitrogen->fDeadRootNw += pPl->pBiomass->fRootDeathRate*pPl->pPltNitrogen->fRootMinConc;
+         
+        pPl->pPltNitrogen->fLeafCont   -= pPl->pBiomass->fLeafDeathRate*pPl->pPltNitrogen->fLeafMinConc;
+        pPl->pPltNitrogen->fStemCont -= pPl->pBiomass->fStemDeathRate*pPl->pPltNitrogen->fStemMinConc;
+        pPl->pPltNitrogen->fRootCont  -= pPl->pBiomass->fRootDeathRate*pPl->pPltNitrogen->fRootMinConc;
+          
 
 		//====================================================================================
 		//      Organ Dry weight
 		//====================================================================================
 		pBiom->fLeafWeight += pBiom->fLeafGrowR - pPl->pBiomass->fLeafDeathRate;
 		pBiom->fStemWeight += pBiom->fStemGrowR - pPl->pBiomass->fStemDeathRate;
-		pBiom->fRootWeight += pBiom->fRootGrowR - pPl->pBiomass->fRootDeathRate;
+//		pBiom->fRootWeight += pBiom->fRootGrowR - pPl->pBiomass->fRootDeathRate;
+        //SG20220329:
+		pBiom->fRootWeight += (double)0.6*pBiom->fRootGrowR - ((double)0.005)*pBiom->fRootWeight;
 
 		pBiom->fGrainWeight+= pBiom->fGrainGrowR;
 //      pBiom->fEarWeight        =pBiom->fGrainWeight;

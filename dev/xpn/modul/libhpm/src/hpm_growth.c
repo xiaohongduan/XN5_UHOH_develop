@@ -218,6 +218,10 @@ int hpm_biomass_growth(hpm *self)
     self->Litter.MXli += (self->Litter.OXsh_li + self->Litter.OXrt_li) * dt;
     self->Litter.MXrt += self->Litter.OXrt_li*dt;
     self->Litter.MXsh += self->Litter.OXsh_li*dt;
+    
+    //SG20211215: root --> litter:
+    //self->Litter.ROCrt_li  = (self->Litter.OCSrt_so + self->parameter.plant.fCplX*self->Litter.OXrt_li)*dt;
+    //self->Litter.RONrt_li  = (self->Litter.ONSrt_so + self->parameter.plant.fNplX*self->Litter.OXrt_li)*dt;
 	
 	//Added by Hong
 	pCh->pCProfile->fCLitterSurf += self->Litter.OXsh_li*dt * mq_TO_ha_1;
@@ -375,6 +379,8 @@ void calculateLaminaAreaPools_HPM(hpm *self,double Gsh, double thetash, double k
 
     double qrCNSsh=2.0;
     double KrCNSshSLA=2.0;
+    
+    double vSLA1;
 
     // const:
     //double cSLAmax = 25.0;  //(m2 leaf) (kg structural DM)-1 Maximum value of incremental SLA.
@@ -405,17 +411,24 @@ void calculateLaminaAreaPools_HPM(hpm *self,double Gsh, double thetash, double k
 
     // Inputs:
     //vSLA, incremental specific leaf area [m2 (leaf) (kg structural DM)-1]: 3.6c
-    //vSLA = parameter.plant.cSLAmax * ( 1.0 - parameter.plant.cSLA_C * Csh )
-    //       * ( 1.0 - Control.water* parameter.plant.cSLA_W * (1.0 - thetash) );
+    vSLA1 = self->parameter.plant.cSLAmax * ( 1.0 - self->parameter.plant.cSLA_C * Csh )
+           * ( 1.0 - self->Control.water* self->parameter.plant.cSLA_W * (1.0 - thetash) );
     Nsh = self->Plant.MNSsh / (self->Plant.MXLam+self->Plant.MXss);
     rCNSSh = Csh/Nsh;
     rCNshq = pow(rCNSSh,qrCNSsh);
     KrCNSshSLAq = pow(KrCNSshSLA,qrCNSsh);
-    vSLA = self->parameter.plant.cSLAmax * ( 1.0 - self->parameter.plant.cSLA_C * rCNshq/(KrCNSshSLAq+rCNshq) )
-           * ( 1.0 - self->Control.water* self->parameter.plant.cSLA_W * (1.0 - thetash) );
+    vSLA = self->parameter.plant.cSLAmax * ( 1.0 - self->parameter.plant.cSLA_C * rCNshq/(KrCNSshSLAq+rCNshq) ) 
+           * ( 1.0 - self->Control.water* self->parameter.plant.cSLA_W * (1.0 - thetash) ); //SG20210928: woher kommt der Term rCNshq/(KrCNSshSLAq+rCNshq)??? --> ssteht weder im Buch noch im HPM-Sourcecode
     //vSLA is affected by shoot substrate C, Csh, and shoot relative water content, thetash.
 
     LAI1in = vSLA  * self->parameter.plant.flam * Gsh;   //m2 leaf m-2 ground day-1.
+    LAI1in = max(LAI1in,.0);
+
+        //debug:
+    //   printf("Time:, %f, SLA1:, %f, SLA:, %f, CN:, %f\n",xpn->pTi->pSimTime->fTimeY, vSLA1, vSLA,  rCNSSh);
+   
+   LAI1in = vSLA1  * self->parameter.plant.flam * Gsh;   //m2 leaf m-2 ground day-1.
+   LAI1in = max(LAI1in,.0);
 
 
     // All Inputs:
@@ -986,7 +999,7 @@ void calculatePhotoynthetic_N(hpm *self,double *ONSsh_Nph,double *ONph_NSsh,doub
     *INph_li_NSsh = ONph_li0 - ONph_li;
 
 
-    INph = *ONSsh_Nph; //  Subsrate
+    INph = *ONSsh_Nph; //  Substrate
 
     // Substrate, Litter, Harvest, Animal
     ONph = *ONph_NSsh + ONph_li0 + self->Harvest.ONph_hv + self->Animal.ONph_an;
@@ -1114,7 +1127,7 @@ double calculateBiomassSubstrateNShoot(hpm *self,double *INSsh_rt,double ONSsh_N
     //(kg ammonia N m-2 day-1):
     ONSsh_atm = 86400.0 * 1.0/(1.0/gcan + 1.0/gblcon) * ( Namm_sh - Namm_atm );
 
-    // Gesamtfluss nach shoot:
+    // Gesamtfluss aus shoot:
     ONSsh = ONS_Gsh + ONSsh_so + self->Animal.ONSsh_an_gr + self->Harvest.ONSsh_hv + ONSsh_Nph + ONSsh_atm;
 
 

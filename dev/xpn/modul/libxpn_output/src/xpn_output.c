@@ -342,7 +342,7 @@ int xpn_output_reg_var(xpn_output *self)
 
 
 	// Evapotranspiration (ET)
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potET_Day,"output.Water.Evapotranspiration Day.Potential Evapotranspiration  [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potET_Day,"output.Water.Evapotranspiration Day.Potential Evapotranspiration [mm]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actET_Day,"output.Water.Evapotranspiration Day.Actual Evapotranspiration [mm]",0.0);
 
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potE_Day,"output.Water.Evaporation and Transpiration Day.Potential Evaporation [mm]",0.0);	
@@ -351,18 +351,25 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Water.Evaporation and Transpiration Day.Actual Transpiration [mm]",0.0);
 
 
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Potential Evapotranspiration  [mm/day]",&(xpn->pWa->fPotETR),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Actual Evapotranspiration  [mm/day]",&(xpn->pWa->fActETR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Potential Evapotranspiration [mm/day]",&(xpn->pWa->fPotETR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evapotranspiration Rate.Actual Evapotranspiration [mm/day]",&(xpn->pWa->fActETR),-1,TRUE,TRUE);
 
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Potential Evaporation  [mm/day]",&(xpn->pWa->pEvap->fPotR),-1,TRUE,TRUE);
-	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Actual Evaporation  [mm/day]",&(xpn->pWa->pEvap->fActR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Potential Evaporation [mm/day]",&(xpn->pWa->pEvap->fPotR),-1,TRUE,TRUE);
+	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Actual Evaporation [mm/day]",&(xpn->pWa->pEvap->fActR),-1,TRUE,TRUE);
 
 	self->fPotTranspR = 0.0;
     self->fActTranspR = 0.0;
-    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Potential Transpiration  [mm/day]",&(self->fPotTranspR),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Potential Transpiration [mm/day]",&(self->fPotTranspR),-1,TRUE,TRUE);
 	xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Evaporation and Transpiration Rate.Actual Transpiration [mm/day]",&(self->fActTranspR),-1,TRUE,TRUE);
     
     
+//SG20221702 - Von Alexander Schade:
+/*    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.ET resistances.soil surface resistance [s m-1]",&(xpn->pWa->rss),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.ET resistances.crop surface resistance [s m-1]",&(xpn->pWa->rsc),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.ET resistances.surface resistance [s m-1]",&(xpn->pWa->rs),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.ET resistances.aerodynamic resistance [s m-1]",&(xpn->pWa->ra),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Debugging.ET rs/ra [-]",&(xpn->pWa->rsra),-1,TRUE,TRUE);
+    xpn_register_var_add_pdouble(self->parent.pXSys->var_list,"output.Water.Debugging.PM numerator",&(xpn->pWa->PM_numerator),-1,TRUE,TRUE);*/
 
 	//Water Flux Density
 	//xpn_register_var_init_array(xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.FluxDens_Day[i],varname,0.0),"output.Water.Water_Flux.Water_Flux_Day [mm]",self->soil_numbers);
@@ -636,8 +643,17 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Height,"output.Plant.Height.Height [m]",0.0);
 	//xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Height,"output.XPlant.Diameter.diameter [m]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->PlantDens,"output.Plant.Plant Density.Plant_Density [Plants/ha]",0.0);
-
-
+    
+    
+    //SG20220214: 
+    //Photosynthesis, assimilation
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fGrossPhotosynR,"output.Plant.Photosynthesis and Respiration Day.Gross Photosynthesis [kg (CO2)/ha/d]",0.0); 
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fGrossPhotosyn_Sum,"output.Plant.Photosynthesis and Respiration Cum.Gross Photosynthesis [kg (CO2)/ha]",0.0); 
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNetPhotosynR,"output.Plant.Photosynthesis and Respiration Day.Net Photosynthesis [kg (CO2)/ha/d]",0.0); 
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->fNetPhotosyn_Sum,"output.Plant.Photosynthesis and Respiration Cum.Net Photosynthesis [kg (CO2)/ha]",0.0); 
+   //Grain number
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Grain_number,"output.Plant.Grain Number.Grains per plant [#]",0.0); 
+    xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->Grain_number_sq,"output.Plant.Grain Number.Grains per square meter [#/m2]",0.0); 
 
 	//================================================================
 	//intfSolRad
@@ -664,15 +680,17 @@ int xpn_output_reg_var(xpn_output *self)
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Sum,"output.Water.Water Compartments Cumulative.Runoff [mm]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Sum,"output.Water.Water Compartments Cumulative.Infiltration [mm]",0.0);
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Sum,"output.Water.Water Compartments Cumulative.Drainage [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.CapillaryRise_Sum,"output.Water.Water Compartments Cumulative.Capillary Rise [mm]",0.0); //SG20220311
 
 	// cumulative water flows (day)
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.Water.Water Compartments Day.Precipitation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Day,"output.Water.Water Compartments Day.Actual Evaporation [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Water.Water Compartments Day.Actual Transpiration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Day,"output.Water.Water Compartments Day.Interception Loss [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Day,"output.Water.Water Compartments Day.Runoff [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Day,"output.Water.Water Compartments Day.Infiltration [mm]",0.0);
-	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Day,"output.Water.Water Compartments Day.Drainage [mm]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.precip_day,"output.Water.Water Compartments Day.Precipitation [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actE_Day,"output.Water.Water Compartments Day.Actual Evaporation [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.actT_Day,"output.Water.Water Compartments Day.Actual Transpiration [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.EI_Day,"output.Water.Water Compartments Day.Interception Loss [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Runoff_Day,"output.Water.Water Compartments Day.Runoff [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Infiltration_Day,"output.Water.Water Compartments Day.Infiltration [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Drain_Day,"output.Water.Water Compartments Day.Drainage [mm/d]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.CapillaryRise_Day,"output.Water.Water Compartments Day.Capillary Rise [mm/d]",0.0); //SG20220311
 
 	// soil water balance
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.Balance,"output.Water.Water Storage.Water Storage in Profile [mm]",0.0); //reloacted to output.Water. by Hong on 20181218
@@ -1662,6 +1680,14 @@ int xpn_output_calc_var(xpn_output *self)
 				}
 			self->heat.soil_temp_mean[i] = zwischen/(double)count;
 		}
+        
+    //SG20220215
+    /* set cumulative plant variables to zero  */    
+    if((pPl->pDevelop->bMaturity==TRUE)||(pPl->pDevelop->iDayAftEmerg<1))
+    {
+        self->fGrossPhotosyn_Sum = 0.0;
+        self->fNetPhotosyn_Sum = 0.0;
+    }
 
 	/* set daily variables to zero */
 	if(NewDay(pTi))
@@ -1676,6 +1702,8 @@ int xpn_output_calc_var(xpn_output *self)
 			self->water.Infiltration_Day = self->water.infiltration_zwischen;		// Infiltration
 			self->water.Runoff_Day = self->water.runoff_zwischen;			// Runoff
 			self->water.Drain_Day = self->water.drain_zwischen;			// Drainage/Ground Water Leaching
+            //SG20220311:
+            self->water.CapillaryRise_Day = self->water.caprise_zwischen; //Capillary rise
 
 			self->water.potET_Day = self->water.pot_evapotransp_zwischen;	// pot. Evapotransp.
 			self->water.potE_Day = self->water.pot_evapo_zwischen;		// pot. Evaporation
@@ -1683,6 +1711,10 @@ int xpn_output_calc_var(xpn_output *self)
 
             self->fSolRadDay = self->fSolRadDay_zwischen;
             self->fPARDay = self->fPARDay_zwischen;
+            
+            //SG20220214
+            self->fGrossPhotosynR = self->fGrossPhotosynR_zwischen; 
+            self->fNetPhotosynR = self->fNetPhotosynR_zwischen; 
 
 
 			// set zwischen values to zero
@@ -1695,6 +1727,7 @@ int xpn_output_calc_var(xpn_output *self)
 			self->water.infiltration_zwischen = 0.0;
 			self->water.runoff_zwischen = 0.0;
 			self->water.drain_zwischen = 0.0;
+            self->water.caprise_zwischen = 0.0; //SG20220311
 
 			self->water.pot_transp_zwischen = 0.0;
 			self->water.pot_evapotransp_zwischen = 0.0;
@@ -1702,6 +1735,9 @@ int xpn_output_calc_var(xpn_output *self)
 
             self->fSolRadDay_zwischen = 0.0;
             self->fPARDay_zwischen = 0.0;
+            //SG20220214
+            self->fGrossPhotosynR_zwischen = 0.0; 
+            self->fNetPhotosynR_zwischen = 0.0; 
 
 		}
 	//===========================================================
@@ -1767,10 +1803,29 @@ int xpn_output_calc_var(xpn_output *self)
 	// Drainage
 	self->water.drain_zwischen += (self->parent.pWa->fPercolR*dt);
 	self->water.Drain_Sum += (self->parent.pWa->fPercolR*dt);
+    
+    //SG20220311:
+    //Capillary rise 
+    self->water.caprise_zwischen += xpn->pWa->fCapillaryRiseR*dt;
+    self->water.CapillaryRise_Sum += xpn->pWa->fCapillaryRiseR*dt;
 
     // Radiation
     self->fSolRadDay_zwischen += xpn->pCl->pWeather->fSolRad *dt;
     self->fPARDay_zwischen += xpn->pCl->pWeather->fPAR * dt;
+    
+    //SG20220214: Photosynthesis
+    if (xpn->pPl->pOutput->fValue3 < 0.001){ //Spass, Ceres
+        self->fGrossPhotosynR_zwischen +=xpn->pPl->pPltCarbon->fGrossPhotosynR * dt; 
+        self->fGrossPhotosyn_Sum +=xpn->pPl->pPltCarbon->fGrossPhotosynR * dt; 
+        self->fNetPhotosynR_zwischen +=xpn->pPl->pPltCarbon->fNetPhotosynR * dt; 
+        self->fNetPhotosyn_Sum +=xpn->pPl->pPltCarbon->fNetPhotosynR * dt; 
+    }
+    else{ //Gecros, Gecros_h
+        self->fGrossPhotosynR_zwischen +=xpn->pPl->pPltCarbon->fGrossPhotosynR * 10.0 * dt; 
+        self->fGrossPhotosyn_Sum +=xpn->pPl->pPltCarbon->fGrossPhotosynR * 10.0 * dt; 
+        self->fNetPhotosynR_zwischen +=xpn->pPl->pPltCarbon->fNetPhotosynR * 10.0 * dt; 
+        self->fNetPhotosyn_Sum +=xpn->pPl->pPltCarbon->fNetPhotosynR * 10.0 * dt;     
+    }
 
 	// Balance
 	self->water.BalanceXN = self->parent.pWa->pWBalance->fBalance;
@@ -2322,8 +2377,9 @@ int xpn_output_calc_var(xpn_output *self)
 	self->NRoot = xpn->pPl->pPltNitrogen->fRootActConc;
 
 	self->PlantDens = xpn->pPl->pCanopy->fPlantDensity;
-    //SG20200117: Notbehelf
-    //self->PlantDens = xpn->pPl->pCanopy->fGrainNumSq;
+    //SG20220215
+    self->Grain_number= xpn->pPl->pCanopy->fGrainNum;
+    self->Grain_number_sq= xpn->pPl->pCanopy->fGrainNumSq;
 
 	self->Height	= xpn->pPl->pCanopy->fPlantHeight;
     

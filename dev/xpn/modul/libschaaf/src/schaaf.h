@@ -78,11 +78,11 @@ G_MODULE_EXPORT int read_irrigation(schaaf *self);
 int schaaf_mineral_fertilization(schaaf *self);
 int schaaf_organic_fertilization(schaaf *self);
 int InitOrgDuenger(schaaf *self);
+//int InitOrgDuenger(PNFERTILIZER fertil);
 int InfiltrationOrgDuenger(schaaf *self);
 int InfiltrationOrgDuengerRegen(schaaf *self);
 int MinerOrgDuengHoff(schaaf *self);
 int NitrOrgNH4Hoff(schaaf *self);
-
 
 
 struct _schaafClass

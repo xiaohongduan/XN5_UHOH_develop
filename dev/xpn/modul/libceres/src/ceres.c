@@ -227,8 +227,42 @@ int ceres_nitrogen_uptake(ceres *self)
 	PPLANT pPl = xpn->pPl;
 	PCHEMISTRY pCh = xpn->pCh;
 	PSPROFILE pSo = xpn->pSo;
+  	int L;
+	PLAYERROOT      pLR     =pPl->pRoot->pLayerRoot;
+	PCLAYER         pSLN=pCh->pCLayer->pNext;  
+  //  pPl->pPltNitrogen->fActNUptR = (double)0.0; //SG20220324
 
 	if NewDayAndPlantGrowing {
+	//Wird nur berechnet wenn der Feldaufgang erreicht wurde
+	if (pPl->pDevelop->iDayAftEmerg > 0) {
+			ceres_NitrogenUptake_run(self);
+			ceres_PlantNitrogenStress_run(self);
+		}
+//	}
+
+//	if PlantIsGrowing {
+
+
+	for (L=1; L<=pSo->iLayers-2; L++) {
+			//Check the whether there are roots in this layer:
+			if (pLR->fLengthDens==(double)0.0)           break;
+			
+			//Nitrogen in layer L: SNO3,SNH4 (kg N/ha)
+/*            if (pLR->fActLayNO3NUpt*pTi->pTimeStep->fAct > pSLN->fNO3N-0.005)
+                pLR->fActLayNO3NUpt = (pSLN->fNO3N-0.005)/pTi->pTimeStep->fAct;
+                
+            if (pLR->fActLayNH4NUpt*pTi->pTimeStep->fAct > pSLN->fNH4N-0.005)
+                pLR->fActLayNH4NUpt = (pSLN->fNH4N-0.005)/pTi->pTimeStep->fAct;*/
+           
+			pSLN->fNO3N -= pLR->fActLayNO3NUpt;
+			pSLN->fNH4N -= pLR->fActLayNH4NUpt;
+
+			pLR =pLR ->pNext;
+			pSLN=pSLN->pNext;
+		}
+	}
+
+/*	if NewDayAndPlantGrowing {
 	//Wird nur berechnet wenn der Feldaufgang erreicht wurde
 	if (pPl->pDevelop->iDayAftEmerg > 0) {
 			ceres_NitrogenUptake_run(self);
@@ -252,7 +286,7 @@ int ceres_nitrogen_uptake(ceres *self)
 			pLR =pLR ->pNext;
 			pSLN=pSLN->pNext;
 		}
-	}
+	}*/
 
 	ceres_integrate_small_time_step_vars(self);
 

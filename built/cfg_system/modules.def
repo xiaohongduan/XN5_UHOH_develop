@@ -20,6 +20,7 @@ heat.emissivity
 heat.net radiation
 heat.ground heat
 atmosphere.stability functions
+water.soil surface resistance
 water.potential evapotranspiration
 water.potential evaporation
 water.actual evaporation

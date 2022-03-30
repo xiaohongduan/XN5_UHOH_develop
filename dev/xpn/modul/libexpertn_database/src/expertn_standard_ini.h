@@ -36,6 +36,9 @@ typedef struct
 	double size; // [ha]
 	double wind_measure_height;
 	double temp_measure_height;
+    
+    //SG20220329
+    double mean_ground_water_level;
 	
 	//climate:
 	double AveYearTemp;
@@ -155,7 +158,7 @@ struct _expertn_standard_ini
 	double global_radiation;	
 	double precipitation;
 	double sunshine_duration;
-	double rel_himidity;
+	double rel_humidity;
 	double windspeed;
 	double dewpoint;
 	double kesselverdunstung;
@@ -174,8 +177,8 @@ struct _expertn_standard_ini
     //double SoilT20;
     //double SoilT50;
     double AtmCO2ppm; //SG20190211
-    //double CnpyDrn;
-    //double WatTbl;
+    double CnpyDrn; //SG20220304
+    double WatTbl; //SG20220304
 
 
 	// run weather small time step:

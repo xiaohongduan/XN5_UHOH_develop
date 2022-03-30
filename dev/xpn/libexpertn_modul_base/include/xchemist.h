@@ -238,7 +238,10 @@ typedef struct cLayer
 	double  fN2OKh;
 	double	fCSoilMicBiom;
 	double	fNSoilMicBiom;
-	PCLAYER pNext;
+    double fLitterDenitrifCC; //SG20210715: Litter-C degradation during denitrification kg(N)/ha
+	double fManureDenitrifCC; //SG20210715: Manure-C degradation during denitrification kg(N)/ha
+    double fHumusDenitrifCC; //SG20210715: Humus-C degradation during denitrification kg(N)/ha
+    PCLAYER pNext;
 	PCLAYER pBack;
 }
 CLAYER;
@@ -280,18 +283,23 @@ typedef struct cBalance
 	double	dCBalance;
 	//Added by Hong on 20180731, for C-balance
 	double  fDOCProfile;
+	double  fCsolProfile;
 	double  fCLitterProfile;
     double  fCManureProfile;
 	double  fCHumusProfile;
 	double  dCBalCorrect; 
+    double dCLossViaDenitrificationCum; //SG20210715: C loss via denitrification (cumulative) kg(N)/ha
+
 	//Hong 20190507: balance for 0-30 cm profile
 	double	fCProfileStart_30;
 	double	dCProfile_30;
 	double	dCBalance_30;
 	double  fDOCProfile_30;
+	double  fCsolProfile_30;
 	double  fCLitterProfile_30;
     double  fCManureProfile_30;
 	double  fCHumusProfile_30;
+    double dCLossViaDenitrificationCum_30; //SG20210715: C loss via denitrification (cumulative) kg(N)/ha
 
 	double	dCInputCum;
 	double	dCInputSurf;

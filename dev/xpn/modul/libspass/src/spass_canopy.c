@@ -288,7 +288,7 @@ double spass_CerealTillering(double fLfEmergRate, double fExpLfNum, double fTill
 
 	//Tiller number per square meter
 	//SG/25/05/99: Modifikation: fTillerNumSq kann nur wachsen
-   	fTillerNumSq = max(fPltDens*fTillNum, fPltDens*max((double)1.0, fTillerNumber*min((double)1.0,fStemWght/(fTotTillerDemand))));
+   	fTillerNumSq = max(fPltDens*fTillNum, fPltDens*max((double)1.0, fTillerNumber*min((double)1.0,fStemWght/(fTotTillerDemand+1e-6))));
 	return fTillerNumSq;
 	}
 

@@ -845,6 +845,7 @@ int hydrus_water_flow_run(hydrus *self)
 	
 	pWa->fPercolR     =  max(self->vBot,(double)0);
 	self->fCapillRiseR      = -min(self->vBot,(double)0);
+     pWa->fCapillaryRiseR = self->fCapillRiseR; //SG20210714
 //Maximal actual evaporation rate
 	pWL->pNext->fHydrCond = NEXT_CONDUCTIVITY(pWL->pNext->fMatPotAct); // first layer
 	pWL->fHydrCond        = pWL->pNext->fHydrCond;  // zero layer same value as first layer
@@ -911,6 +912,7 @@ int hydrus_water_flow_run(hydrus *self)
 		}*/
 
 	return RET_SUCCESS;
+//	return self->__ERROR; //Abbruch sobald für eine Variable CHECK_VALID(var) negativ ist (nur bei DEBUG_LEVEL > 2)
 }
 
 
@@ -1090,6 +1092,7 @@ int hydrus_water_flow_setBC(hydrus *self)
 
 	PSPROFILE pSo = self->parent.pSo;
 	PWATER pWa = self->parent.pWa;
+    PCLIMATE pCl = self->parent.pCl;
 
 //	PSLAYER     pSL;
 //	PSWATER     pSW;
@@ -1137,6 +1140,10 @@ int hydrus_water_flow_setBC(hydrus *self)
 			pWa->fGrdWatLvlPot = pSo->fDepth - pWa->fGrdWatLevel + pSo->fDeltaZ/(double)2;
 			if (self->iBotBC == (int)2) self->hBot=pWa->fGrdWatLvlPot;
 			//if(abs(hBotOld-hBot)>(double)1.e-8) MinStep=TRUE;
+            
+           //SG20220304: dynamic groundwater table:
+           if (pWa->iBotBC == (int)5) 
+               self->hBot= pSo->fDepth - pCl->pWeather->fWaterTable + pSo->fDeltaZ/(float)2;
 		}
 
 	return RET_SUCCESS;

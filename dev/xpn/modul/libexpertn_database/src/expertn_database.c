@@ -1048,7 +1048,7 @@ void expertn_database_runWetterTageswerte(expertn_database *self) {
 		self->global_radiation = self->wetter_data[i].Globalstrahlung;
 		self->precipitation = self->wetter_data[i].Niederschlag;
 		self->sunshine_duration = self->wetter_data[i].Sonnenscheindauer;
-		self->rel_himidity = self->wetter_data[i].RelativeLuftfeuchte;
+		self->rel_humidity = self->wetter_data[i].RelativeLuftfeuchte;
 		self->windspeed = self->wetter_data[i].Windgeschwindigkeit;
 		self->dewpoint = self->wetter_data[i].Taupunkt;
 		self->kesselverdunstung = self->wetter_data[i].Kesselverdunstung;
@@ -1057,7 +1057,7 @@ void expertn_database_runWetterTageswerte(expertn_database *self) {
 		self->par = self->wetter_data[i].PhotosynthischAktiveStrahlung;
 
 
-		xpn->pCl->pWeather->fHumidity = self->rel_himidity; // ist nur Tageswert --> vlt. sollte man auch eine Sinusartige Funktion durchlegen
+		xpn->pCl->pWeather->fHumidity = self->rel_humidity; // ist nur Tageswert --> vlt. sollte man auch eine Sinusartige Funktion durchlegen
 		xpn->pCl->pWeather->fWindSpeed = self->windspeed;
 	}
 	

@@ -794,8 +794,11 @@ int gecros_load_ini_file(gecros_h *self)
 	char **varietynames;
 	int varietynum;	
 	double *dummy_in;
+	double *dummy_out; //SG20210302
 	int dummy_in_size;
-	int i;
+	int dummy_out_size; //SG20210302
+	int var_len; //SG20210302
+    int i;
 	PPLANT			pPl = xpn->pPl;
 	PGENOTYPE		pGe = pPl->pGenotype;
 	//End of Hong
@@ -803,6 +806,8 @@ int gecros_load_ini_file(gecros_h *self)
     //SG20180530
     char spec[30];
    strcpy(spec,pPl->pGenotype->acCropCode);
+   
+    self->parent.pPl->pOutput->fValue3 = 1.0; //SG2022: to be used in xpn_output.c for recognizing the "Gecros_h" model
     //end SG
 
 //Begin of Hong:changed for C. Troost in Oct. 2016 
@@ -921,10 +926,35 @@ int gecros_load_ini_file(gecros_h *self)
 	GET_INI_DOUBLE(self->TCD,"phenology","TCD");
 	GET_INI_DOUBLE(self->TSEN,"phenology","TSEN");
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fOptVernDays,"phenology","OptVernDays",0.0);
-	GET_INI_INT_OPTIONAL(pPl->pGenotype->iVernCoeff,"phenology","VernCoeff",0);
+    //SG20210708
+//	GET_INI_INT_OPTIONAL(pPl->pGenotype->iVernCoeff,"phenology","VernCoeff",0);
+	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->VernCoeff,"phenology","VernCoeff",0);
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fTempMinVern,"phenology","TempMinDevVern",-1.0);
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fTempOptVern,"phenology","TempOptDevVern",2.0);
 	GET_INI_DOUBLE_OPTIONAL(pPl->pGenotype->fTempMaxVern,"phenology","TempMaxDevVern",15.0);
+    
+//SG2021032: OPTIONAL - Read DS --> EC (BBCH) conversion from ini-file
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_in,dummy_in_size,1,-1.0,"phenology","DEV");
+	GET_INI_DOUBLE_ARRAY_OPTIONAL(dummy_out,dummy_out_size,1,-1.0,"phenology","ECStadium");
+	pGe->DVR = (RESPONSE*)g_malloc0_n(1,sizeof(RESPONSE));
+	pGe->DVR[0].fInput = -1.0;
+	pGe->DVR[0].fOutput = -1.0;
+	pGe->DVR[0].iInLen = 1;
+	pGe->DVR[0].iOutLen = 1;
+	if ((dummy_in[0] != -1.0)&&(dummy_out[0] != -1.0))
+		{
+			g_free(pGe->DVR);
+			CHECK_LEN(dummy_in_size,dummy_out_size);
+			var_len = array_length(dummy_in_size,dummy_out_size);
+			pGe->DVR = (RESPONSE*)g_malloc0_n(var_len,sizeof(RESPONSE));
+			pGe->DVR[0].iInLen = dummy_in_size;
+			pGe->DVR[0].iOutLen = dummy_out_size;
+			for(i=0; i<var_len; i++)
+				{
+					pGe->DVR[i].fInput = dummy_in[i];
+					pGe->DVR[i].fOutput = dummy_out[i];
+				}
+		}
 
 	GET_INI_DOUBLE(self->NUPTX,"nitrogen","NUPTX");
 	GET_INI_DOUBLE(self->RNCMIN,"nitrogen","RNCMIN");
@@ -1725,6 +1755,7 @@ int PhasicDevelopment_GECROS(gecros_h *self)
 	  PPLANT pPl = xpn->pPl;
 
 	  PDEVELOP      pDev = pPl->pDevelop;
+      PGENOTYPE   pGe = pPl->pGenotype; //SG20210302
 	  PGECROSSOIL   pGS  = self->pGecrosPlant->pGecrosSoil;	  
 //Hong 2016-08-08: change for Sebastian Gayler and Arne Poyda
       //PMANAGEMENT pMa = xpn->pMa;
@@ -1741,7 +1772,9 @@ int PhasicDevelopment_GECROS(gecros_h *self)
 	  //double DELT = (double)1;
 	  double DELT = (double)xpn->pTi->pTimeStep->fAct;
 
-      double DVS[]={0.0, 0.4, 0.55, 0.656, 0.91, 1.00, 1.15, 1.50, 1.95, 2.0};
+//      double DVS[]={0.0, 0.4, 0.55, 0.656, 0.91, 1.00, 1.15, 1.50, 1.95, 2.0};
+//SG20211005
+      double DVS[]={0.0, 0.1425, 0.4, 0.656, 0.91, 1.00, 1.15, 1.50, 1.95, 2.0};
 	  double  VR[10];
       int i;
 
@@ -1919,8 +1952,26 @@ int PhasicDevelopment_GECROS(gecros_h *self)
       {
        DS = (double)pDev->fStageSUCROS;   
        
+      DS   = max(0., DS + DVR*DELT);
+	  pDev->fStageSUCROS = (double)DS;
+	  //pDev->fDevStage    = (double)DS;
+
+       
 	  //output from fStageSUCROS to pDev->fStageWang
-      for (i=0;i<10;i++) VR[i]=(double)DVS[i];
+      //for (i=0;i<10;i++) VR[i]=(double)DVS[i];
+      //SG20210302: conversion DS --> EC (BBCH) can now be read from __gecros.ini
+        if(pGe->DVR[0].fInput<0.0)
+            {
+            g_free(pGe->DVR);
+            pGe->DVR = (RESPONSE*)g_malloc0_n(10,sizeof(RESPONSE));
+            for (i=0;i<=9;i++)  pGe->DVR[i].fInput=DVS[i];
+            }
+
+        for (i=0;i<=9;i++)  
+        {
+            VR[i]=(double)pGe->DVR[i].fInput;
+        }
+
       if ((pDev->fStageSUCROS>=VR[0])&&(pDev->fStageSUCROS<=VR[1]))
             pDev->fDevStage=(double)(10.0*(1.0+(pDev->fStageSUCROS-VR[0])/(VR[1]-VR[0])));
       if ((pDev->fStageSUCROS>VR[1])&&(pDev->fStageSUCROS<=VR[2]))
@@ -1940,7 +1991,8 @@ int PhasicDevelopment_GECROS(gecros_h *self)
       if ((pDev->fStageSUCROS>VR[8])&&(pDev->fStageSUCROS<=VR[9]))
             pDev->fDevStage=(double)(10.0*(9.0+0.2*(pDev->fStageSUCROS-VR[8])/(VR[9]-VR[8])));
       if (pDev->fStageSUCROS>VR[9])
-            pDev->fDevStage=(double)92.0; 
+            pDev->fDevStage=(double)(10.0*(9.2+0.7*(pDev->fStageSUCROS-VR[9])/(2.2-VR[9]))); 
+            //pDev->fDevStage=(double)92.0; 
 
      }// if (pDev->fStageSUCROS>=0) else
 	
@@ -3312,8 +3364,8 @@ int   BiomassGrowth_GECROS(gecros_h *self)
       pCan->fLAGrowR     = (double)RLAI;
       */
 
-	  DS   = max(0., DS + DVR*DELT);
-	  pDev->fStageSUCROS = (double)DS;
+//	  DS   = max(0., DS + DVR*DELT);
+//	  pDev->fStageSUCROS = (double)DS;
 	  //pDev->fDevStage    = (double)DS;
 
 	  CTDU   = max(0., CTDU  + TDU*DELT);
@@ -6091,7 +6143,9 @@ double gecros_Vernalization_CERES(gecros_h *self)
 	//SG/14/06/99:
 	//      wegen pPl->pGenotype->iVernCoeff = 0 VF immer gleich 1.
 	//VF=1.0-(double)pPl->pGenotype->iVernCoeff*(50.0-CumVD); //vernalization factor.
-	VF=min((double)1.0,1.0-(double)(1.0/pPl->pGenotype->iVernCoeff)*(50.0-CumVD)); //vernalization factor.
+	//VF=min((double)1.0,1.0-(double)(1.0/pPl->pGenotype->iVernCoeff)*(50.0-CumVD)); //vernalization factor.
+	//SG 20210708:
+    VF=min(1.0,1.0-(1.0/pPl->pGenotype->VernCoeff)*(50.0-CumVD)); //vernalization factor.
 
 	if (VF<=0.0)    VF=0.0;
 	if (VF>1.0)     VF=1.0;
