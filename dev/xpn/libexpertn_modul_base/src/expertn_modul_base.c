@@ -2204,6 +2204,8 @@ if(pPl->pModelParam->cResidueCarryOff==0)
 				    pCP->fNStandCropRes  += fNStandR; 
 				    pCP->fNLitterSurf    += (pPl->pGenotype->fResidueAMO1Frac*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac); 
 			        pCP->fNManureSurf    += ((1.0- pPl->pGenotype->fResidueAMO1Frac)*(fNResidue - fNStandR)+pPl->pPltNitrogen->fDeadLeafNw*pPl->pGenotype->fNDeadleafFrac);
+                    
+                    //SG20220329: was ist mit pPl->pBiomass->fDeadStemWeight und pPl->pPltNitrogen->fDeadStemNw  aus Ceres-Modell? --> muss auch noch auf entsprechende ÜPools geschrieben werden
                   }
               }  //end if(pPl->pModelParam->cResidueCarryOff==0)
             else 

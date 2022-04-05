@@ -444,7 +444,7 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	//GET_INI_DOUBLE(self->cfg->wind_measure_height,"location","wind_measure_height");
 	//GET_INI_DOUBLE(self->cfg->temp_measure_height,"location","temp_measure_height");
     //SG20220329
-    GET_INI_DOUBLE_OPTIONAL(self->cfg->mean_ground_water_level,"location","ground_water_level",200.0);
+    GET_INI_DOUBLE_OPTIONAL_WITHOUT_ERROR_MESSAGE(self->cfg->mean_ground_water_level,"location","ground_water_level",200.0);
 	
     // climate:
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->AveYearTemp,"climate","AveYearTemp",7.4);
