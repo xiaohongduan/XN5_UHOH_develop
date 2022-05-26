@@ -762,6 +762,7 @@ int ceres_PlantNitrogenStress_run(ceres *self)
 		pPltN->fGrainDemand = pBiom->fGrainGrowR*fGrainIncNConc;
 
 		pPltN->fRootOptConc = (double)((2.5-0.25*self->fXDevStage)/100.0);
+        //pPltN->fRootMinConc = (double)0.005;//SG20220405: that's the value from Gecros model
 
 		//======================================================================================
 		//Nitrogen translocation to grain

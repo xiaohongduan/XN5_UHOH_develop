@@ -455,7 +455,8 @@ int main(int argc, char **argv)
 
 
 #ifdef USE_OPENMP
-#pragma omp parallel for schedule(dynamic) reduction(||: finish)
+//#pragma omp parallel for schedule(dynamic) reduction(||: finish)
+#pragma omp parallel for reduction(||: finish)
 #endif
 			for (i=loop_min; i<loop_max; i++) {
 

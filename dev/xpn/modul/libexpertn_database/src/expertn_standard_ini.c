@@ -1164,11 +1164,13 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 	//xpn->pCl->pWeather->fTempAir=db_get_double(data_model,9); // mittlere Lufttemperatur
 	xpn->pCl->pWeather->fTempAir = self->Tair;
 	xpn->pCl->pWeather->fTempAir_zlvl = self->Tair;
-	if (xpn->pCl->fTempMeasHeight==0.0)
+//	if (xpn->pCl->fTempMeasHeight==0.0)
+	if (xpn->pCl->fTempMeasHeight<=0.0) //SG20220408
 		{
 			xpn->pCl->fTempMeasHeight=2.0;
 		}
-	if (xpn->pCl->fWindMeasHeight==0.0)
+//	if (xpn->pCl->fWindMeasHeight==0.0)
+	if (xpn->pCl->fWindMeasHeight<=0.0) //SG20220408
 		{
 			xpn->pCl->fWindMeasHeight=2.0;
 		}
