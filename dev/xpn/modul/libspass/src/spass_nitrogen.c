@@ -409,6 +409,7 @@ int spass_PlantNitrogenTranslocation(spass *self)
 	
 	//Time constant for N translocation
 	fTransNconst = (double)20.0;
+	//fTransNconst = (double)10.0; //SG20220527: faster N translocationfrom stem, leaves, roots to grain
 	
 	//SG/17/05/99:Etwas anders bei Kartoffel (aus PLAGEN)
 	if(strcmp(pPl->pGenotype->acCropCode,"PT")==0)
@@ -452,8 +453,11 @@ int spass_PlantNitrogenTranslocation(spass *self)
         if (pBiom->fGrainGrowR>(double)0.0)
 			{
 			pPl->pPltNitrogen->fGrainDemand = fGrainNcumRate*pCan->fGrainNum*pSI->fPlantDens*(double)1E-2;
-			fGrainDemand = (pBiom->fGrainWeight-pBiom->fGrainGrowR*pTi->pTimeStep->fAct)*max((double)0.0, (double)0.02-pPltN->fGrainConc)
-					  +pBiom->fGrainGrowR*(double)0.02*pTi->pTimeStep->fAct;
+/*			fGrainDemand = (pBiom->fGrainWeight-pBiom->fGrainGrowR*pTi->pTimeStep->fAct)*max((double)0.0, (double)0.02-pPltN->fGrainConc)
+					  +pBiom->fGrainGrowR*(double)0.02*pTi->pTimeStep->fAct;*/
+            //SG20220527: readmaximum grain N concentration from *.ini file
+			fGrainDemand = (pBiom->fGrainWeight-pBiom->fGrainGrowR*pTi->pTimeStep->fAct)*max((double)0.0, pPltN->fFruitOptConc - pPltN->fGrainConc)
+					  + pBiom->fGrainGrowR * pPltN->fFruitOptConc * pTi->pTimeStep->fAct;
 
 			if (strcmp(pPl->pGenotype->acCropCode,"PT")==0)			
 			//	

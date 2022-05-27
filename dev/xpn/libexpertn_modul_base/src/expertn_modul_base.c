@@ -1678,6 +1678,7 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 		}
 	g_free(dummy_in);
 	g_free(dummy_out);
+
 //nitrogen
 	GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"nitrogen","VROptLvNc");
 	GET_INI_DOUBLE_ARRAY(dummy_out,dummy_out_size,"nitrogen","OptLvNc");
@@ -1693,6 +1694,7 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 		}
 	g_free(dummy_in);
 	g_free(dummy_out);
+
 	GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"nitrogen","VROptStNc");
 	GET_INI_DOUBLE_ARRAY(dummy_out,dummy_out_size,"nitrogen","OptStNc");
 	CHECK_LEN(dummy_in_size,dummy_out_size);
@@ -1707,6 +1709,7 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 		}
 	g_free(dummy_in);
 	g_free(dummy_out);
+
 	GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"nitrogen","VROptRtNc");
 	GET_INI_DOUBLE_ARRAY(dummy_out,dummy_out_size,"nitrogen","OptRtNc");
 	CHECK_LEN(dummy_in_size,dummy_out_size);
@@ -1721,6 +1724,7 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 		}
 	g_free(dummy_in);
 	g_free(dummy_out);
+
 	GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"nitrogen","VRMinLvNc");
 	GET_INI_DOUBLE_ARRAY(dummy_out,dummy_out_size,"nitrogen","MinLvNc");
 	CHECK_LEN(dummy_in_size,dummy_out_size);
@@ -1735,6 +1739,7 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 		}
 	g_free(dummy_in);
 	g_free(dummy_out);
+
 	GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"nitrogen","VRMinStNc");
 	GET_INI_DOUBLE_ARRAY(dummy_out,dummy_out_size,"nitrogen","MinStNc");
 	CHECK_LEN(dummy_in_size,dummy_out_size);
@@ -1749,6 +1754,7 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 		}
 	g_free(dummy_in);
 	g_free(dummy_out);
+
 	GET_INI_DOUBLE_ARRAY(dummy_in,dummy_in_size,"nitrogen","VRMinRtNc");
 	GET_INI_DOUBLE_ARRAY(dummy_out,dummy_out_size,"nitrogen","MinRtNc");
 	CHECK_LEN(dummy_in_size,dummy_out_size);
@@ -1763,6 +1769,11 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 		}
 	g_free(dummy_in);
 	g_free(dummy_out);
+    
+    //SG20220527: for SPASS - parameter for optimum Grain N Concentration to be read from *.ini file (optional)
+    GET_INI_DOUBLE_OPTIONAL_WITHOUT_ERROR_MESSAGE( pPl->pPltNitrogen->fFruitOptConc,"nitrogen","OptimumGrainNConc",0.02);
+
+
 //rootgrowth
 	GET_INI_DOUBLE( pGe->fMaxRootExtRate,"rootgrowth","MaxRootExtRate");
 	GET_INI_DOUBLE( pGe->fRootLengthRatio,"rootgrowth","RootLengthRatio");
@@ -1809,6 +1820,8 @@ int expertn_modul_base_GenotypeRead(expertn_modul_base *self,PPLANT pPl ,const c
 		}
 	g_free(dummy_in);
 	g_free(dummy_out);
+    
+    //SG2021: new optional parameter for reduced N uptake  in case of  soil water limitation (SPASS)
     GET_INI_DOUBLE_OPTIONAL_WITHOUT_ERROR_MESSAGE( pGe->dNUptH2OStress,"rootgrowth","dNUptH2OStress",2.0);
     
 //senescence

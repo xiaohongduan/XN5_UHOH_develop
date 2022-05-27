@@ -973,7 +973,9 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
             pSLayer->fRockFrac = max(0,pSLayer->fRockFrac);
             
 			//pSWater->fContSat = pSLayer->fPorosity;//self->cfg->cont_sat[i2]; //SG: why porosity?
-			pSWater->fContSat =self->cfg->cont_sat[i2]; //SG20220208: back to theta_sat!
+			pSWater->fContSat =self->cfg->cont_sat[i2]; //SG20220208: back to theta_sat! 
+            if  (pSWater->fContSat< 0.0) pSWater->fContSat  = pSLayer->fPorosity; //(if "-99", fContSat=Porosity via Pedotransfer function)
+            
 			pSWater->fContPWP = self->cfg->wilting_point[i2];
 			pSWater->fContFK = self->cfg->field_capacity[i2];
 			pSWater->fContRes = self->cfg->res_water_cont[i2];
@@ -989,7 +991,7 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 
             //SG20200327
             pSWater->fTau= self->cfg->pore_connectivity[i2];
-            pSWater->fContSat_c= self->cfg->cond_sat_c[i2];
+            pSWater->fContSat_c= self->cfg->cont_sat_c[i2];
             pSWater->fContRes_c= self->cfg->res_water_cont_c[i2];
             pSWater->fCondSat_c= self->cfg->cond_sat_c[i2];
             pSWater->fCondSat_nc= self->cfg->cond_sat_nc[i2];
