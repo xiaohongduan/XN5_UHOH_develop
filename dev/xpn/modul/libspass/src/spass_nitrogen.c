@@ -409,7 +409,7 @@ int spass_PlantNitrogenTranslocation(spass *self)
 	
 	//Time constant for N translocation
 	fTransNconst = (double)20.0;
-	//fTransNconst = (double)10.0; //SG20220527: faster N translocationfrom stem, leaves, roots to grain
+	//fTransNconst = (double)10.0; //SG20220527: faster N translocation from stem, leaves, roots to grain
 	
 	//SG/17/05/99:Etwas anders bei Kartoffel (aus PLAGEN)
 	if(strcmp(pPl->pGenotype->acCropCode,"PT")==0)
