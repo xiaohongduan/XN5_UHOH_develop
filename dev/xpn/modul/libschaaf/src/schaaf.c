@@ -158,6 +158,135 @@ int schaaf_fertilizer(schaaf* self)
     return RET_SUCCESS;
 }
 
+///////////// SG20210606: modified version for fertilization at BBCH ///////////////////////////////////////////////////////////
+
+int schaaf_fertilizer_bbch(schaaf* self)
+{
+    expertn_modul_base* xpn = &(self->parent);
+
+    PNFERTILIZER pNF = xpn->pMa->pNFertilizer;
+	
+    if ((pNF != NULL) && (pNF->bbch > 0)) {
+		//Annotated by Hong on 20180515
+		//1. first action of fertilization:
+
+		if (self->first_fertil_done == 0){
+			//1.1 for regular XN:
+/*			if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
+									xpn->pTi->pSimTime->mon,
+									xpn->pTi->pSimTime->mday,
+									pNF->Year,
+									pNF->Month,
+									pNF->Day) == 0)){*/
+                                        			
+        if (xpn->pPl->pDevelop->fDevStage >= pNF->bbch){
+            
+            
+/*  		if (pMa->pNFertilizer->pNext != NULL)
+			pMa->pNFertilizer->iDay = (int)pTi->pSimTime->fTimeAct;
+		else
+			pMa->pNFertilizer->iID = 999;*/
+
+                       
+				self->first_fertil_done += 1;
+/*				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
+					schaaf_mineral_fertilization(self);
+				if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+					schaaf_organic_fertilization(self);*/
+				if ((strncmp(pNF->acCode, "FE\0", 2) == 0))
+					schaaf_mineral_fertilization(self);
+				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+					schaaf_organic_fertilization(self);
+					
+			}
+			
+			//1.2 for XN-MPMAS
+/*			else if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
+									xpn->pTi->pSimTime->mon,
+									xpn->pTi->pSimTime->mday,
+									pNF->pNext->Year,
+									pNF->pNext->Month,
+									pNF->pNext->Day) == 0)){
+  */                                      
+        else if (xpn->pPl->pDevelop->fDevStage >= pNF->pNext->bbch){
+			
+				xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext;// XN-MPMAS assigns fertilization data to  xpn->pMa->pNFertilizer->pNext (mpmas_coupling.c line 596, line627) Otherwise xpn->pMa->pNFertilizer->pNext remains empty and it won't switch to the 2. step for the next fetilization action.    						
+				pNF = xpn->pMa->pNFertilizer;
+
+				self->first_fertil_done += 1;
+/*				if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
+					schaaf_mineral_fertilization(self);
+				else if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+					schaaf_organic_fertilization(self);*/
+				if ((strncmp(pNF->acCode, "FE\0", 2) == 0))
+					schaaf_mineral_fertilization(self);
+				else if ((strncmp(pNF->acCode, "RE\0", 2) == 0) ||(strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+					schaaf_organic_fertilization(self);
+				else {
+					char* S =  g_strdup_printf("Error in schaaf.c:schaaf_fertilizer_bbch\nUnknown fertilizer code: %s\n", pNF->acCode);
+					PRINT_ERROR(S);// for debug
+					g_free(S);
+				}
+					
+			}
+		}
+		//2. next actions of fertilization (self->first_fertil_done!=0):
+		else{
+			    //valid for both regular XN and transfered fertilization data from XN-MPMAS (saved in pNF->pNext) 
+/*				if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
+									xpn->pTi->pSimTime->mon,
+									xpn->pTi->pSimTime->mday,
+									pNF->pNext->Year,
+									pNF->pNext->Month,
+									pNF->pNext->Day) == 0)) {*/
+                                        
+                if (xpn->pPl->pDevelop->fDevStage >= pNF->pNext->bbch){
+					xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext; //The data in xpn->pMa->pNFertilizer is required by InfiltrationOrgDuenger(self) and InfiltrationOrgDuengerRegen(self). Therefore xpn->pMa->pNFertilizer should not be switched to the next struc before the date of next fertilization action.   
+					pNF = xpn->pMa->pNFertilizer;
+/*					if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "FE\0", 2) == 0))
+						schaaf_mineral_fertilization(self);
+					else if ((strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+						schaaf_organic_fertilization(self);*/
+					if ((strncmp(pNF->acCode, "FE\0", 2) == 0))
+						schaaf_mineral_fertilization(self);
+					else if ((strncmp(pNF->acCode, "RE\0", 2) == 0) || (strncmp(pNF->acCode, "LA\0", 2) == 0) || (strncmp(pNF->acCode, "HA\0", 2) == 0))
+						schaaf_organic_fertilization(self);
+                	                else {
+        	                              	char* S =  g_strdup_printf("Error in schaaf.c:schaaf_fertilizer_bbch\nUnknown fertilizer code: %s\n", pNF->acCode);
+
+	                                        PRINT_ERROR(S);// for debug
+	                                        g_free(S);
+	                                }
+						
+				}
+		}
+		
+
+ /*       if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
+                                   xpn->pTi->pSimTime->mon,
+                                   xpn->pTi->pSimTime->mday,
+                                   pNF->Year,
+                                   pNF->Month,
+                                   pNF->Day) == 0) &&
+            xpn->pMa->pNFertilizer->pNext != NULL) {
+            
+            self->fertil_done = 0;*/
+
+	}
+	
+	if (self->first_fertil_done >0)
+	{
+        InfiltrationOrgDuenger(self);
+        InfiltrationOrgDuengerRegen(self);
+
+        //MinerOrgDuengHoff(self);
+        //NitrOrgNH4Hoff(self);
+	}
+
+    return RET_SUCCESS;
+}
+///////////// End fertilization at BBCH ///////////////////////////////////////////////////////////
+
 int schaaf_mineral_fertilization(schaaf* self) //Hong: =TSFertilizer()?
 {
     expertn_modul_base* xpn = &(self->parent);
@@ -1071,7 +1200,7 @@ int read_fertilizers(schaaf* self)
 	        stopyear = str_time.year;
 			stopmon =  str_time.mon;
 	        stopday =  str_time.mday;
-			j=0.0;
+			j = 0;
             //End of Hong
 
             for (i = 0; i < fertilizer_count; i++) {
@@ -1210,6 +1339,402 @@ int read_fertilizers(schaaf* self)
 
     return RET_SUCCESS;
 }
+
+int read_fertilizers_BBCH(schaaf* self)
+{
+    expertn_modul_base* xpn = &(self->parent);
+    PMANAGEMENT pMa = xpn->pMa;
+    PNFERTILIZER fertil_first, fertil, fertil_act;
+
+    GKeyFile* keyfile;
+    GKeyFileFlags flags;
+    GError* error = NULL;
+    GDate* date;
+    const char* filename;
+    char* ini_filename;
+
+    int fertilizer_count, i, start_i, j;
+
+//    int fertil_start_year, fertil_start_mon, fertil_start_day;
+    int fertil_start_bbch, bbch;
+
+    // Read from INI File:
+    ini_filename = xpn_register_var_get_pointer(self->parent.pXSys->var_list, "Config.schaaf.filename_bbch");
+
+    if (ini_filename == NULL) {
+        PRINT_ERROR("Missing entry 'schaaf.filename' in your configuration. If present, fertilization from database "
+                    "will be used.");
+        return 0;
+    } else {
+
+        char* S2;
+        S2 = expertn_modul_base_replace_std_templates(xpn, ini_filename);
+        if (S2 != NULL) {
+            ini_filename = get_fullpath_from_relative(self->parent.pXSys->base_path, S2);
+
+            /* Create a new GKeyFile object and a bitwise list of flags. */
+            keyfile = g_key_file_new();
+
+            flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
+
+            /* Load the GKeyFile from keyfile.conf or return. */
+            if (!g_key_file_load_from_file(keyfile, ini_filename, flags, &error)) {
+                PRINT_ERROR("Error Read SCHAAF INI File");
+                return -1;
+            }
+
+            filename = ini_filename;
+
+            // Read mineral fertilization
+ //           GET_INI_STRING_ARRAY_OPTIONAL(self->min_date, self->min_date_len, 1, "9999-09-09", "fertilize_at_BBCH_miner", "date");
+            GET_INI_INT_ARRAY_OPTIONAL(self->min_bbch,self->min_bbch_len,1,999,"fertilize_at_BBCH_miner","bbch");
+            GET_INI_STRING_ARRAY_OPTIONAL(self->min_fertilizer, self->min_fertilizer_len, 1, "no fertilizer", "fertilize_at_BBCH_miner", "fertilizer");
+            GET_INI_STRING_ARRAY_OPTIONAL(self->min_code, self->min_code_len, 1, "no fertilizer", "fertilize_at_BBCH_miner", "code");
+            GET_INI_DOUBLE_ARRAY_OPTIONAL(self->min_n_tot, self->min_n_tot_len, 1, 0.0, "fertilize_at_BBCH_miner", "n_tot_min");
+            GET_INI_DOUBLE_ARRAY_OPTIONAL(self->min_no3n, self->min_no3n_len, 1, 0.0, "fertilize_at_BBCH_miner", "no3n");
+            GET_INI_DOUBLE_ARRAY_OPTIONAL(self->min_nh4n, self->min_nh4n_len, 1, 0.0, "fertilize_at_BBCH_miner", "nh4n");
+            GET_INI_DOUBLE_ARRAY_OPTIONAL(self->min_urea, self->min_urea_len, 1, 0.0, "fertilize_at_BBCH_miner", "urea");
+
+            CHECK_LEN(self->min_bbch_len, self->min_fertilizer_len);
+            CHECK_LEN(self->min_bbch_len, self->min_code_len);
+            CHECK_LEN(self->min_bbch_len, self->min_n_tot_len);
+            CHECK_LEN(self->min_bbch_len, self->min_no3n_len);
+            CHECK_LEN(self->min_bbch_len, self->min_nh4n_len);
+            CHECK_LEN(self->min_bbch_len, self->min_urea_len);
+
+            // Read organic fertilization
+ //        GET_INI_STRING_ARRAY_OPTIONAL(self->org_date, self->org_date_len, 1, "9999-09-09", "fertilize_at_BBCH_orga", "date");
+            GET_INI_INT_ARRAY_OPTIONAL(self->org_bbch, self->org_bbch_len, 1, 999, "fertilize_at_BBCH_org", "bbch");
+            GET_INI_STRING_ARRAY_OPTIONAL(self->org_fertilizer, self->org_fertilizer_len, 1, "no fertilizer", "fertilize_at_BBCH_org", "fertilizer");
+            GET_INI_STRING_ARRAY_OPTIONAL(self->org_code, self->org_code_len, 1, "no fertilizer", "fertilize_at_BBCH_org", "code");
+            GET_INI_DOUBLE_ARRAY_OPTIONAL(self->org_amount, self->org_amount_len, 1, 0.0, "fertilize_at_BBCH_org", "amount");
+            GET_INI_DOUBLE_ARRAY_OPTIONAL(self->org_dry_matter, self->org_dry_matter_len, 1, 0.0, "fertilize_at_BBCH_org", "dry_matter");
+            GET_INI_DOUBLE_ARRAY_OPTIONAL(self->org_subst, self->org_subst_len, 1, 0.0, "fertilize_at_BBCH_org", "org_subst");
+            GET_INI_DOUBLE_ARRAY_OPTIONAL(self->org_n_tot, self->org_n_tot_len, 1, 0.0, "fertilize_at_BBCH_org", "n_tot_org");
+            GET_INI_DOUBLE_ARRAY_OPTIONAL(self->org_nh4n, self->org_nh4n_len, 1, 0.0, "fertilize_at_BBCH_org", "nh4n");
+
+            CHECK_LEN(self->org_bbch_len, self->org_fertilizer_len);
+            CHECK_LEN(self->org_bbch_len, self->org_code_len);
+            CHECK_LEN(self->org_bbch_len, self->org_amount_len);
+            CHECK_LEN(self->org_bbch_len, self->org_dry_matter_len);
+            CHECK_LEN(self->org_bbch_len, self->org_subst_len);
+            CHECK_LEN(self->org_bbch_len, self->org_n_tot_len);
+            CHECK_LEN(self->org_bbch_len, self->org_nh4n_len);
+
+            if ((strcmp(self->min_fertilizer[0], "no fertilizer") != 0) &&
+                strcmp(self->org_fertilizer[0], "no fertilizer") != 0)
+                fertilizer_count = self->min_bbch_len + self->org_bbch_len;
+            else if ((strcmp(self->min_fertilizer[0], "no fertilizer") != 0) &&
+                     strcmp(self->org_fertilizer[0], "no fertilizer") == 0)
+                fertilizer_count = self->min_bbch_len + 1;
+            else if ((strcmp(self->min_fertilizer[0], "no fertilizer") == 0) &&
+                     strcmp(self->org_fertilizer[0], "no fertilizer") != 0)
+                fertilizer_count = self->org_bbch_len + 1;
+            else
+                fertilizer_count = 2;
+
+            // Merge fertilizations
+            // 1. Allocate memory
+            self->ges_bbch = g_malloc0(sizeof(int) * fertilizer_count);
+            self->ges_fertilizer = g_malloc0(sizeof(char*) * fertilizer_count);
+            self->ges_code = g_malloc0(sizeof(char*) * fertilizer_count);
+            self->ges_n_tot = g_malloc0(sizeof(double) * fertilizer_count);
+			self->ges_n_org_tot = g_malloc0(sizeof(double) * fertilizer_count);
+            self->ges_no3n = g_malloc0(sizeof(double) * fertilizer_count);
+            self->ges_nh4n = g_malloc0(sizeof(double) * fertilizer_count);
+            self->ges_urea = g_malloc0(sizeof(double) * fertilizer_count);
+            self->ges_dry_matter = g_malloc0(sizeof(double) * fertilizer_count);
+            self->ges_subst = g_malloc0(sizeof(double) * fertilizer_count);
+            self->ges_amount = g_malloc0(sizeof(double) * fertilizer_count);
+            // 2.  Add mineral and organic fertilizations to merged arrays and remove spaces
+            for (i = 0; i < fertilizer_count; i++) {
+                if (i < self->min_bbch_len) {
+                   // deleteSpaceBegEnd(self->min_bbch[i]);
+                    self->ges_bbch[i] =self->min_bbch[i];
+                    deleteSpaceBegEnd(self->min_fertilizer[i]);
+                    self->ges_fertilizer[i] = g_strdup_printf("%s", self->min_fertilizer[i]);
+                    deleteSpaceBegEnd(self->min_code[i]);
+                    self->ges_code[i] = g_strdup_printf("%s", self->min_code[i]);
+                    self->ges_n_tot[i] = self->min_n_tot[i];
+                    self->ges_no3n[i] = self->min_no3n[i];
+                    self->ges_nh4n[i] = self->min_nh4n[i];
+                    self->ges_urea[i] = self->min_urea[i];
+                } else {
+                    j = i - self->min_bbch_len;
+                 //   deleteSpaceBegEnd(self->org_bbch[j]);
+                    self->ges_bbch[i] =  self->org_bbch[j];
+                    deleteSpaceBegEnd(self->org_fertilizer[j]);
+                    self->ges_fertilizer[i] = g_strdup_printf("%s", self->org_fertilizer[j]);
+                    deleteSpaceBegEnd(self->org_code[j]);
+                    self->ges_code[i] = self->org_code[j];
+                    self->ges_n_org_tot[i] = self->org_n_tot[j];
+                    self->ges_nh4n[i] = self->org_nh4n[j];
+                    self->ges_dry_matter[i] = self->org_dry_matter[j];
+                    self->ges_subst[i] = self->org_subst[j];
+                    self->ges_amount[i] = self->org_amount[j];
+                }
+            }
+
+            // Order bbch's chronologically
+            // Set first bbch for comparison
+//            date = convert_str_to_gdate(self->min_date[0]);
+            bbch = self->min_bbch[0];
+            fertil_start_bbch = bbch;
+
+            start_i = 0;
+            for (i = start_i; i < fertilizer_count; i++) {
+              //  g_date_free(date);
+                bbch = self->ges_bbch[i];
+                
+/*                if (xpn_time_compare_date(fertil_start_year,
+                                          fertil_start_mon,
+                                          fertil_start_day,
+                                          g_date_get_year(date),
+                                          g_date_get_month(date),
+                                          g_date_get_day(date)) > 0) */
+                                              
+                                              
+                    if(fertil_start_bbch > bbch){
+                    // Permutation of the data
+                    self->ges_bbch_zwischen = self->ges_bbch[start_i];
+                    self->ges_fertilizer_zwischen = self->ges_fertilizer[start_i];
+                    self->ges_code_zwischen = self->ges_code[start_i];
+                    self->ges_n_tot_zwischen = self->ges_n_tot[start_i];
+					self->ges_n_org_tot_zwischen = self->ges_n_org_tot[start_i];//changed by EP and Hong on 20180702: es war self->ges_n_org_tot_zwischen = self->ges_n_tot[start_i] 
+                    self->ges_no3n_zwischen = self->ges_no3n[start_i];
+                    self->ges_nh4n_zwischen = self->ges_nh4n[start_i];
+                    self->ges_urea_zwischen = self->ges_urea[start_i];
+                    self->ges_dry_matter_zwischen = self->ges_dry_matter[start_i];
+                    self->ges_subst_zwischen = self->ges_subst[start_i];
+                    self->ges_amount_zwischen = self->ges_amount[start_i];
+
+                    self->ges_bbch[start_i] = self->ges_bbch[i];
+                    self->ges_fertilizer[start_i] = self->ges_fertilizer[i];
+                    self->ges_code[start_i] = self->ges_code[i];
+                    self->ges_n_tot[start_i] = self->ges_n_tot[i];
+					self->ges_n_org_tot[start_i]  = self->ges_n_org_tot[i];
+                    self->ges_no3n[start_i] = self->ges_no3n[i];
+                    self->ges_nh4n[start_i] = self->ges_nh4n[i];
+                    self->ges_urea[start_i] = self->ges_urea[i];
+                    self->ges_dry_matter[start_i] = self->ges_dry_matter[i];
+                    self->ges_subst[start_i] = self->ges_subst[i];
+                    self->ges_amount[start_i] = self->ges_amount[i];
+
+                    self->ges_bbch[i] = self->ges_bbch_zwischen;
+                    self->ges_fertilizer[i] = g_strdup_printf("%s", self->ges_fertilizer_zwischen);
+                    self->ges_code[i] = g_strdup_printf("%s", self->ges_code_zwischen);
+                    self->ges_n_tot[i] = self->ges_n_tot_zwischen;
+					self->ges_n_org_tot[i] = self->ges_n_org_tot_zwischen;
+                    self->ges_no3n[i] = self->ges_no3n_zwischen;
+                    self->ges_nh4n[i] = self->ges_nh4n_zwischen;
+                    self->ges_urea[i] = self->ges_urea_zwischen;
+                    self->ges_dry_matter[i] = self->ges_dry_matter_zwischen;
+                    self->ges_subst[i] = self->ges_subst_zwischen;
+                    self->ges_amount[i] = self->ges_amount_zwischen;
+
+                    // Set new start date for permutation
+/*                    g_date_free(date);
+                    date = convert_str_to_gdate(self->ges_date[start_i]);
+                    fertil_start_day = g_date_get_day(date);
+                    fertil_start_mon = g_date_get_month(date);
+                    fertil_start_year = g_date_get_year(date); */
+
+                     fertil_start_bbch = self->ges_bbch[start_i];
+
+                    i = start_i;
+
+                    continue;
+                }
+
+                // If date[start_i] does not need permutation anymore, test date[start_i+1]
+                if (i == fertilizer_count - 1) {
+                    start_i += 1;
+                    i = start_i;
+/*                g_date_free(date);
+                    date = convert_str_to_gdate(self->ges_date[start_i]);
+                    fertil_start_day = g_date_get_day(date);
+                    fertil_start_mon = g_date_get_month(date);
+                    fertil_start_year = g_date_get_year(date);*/
+                    
+                    fertil_start_bbch = self->ges_bbch[start_i];
+                    
+                    
+                    continue;
+                }
+
+                // Exit loop if the last array members are reached
+                if (start_i == fertilizer_count - 1)
+                    break;
+            }
+
+
+            fertil_first = NULL;
+            fertil_act = NULL;
+
+			//Added by Hong on 20190513
+			//Get Start and Stop Year
+			PSIMTIME		pST = xpn->pTi->pSimTime;
+			STRUCT_XPN_TIME str_time;
+			int 			startyear,startmon,startday,stopyear,stopmon,stopday;
+			int j;
+			xpn_time_get_struc(&str_time, pST->iStart_year, pST->fStart_TimeY);
+	        startyear = str_time.year;
+		    startmon =  str_time.mon;
+	        startday =  str_time.mday;
+	        xpn_time_get_struc(&str_time, pST->iStop_year, pST->fStop_TimeY);
+	        stopyear = str_time.year;
+			stopmon =  str_time.mon;
+	        stopday =  str_time.mday;
+			j=0;
+            //End of Hong
+
+            for (i = 0; i < fertilizer_count; i++) {
+                // Struktur mit 0 Initialisieren
+                fertil = g_malloc0_n(1, sizeof(STNFERTILIZER));
+                fertil->acName = self->ges_fertilizer[i];
+                
+/*                g_date_free(date);
+                date = convert_str_to_gdate(self->ges_date[i]);
+                fertil->Day = g_date_get_day(date);
+                fertil->Month = g_date_get_month(date);
+                fertil->Year = g_date_get_year(date);*/
+                
+                fertil->bbch = self->ges_bbch[i];
+                
+                fertil->fTotalN = self->ges_n_tot[i];
+                fertil->fNO3N = self->ges_no3n[i];
+                fertil->fNH4N = self->ges_nh4n[i];
+                fertil->fUreaN = self->ges_urea[i];
+                fertil->acCode = self->ges_code[i];
+                fertil->fDryMatter = self->ges_dry_matter[i];
+                fertil->fNorgManure = self->ges_n_org_tot[i];
+				
+				//added by Hong on 20190513
+				if (xpn_time_compare_date(startyear,
+				                          startmon,
+										  startday,
+                                         fertil->Year,
+                                         fertil->Month,
+                                         fertil->Day) < 0)
+				
+				{
+					if (j == 0) {
+                    fertil_first = fertil;
+                    fertil_act = fertil;
+                } else {
+                    fertil_act->pNext = fertil;
+                    fertil->pBack = fertil_act;
+                    fertil_act = fertil_act->pNext;
+                }
+				j++;
+				}
+				
+				if (xpn_time_compare_date(stopyear,
+				                          stopmon,
+										  stopday,
+                                         fertil->Year,
+                                         fertil->Month,
+                                         fertil->Day) < 0)
+											 break;
+				
+            
+            
+               if (i == 0) {
+                   fertil_first = fertil;
+                   fertil_act = fertil;
+              } else {
+                  fertil_act->pNext = fertil;
+                 fertil->pBack = fertil_act;
+                fertil_act = fertil_act->pNext;
+             }
+				//End of Hong
+            }
+            if (fertilizer_count != 0) {
+                // Letzter hat -1 als Wert
+                fertil = g_malloc0_n(1, sizeof(STNFERTILIZER));
+                fertil->Day = 0;
+                fertil->Month = 0;
+                fertil->Year = 0;
+                fertil->bbch = 999;
+                fertil_act->pNext = fertil;
+                fertil->pBack = fertil_act;
+                fertil_act = fertil_act->pNext;
+            }
+
+            pMa->pNFertilizer = fertil_first;
+            //self->fertil_done = 0;
+			self->first_fertil_done = 0;// changed by Florian on 20171220
+
+            self->ini_filename = g_strdup_printf("%s", ini_filename);
+            free(ini_filename);
+            free(S2);
+            g_key_file_free(keyfile);
+
+            // Free the variables
+            g_free(self->min_date);
+            g_free(self->min_bbch);
+            g_free(self->min_fertilizer);
+            g_free(self->min_code);
+            g_free(self->org_date);
+            g_free(self->org_bbch);
+            g_free(self->org_fertilizer);
+            g_free(self->org_code);
+            g_free(self->ges_date);
+            g_free(self->ges_bbch);
+            g_free(self->ges_fertilizer);
+            g_free(self->ges_code);
+            g_free(self->min_n_tot);
+            g_free(self->min_no3n);
+            g_free(self->min_nh4n);
+            g_free(self->min_urea);
+            g_free(self->org_amount);
+            g_free(self->org_dry_matter);
+            g_free(self->org_subst);
+            g_free(self->org_n_tot);
+            g_free(self->org_nh4n);
+            g_free(self->ges_n_tot);
+            g_free(self->ges_no3n);
+            g_free(self->ges_nh4n);
+            g_free(self->ges_urea);
+            g_free(self->ges_amount);
+            g_free(self->ges_dry_matter);
+            g_free(self->ges_subst);
+            g_free(self->ges_date_zwischen);
+            g_free(self->ges_fertilizer_zwischen);
+            g_free(self->ges_code_zwischen);
+
+            //g_date_free(date);
+            if (error != NULL)
+                g_error_free(error);
+        }
+
+        // Auf das neueste BBCH-Stadium stellen:
+
+       {
+            PNFERTILIZER pNF = xpn->pMa->pNFertilizer;
+
+/*            if ((pNF != NULL) && (pNF->Day > 0)) {
+                while ((pNF == NULL) || ((xpn_time_compare_date(xpn->pTi->pSimTime->year,
+                                         xpn->pTi->pSimTime->mon,
+                                         xpn->pTi->pSimTime->mday,
+                                         pNF->Year,
+                                         pNF->Month,
+                                         pNF->Day) > 0)&& (xpn_time_compare_date(xpn->pTi->pSimTime->year,
+                                         xpn->pTi->pSimTime->mon,
+                                         xpn->pTi->pSimTime->mday,
+                                         pNF->pNext->Year,
+                                         pNF->pNext->Month,
+                                         pNF->pNext->Day) < 0))) {
+                    xpn->pMa->pNFertilizer = xpn->pMa->pNFertilizer->pNext;
+                    pNF = xpn->pMa->pNFertilizer;
+                }
+            }*/
+         }
+    }
+
+    return RET_SUCCESS;
+}
+
 
 int schaaf_irrigation(schaaf* self)
 {
