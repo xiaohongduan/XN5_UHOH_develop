@@ -287,7 +287,8 @@ int spass_phenological_development(spass *self)
 //        if (pDev->fStageSUCROS>=(double)0.0) //SG 20190703: out-commented to count for BBCH stages between 0 and 10
 //        {
 
-		pDev->fStageSUCROS	+= pDev->fDevR*pTi->pTimeStep->fAct;
+		if(strcmp(pPl->pGenotype->acCropCode,"PT")!=0)
+            pDev->fStageSUCROS	+= pDev->fDevR*pTi->pTimeStep->fAct;
   
         //SG/17/05/99:////////////////////////////////////////////
         //
@@ -312,7 +313,8 @@ int spass_phenological_development(spass *self)
         // Änderung des internen Entwicklungsstadiums hinter die 
         // Umwandlung in EC-Stadium verlegt
 	
-		//pDev->fStageSUCROS	+= pDev->fDevR*pTi->pTimeStep->fAct;
+		if(strcmp(pPl->pGenotype->acCropCode,"PT")==0)
+            pDev->fStageSUCROS	+= pDev->fDevR*pTi->pTimeStep->fAct;
         
  /*   // SG 20130516-----------------------------------------------------------------
 	// To fix the date of Emergence following SUCROS DEVELOPMENT MODEL
@@ -856,7 +858,8 @@ int spass_COMVR_TO_ZSTAGE_AND_CERES_POTATO(spass *self)
 
 //	pPl->pDevelop->fDevStage = (double)5*(pPl->pDevelop->fStageSUCROS+pPl->pDevelop->fDevR)*(double)10;
 
-	x=pPl->pDevelop->fStageSUCROS+pPl->pDevelop->fDevR*pTi->fAct;
+//	x=pPl->pDevelop->fStageSUCROS+pPl->pDevelop->fDevR*pTi->fAct;
+	x=pPl->pDevelop->fStageSUCROS;
 
 
 	if (x<(double)1.0)
