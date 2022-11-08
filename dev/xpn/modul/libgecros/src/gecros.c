@@ -4254,6 +4254,11 @@ int   ActualNitrogenUptake_GECROS(gecros *self)
 		//SG 20111103: non-extractable mineral nitrogen from bulk density and thickness 
 		fnh4r +=(double)0.5 *(double)0.01*pSL->fBulkDens*DeltaZ; //--> schichtweise
 		fno3r +=(double)0.25*(double)0.01*pSL->fBulkDens*DeltaZ;
+/*        if (strcmp(pPl->pGenotype->acCropCode,"RP")==0) //SG20221020
+        {  //Rapeseed: NH4R ans NO3R values from CERES-INRA
+            fnh4r +=(double)2.0 *(double)0.01*pSL->fBulkDens*DeltaZ; //--> schichtweise
+            fno3r +=(double)0.25*(double)0.01*pSL->fBulkDens*DeltaZ;
+        }*/
 	 }
 	 else if ((pPl->pRoot->fDepth*(double)10 < iLayer*DeltaZ)&&(iLayer*DeltaZ <= pPl->pRoot->fDepth*(double)10.+DeltaZ))
      {
@@ -4267,7 +4272,12 @@ int   ActualNitrogenUptake_GECROS(gecros *self)
 
  		fnh4r +=(double)0.5 *(double)0.01*pSL->fBulkDens*DeltaZ*((double)1-f1); //--> schichtweise
 		fno3r +=(double)0.25*(double)0.01*pSL->fBulkDens*DeltaZ*((double)1-f1);
-}
+/*        if (strcmp(pPl->pGenotype->acCropCode,"RP")==0)//SG20221020
+        {  //Rapeseed: NH4R ans NO3R values from CERES-INRA
+            fnh4r +=(double)2.0 *(double)0.01*pSL->fBulkDens*DeltaZ; //--> schichtweise
+            fno3r +=(double)0.25*(double)0.01*pSL->fBulkDens*DeltaZ;
+        }*/
+    }
 	 else
 	 {
 	    break;

@@ -997,7 +997,7 @@ void hydrus_rain_limit_infiltration_layer(hydrus *self)
 
 			if (pWLayer->fContAct > pSLayer->fPorosity)
 				{
-					water_pond = (pWLayer->fContAct - pSLayer->fPorosity)*20.0;
+					water_pond = (pWLayer->fContAct - pSLayer->fPorosity)*20.0; //SG20220920 ??? warum *20? sollte das vielleicht water_pond = (pWLayer->fContAct - pSLayer->fPorosity)/pSLayer->fThickness heissen?
 					pWLayer->fContAct -= water_pond;
 					water_pond *= pSLayer->fThickness;
 					//pWLayer->fContAct = pWLayer->fContOld;
