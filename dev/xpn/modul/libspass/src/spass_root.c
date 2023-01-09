@@ -427,7 +427,8 @@ int spass_RootLengthDensity(spass *self)
 			//bzw.
 			// RLLRLay = ((double)0.01)*pLR->fLengthDens;
 
-			//SG 20120126:
+/*			
+            //SG 20120126:
 			// zunehmendes Absterben der Wurzeln (hier: Wurzellängendichte) nach der Blüte (Seneszenz)
 			// --> muestte eigentlich aus Absterberate der Wurzeln errechnet werden, am besten unter Berücksichtigung der 
 			// Ressourcenverfügbarkeit in den einzelnen Schichten wie in PLATHO
@@ -449,11 +450,14 @@ int spass_RootLengthDensity(spass *self)
 			RLLRLay = max((double)0.01*pLR->fLengthDens,RLLRLay);
 			// 
 			////////////////////////////////////////////////////////////////////////////////////////
+             
+             */
 
-			//  pLR->fLengthDens += pLR->fLengthDensFac*RNLF/fThickness-(double)0.01*pLR->fLengthDens;
+			//Original SPASS:
+            pLR->fLengthDens += (pLR->fLengthDensFac*RNLF/fThickness-(double)0.01*pLR->fLengthDens)*pTS->fAct;
 
 			//SG 20120126
-			pLR->fLengthDens += (pLR->fLengthDensFac*RNLF/fThickness-(double)RLLRLay)*pTS->fAct;  //[m]
+			//pLR->fLengthDens += (pLR->fLengthDensFac*RNLF/fThickness-(double)RLLRLay)*pTS->fAct;  //[m]
 
 			if (fCumDepth<(double)115.0)
 				pLR->fLengthDens=max((double)0.0,pLR->fLengthDens);

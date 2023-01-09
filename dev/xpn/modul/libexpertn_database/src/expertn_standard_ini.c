@@ -444,7 +444,7 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	//GET_INI_DOUBLE(self->cfg->wind_measure_height,"location","wind_measure_height");
 	//GET_INI_DOUBLE(self->cfg->temp_measure_height,"location","temp_measure_height");
     //SG20220329
-    GET_INI_DOUBLE_OPTIONAL(self->cfg->mean_ground_water_level,"location","ground_water_level",200.0);
+    GET_INI_DOUBLE_OPTIONAL_WITHOUT_ERROR_MESSAGE(self->cfg->mean_ground_water_level,"location","ground_water_level",200.0);
 	
     // climate:
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->AveYearTemp,"climate","AveYearTemp",7.4);
@@ -973,7 +973,9 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
             pSLayer->fRockFrac = max(0,pSLayer->fRockFrac);
             
 			//pSWater->fContSat = pSLayer->fPorosity;//self->cfg->cont_sat[i2]; //SG: why porosity?
-			pSWater->fContSat =self->cfg->cont_sat[i2]; //SG20220208: back to theta_sat!
+			pSWater->fContSat =self->cfg->cont_sat[i2]; //SG20220208: back to theta_sat! 
+            if  (pSWater->fContSat< 0.0) pSWater->fContSat  = pSLayer->fPorosity; //(if "-99", fContSat=Porosity via Pedotransfer function)
+            
 			pSWater->fContPWP = self->cfg->wilting_point[i2];
 			pSWater->fContFK = self->cfg->field_capacity[i2];
 			pSWater->fContRes = self->cfg->res_water_cont[i2];
@@ -989,7 +991,7 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 
             //SG20200327
             pSWater->fTau= self->cfg->pore_connectivity[i2];
-            pSWater->fContSat_c= self->cfg->cond_sat_c[i2];
+            pSWater->fContSat_c= self->cfg->cont_sat_c[i2];
             pSWater->fContRes_c= self->cfg->res_water_cont_c[i2];
             pSWater->fCondSat_c= self->cfg->cond_sat_c[i2];
             pSWater->fCondSat_nc= self->cfg->cond_sat_nc[i2];
@@ -1164,11 +1166,13 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 	//xpn->pCl->pWeather->fTempAir=db_get_double(data_model,9); // mittlere Lufttemperatur
 	xpn->pCl->pWeather->fTempAir = self->Tair;
 	xpn->pCl->pWeather->fTempAir_zlvl = self->Tair;
-	if (xpn->pCl->fTempMeasHeight==0.0)
+//	if (xpn->pCl->fTempMeasHeight==0.0)
+	if (xpn->pCl->fTempMeasHeight<=0.0) //SG20220408
 		{
 			xpn->pCl->fTempMeasHeight=2.0;
 		}
-	if (xpn->pCl->fWindMeasHeight==0.0)
+//	if (xpn->pCl->fWindMeasHeight==0.0)
+	if (xpn->pCl->fWindMeasHeight<=0.0) //SG20220408
 		{
 			xpn->pCl->fWindMeasHeight=2.0;
 		}

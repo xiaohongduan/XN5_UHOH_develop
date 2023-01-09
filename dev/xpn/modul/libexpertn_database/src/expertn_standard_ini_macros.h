@@ -122,6 +122,19 @@
 			}\
 	}\
 	
+#define GET_INI_DOUBLE_OPTIONAL_WITHOUT_ERROR_MESSAGE(var,groupname,key,std_value)\
+{\
+		gboolean key_exists;\
+		error = NULL; \
+		key_exists = g_key_file_has_key(keyfile,groupname,key,&error);\
+		if (key_exists==FALSE)\
+			{\
+				var = std_value;\
+			} else\
+			{\
+				GET_INI_DOUBLE(var,groupname,key);\
+			}\
+	}\
 	
 #define GET_INI_DOUBLE_ARRAY_OPTIONAL(var,var_size,expected_len,std_value,groupname,key) \
 	{\

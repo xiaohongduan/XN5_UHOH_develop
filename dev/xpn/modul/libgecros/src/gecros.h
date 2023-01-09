@@ -375,6 +375,9 @@ struct _gecros
     
     //SG20180410. additional paramterfor sugarbeet
     double SINKBEET, EFF, CFS;
+    
+    //SG20220620: additional parameter for winter crops
+    double DSCRIT;
 
     //%** Soil parameters
     //double PNLS=1.

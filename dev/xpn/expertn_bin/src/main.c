@@ -455,7 +455,11 @@ int main(int argc, char **argv)
 
 
 #ifdef USE_OPENMP
-#pragma omp parallel for schedule(dynamic) reduction(||: finish)
+//LINUX
+//#pragma omp parallel for schedule(dynamic) reduction(||: finish)
+
+//WINDOWS (works also under LINUX )
+#pragma omp parallel for reduction(||: finish) //SG202206: use this variant to avoid initialisation problems during parallelization (obeserved in Spass model)
 #endif
 			for (i=loop_min; i<loop_max; i++) {
 

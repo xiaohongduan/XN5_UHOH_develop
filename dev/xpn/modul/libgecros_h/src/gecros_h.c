@@ -720,6 +720,8 @@ self->SINKBEET = 1000;
 self->EFF = 27;
 self->CFS = 0.52;
 
+//SG20220620: additional parameter for winter crops
+self->DSCRIT = 0.25;
 
 //%** Soil parameters
 //double PNLS=1.
@@ -955,6 +957,10 @@ int gecros_load_ini_file(gecros_h *self)
 					pGe->DVR[i].fOutput = dummy_out[i];
 				}
 		}
+    //SG20220620
+    GET_INI_DOUBLE_OPTIONAL(self->DSCRIT,"phenology","DSCRIT",0.25);
+    if(strcmp(xpn->pPl->pGenotype->acCropCode,"RP")==0) 
+        GET_INI_DOUBLE_OPTIONAL(self->DSCRIT,"phenology","DSCRIT",0.3);
 
 	GET_INI_DOUBLE(self->NUPTX,"nitrogen","NUPTX");
 	GET_INI_DOUBLE(self->RNCMIN,"nitrogen","RNCMIN");
@@ -1444,7 +1450,9 @@ int   DefaultPlantParameters_GECROS(gecros_h *self)
    self->MTDV   = (double)40.0;
    self->MTDR   = (double)50.0;
    self->PSEN   = (double)-0.0;
-  }
+    
+   self->DSCRIT = 0.25; //SG20220620
+ }
 
   if (!strcmp(spec,"BA"))
   {
@@ -1486,7 +1494,9 @@ int   DefaultPlantParameters_GECROS(gecros_h *self)
    self->MTDV   = (double)40.0;
    self->MTDR   = (double)50.0;
    self->PSEN   = (double)-0.0;
-  }
+    
+   self->DSCRIT = 0.25; //SG20220620
+ }
 
   if (!strcmp(spec,"MZ"))
   {
@@ -1656,6 +1666,8 @@ int   DefaultPlantParameters_GECROS(gecros_h *self)
    self->MTDV   = (double)40.0;
    self->MTDR   = (double)50.0;
    self->PSEN   = (double)-0.0;
+   
+   self->DSCRIT = 0.3; //SG20220620
   }
 
 
@@ -3934,6 +3946,8 @@ int     PotentialNitrogenUptake_GECROS(gecros_h *self)
 	  double LNCI = (double)self->LNCI;
 	  double NUPTX =(double)self->NUPTX;
 	  double SLNMIN = (double)self->SLNMIN;
+      
+     double DSCRIT = self->DSCRIT; //SG20220620
 
       //double DELT = (double)1;
 	 double DELT = (double)xpn->pTi->pTimeStep->fAct;
@@ -4042,7 +4056,7 @@ int     PotentialNitrogenUptake_GECROS(gecros_h *self)
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// SG20140312:
 	// Vorschlag von Joachim Ingwersen zur Simulation der Winterung
-	if((strcmp(pPl->pGenotype->acCropCode,"WH")==0)||(strcmp(pPl->pGenotype->acCropCode,"BA")==0)) // here we have to distinguish between winter and summer crops!!!
+/*	if((strcmp(pPl->pGenotype->acCropCode,"WH")==0)||(strcmp(pPl->pGenotype->acCropCode,"BA")==0)) // here we have to distinguish between winter and summer crops!!!
 									
 	{
 		//	if (DS < 0.25) // DSCRIT = 0.25
@@ -4060,7 +4074,13 @@ int     PotentialNitrogenUptake_GECROS(gecros_h *self)
     		NDEM   = INSW(SLNMIN-SLN+1.E-5, min(NUPTX,0.01*NDEMAD), 0.);
 		else
     		NDEM   = INSW(SLNMIN-SLN+1.E-5, min(NUPTX,NDEMAD), 0.);
-	}
+	}*/
+    
+    if ((self->VERN > -0.1) && (DS < DSCRIT))// SG20220620: DSCRIT read from ini-file
+        NDEM   = INSW(SLNMIN-SLN+1.E-5, min(NUPTX,0.01*NDEMAD), 0.);
+	else
+        NDEM   = INSW(SLNMIN-SLN+1.E-5, min(NUPTX,NDEMAD), 0.);
+
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		
 //End of Hong	

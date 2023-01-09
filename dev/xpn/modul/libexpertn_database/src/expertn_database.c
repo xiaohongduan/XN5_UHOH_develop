@@ -1084,10 +1084,12 @@ void expertn_database_runWetterTageswerte(expertn_database *self) {
 	
 	xpn->pCl->pWeather->fTempAir_zlvl = xpn->pCl->pWeather->fTempAir;
 
-	if (xpn->pCl->fTempMeasHeight==0.0) {
+//	if (xpn->pCl->fTempMeasHeight==0.0) {
+	if (xpn->pCl->fTempMeasHeight==0.0) { //SG20220408
 		xpn->pCl->fTempMeasHeight=2.0;
 	}
-	if (xpn->pCl->fWindMeasHeight==0.0) {
+//	if (xpn->pCl->fWindMeasHeight==0.0) {
+	if (xpn->pCl->fWindMeasHeight==0.0) {  //SG20220408
 		xpn->pCl->fWindMeasHeight=2.0;
 	}
 

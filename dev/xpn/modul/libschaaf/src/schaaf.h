@@ -39,23 +39,28 @@ struct _schaaf
 	int min_date_len, min_fertilizer_len, min_code_len;
 	double *min_n_tot, *min_no3n, *min_nh4n, *min_urea;
 	int min_n_tot_len, min_no3n_len, min_nh4n_len, min_urea_len;
+    int *min_bbch;
+    int min_bbch_len;  //SG20210604
 	
 	// Organic fertilization
 	char **org_date, **org_fertilizer, **org_code;
 	int org_date_len, org_fertilizer_len, org_code_len;
 	double *org_amount, *org_dry_matter, *org_subst, *org_n_tot, *org_nh4n;
 	int org_amount_len, org_dry_matter_len, org_subst_len, org_n_tot_len, org_nh4n_len;
+    int *org_bbch;
+    int org_bbch_len;  //SG20210604
 
 	// Mineral + Organic fertilization
 	char **ges_date, **ges_fertilizer, **ges_code;
 	double *ges_n_tot, *ges_n_org_tot, *ges_no3n, *ges_nh4n, *ges_urea;
 	double *ges_amount, *ges_dry_matter, *ges_subst;
+    int *ges_bbch;  //SG20210604
 	
 	//für Sortierung
 	char *ges_date_zwischen, *ges_fertilizer_zwischen, *ges_code_zwischen;
 	double ges_n_tot_zwischen, ges_n_org_tot_zwischen, ges_no3n_zwischen, ges_nh4n_zwischen, ges_urea_zwischen;
 	double ges_amount_zwischen, ges_dry_matter_zwischen, ges_subst_zwischen;
-	
+    int ges_bbch_zwischen;  //SG20210604
 
 	
 	// irrigation:
@@ -71,7 +76,9 @@ struct _schaaf
 
 // public class member function:
 G_MODULE_EXPORT int schaaf_fertilizer(schaaf *self);
+G_MODULE_EXPORT int schaaf_fertilizer_bbch(schaaf *self); //SG20210604
 G_MODULE_EXPORT int read_fertilizers(schaaf *self);
+G_MODULE_EXPORT int read_fertilizers_BBCH(schaaf *self); //SG20210604
 G_MODULE_EXPORT int schaaf_irrigation(schaaf *self);
 G_MODULE_EXPORT int read_irrigation(schaaf *self);
 
@@ -83,6 +90,7 @@ int InfiltrationOrgDuenger(schaaf *self);
 int InfiltrationOrgDuengerRegen(schaaf *self);
 int MinerOrgDuengHoff(schaaf *self);
 int NitrOrgNH4Hoff(schaaf *self);
+
 
 
 struct _schaafClass
@@ -191,6 +199,54 @@ G_MODULE_EXPORT GType schaaf_get_type (void);
 			}\
 	}\
 
+#define GET_INI_INT_ARRAY(var,var_size,groupname,key) \
+	{\
+		gsize _var_size;\
+		error = NULL; \
+		var = g_key_file_get_integer_list (keyfile,groupname,key,&_var_size,&error); \
+		if (error!=NULL) \
+			{ \
+				gchar *S;\
+				S = g_strdup_printf  ("Init var %s.%s (%s)!\n Error Message: %s",groupname,key,filename,error->message);\
+				PRINT_ERROR(S);\
+				g_free(S);\
+			}\
+		var_size = (int)_var_size;\
+	}\
+	
+#define GET_INI_INT_ARRAY_OPTIONAL(var,var_size,expected_len,std_value,groupname,key) \
+	{\
+		gboolean key_exists,group_exists;\
+		error = NULL;\
+		group_exists = g_key_file_has_group(keyfile,groupname);\
+		if (group_exists==TRUE)\
+			{\
+				key_exists = g_key_file_has_key(keyfile,groupname,key,&error);\
+				if (error!=NULL) \
+					{ \
+						gchar *S;\
+						S = g_strdup_printf  ("Init var %s.%s (%s)!\n Error Message: %s",groupname,key,filename,error->message);\
+						PRINT_ERROR(S);\
+						g_free(S);\
+					}\
+			} else\
+			{\
+				key_exists = FALSE;\
+			}\
+		if (key_exists==FALSE)\
+			{ \
+				int i;\
+				var_size=expected_len;\
+				var = g_malloc0(sizeof(int)*expected_len);\
+				for (i=0;i<expected_len;i++)\
+					{\
+						var[i] = std_value;\
+					}\
+			} else\
+			{\
+				GET_INI_INT_ARRAY(var,var_size,groupname,key);\
+			}\
+	}\
 
 
 G_END_DECLS

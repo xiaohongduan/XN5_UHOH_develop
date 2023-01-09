@@ -60,7 +60,8 @@ int ceres_NitrogenConcentrationLimits(ceres *self)
 		//Roots Nitrogen Concentration of the Plant - Stage dependant
 		//============================================================================
 		pPltN->fRootOptConc     =(double)((2.10-0.14*sqrt((double)fStage))*0.01);
-		pPltN->fRootMinConc     =((double)0.75)*pPltN->fRootOptConc;
+		//pPltN->fRootMinConc     =((double)0.75)*pPltN->fRootOptConc;
+		pPltN->fRootMinConc     = (double)0.005;//SG20220405: that's the value from Gecros model
 	}//end wheat, barley
 
 	//Maize:
@@ -761,6 +762,7 @@ int ceres_PlantNitrogenStress_run(ceres *self)
 		pPltN->fGrainDemand = pBiom->fGrainGrowR*fGrainIncNConc;
 
 		pPltN->fRootOptConc = (double)((2.5-0.25*self->fXDevStage)/100.0);
+        //pPltN->fRootMinConc = (double)0.005;//SG20220405: that's the value from Gecros model
 
 		//======================================================================================
 		//Nitrogen translocation to grain
