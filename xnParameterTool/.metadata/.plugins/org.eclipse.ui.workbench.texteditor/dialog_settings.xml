@@ -2,7 +2,7 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
 		<item key="DIALOG_WIDTH" value="412"/>
-		<item key="DIALOG_Y_ORIGIN" value="131"/>
+		<item key="DIALOG_Y_ORIGIN" value="71"/>
 		<item key="DIALOG_X_ORIGIN" value="45"/>
 		<item key="DIALOG_HEIGHT" value="801"/>
 		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|11.0|0|GTK|1|"/>
@@ -13,8 +13,9 @@
 		<item key="isRegEx" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="wholeword" value="false"/>
-		<item key="selection" value="HashMap"/>
+		<item key="selection" value="main"/>
 		<list key="findhistory">
+			<item value="main"/>
 			<item value="HashMap"/>
 			<item value="station_id"/>
 			<item value="history_filename"/>
@@ -28,7 +29,6 @@
 			<item value="simulation_project_xn5_cells"/>
 			<item value="leachnParam"/>
 			<item value="camp_a"/>
-			<item value="main"/>
 			<item value="pack"/>
 		</list>
 		<list key="replacehistory">
