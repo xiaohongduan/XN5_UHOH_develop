@@ -47,6 +47,9 @@ xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fBiomGrowR,"pPl.pBiomass
 xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fRootDeathRate,"pPl.pBiomass.fRootDeathRate",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pBiomass->fLeafDeathRate,"pPl.pBiomass.fLeafDeathRate",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fLAI,"pPl.pCanopy.fLAI",0.0);\
+xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fGreenLAI,"pPl.pCanopy.fGreenLAI",0.0);\
+xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fDeadLAI,"pPl.pCanopy.fDeadLAI",0.0);\
+xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fTotalLAI,"pPl.pCanopy.fTotalLAI",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fPlantGreenLA,"pPl.pCanopy.fPlantGreenLA",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fPlantSenesLA,"pPl.pCanopy.fPlantSenesLA",0.0);\
 xpn_register_var_init_pdouble( var_list, pPl->pCanopy->fRoughnessHeat,"pPl.pCanopy.fRoughnessHeat",0.01);\

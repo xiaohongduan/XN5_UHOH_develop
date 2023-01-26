@@ -188,6 +188,9 @@ struct _xpn_output
     double fGrossPhotosynR, fGrossPhotosynR_zwischen, fGrossPhotosyn_Sum; 
     double fNetPhotosynR, fNetPhotosynR_zwischen, fNetPhotosyn_Sum; 
 	double Grain_number, Grain_number_sq;
+    //SG20230124:
+    double GreenLAI, DeadLAI, TotalLAI;
+
 	double *RLD;
 		
 		// Plant Nitrogen

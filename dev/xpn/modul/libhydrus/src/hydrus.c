@@ -84,7 +84,7 @@ int hydrus_water_flow_init(hydrus *self)
 	// Mobil Immobil (Standartmäßig aus = 0)
 	self->mob_imm = xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.hydrus.mobil",0);
 
-	self->use_infiltration_limit=xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.hydrus.infiltration_limit",TRUE);;
+	self->use_infiltration_limit=xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.hydrus.infiltration_limit",TRUE);
 	self->use_infiltration_limit_layer=xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.hydrus.infiltration_layer_limit",TRUE);
 
 	// Hydraulische Funktionen laden:

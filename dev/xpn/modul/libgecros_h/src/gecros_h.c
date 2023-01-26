@@ -3615,6 +3615,10 @@ int   LeafAreaGrowth_GECROS(gecros_h *self)
 //	  pPl->pCanopy->fLAI = (double)TLAI;	  
 //SG20210202: output of living LAI
 	  pPl->pCanopy->fLAI = (double)LAI;	  
+ //SG20230124:
+     pPl->pCanopy->fDeadLAI = (double)DLAI;
+      pPl->pCanopy->fGreenLAI = (double)LAI;	 
+      pPl->pCanopy->fTotalLAI = (double)TLAI;
 
       /*
 	  pGCan->fLAINdeterm = (double)LAIN;

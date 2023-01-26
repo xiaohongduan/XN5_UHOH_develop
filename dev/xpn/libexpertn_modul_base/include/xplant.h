@@ -483,6 +483,9 @@ typedef struct stcanopy   *PCANOPY;
 typedef struct stcanopy
     {
     double  fLAI;
+    double  fTotalLAI; //SG20230124
+    double  fGreenLAI; //SG20230124
+    double  fDeadLAI; //SG20230124
     double  fLAISpass;
     double  fPlantHeight; // in m
     double  fLeafAppearR;

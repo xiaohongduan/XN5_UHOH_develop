@@ -3077,7 +3077,7 @@ int   BiomassGrowth_GECROS(gecros *self)
 	  DIFS   = (double)pGS->fDiffSoilAirTemp;       //[°C]
 	  DAVTMP = 0.29*TMIN + 0.71*TMAX;
       NAVTMP = 0.71*TMIN + 0.29*TMAX;
-      //TAVSS  = ((DAVTMP+DIFS)+NAVTMP)/2.;	  //Average soil surface temperature -> SG20191121: bei Tagesschritten ok!
+      TAVSS  = ((DAVTMP+DIFS)+NAVTMP)/2.;	  //Average soil surface temperature -> SG20191121: bei Tagesschritten ok!
       LVDS   = (CLVD-CLVDS)/10.*(TAVSS-TBD)/(TOD-TBD);//rate ;	  //SG20191121: bei Tagesschritten ok!
      //SG20191121: LVDS depends on daytime temperature
      // fTemp = xpn->pCl->pWeather->fTempAir;
@@ -3677,6 +3677,11 @@ int   LeafAreaGrowth_GECROS(gecros *self)
 	  //pPl->pCanopy->fLAI = (double)TLAI;	  
 	  pPl->pCanopy->fLAI = (double)LAI;	  
 
+ //SG20230124:
+     pPl->pCanopy->fDeadLAI = (double)DLAI;
+      pPl->pCanopy->fGreenLAI = (double)LAI;	 
+      pPl->pCanopy->fTotalLAI = (double)TLAI;
+      
       /*
 	  pGCan->fLAINdeterm = (double)LAIN;
       pGCan->fLAIGreen   = (double)LAI;
@@ -4277,7 +4282,7 @@ int   ActualNitrogenUptake_GECROS(gecros *self)
             fnh4r +=(double)2.0 *(double)0.01*pSL->fBulkDens*DeltaZ; //--> schichtweise
             fno3r +=(double)0.25*(double)0.01*pSL->fBulkDens*DeltaZ;
         }*/
-    }
+}
 	 else
 	 {
 	    break;

@@ -617,6 +617,10 @@ int xpn_output_reg_var(xpn_output *self)
 
 	//LAI
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->LAI,"output.Plant.Leaf Area Index.LAI [m2/m2]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->GreenLAI,"output.Plant.Leaf Area Index.GreenLAI [m2/m2]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->DeadLAI,"output.Plant.Leaf Area Index.DeadLAI [m2/m2]",0.0);
+	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->TotalLAI,"output.Plant.Leaf Area Index.TotalLAI [m2/m2]",0.0);
+    
 
 	//Transpiration
 	xpn_register_var_init_pdouble(self->parent.pXSys->var_list,self->water.potT_Day,"output.Plant.Transpiration Day.Potential Transpiration [mm]",0.0);
@@ -2367,6 +2371,10 @@ int xpn_output_calc_var(xpn_output *self)
 	self->TotalMass = self->AboveMass + self->RootMass;
 
 	self->LAI = xpn->pPl->pCanopy->fLAI;
+    //SG20230124:
+    self->GreenLAI = xpn->pPl->pCanopy->fGreenLAI;
+    self->DeadLAI = xpn->pPl->pCanopy->fDeadLAI;
+    self->TotalLAI = xpn->pPl->pCanopy->fTotalLAI;
 
     // FH 20190705 Added multiplication with fDeltaZ and division by fDepth because we want to have the total root length density
 	self->TotRLD = xpn->pPl->pRoot->fTotalLength * pSo->fDeltaZ/ pSo->fDepth;
