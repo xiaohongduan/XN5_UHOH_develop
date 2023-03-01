@@ -54,7 +54,7 @@ typedef struct
 
 typedef struct
 {
-	// interne Daten
+	// interne Datten
 	STRUCT_XPN_VARLIST *var_list;
 	int var_list_len;
 	
