@@ -20,8 +20,11 @@ xpn_register_var_init_pdouble( var_list, pCl->pWeather->fHumidity,"pCl.pWeather.
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fHumidity_daily_models,"pCl.pWeather.fHumidity_daily_models",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fPanEvap,"pCl.pWeather.fPanEvap",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fWindSpeed,"pCl.pWeather.fWindSpeed",0.0);\
+xpn_register_var_init_pdouble( var_list, pCl->pWeather->fWindSpeedUndisturbed,"pCl.pWeather.fWindSpeedUndisturbed",0.0);\
+xpn_register_var_init_pdouble( var_list, pCl->pWeather->fWindAttenuationFactorTotal,"pCl.pWeather.fWindAttenuationFactorTotal",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fWindSpeed_daily_models,"pCl.pWeather.fWindSpeed_daily_models",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fWindSpeedConv,"pCl.pWeather.fWindSpeedConv",0.0);\
+xpn_register_var_init_pdouble( var_list, pCl->pWeather->fWindDirection,"pCl.pWeather.fWindDirection",-99.9);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fDewPoint,"pCl.pWeather.fDewPoint",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fSatDef,"pCl.pWeather.fSatDef",0.0);\
 xpn_register_var_init_pdouble( var_list, pCl->pWeather->fPreciRate,"pCl.pWeather.fPreciRate",0.0);\

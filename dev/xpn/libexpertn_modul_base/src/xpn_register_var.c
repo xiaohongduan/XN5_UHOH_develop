@@ -9,12 +9,11 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <string.h>
-#include <strings.h>
 #include <glib-object.h>
 #include <gmodule.h>
 #include <math.h>
 #include "xinclexp.h"
-#include <errno.h>
+
 
 static void xpn_register_var_finalize  			(GObject *object);
 
@@ -639,13 +638,6 @@ void xpn_register_var_write_data(xpn_register_var *self, gboolean first, gboolea
 			if (first==TRUE)
 				{
 					self->txtout = fopen(self->txtfile,"w");
-					/*Change Troost 2020-12-19: Added check for successful file opening */
-					if (self->txtout == NULL)
-					{						
-						fprintf(stdout,"ERROR (TXTOUTPUT): Could not open '%s'\n%s\n",self->txtfile, strerror(errno));
-						exit(1);
-					}
-					
 					xpn_register_var_write_header(self,self->txtout);
 					xpn_register_var_write_txt_row(self,self->txtout);
 					fflush(self->txtout);
@@ -821,8 +813,7 @@ int getStringColumn(char *dest,char *source,char *seperator,int column)
 						}
 					else
 						{
-							//dest=NULL;
-                            strcpy(dest,(char*)"");
+							dest=NULL;
 							return 1;
 						}
 				}
@@ -1251,9 +1242,6 @@ void* xpn_register_var_get_pointer(xpn_register_var *self,char *varname)
 	int i;
 	for (i=0; i<self->size; i++)
 		{
-        //debug:
-//       printf("i:, %i, varname:, %s\n",i, self->vars[i]->varname);
-			//if (strcasecmp(self->vars[i]->varname,varname)==0) //SG "case-insensitive"
 			if (strcmp(self->vars[i]->varname,varname)==0)
 				{
 					if  ((self->vars[i]->flag_pointer==TRUE) && (self->vars[i]->vartype==G_TYPE_NONE))
@@ -1272,7 +1260,9 @@ int xpn_register_var_get_pointer_convert_to_int(xpn_register_var *self,char *var
 	S = (char*)xpn_register_var_get_pointer(self,varname);
 	if (S==NULL)
 		{
-			fprintf(stderr,"ERROR: Varname is not defined (%s), take default value (%d)!\n",varname,standartvalue);
+			//changed error to warning by Hong on 20230210
+			//fprintf(stderr,"ERROR: Varname is not defined (%s), take default value (%d)!\n",varname,standartvalue);
+			fprintf(stderr,"WARNING: Varname is not defined (%s), take default value (%d)!\n",varname,standartvalue);
 			return  standartvalue;
 		}
 	else
@@ -1288,7 +1278,9 @@ double xpn_register_var_get_pointer_convert_to_double(xpn_register_var *self,cha
 	S = (char*)xpn_register_var_get_pointer(self,varname);
 	if (S==NULL)
 		{
-			fprintf(stderr,"ERROR: Varname is not defined (%s), take default value (%f)!\n",varname,standartvalue);
+			//changed error to warning by Hong on 20230210
+			//fprintf(stderr,"ERROR: Varname is not defined (%s), take default value (%f)!\n",varname,standartvalue);
+			fprintf(stderr,"WARNING: Varname is not defined (%s), take default value (%f)!\n",varname,standartvalue);
 			return  standartvalue;
 		}
 	else
@@ -1304,7 +1296,9 @@ float xpn_register_var_get_pointer_convert_to_float(xpn_register_var *self,char 
 	S = (char*)xpn_register_var_get_pointer(self,varname);
 	if (S==NULL)
 		{
-			fprintf(stderr,"ERROR: Varname is not defined (%s), take default value (%f)!\n",varname,(double)standartvalue);
+			//changed error to warning by Hong on 20230210
+			//fprintf(stderr,"ERROR: Varname is not defined (%s), take default value (%f)!\n",varname,(double)standartvalue);
+			fprintf(stderr,"WARNING: Varname is not defined (%s), take default value (%f)!\n",varname,(double)standartvalue);
 			return  standartvalue;
 		}
 	else
@@ -1322,7 +1316,9 @@ char** xpn_register_var_get_pointer_convert_to_array_string(xpn_register_var *se
 	S = (char*)xpn_register_var_get_pointer(self,varname);
 	if (S==NULL)
 		{
-			fprintf(stderr,"ERROR: Varname is not defined (%s)!\n",varname);
+			//changed error to warning by Hong on 20230210
+			//fprintf(stderr,"ERROR: Varname is not defined (%s)!\n",varname);
+			fprintf(stderr,"WARNING: Varname is not defined (%s)!\n",varname);
 			*size = 0;
 			return  NULL;
 		}

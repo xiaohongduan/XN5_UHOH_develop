@@ -108,7 +108,6 @@ typedef struct stnfertilizer
 	int		Day;
 	int 	Month;
 	int     Year;
-    int bbch;  //SG20210605
 	char		*acName; // Fertilizer Name
 	char		*acCode; // Fertilizer Code
 	double		fDryMatter; // Dry matter (organic fertilization)

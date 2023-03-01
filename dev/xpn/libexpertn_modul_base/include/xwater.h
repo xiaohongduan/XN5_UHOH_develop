@@ -154,8 +154,7 @@ typedef   struct xwater
 	double	 fCumInfiltration;
 	double	 fPondWater;
 	double	 fPercolR;
-    double fCapillaryRiseR;	
-    double	 fPotETDay;// Diese Variablen sollten, wenn dann lokal in der Bilanz oder zur Ausgabe erzeugt werden
+	double	 fPotETDay;// Diese Variablen sollten, wenn dann lokal in der Bilanz oder zur Ausgabe erzeugt werden
 //	double	 fActETDay;
 //	double	 fPotETCum;
 //	double	 fActETCum;
@@ -171,8 +170,6 @@ typedef   struct xwater
 	double    fGrdWatLevel;
 	double    fGrdWatLvlPot;
 	double    kc_factor; // kc factor for pm: 1 without model
-    //SG20220216 --> AS: added resistances to output:
-    double rss,rsc,rs,ra,rsra,PM_numerator;
 	PWLAYER	   pWLayer;
 	PWMEASURE  pWMeasure;
 	PEVAP	   pEvap;

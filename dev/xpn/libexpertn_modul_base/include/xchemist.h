@@ -238,10 +238,7 @@ typedef struct cLayer
 	double  fN2OKh;
 	double	fCSoilMicBiom;
 	double	fNSoilMicBiom;
-    double fLitterDenitrifCC; //SG20210715: Litter-C degradation during denitrification kg(N)/ha
-	double fManureDenitrifCC; //SG20210715: Manure-C degradation during denitrification kg(N)/ha
-    double fHumusDenitrifCC; //SG20210715: Humus-C degradation during denitrification kg(N)/ha
-    PCLAYER pNext;
+	PCLAYER pNext;
 	PCLAYER pBack;
 }
 CLAYER;
@@ -288,8 +285,6 @@ typedef struct cBalance
     double  fCManureProfile;
 	double  fCHumusProfile;
 	double  dCBalCorrect; 
-    double dCLossViaDenitrificationCum; //SG20210715: C loss via denitrification (cumulative) kg(N)/ha
-
 	//Hong 20190507: balance for 0-30 cm profile
 	double	fCProfileStart_30;
 	double	dCProfile_30;
@@ -299,7 +294,6 @@ typedef struct cBalance
 	double  fCLitterProfile_30;
     double  fCManureProfile_30;
 	double  fCHumusProfile_30;
-    double dCLossViaDenitrificationCum_30; //SG20210715: C loss via denitrification (cumulative) kg(N)/ha
 
 	double	dCInputCum;
 	double	dCInputSurf;
@@ -341,15 +335,6 @@ typedef struct cProfile
 	double	fCNHumusSurf;
 	double  fCStandCropRes;
 	double  fNStandCropRes;
-    //Moritz added fStandCropRes_to_AOM2_part_LN
-	int  dyn_AOM_div; //Switch ot activate new dynamic AOM division by Moritz 
-	int  fSOM1_new; //Switch ot activate new fSOM1 partitioning at BOM death by Moritz     
-	int  dyn_CUE_AOM; //Switch ot activate new dynamic CUE for AOM division by Moritz     
-    double  Resp_root; //Root Respiration kg CO2 C ha-1 d-1
-	double  fStandCropRes_to_AOM2_part_LN; 
-    double  L_N_slope; 
-    double  L_N_intercept; 
-    //End of Moritz
 	double  fCStrLitterSurf;
 	double  fNStrLitterSurf;
 	double  fLignFracStrLitSurf;
@@ -459,13 +444,8 @@ typedef struct cProfile
 	double  fCH4ImisR; // Deposition (Rate für CH4)
 	double  fNO3NImisR; // Deposition (Rate für NO3N)
 	double  fNH4NImisR; // Deposition (Rate für NH4)
-	double  fUreaLeachR;
-	double  fNH4LeachR;
 	double  fNO3LeachR;
-	double  fN2OLeachR;
-	double  fDOCLeachR;
-	double  fDONLeachR;
- 	double  fN2OEmisR;
+	double  fN2OEmisR;
 	double  fNOEmisR;
 	double  fN2EmisR;
 	double  fNFertilizerR;

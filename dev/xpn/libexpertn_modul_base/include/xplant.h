@@ -182,7 +182,6 @@ typedef struct stgenotype
     //double    fCriticalDaylength;
     //int       iDaylengthTyp;
     int     iVernCoeff;
-    double VernCoeff;
     //double    fGrainNumCoeff;
     //double    fGrainFillCoeff;
     //double    fGrainFillStage;
@@ -195,7 +194,6 @@ typedef struct stgenotype
     double   fTempOpt;
     double   fTempMax;
     double   fTempBase;
-    double dNUptH2OStress;
 //  double  fTempQ10;
 //  char    acStageName[MAX_FILE_STRINGLEN];
 
@@ -246,7 +244,7 @@ typedef struct stgenotype
     double  fTempMinDevRep;         //Minimum temperature for the development in reproductive phase (C)
     double  fTempOptDevRep;         //Optimum temperature for the development in reproductive phase (C)
     //double    fCritVernDays;          //Critical (minimum) vernalization units reqired (d)
-    double  fOptVernDays;           //Optimal vernalization units (d)
+    double  fOptVernDays;           //Optimal vernalization units (d)  // FH 20210521 also used in grapevine model as threshold for dormancy calculation
     double  fVernSensitivity;       //Vernalization sensitivity (0-1)
     double  fTempMaxVern;           //Maximum temperature for vernalization (C)
     double  fTempOptVern;           //Optimum temperature for vernalization (C)
@@ -348,15 +346,15 @@ typedef struct stdevelop
     double  fDevStage;
     double  fStageSUCROS;
     double  fDevR;
-    double  fDTT;
+    double  fDTT; // FH 20210521 also used in grapevine model as temperature sum
     double  fDaylengthEff;
-    double  fVernUnit;
+    double  fVernUnit; // FH 20210521 also used in grapevine model as chilling units
     double  fVernEff;
-    double  fCumDTT;
+    double  fCumDTT; // FH 20210521 also used in grapevine model as cumulative temperature sum
     double  fSumDTT;
     double  fCumTDU;
     double  fCumPhyll;
-    double  fCumVernUnit;
+    double  fCumVernUnit; // FH 20210521 also used in grapevine model as cumulative chilling unit
     double  fPhysTime;
     double  fCumPhysTime;
     double  fPhysTimeFct;
@@ -374,6 +372,8 @@ typedef struct stdevelop
 
     int     bMaturity;
     int     bPlantGrowth;
+    
+    int iAFTrue; //if agroforestry module is used or not
 
     PDEVELOP pNext;
     PDEVELOP pBack;
@@ -483,9 +483,6 @@ typedef struct stcanopy   *PCANOPY;
 typedef struct stcanopy
     {
     double  fLAI;
-    double  fTotalLAI; //SG20230124
-    double  fGreenLAI; //SG20230124
-    double  fDeadLAI; //SG20230124
     double  fLAISpass;
     double  fPlantHeight; // in m
     double  fLeafAppearR;
@@ -561,7 +558,13 @@ typedef struct stlayerRoot
 	double  fDeadGrossRootWeight_dt;
 	double  fDeadFineRootWeight_layer;
 	double  fDeadGrossRootWeight_layer;
-	
+   // FH 20191115 added for root competition in agroforestry module
+    double  fPotWatUptAF;
+    double  fActWatUptAF;
+    double  fPotLayWatUptAF;
+    double  fActLayWatUptAF;
+    double  fActLayWatUptAFbyTree;//Hong 20210625
+    
     PLAYERROOT  pNext;
     PLAYERROOT  pBack;
     }
@@ -637,6 +640,10 @@ typedef struct stplantWater
     double  fPanFac;
     double  fPotTranspR;        /* New [mm]/day  Potential Transpiration Rate*/
     double  fActTranspR;        /* New [mm]/day  Actual Transpiration Rate*/
+    double  fPotTranspAF;        /* New [mm]/day  Potential Transpiration Rate from agroforestry module*/
+    double  fActTranspAF;        /* New [mm]/day  Actual Transpiration Rate from agroforestry module*/
+    double  fWaterLossAF;       /* Hong 20200219: New [mm]/day  water loss due to root competition from agroforestry module*/
+    double  fWaterGainAF;       /* Hong 20200219: New [mm]/day  water loss due to root competition from agroforestry module*/
     double  fPotTranspdt;
     double  fActTranspdt;
     double  fPotTranspDay;
@@ -654,8 +661,11 @@ typedef struct stplantWater
     double  fStressFacTiller;
 
     double  fPotUptakedt;
+    double  fPotUptakeR;
+    double  fPotUptakeAF;
     double  fPotUptake;
     double  fActUptakedt;
+    double  fActUptakeR;
     double  fActUptake;
     double  fStressFacPartition;
     PPLTWATER  pNext;
@@ -803,7 +813,6 @@ typedef struct stplantNitrogen
     double  fNStressLeaf;
     double  fNStressTiller;
     double  fNStressGrain;
-
 
     PPLTNITROGEN  pNext;
     PPLTNITROGEN  pBack;

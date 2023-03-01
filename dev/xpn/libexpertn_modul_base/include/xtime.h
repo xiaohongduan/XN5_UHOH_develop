@@ -58,7 +58,7 @@ typedef struct
   int     iyear_old; // year YYYY z.B. 1981
   double  fTimeY_old ; // Days from Jan.
   
-
+    
 // Diese Daten stehen nach der Init zur Verfügung:
 	
   double fTimeZone;	// Time Zone: 0 = GMT, +1 = Germany
@@ -67,6 +67,9 @@ typedef struct
   double fStart_TimeY;
   int   iStop_year;      // Datum des Simulationsendes
   double fStop_TimeY;
+
+    // For root competition agroforestry module
+  double fCompTimeY;
 
 // other FLags:
 
