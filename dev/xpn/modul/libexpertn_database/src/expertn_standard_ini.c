@@ -23,6 +23,11 @@ static void expertn_standard_ini_init(expertn_standard_ini *self)
 	self->climate_values=NULL;
 	self->climate_values_small_ts=NULL;
 	self->interpolate_climate_data=0;
+	// FH 20210316 high resolution input column specific for pressure, par, and wind direction
+	self->read_pressure_from_column = 0;
+	self->read_par_from_column = 0;
+	self->read_winddirection_from_column = 0;
+	self->read_groundwater_from_column = 0;
 	self->use_high_resolution_climate_data=0;
 	self->no_rain = 0;
 }
@@ -93,6 +98,10 @@ int expertn_standard_ini_load(expertn_standard_ini *self)
 		{
 			self->use_high_resolution_climate_data=0;
 			self->interpolate_climate_data=0;
+			// FH 20210316 high resolution input column specific for pressure, par, and wind direction
+			self->read_winddirection_from_column = 0;
+			self->read_par_from_column = 0;
+			self->read_pressure_from_column = 0;
 			S = xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.Expert N Standard Read INI.use high resolution climate data");
 			if ((S==NULL) || (atoi(S)==0))
 				{
@@ -110,7 +119,97 @@ int expertn_standard_ini_load(expertn_standard_ini *self)
 						{
 							self->interpolate_climate_data=0;
 						}
-				}
+					
+					// FH 20210316 high resolution input column specific for pressure, par, and wind direction, atoi(S) < 6 since the first five columns are reserved for the necessary variables
+					// Since the date is the first column and handled as column 0, we need atoi(S) - 1 here
+					S = xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.Expert N Standard Read INI.read pressure from column");
+					if ((S==NULL) || (atoi(S)<=6))
+						{
+							if ((S != NULL) && (atoi(S)<=6))
+							{
+							PRINT_MESSAGE(xpn,3,"Pressure can only be read if the specified column number is higher than 6.");
+							}
+							self->read_pressure_from_column=0;
+						}
+					else
+						{
+							self->read_pressure_from_column= atoi(S)-1;
+						}
+
+					S = xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.Expert N Standard Read INI.read par from column");
+					if ((S==NULL) || (atoi(S)<=6))
+						{
+							if ((S != NULL) && (atoi(S)<=6))
+							{
+							PRINT_MESSAGE(xpn,3,"PAR can only be read if the specified column number is higher than 6.");
+							}
+							self->read_par_from_column=0;
+						}
+					else
+						{
+							self->read_par_from_column= atoi(S)-1;
+						}
+						
+					S = xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.Expert N Standard Read INI.read wind direction from column");
+					if ((S==NULL) || (atoi(S)<=6))
+						{
+							if ((S != NULL) && (atoi(S)<=6))
+							{
+							PRINT_MESSAGE(xpn,3,"Wind direction can only be read if the specified column number is higher than 6.");
+							}
+							self->read_winddirection_from_column=0;
+						}
+					else
+						{
+							self->read_winddirection_from_column= atoi(S)-1;
+						}
+
+					S = xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.Expert N Standard Read INI.read groundwater from column");
+					if ((S==NULL) || (atoi(S)<=6))
+						{
+							if ((S != NULL) && (atoi(S)<=6))
+							{
+							PRINT_MESSAGE(xpn,3,"Ground water can only be read if the specified column number is higher than 6.");
+							}
+							self->read_groundwater_from_column=0;
+						}
+					else
+						{
+							self->read_groundwater_from_column= atoi(S)-1;
+						}						
+						
+					if ((self->read_pressure_from_column >= 10) || (self->read_par_from_column >= 10) || (self->read_winddirection_from_column >= 10) || (self->read_groundwater_from_column >= 10) )
+						{
+						PRINT_MESSAGE(xpn,3,"Specified column number of pressure, par, winddirection or groundwater level is higher than 10, which might be a mistake. Please check your configuration and your weather input file.");
+						}
+						
+					if (self->read_pressure_from_column != 0 && 
+					(self->read_pressure_from_column == self->read_par_from_column || self->read_pressure_from_column == self->read_winddirection_from_column || self->read_pressure_from_column == self->read_groundwater_from_column))
+					{
+						PRINT_MESSAGE(xpn,3,"Pressure and par or wind direction or ground water level should not be read from the same column. Please check your configuration and your weather input file.");
+					}
+					
+					if (self->read_par_from_column != 0 &&
+					(self->read_par_from_column == self->read_pressure_from_column || self->read_par_from_column == self->read_winddirection_from_column || self->read_par_from_column == self->read_groundwater_from_column))
+					{
+						PRINT_MESSAGE(xpn,3,"PAR and pressure or wind or ground water level direction should not be read from the same column. Please check your configuration and your weather input file.");
+					}	
+
+					if (self->read_winddirection_from_column != 0 && 
+					(self->read_winddirection_from_column == self->read_pressure_from_column || self->read_winddirection_from_column == self->read_par_from_column || self->read_winddirection_from_column == self->read_groundwater_from_column))
+					{
+						PRINT_MESSAGE(xpn,3,"Wind direction and pressure or par or ground water level should not be read from the same column. Please check your configuration and your weather input file.");
+					}			
+
+					if (self->read_groundwater_from_column != 0 && 
+					(self->read_groundwater_from_column == self->read_pressure_from_column || self->read_groundwater_from_column == self->read_par_from_column || self->read_groundwater_from_column == self->read_winddirection_from_column))
+					{
+						PRINT_MESSAGE(xpn,3,"Ground water level and pressure or par or ground wind direction should not be read from the same column. Please check your configuration and your weather input file.");
+					}				
+
+				}	
+					
+					
 			if (self->use_high_resolution_climate_data==0)
 				{
 					filename = xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.Expert N Standard Read INI.climate file");
@@ -175,7 +274,8 @@ int expertn_standard_ini_load(expertn_standard_ini *self)
 	xpn_register_var_add_none(self->parent.pXSys->var_list,"expertn_database.MeanTemp",&(self->meantemp),-1,TRUE);
 	self->weather_index=0;
     
-    
+	// FH 20210318 I suppose we forgot the free here
+    free(S);
     
     
 	return RET;
@@ -443,17 +543,14 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->temp_measure_height,"location","temp_measure_height",2.0);
 	//GET_INI_DOUBLE(self->cfg->wind_measure_height,"location","wind_measure_height");
 	//GET_INI_DOUBLE(self->cfg->temp_measure_height,"location","temp_measure_height");
-    //SG20220329
-    GET_INI_DOUBLE_OPTIONAL_WITHOUT_ERROR_MESSAGE(self->cfg->mean_ground_water_level,"location","ground_water_level",200.0);
-	
-    // climate:
+	// climate:
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->AveYearTemp,"climate","AveYearTemp",7.4);
 	GET_INI_DOUBLE_OPTIONAL(self->cfg->MonthTempAmp,"climate","MonthTempAmp",6.0);
 	
 	//Added by Hong on 20190930
-	//preceding_crop  -->  must still be adapted to XN3 (SG20191112).
-	//GET_INI_DOUBLE_OPTIONAL(self->cfg->aboveResidualC,"preceding_crop","above_residual_c",0.0);
-	//GET_INI_DOUBLE_OPTIONAL(self->cfg->aboveResidualN,"preceding_crop","above_residual_n",0.0);
+	//preceding_crop
+	GET_INI_DOUBLE_OPTIONAL(self->cfg->aboveResidualC,"preceding_crop","above_residual_c",0.0);
+	GET_INI_DOUBLE_OPTIONAL(self->cfg->aboveResidualN,"preceding_crop","above_residual_n",0.0);
 	
 	//End of hong
 	
@@ -495,13 +592,6 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->cont_inflec,self->cfg->cont_inflec_len,self->cfg->layers_len,-99.0,"soil","cont_inflec");
 	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->pot_inflec_hPa,self->cfg->pot_inflec_hPa_len,self->cfg->layers_len,-99.0,"soil","pot_inflec_hPa");
 	GET_INI_STRING_ARRAY_OPTIONAL(self->cfg->soil_type,self->cfg->soil_type_len,self->cfg->layers_len,"-99.0","soil","soil_type");
-    //SG20200327:
- 	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->pore_connectivity,self->cfg->pore_connectivity_len,self->cfg->layers_len,0.5,"soil","pore_connectivity");
-	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->cont_sat_c,self->cfg->cont_sat_c_len,self->cfg->layers_len,-99.0,"soil","cont_sat_c");
-	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->res_water_cont_c,self->cfg->res_water_cont_c_len,self->cfg->layers_len,-99.0,"soil","res_water_cont_c");
-	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->cond_sat_c,self->cfg->cond_sat_c_len,self->cfg->layers_len,-99.0,"soil","cond_sat_c");
-	GET_INI_DOUBLE_ARRAY_OPTIONAL(self->cfg->cond_sat_nc,self->cfg->cond_sat_nc_len,self->cfg->layers_len,-99.0,"soil","cond_sat_nc");
-   
 	// Array Groessen muessen alle gleich sein, sonst: Fehlermeldung und abbrechen
 	CHECK_LEN(self->cfg->layers_len,self->cfg->organic_carbon_len);
 	CHECK_LEN(self->cfg->layers_len,self->cfg->organic_nitrogen_len);
@@ -519,24 +609,13 @@ int expertn_standard_ini_load_config(expertn_standard_ini *self,GDate *global_st
 	CHECK_LEN(self->cfg->layers_len,self->cfg->cont_inflec_len);
 	CHECK_LEN(self->cfg->layers_len,self->cfg->pot_inflec_hPa_len);
 	CHECK_LEN(self->cfg->layers_len,self->cfg->soil_type_len);
-    
-    //SG20200327:
-  	CHECK_LEN(self->cfg->layers_len,self->cfg->pore_connectivity_len);
-  	CHECK_LEN(self->cfg->layers_len,self->cfg->cont_sat_c_len);
-	CHECK_LEN(self->cfg->layers_len,self->cfg->res_water_cont_c_len);
-	CHECK_LEN(self->cfg->layers_len,self->cfg->cond_sat_c_len);
-	CHECK_LEN(self->cfg->layers_len,self->cfg->cond_sat_nc_len);
-
-    
-    
 	for (i=0; i<self->cfg->soil_type_len; i++)
 		{
 			sum=self->cfg->clay[i]+self->cfg->sand[i]+self->cfg->silt[i];
-//			if ((sum-EPSILON > 100.0) || (sum+EPSILON < 100.0))
-			if ((sum > 101) || (sum < 99)) //SG20200212: to avoid unnecessary error messages
+			if ((sum-EPSILON > 100.0) || (sum+EPSILON < 100.0))
 				{
 					gchar *S;
-					S = g_strdup_printf  ("Clay + silt + sand is not 100 %% +/-1%%, it is %f. Check your configuration in file (col %d): %s!",sum,i+1,filename);
+					S = g_strdup_printf  ("Clay + silt + sand is not 100 %%, it is %f. Check your configuration in file (col %d): %s!",sum,i+1,filename);
 					PRINT_ERROR(S);
 					g_free(S);
 					return -1;
@@ -614,14 +693,6 @@ void expertn_standard_ini_free_cfg_file(expertn_standard_ini *self)
 			G_FREE_IF_NOT_0(self->cfg->cond_sat);
 			G_FREE_IF_NOT_0(self->cfg->cont_inflec);
 			G_FREE_IF_NOT_0(self->cfg->pot_inflec_hPa);
-            
-            //SG20200327:
-            G_FREE_IF_NOT_0(self->cfg->pore_connectivity);
-            G_FREE_IF_NOT_0(self->cfg->cont_sat_c);
-            G_FREE_IF_NOT_0(self->cfg->res_water_cont_c);
-            G_FREE_IF_NOT_0(self->cfg->cond_sat_c);
-            G_FREE_IF_NOT_0(self->cfg->cond_sat_nc);
-
 			if (self->cfg->soil_type!=NULL)
 				{
 					for (i=0; i<self->cfg->soil_type_len; i++)
@@ -896,11 +967,6 @@ void expertn_standard_ini_set_location(expertn_standard_ini *self)
 	/*char* exposition;
 	double inclination; // Hang Neigung[%]
 	double size; // [ha]*/
-
-    //SG20220329: mean groundwater level
-	xpn->pLo->pFieldplot->AveGroundWaterTable = self->cfg->mean_ground_water_level;
-    xpn->pWa->fGrdWatLevel = xpn->pLo->pFieldplot->AveGroundWaterTable * 10.0; //cm -> mm
-
 }
 void expertn_standard_ini_set_climate_Ave(expertn_standard_ini *self)
 {
@@ -922,17 +988,16 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
 	int i,i2,i3;
-/*    int  i4,var_len; //SG 20180921*/
 	double fDepth_all;
 	PSPROFILE pSo;
 	PSLAYER pSLayer;
 	PSWATER pSWater;
 	PSHEAT pSHeat;
-/*	//Added by Hong
+	//Added by Hong
 	PWLAYER pWL;
 	PSWATER      pSW;
     pWL= xpn->pWa->pWLayer; //Added by Hong
-	pSW = xpn->pSo->pSWater;*/
+	pSW = xpn->pSo->pSWater;
 	//End of Hong
 	pSo = xpn->pSo;
 	pSo->fDepth=0.0;
@@ -942,14 +1007,14 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 	
 	//Added by Hong
 	// Hydraulische Funktionen laden:
-/*	self->WCont = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.WCont");
+	self->WCont = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.WCont");
 	self->HCond = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.HCond");
 	self->DWCap = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.DWCap");
 	self->MPotl = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.MPotl");
 	if ((self->WCont==NULL) || (self->HCond==NULL) || (self->DWCap==NULL) || (self->MPotl==NULL))
 		{
 			PRINT_ERROR("Problem with hydraulic functions!");
-		}*/
+		}
 	//End of Hong
 	
 	
@@ -958,24 +1023,16 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 			pSLayer->fClay = self->cfg->clay[i2];
 			pSLayer->fSilt = self->cfg->silt[i2];
 			pSLayer->fSand = self->cfg->sand[i2];
-			pSLayer->fHumus = self->cfg->organic_matter[i2];
 			pSLayer->fNHumus = self->cfg->organic_nitrogen[i2];
-            if(pSLayer->fNHumus<0.0) pSLayer->fNHumus = pSLayer->fHumus*0.058; //SG20200211
-            pSLayer->fCHumus = self->cfg->organic_carbon[i2];
-            if(pSLayer->fCHumus<0.0) pSLayer->fCHumus = pSLayer->fHumus*0.58; //SG20200211
+			pSLayer->fCHumus = self->cfg->organic_carbon[i2];
+			pSLayer->fHumus = self->cfg->organic_matter[i2];
 			pSLayer->fpH = self->cfg->ph[i2];
 			pSLayer->fBulkDens = self->cfg->bulk_desity[i2];
 			pSLayer->fBulkDensStart = self->cfg->bulk_desity[i2];
 			pSLayer->fPorosity = self->cfg->porosity[i2];
 			//pSLayer->fRockFrac = self->cfg->rock_fraction[i2] * pSLayer->fBulkDens/2.65; //weight% to volume%
 			pSLayer->fRockFrac = self->cfg->rock_fraction[i2] * pSLayer->fBulkDens/2.06; //weight% to volume%
-            //SG20200211: -99 abfangen
-            pSLayer->fRockFrac = max(0,pSLayer->fRockFrac);
-            
-			//pSWater->fContSat = pSLayer->fPorosity;//self->cfg->cont_sat[i2]; //SG: why porosity?
-			pSWater->fContSat =self->cfg->cont_sat[i2]; //SG20220208: back to theta_sat! 
-            if  (pSWater->fContSat< 0.0) pSWater->fContSat  = pSLayer->fPorosity; //(if "-99", fContSat=Porosity via Pedotransfer function)
-            
+			pSWater->fContSat = pSLayer->fPorosity;//self->cfg->cont_sat[i2];
 			pSWater->fContPWP = self->cfg->wilting_point[i2];
 			pSWater->fContFK = self->cfg->field_capacity[i2];
 			pSWater->fContRes = self->cfg->res_water_cont[i2];
@@ -983,32 +1040,17 @@ void expertn_standard_ini_set_soil(expertn_standard_ini *self)
 			pSWater->fCampB = self->cfg->camp_b[i2];
 			pSWater->fVanGenA = self->cfg->van_gen_a[i2];
 			pSWater->fVanGenN = self->cfg->van_gen_n[i2];
-
+			//Added by Hong Dec.2018, test of Hong
+			int f1, f2;
+			f1= (double)-150000;
+			f2=(double)-3300;
+			SET_IF_99(pSWater->fContPWP,  WATER_CONTENT(f1));
+			SET_IF_99(pSWater->fContFK, WATER_CONTENT(f2));
+			//End of Hong
 			pSWater->fMinPot = self->cfg->max_pot[i2];
 			pSWater->fCondSat = self->cfg->cond_sat[i2];
 			pSWater->fContInflec = self->cfg->cont_inflec[i2];
 			pSWater->fPotInflec =  self->cfg->pot_inflec_hPa[i2];
-
-            //SG20200327
-            pSWater->fTau= self->cfg->pore_connectivity[i2];
-            pSWater->fContSat_c= self->cfg->cont_sat_c[i2];
-            pSWater->fContRes_c= self->cfg->res_water_cont_c[i2];
-            pSWater->fCondSat_c= self->cfg->cond_sat_c[i2];
-            pSWater->fCondSat_nc= self->cfg->cond_sat_nc[i2];
-            
-/* 		//Added by Hong Dec.2018
-			int f1, f2;
-			f1= (double)-150000;
-			f2=(double)-3300;
-			pSWater->fContPWP = WATER_CONTENT(f1);
-			pSWater->fContFK = WATER_CONTENT(f2);*/
-			//End of Hong
-            
-            //SG20200327 --> verschoben in die jeweils ausgewählte Hydraulische Funktion!
-            //Dadurch werden die Werte für PWP und FK aus der cfg nur dann überschrieben, wenn eine Hydraulische Funktion ausgewählt wurde.
-            //Wichtig für Plan, Tipping-Bucket Modell zu implementieren
-
-            
 			pSLayer->acSoilID=g_strdup_printf("%s",self->cfg->soil_type[i2]);
 			pSLayer->fThickness =self->cfg->layer_thickness * 10.0; // cm --> mm
 			if ((i>0) && (i<pSo->iLayers-1))
@@ -1107,6 +1149,10 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 	self->weather_index=i;
 	self->par = -9999.0;
 	self->pressure = -9999.0;
+	//FH 20210318
+	self->winddirection = -9999.0;
+	self->groundwaterlevel = -9999.0;
+	//printf("%f %d\n", self->winddirection,self->climate_values_small_ts->size_of_values);
 	if (self->interpolate_climate_data==1)
 		{
 			expertn_standard_ini_run_climate_high_res_interpol(self->global_radiation,1)
@@ -1114,14 +1160,77 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 			expertn_standard_ini_run_climate_high_res_interpol(self->rel_humidity,3)
 			expertn_standard_ini_run_climate_high_res_interpol(self->windspeed,4)
 			expertn_standard_ini_run_climate_high_res_interpol(self->Tair,5)
-			if (self->climate_values_small_ts->size_of_values>6)
+			//FH 20210318 Now column numbers can be specified in the parameterization to load par, pressure and wind direction, hence it is not required to fill all columns
+			if(self->read_par_from_column != 0)
+			{ 
+				if (self->read_par_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read par from weather file is higher than number of columns in the weather file.")
+					}
+				}	
+				else
+				{
+				expertn_standard_ini_run_climate_high_res_interpol(self->par,self->read_par_from_column)
+				}
+			}
+			
+			if(self->read_pressure_from_column != 0)
+			{ 
+				if (self->read_pressure_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read pressure from weather file is higher than number of columns in the weather file.")
+					}
+				}	
+				else
+				{
+				expertn_standard_ini_run_climate_high_res_interpol(self->pressure,self->read_pressure_from_column)
+				}
+			}
+			
+			if(self->read_winddirection_from_column != 0)
+			{ 
+				if (self->read_winddirection_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read wind direction from weather file is higher than number of columns in the weather file.")
+					}
+				}	
+				else
+				{
+				expertn_standard_ini_run_climate_high_res_interpol(self->winddirection,self->read_winddirection_from_column)
+				}
+			}		
+			
+			if(self->read_groundwater_from_column != 0)
+			{ 
+				if (self->read_groundwater_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read ground water level from weather file is higher than number of columns in the weather file.")
+					}
+				}	
+				else
+				{
+				expertn_standard_ini_run_climate_high_res_interpol(self->groundwaterlevel,self->read_groundwater_from_column)
+				}
+			}				
+			
+			
+			//FH 20210318 Former code
+			/*if (self->climate_values_small_ts->size_of_values>5)
 				{
 					expertn_standard_ini_run_climate_high_res_interpol(self->par,6)
 					if (self->climate_values_small_ts->size_of_values>6)
 						{
 							expertn_standard_ini_run_climate_high_res_interpol(self->pressure,7);
 						}
-				}
+				}*/
 		}
 	else
 		{
@@ -1130,14 +1239,76 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 			self->rel_humidity = self->climate_values_small_ts->valuelist[i][3];
 			self->windspeed = self->climate_values_small_ts->valuelist[i][4];
 			self->Tair = self->climate_values_small_ts->valuelist[i][5];
-			if (self->climate_values_small_ts->size_of_values>5)
+			//FH 20210318 Now column numbers can be specified in the parameterization to load par, pressure and wind direction, hence it is not required to fill all columns
+			if(self->read_par_from_column != 0)
+			{ 
+				if (self->read_par_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read par from weather file is higher than number of columns in the weather file.")
+					}
+				}
+				else
+				{
+				self->par = self->climate_values_small_ts->valuelist[i][self->read_par_from_column];
+				}
+			}
+			
+			if(self->read_pressure_from_column != 0)
+			{ 
+				if (self->read_pressure_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read pressure from weather file is higher than number of columns in the weather file.")
+					}
+				}
+				else
+				{
+				self->pressure = self->climate_values_small_ts->valuelist[i][self->read_pressure_from_column];
+				}
+			}
+			
+			if(self->read_winddirection_from_column != 0)
+			{ 
+				if (self->read_winddirection_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read wind direction from weather file is higher than number of columns in the weather file.")
+					}
+				}
+				else
+				{
+				self->winddirection = self->climate_values_small_ts->valuelist[i][self->read_winddirection_from_column];
+				}
+			}
+			
+			if(self->read_groundwater_from_column != 0)
+			{ 
+				if (self->read_groundwater_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read ground water level from weather file is higher than number of columns in the weather file.")
+					}
+				}
+				else
+				{
+				self->groundwaterlevel = self->climate_values_small_ts->valuelist[i][self->read_groundwater_from_column];
+				}
+			}			
+			
+			//FH 20210318 Former code
+/*			if (self->climate_values_small_ts->size_of_values>5)
 				{
 					self->par = self->climate_values_small_ts->valuelist[i][6];
 					if (self->climate_values_small_ts->size_of_values>6)
 						{
 							self->pressure =  self->climate_values_small_ts->valuelist[i][7];
 						}
-				}
+				}*/
 		}
 	if (self->no_rain==1)
 		{
@@ -1163,16 +1334,28 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 		{
 			xpn->pCl->pWeather->fAtmPressure = self->pressure;
 		}
+	//FH 20210318 Just that it is somehow initialized
+	xpn->pCl->pWeather->fWindDirection = -99.9;
+	//printf("%f %f \n", xpn->pCl->pWeather->fWindDirection, self->winddirection);
+	if (self->winddirection >= -9998.0)
+		{
+			xpn->pCl->pWeather->fWindDirection = self->winddirection;
+		}
+	// Initialized as 2000 as before
+	xpn->pWa->fGrdWatLevel = 2000;	
+	if(self->groundwaterlevel >= -9998.0)
+		{
+		xpn->pWa->fGrdWatLevel = self->groundwaterlevel;
+		}
+		
 	//xpn->pCl->pWeather->fTempAir=db_get_double(data_model,9); // mittlere Lufttemperatur
 	xpn->pCl->pWeather->fTempAir = self->Tair;
 	xpn->pCl->pWeather->fTempAir_zlvl = self->Tair;
-//	if (xpn->pCl->fTempMeasHeight==0.0)
-	if (xpn->pCl->fTempMeasHeight<=0.0) //SG20220408
+	if (xpn->pCl->fTempMeasHeight==0.0)
 		{
 			xpn->pCl->fTempMeasHeight=2.0;
 		}
-//	if (xpn->pCl->fWindMeasHeight==0.0)
-	if (xpn->pCl->fWindMeasHeight<=0.0) //SG20220408
+	if (xpn->pCl->fWindMeasHeight==0.0)
 		{
 			xpn->pCl->fWindMeasHeight=2.0;
 		}
@@ -1214,14 +1397,76 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 			expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->rel_humidity,3)
 			expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->windspeed,4)
 			expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->Tair,5)
-			if (self->climate_values_small_ts->size_of_values>6)
+			//FH 20210318 Now column numbers can be specified in the parameterization to load par, pressure and wind direction, hence it is not required to fill all columns
+			if(self->read_par_from_column != 0)
+			{ 
+				if (self->read_par_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read par from weather file is higher than number of columns in the weather file.")
+					}
+				}	
+				else
+				{
+				expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->par,self->read_par_from_column)
+				}
+			}
+			
+			if(self->read_pressure_from_column != 0)
+			{ 
+				if (self->read_pressure_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read pressure from weather file is higher than number of columns in the weather file.")
+					}
+				}	
+				else
+				{
+				expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->pressure,self->read_pressure_from_column)
+				}
+			}
+			
+			if(self->read_winddirection_from_column != 0)
+			{ 
+				if (self->read_winddirection_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read wind direction from weather file is higher than number of columns in the weather file.")
+					}
+				}	
+				else
+				{
+				expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->winddirection,self->read_winddirection_from_column)
+				}
+			}		
+			
+			if(self->read_groundwater_from_column != 0)
+			{ 
+				if (self->read_groundwater_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read ground water level from weather file is higher than number of columns in the weather file.")
+					}
+				}	
+				else
+				{
+				expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->groundwaterlevel,self->read_groundwater_from_column)
+				}
+			}					
+			
+			//FH 20210318 Former code
+/*			if (self->climate_values_small_ts->size_of_values>6)
 				{
 					expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->par,6)
 					if (self->climate_values_small_ts->size_of_values>6)
 						{
 							expertn_standard_ini_run_climate_high_res_interpol_daily_models(self->pressure,7);
 						}
-				}
+				}*/
 		}
 	else
 		{
@@ -1230,14 +1475,76 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 			self->rel_humidity = self->climate_values_small_ts->valuelist[i][3];
 			self->windspeed = self->climate_values_small_ts->valuelist[i][4];
 			self->Tair = self->climate_values_small_ts->valuelist[i][5];
-			if (self->climate_values_small_ts->size_of_values>5)
+			//FH 20210318 Now column numbers can be specified in the parameterization to load par, pressure and wind direction, hence it is not required to fill all columns
+			if(self->read_par_from_column != 0)
+			{ 
+				if (self->read_par_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read par from weather file is higher than number of columns in the weather file.")
+					}
+				}
+				else
+				{
+				self->par = self->climate_values_small_ts->valuelist[i][self->read_par_from_column];
+				}
+			}
+			
+			if(self->read_pressure_from_column != 0)
+			{ 
+				if (self->read_pressure_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read pressure from weather file is higher than number of columns in the weather file.")
+					}
+				}
+				else
+				{
+				self->pressure = self->climate_values_small_ts->valuelist[i][self->read_pressure_from_column];
+				}
+			}
+			
+			if(self->read_winddirection_from_column != 0)
+			{ 
+				if (self->read_winddirection_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read wind direction from weather file is higher than number of columns in the weather file.")
+					}
+				}
+				else
+				{
+				self->winddirection = self->climate_values_small_ts->valuelist[i][self->read_winddirection_from_column];
+				}
+			}
+			
+			if(self->read_groundwater_from_column != 0)
+			{ 
+				if (self->read_groundwater_from_column > self->climate_values_small_ts->size_of_values)
+				{
+					if(xpn->pTi->pSimTime->bFirstRound == 1)
+					{
+					PRINT_MESSAGE(xpn,3,"Specified column to read ground water level from weather file is higher than number of columns in the weather file.")
+					}
+				}
+				else
+				{
+				self->groundwaterlevel = self->climate_values_small_ts->valuelist[i][self->read_groundwater_from_column];
+				}
+			}			
+			
+			//FH 20210318 Former code
+/*			if (self->climate_values_small_ts->size_of_values>5)
 				{
 					self->par = self->climate_values_small_ts->valuelist[i][6];
 					if (self->climate_values_small_ts->size_of_values>6)
 						{
 							self->pressure =  self->climate_values_small_ts->valuelist[i][7];
 						}
-				}
+				}*/
 		}
 	if (self->no_rain==1)
 		{
@@ -1254,6 +1561,8 @@ void expertn_standard_ini_run_climate_high_res(expertn_standard_ini *self)
 	//xpn->pCl->pWeather->fTempAir=db_get_double(data_model,9); // mittlere Lufttemperatur
 	xpn->pCl->pWeather->fTempAir_daily_models = self->Tair;
 }
+
+
 void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
 {
     double Solar_radiation(expertn_modul_base *xpn, double); //SG20190212
@@ -1310,15 +1619,11 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
             //self->SoilT50 = self->climate_values->valuelist[i][18];
         
              if(self->climate_values->size_of_values>19) //wenn Spalte CO2 vorhanden vorhanden
-             {    
                  self->AtmCO2ppm =   self->climate_values->valuelist[i][19];//SG20190211 - Provisorium für Rajina! Später "Throughfall" [19]; Groundwater [20]; "Atm. CO2" [21];
-                 
-                 if(self->climate_values->size_of_values==22) //wenn Spalte CO2 vorhanden vorhanden
-                 { 
-                     self->CnpyDrn = self->climate_values->valuelist[i][20]; //SG20220304 - "Throughfall" [20]
-                     self->WatTbl= self->climate_values->valuelist[i][21]; //SG20220304 - "Groundwater" [21]
-                 }
-             }            
+             
+            //self->CnpyDrn = self->climate_values->valuelist[i][20];
+            //self->WatTbl= self->climate_values->valuelist[i][21];
+            
             
             //Berechnung fehlender Globalstrahlung, falls Sonnenscheindauer gegeben ist:
             if ((self->global_radiation < -9)||(self->global_radiation>=99))
@@ -1390,9 +1695,6 @@ void expertn_standard_ini_runWetterTageswerte(expertn_standard_ini *self)
     //SG20190211:
    if((self->AtmCO2ppm>199.999)&&(self->AtmCO2ppm<2000.01))
         xpn->pCl->pWeather->fAtmCO2ppm =     self->AtmCO2ppm;
-        
-     xpn->pCl->pWeather->fThroughfall = self->CnpyDrn;
-     xpn->pCl->pWeather->fWaterTable = self->WatTbl;
     //end of SG
 	
 	xpn->pCl->pWeather->fTempAir_zlvl = xpn->pCl->pWeather->fTempAir;

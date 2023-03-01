@@ -188,5 +188,5 @@
 			g_free(darray_from);\
 			darray_from=NULL;\
 		}
-	
+    
 #endif

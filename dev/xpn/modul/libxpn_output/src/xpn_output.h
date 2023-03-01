@@ -96,11 +96,6 @@ typedef struct
 	//Water Flux Density
 	double *FluxDens_Day, *FluxDensZwischen_Day;
 	//double FluxDens_dt, FluxDens_Day, FluxDens_Sum;
-    
-    //SG20220311: Capillary rise
-    double CapillaryRise_Day;
-    double CapillaryRise_Sum;
-    double caprise_zwischen;
 	
 } struct_Water;
 
@@ -151,19 +146,7 @@ struct _xpn_output
 	double fUreaHydroDay,fNHumusMinerDay, fNH4NitrDay,fNO3DenitDay,fNImmobDay,fNLitterMinerDay,fNManureMinerDay;
 	
 	double fNLitterImmobDay,fNHumusImmobDay,fNManureImmobDay;
-    
-    //SG20200629: N Gaseous emissions
-    double NH3CumVolat, N2OCumEmission,NOXCumEmission, N2CumEmission;
-    double NH3VolatDay, N2OEmissionDay,NOXEmissionDay, N2EmissionDay;
-    double NH3Volat_zwischen, N2OEmission_zwischen, NOXEmission_zwischen, N2Emission_zwischen;
-    
-    //SG20200826: N Leaching
-    double UreaLeachCum,NH4LeachCum,NO3LeachCum, N2ODrainCum,DOCLeachCum,DONLeachCum;;
-    double UreaLeachR, NH4LeachR,NO3LeachR, N2ODrainR,DOCLeachR,DONLeachR;
-    double UreaLeach_zwischen, NH4Leach_zwischen, NO3Leach_zwischen, N2ODrain_zwischen,DOCLeach_zwischen,DONLeach_zwischen;
-    
-    
-  	
+	
 	// Carbon
 	double CLitter,CManure,CHumus,NLitter,NManure,NHumus;
 	
@@ -184,25 +167,13 @@ struct _xpn_output
     double fPotTranspR;
     double fActTranspR;
     double fSolRadDay, fPARDay, fSolRadDay_zwischen, fPARDay_zwischen;
-    //SG20220214
-    double fGrossPhotosynR, fGrossPhotosynR_zwischen, fGrossPhotosyn_Sum; 
-    double fNetPhotosynR, fNetPhotosynR_zwischen, fNetPhotosyn_Sum; 
-	double Grain_number, Grain_number_sq;
-    //SG20230124:
-    double GreenLAI, DeadLAI, TotalLAI;
-
+	
 	double *RLD;
 		
 		// Plant Nitrogen
 	double NRoot, NStem, NLeaves, NGrain, NAboveGround;
     
     double rooting_depth;
-	
-	//Moritz variables
-    double dyn_AOM_div,fSOM1_new,dyn_CUE_AOM,Resp_root;
-	double fCStandCropRes,fNStandCropRes,fC_NStandCropRes,fStandCropRes_to_AOM2_part_LN,fCLitterSurf,fNLitterSurf,fC_NLitterSurf;
-	double fCManureSurf,fNManureSurf,fC_NManureSurf,fCHumusSurf,fNHumusSurf,fC_NHumusSurf,rooting_depth_Mo,fNH4NSurf,fNO3NSurf;
-	//End Moritz
 	
 	
 	

@@ -71,7 +71,8 @@ G_MODULE_EXPORT int schaaf_manag_load(schaaf_manag *self);
 /*********************************************************************************/
 /**                 Interne Functionen                                          **/
 /*********************************************************************************/
-int InitBBGeraet(schaaf_manag *self);
+//int InitBBGeraet(schaaf_manag *self);
+int InitBBGeraet(PTILLAGE tillage); //changed by Hong in Okt 2019
 int LagerungNeu(schaaf_manag *self);
 int EinarbeitRueckstaende(schaaf_manag *self);
 int DurchMisch(schaaf_manag *self);

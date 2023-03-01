@@ -128,12 +128,6 @@ int spass_crop_senescence(spass *self)
 	pBiom->fBiomassAbvGround = pPl->pBiomass->fTotLeafWeight+pPl->pBiomass->fTotStemWeight+pBiom->fGrainWeight;
 	pBiom->fTotalBiomass     = pBiom->fBiomassAbvGround + pBiom->fRootWeight;
 
-     //SG20230124//(works only for constant specific leaf weight!)
-     pCan->fDeadLAI = pBiom->fDeadLeafWeight/pPl->pGenotype->fSpecLfWeight;
-     pCan->fGreenLAI   = pBiom->fLeafWeight/pPl->pGenotype->fSpecLfWeight;	 
-     pCan->fTotalLAI    = pBiom->fTotLeafWeight/pPl->pGenotype->fSpecLfWeight;
-
-
   } //end PLANT_IS_GROWING
     return RET_SUCCESS;
   }

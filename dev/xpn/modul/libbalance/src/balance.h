@@ -38,14 +38,14 @@ struct _balance
 	double fWaterInput, fWaterOutput;
 	double fActETCum;
 	double fProfil, fProfilStart;
-    double CumCapillaryRise; //SG20220311
-	
+    
     double fGroundHeatNeg;
     double fGroundHeatDay, fHeatLatentDay, fHeatSensDay, fNetRadDay, fResDay;
     double fGroundHeatDay_zwischen, fHeatLatentDay_zwischen, fHeatSensDay_zwischen, fNetRadDay_zwischen, fResDay_zwischen;
 	
 	//Added by Hong for WC balance on 20181205
 	double fCumInfilt, fCumIntercept, fCumRunOff;
+	double fWaterLossAF, fWaterGainAF;
 	//End of Hong
 };
 

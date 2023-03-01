@@ -180,13 +180,23 @@ int libtreemix_RootLengthGrowth(libtreemix *self)
 				//	PRINT_MESSAGE(xpn,3,"RLDTemp <= 0.0");
 				//}
 				
-				self->plant[i].RtLengthDens[L-1] += self->plant[i].RLDTemp[L]; //(self->plant[i].RtLengthDensFac[L-1] * RNLF - RtLengthDead * self->plant[i].RtLengthDens[L-1] / TRLD) / Thickness;
+                //FH 20191022 might be += and multiplied by dt but just to be checked, leave it as is for now, seems to be OK
+				//self->plant[i].RtLengthDens[L-1] += self->plant[i].RLDTemp[L] ; //(self->plant[i].RtLengthDensFac[L-1] * RNLF - RtLengthDead * self->plant[i].RtLengthDens[L-1] / TRLD) / Thickness;
+				self->plant[i].RtLengthDens[L-1] += self->plant[i].RLDTemp[L];// * dt; //(self->plant[i].RtLengthDensFac[L-1] * RNLF - RtLengthDead * self->plant[i].RtLengthDens[L-1] / TRLD) / Thickness;
 				self->plant[i].RtLengthDens[L-1] = max(EPSILON, self->plant[i].RtLengthDens[L-1]);
 				self->plant[i].LyFc[L] = self->plant[i].RtLengthDens[L-1]/TRLD;
 				
 				// mean root length density for forest stand
-				pLRt->fLengthDens = (self->plant[i].RtLengthDens[L-1]*self->plant[i].TreeDistr);
-
+                //FH 20191008 shoudln't all plants be considered for the XN-Variable? -> modification:
+                //set fLenghDens to 0.0 for the first plant, then sum over all plants, probably needed for agroforestry module
+                if (i == 0)
+                    {
+                    pLRt->fLengthDens = 0.0;
+                    }
+                //printf("%d %d %f \n", i, L-1, pLRt->fLengthDens);
+				pLRt->fLengthDens  +=  (self->plant[i].RtLengthDens[L-1]*self->plant[i].TreeDistr);
+                //printf("%d %d %f \n", i, L-1, pLRt->fLengthDens);
+                
 				pSL = pSL->pNext;
 				pLRt = pLRt->pNext;
 			}

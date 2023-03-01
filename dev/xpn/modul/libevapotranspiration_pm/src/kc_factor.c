@@ -94,7 +94,6 @@ int kc_factor_dev_stage_load(kc_factor* self)
 
     if(S != NULL) {
         ini_filename = expertn_modul_base_replace_std_templates_and_get_fullpath_from_relative(xpn, S);
-	printf("LOADING %s ...\n", ini_filename);
         return kc_factor_read_dev_file(self, ini_filename);
         free(ini_filename);
     }
@@ -115,7 +114,7 @@ int kc_factor_read_dev_file(kc_factor* self, char* filename)
     char** varietynames;
     char* S;
     int varietynum;
-    int i,j;
+    int i;
     int col;
     int plant_nr;
 
@@ -138,190 +137,100 @@ int kc_factor_read_dev_file(kc_factor* self, char* filename)
     self->crop=NULL;
     self->crop_size = 0;
     
-/* Added 191211 Troost for coupling: Inclusion of group: [LOAD ALL] makes XN5 load all crops, not only the ones in crop_rotation ... */
-
-    if (g_key_file_has_group(keyfile, "LOAD ALL") ) {
-	
-	plant_nr = 0;
-	gsize cropnum;
-	gchar** croplist = g_key_file_get_groups (keyfile, &cropnum);
-	
-	//printf("Reading kc_dev_stage ... LOAD ALL for %d crops\n", cropnum);
-
-	for (i = 0; i < cropnum; ++i) {
-	
-	    if (strcmp(croplist[i],"LOAD ALL") == 0) // skip LOAD ALL group
-	     continue;
-
-	    GET_INI_STRING_ARRAY(varietynames, varietynum, croplist[i], "VarietyName");
-            self->crop_size += varietynum;
-	    self->crop = realloc_struct_kc_factor_crop_rot(self->crop,self->crop_size);
-		        
-            GET_INI_STRING_ARRAY(DevKC_arr, DevKC_arr_size, croplist[i], "DevKC");
-            CHECK_LEN(DevKC_arr_size, varietynum)
-
-            GET_INI_STRING_ARRAY(KC_arr, KC_arr_size, croplist[i], "KC");
-            CHECK_LEN(KC_arr_size, varietynum)
-
-            GET_INI_STRING_ARRAY(else_arr, else_arr_size, croplist[i], "else");
-            CHECK_LEN(else_arr_size, varietynum)
-
-	    //printf("Reading kc_dev_stage ... LOAD ALL for %d varieties for crop %d %s\n", varietynum, i, croplist[i]);
-            for (col = 0; col < varietynum; ++col) {
-
-			//printf("READING kc data for %s %s...\n", croplist[i], varietynames[col]);
-		        deleteSpaceBegEnd(varietynames[col]);
-			self->crop[plant_nr].acCropName=g_strdup_printf("%s",croplist[i]);
-			self->crop[plant_nr].acVarietyName=g_strdup_printf("%s",varietynames[col]);        
-
-
-			DevKC_str = DevKC_arr[col];
-			KC_str = KC_arr[col];
-			else_str = else_arr[col];
-
-			self->crop[plant_nr].devkc_len = getStringColumn_get_Size(DevKC_str, ",");
-			self->crop[plant_nr].devkc_arr = (double*)g_malloc0(self->crop[plant_nr].devkc_len * sizeof(double));
-
-			S = (char*)g_malloc0(strlen(DevKC_str) + 1);
-			for(j = 0; j < self->crop[plant_nr].devkc_len; j++) {
-			    getStringColumn(S, DevKC_str, ",", j);
-			    self->crop[plant_nr].devkc_arr[j] = atof(S);
-			}
-			g_free(S);
-
-			self->crop[plant_nr].kc_len = getStringColumn_get_Size(KC_str, ",");
-			self->crop[plant_nr].kc_arr = (double*)g_malloc0(self->crop[plant_nr].kc_len * sizeof(double));       
-
-			S = (char*)g_malloc0(strlen(KC_str) + 1);
-			for(j = 0; j < self->crop[plant_nr].kc_len; j++) {
-			    getStringColumn(S, KC_str, ",", j);
-			    self->crop[plant_nr].kc_arr[j] = atof(S);
-			}
-			g_free(S);
-		
-			if (getStringColumn_get_Size(else_str, ",")<2)
-			    {
-				PRINT_ERROR_ID(xpn,"else value < 2");
-				return 1;
-			    }
-			self->crop[plant_nr].else_kc_arr = (double*)g_malloc0(2 * sizeof(double));
-			S = (char*)g_malloc0(strlen(else_str) + 1);
-			for(j = 0; j < 2; j++) {
-			    getStringColumn(S, else_str, ",", j);
-			    self->crop[plant_nr].else_kc_arr[j] = atof(S);
-			}
-			g_free(S);
-				
-
-			CHECK_LEN(self->crop[plant_nr].devkc_len, self->crop[plant_nr].kc_len);
-
-			++plant_nr;
-	    }
-	    g_strfreev(DevKC_arr);
-            g_strfreev(KC_arr);
-	    g_free(else_arr);      ;
-	    g_strfreev(varietynames);
-        }
-	g_strfreev(croplist);
-    }
-    else { //standard loading, only load what is listed in crop_rotation.ini
-/* END Addition 191211 Troost*/
     //for(plant_nr = 0, pGe = pPl->pGenotype; pGe != NULL; pGe = pGe->pNext, plant_nr++)
-	    for(plant_nr = 0, pPl = xpn->pPl; pPl != NULL; pPl = pPl->pNext, plant_nr++)
-	    {                
-		pGe = pPl->pGenotype;
-		if(pGe->acCropName == NULL) {
-		    PRINT_ERROR_ID(xpn, "No Crop Code Name set!");
-		    return -1;
-		}
+    for(plant_nr = 0, pPl = xpn->pPl; pPl != NULL; pPl = pPl->pNext, plant_nr++)
+    {                
+        pGe = pPl->pGenotype;
+        if(pGe->acCropName == NULL) {
+            PRINT_ERROR_ID(xpn, "No Crop Code Name set!");
+            return -1;
+        }
 
-		if(pGe->acVarietyName == NULL)
-		    pGe->acVarietyName = "Default";                
-		
-		printf("READING kc data for %s %s...\n", pGe->acCropName, pGe->acVarietyName);
-		self->crop_size++;
-		self->crop = realloc_struct_kc_factor_crop_rot(self->crop,self->crop_size);
-		        
-		
-		self->crop[plant_nr].acCropName=g_strdup_printf("%s",pGe->acCropName);
-		self->crop[plant_nr].acVarietyName=g_strdup_printf("%s",pGe->acVarietyName);        
+        if(pGe->acVarietyName == NULL)
+            pGe->acVarietyName = "Default";                
+        
+        
+        self->crop_size++;
+        self->crop = realloc_struct_kc_factor_crop_rot(self->crop,self->crop_size);
+                
+        
+        self->crop[plant_nr].acCropName=g_strdup_printf("%s",pGe->acCropName);
+        self->crop[plant_nr].acVarietyName=g_strdup_printf("%s",pGe->acVarietyName);        
 
-		GET_INI_STRING_ARRAY(varietynames, varietynum, pGe->acCropName, "VarietyName");
+        GET_INI_STRING_ARRAY(varietynames, varietynum, pGe->acCropName, "VarietyName");
 
-		for(i = 0; i < varietynum; i++) {
-		    deleteSpaceBegEnd(varietynames[i]);
-		    if(strcmp(pGe->acVarietyName, varietynames[i]) == 0)
-		        break;
-		    if((i == varietynum - 1) && (strcmp(pGe->acVarietyName, varietynames[varietynum - 1]) != 0)) {
-		        char* S;
-		        i = 0;
-		        S = g_strdup_printf(
-		            "Variety \"%s\" not found in %s: Default values are used.", pGe->acVarietyName, filename);
-		        PRINT_ERROR(S);
-		        g_free(S);
-		        break;
-		    }
-		}
-		        
-		col = i;
-		g_strfreev(varietynames);
+        for(i = 0; i < varietynum; i++) {
+            deleteSpaceBegEnd(varietynames[i]);
+            if(strcmp(pGe->acVarietyName, varietynames[i]) == 0)
+                break;
+            if((i == varietynum - 1) && (strcmp(pGe->acVarietyName, varietynames[varietynum - 1]) != 0)) {
+                char* S;
+                i = 0;
+                S = g_strdup_printf(
+                    "Variety \"%s\" not found in %s: Default values are used.", pGe->acVarietyName, filename);
+                PRINT_WARNING(xpn,S);//changed Error to Warning by Hong
+                g_free(S);
+                break;
+            }
+        }
+                
+        col = i;
+        g_strfreev(varietynames);
 
-		GET_INI_STRING_ARRAY(DevKC_arr, DevKC_arr_size, pGe->acCropName, "DevKC");
-		CHECK_LEN(DevKC_arr_size, varietynum)
+        GET_INI_STRING_ARRAY(DevKC_arr, DevKC_arr_size, pGe->acCropName, "DevKC");
+        CHECK_LEN(DevKC_arr_size, varietynum)
 
-		GET_INI_STRING_ARRAY(KC_arr, KC_arr_size, pGe->acCropName, "KC");
-		CHECK_LEN(KC_arr_size, varietynum)
+        GET_INI_STRING_ARRAY(KC_arr, KC_arr_size, pGe->acCropName, "KC");
+        CHECK_LEN(KC_arr_size, varietynum)
 
-		GET_INI_STRING_ARRAY(else_arr, else_arr_size, pGe->acCropName, "else");
-		CHECK_LEN(else_arr_size, varietynum)
+        GET_INI_STRING_ARRAY(else_arr, else_arr_size, pGe->acCropName, "else");
+        CHECK_LEN(else_arr_size, varietynum)
 
-		DevKC_str = DevKC_arr[col];
-		KC_str = KC_arr[col];
-		else_str = else_arr[col];
+        DevKC_str = DevKC_arr[col];
+        KC_str = KC_arr[col];
+        else_str = else_arr[col];
 
-		self->crop[plant_nr].devkc_len = getStringColumn_get_Size(DevKC_str, ",");
-		self->crop[plant_nr].devkc_arr = (double*)g_malloc0(self->crop[plant_nr].devkc_len * sizeof(double));
+        self->crop[plant_nr].devkc_len = getStringColumn_get_Size(DevKC_str, ",");
+        self->crop[plant_nr].devkc_arr = (double*)g_malloc0(self->crop[plant_nr].devkc_len * sizeof(double));
 
-		S = (char*)g_malloc0(strlen(DevKC_str) + 1);
-		for(i = 0; i < self->crop[plant_nr].devkc_len; i++) {
-		    getStringColumn(S, DevKC_str, ",", i);
-		    self->crop[plant_nr].devkc_arr[i] = atof(S);
-		}
-		g_free(S);
+        S = (char*)g_malloc0(strlen(DevKC_str) + 1);
+        for(i = 0; i < self->crop[plant_nr].devkc_len; i++) {
+            getStringColumn(S, DevKC_str, ",", i);
+            self->crop[plant_nr].devkc_arr[i] = atof(S);
+        }
+        g_free(S);
 
-		self->crop[plant_nr].kc_len = getStringColumn_get_Size(KC_str, ",");
-		self->crop[plant_nr].kc_arr = (double*)g_malloc0(self->crop[plant_nr].kc_len * sizeof(double));       
+        self->crop[plant_nr].kc_len = getStringColumn_get_Size(KC_str, ",");
+        self->crop[plant_nr].kc_arr = (double*)g_malloc0(self->crop[plant_nr].kc_len * sizeof(double));       
 
-		S = (char*)g_malloc0(strlen(KC_str) + 1);
-		for(i = 0; i < self->crop[plant_nr].kc_len; i++) {
-		    getStringColumn(S, KC_str, ",", i);
-		    self->crop[plant_nr].kc_arr[i] = atof(S);
-		}
-		g_free(S);
-		
-		if (getStringColumn_get_Size(else_str, ",")<2)
-		    {
-		        PRINT_ERROR_ID(xpn,"else value < 2");
-		        return 1;
-		    }
-		self->crop[plant_nr].else_kc_arr = (double*)g_malloc0(2 * sizeof(double));
-		S = (char*)g_malloc0(strlen(else_str) + 1);
-		for(i = 0; i < 2; i++) {
-		    getStringColumn(S, else_str, ",", i);
-		    self->crop[plant_nr].else_kc_arr[i] = atof(S);
-		}
-		g_free(S);
-		        
+        S = (char*)g_malloc0(strlen(KC_str) + 1);
+        for(i = 0; i < self->crop[plant_nr].kc_len; i++) {
+            getStringColumn(S, KC_str, ",", i);
+            self->crop[plant_nr].kc_arr[i] = atof(S);
+        }
+        g_free(S);
+        
+        if (getStringColumn_get_Size(else_str, ",")<2)
+            {
+                PRINT_ERROR_ID(xpn,"else value < 2");
+                return 1;
+            }
+        self->crop[plant_nr].else_kc_arr = (double*)g_malloc0(2 * sizeof(double));
+        S = (char*)g_malloc0(strlen(else_str) + 1);
+        for(i = 0; i < 2; i++) {
+            getStringColumn(S, else_str, ",", i);
+            self->crop[plant_nr].else_kc_arr[i] = atof(S);
+        }
+        g_free(S);
+                
 
-		CHECK_LEN(self->crop[plant_nr].devkc_len, self->crop[plant_nr].kc_len);
+        CHECK_LEN(self->crop[plant_nr].devkc_len, self->crop[plant_nr].kc_len);
 
-		g_strfreev(DevKC_arr);
-		g_strfreev(KC_arr);
-		g_free(else_arr);      ;
-	    }
-/*Added 191211 Troost */
+        g_strfreev(DevKC_arr);
+        g_strfreev(KC_arr);
+        g_free(else_arr);      ;
     }
-/*End addition 191211*/
+
     g_key_file_free(keyfile);
     
     return RET_SUCCESS;
@@ -382,20 +291,15 @@ int kc_factor_dev_stage_run(kc_factor* self)
    //SG 20190626: use bare soil value (else_kc_arr[0]) until field emergence (including phase from sowing (fStageSUCROS= -1.0) until emergence (fStageSUCROS= 0.0) 
     if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,pSI->Year,pSI->Month,pSI->Day)<0)||(pPl->pDevelop->fStageSUCROS<= 0.0))
         {
-            xpn->pWa->kc_factor=self->crop[plant_nr].else_kc_arr[0]; // before sowing             
-            //printf("Using kc %.02f [else 0] for [%d] %s %s ...\n", self->crop[plant_nr].else_kc_arr[0], plant_nr, self->crop[plant_nr].acCropName, 
-            //     self->crop[plant_nr].acVarietyName);
-
+            xpn->pWa->kc_factor=self->crop[plant_nr].else_kc_arr[0];            
         }
     else
     if ((xpn_time_compare_date(xpn->pTi->pSimTime->year,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pPl->pModelParam->HarvestYear,xpn->pPl->pModelParam->HarvestMonth,xpn->pPl->pModelParam->HarvestDay)>=0)||(pPl->pDevelop->fStageSUCROS>= 2.0))
         {
-            xpn->pWa->kc_factor=self->crop[plant_nr].else_kc_arr[1]; // after harvest
-            //printf("Using kc %.02f [else 1] for [%d] %s	%s ...\n", self->crop[plant_nr].else_kc_arr[1], plant_nr, self->crop[plant_nr].acCropName, self->crop[plant_nr].acVarietyName);
-
+            xpn->pWa->kc_factor=self->crop[plant_nr].else_kc_arr[1];
         }
     else
-        {  // Inbetween sowing and harvest interpolate kc factors depending on development stage:
+        {
             double m,t;
             double x1,x2,y1,y2;
             y2 = self->crop[plant_nr].kc_arr[devk_nr+1];
@@ -408,9 +312,6 @@ int kc_factor_dev_stage_run(kc_factor* self)
             xpn->pWa->kc_factor= m*fStage+t;
             
             //printf("%f %f \n",  xpn->pWa->kc_factor,  fStage);
-           // printf("Using kc %.02f [lower stage %.02f / %d] for [%d] %s %s ...\n", xpn->pWa->kc_factor, fStage, devk_nr, plant_nr, self->crop[plant_nr].acCropName, self->crop[plant_nr].acVarietyName);
-
-
             
             //m = (self->crop[plant_nr].devkc_arr[devk_nr+1]-self->crop[plant_nr].devkc_arr[devk_nr])/(self->crop[plant_nr].kc_arr[devk_nr+1]-self->crop[plant_nr].kc_arr[devk_nr]);
             //t = self->crop[plant_nr].devkc_arr[devk_nr+1]-m*self->crop[plant_nr].kc_arr[devk_nr+1];

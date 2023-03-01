@@ -33,9 +33,9 @@ static void libtreemix_init(libtreemix *self)
 //fflush(stdout);
 //g_free(S);
 self->__INIT_DONE=0;
+self->__DONE_DONE=0;
 self->__ERROR=RET_SUCCESS;
 }
-
 
 
 // Our Modul Functions:

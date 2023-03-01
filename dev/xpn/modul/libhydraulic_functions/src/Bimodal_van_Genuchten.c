@@ -17,8 +17,7 @@
 double C2_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2,   
-                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW)
+                double Alpha2, double N2, double M2, double W1, double W2)
 
 {   double  f1=(double)0.0,f2=(double)0.0;
     double  Hb=(double)0.0;
@@ -60,8 +59,7 @@ double C2_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 double C2_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2,   
-                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW)
+                double Alpha2, double N2, double M2, double W1, double W2)
 
 {
     double  f1=(double)0.0,f2=(double)0.0;
@@ -105,8 +103,7 @@ double C2_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 double C2_MPotl(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2,   
-                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW)
+                double Alpha2, double N2, double M2, double W1, double W2)
 
 {   
   double  f1=(double)0.0,f2=(double)0.0;
@@ -148,8 +145,7 @@ double C2_MPotl(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 double C2_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2,   
-                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW)
+                double Alpha2, double N2, double M2, double W1, double W2)
 
 {
     double RP=(double)0.5;    /* pore interaction parameter  */
@@ -157,7 +153,7 @@ double C2_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
     double f1=(double)0.0,f2=(double)0.0,f3=(double)0.0;
     double f4=(double)0.0,f5=(double)0.0,f6=(double)0.0;
     
-    Takt=C2_WCont(Hakt,Takt,Ksat,Tsat,Tmin,Alpha,N,M,Ca,Cb,Hc,Tc,Hmin,Hvor,Tvor,Alpha2,N2,M2,W1,W2,tau,Tsat_c,Tmin_c,Ksat_c,Ksat_nc,pSW);
+    Takt=C2_WCont(Hakt,Takt,Ksat,Tsat,Tmin,Alpha,N,M,Ca,Cb,Hc,Tc,Hmin,Hvor,Tvor,Alpha2,N2,M2,W1,W2);
 
     W1=Tsat;
 //    f8=(double)-40.0 * (double)(abspowerDBL((Tsat/W1),((double)-1.0* Ca)));

@@ -212,22 +212,6 @@ GDate *gecros_convert_str_to_gdate(char* S) {
 	
 }
 
-int array_length(var1,var2)
-{
-	if (var1>var2)
-		{
-			return var2;
-		}
-	else if (var1<var2)
-		{
-			return var1;
-		}\
-	else
-		{
-			return var1;
-		}
-}
-
 
 
 

@@ -86,6 +86,10 @@ int ceres_load(ceres *self)
 
 	//self->iLimitRootGrowthPhase3 = xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.ceres.Limit rootgrowth phase 3",0);
 
+    //FH 20200116 flag for flexible day length, default 0 = -> old ceres formulation from daytime 0.3 to 0.8; 1 = flexible depending on radiation
+    self->iFlexDayLen = xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.ceres.flexible_day_length",0);
+    self->iINRAWatUpt = xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.ceres.INRA_water_uptake",1);
+
 	self->TairMin = xpn_register_var_get_pointer(xpn->pXSys->var_list,"expertn_database.fTempMin");
 	self->TairMax = xpn_register_var_get_pointer(xpn->pXSys->var_list,"expertn_database.fTempMax");
 	self->TairMean = xpn_register_var_get_pointer(xpn->pXSys->var_list,"expertn_database.fTempMean");
@@ -227,42 +231,8 @@ int ceres_nitrogen_uptake(ceres *self)
 	PPLANT pPl = xpn->pPl;
 	PCHEMISTRY pCh = xpn->pCh;
 	PSPROFILE pSo = xpn->pSo;
-  	int L;
-	PLAYERROOT      pLR     =pPl->pRoot->pLayerRoot;
-	PCLAYER         pSLN=pCh->pCLayer->pNext;  
-  //  pPl->pPltNitrogen->fActNUptR = (double)0.0; //SG20220324
 
 	if NewDayAndPlantGrowing {
-	//Wird nur berechnet wenn der Feldaufgang erreicht wurde
-	if (pPl->pDevelop->iDayAftEmerg > 0) {
-			ceres_NitrogenUptake_run(self);
-			ceres_PlantNitrogenStress_run(self);
-		}
-//	}
-
-//	if PlantIsGrowing {
-
-
-	for (L=1; L<=pSo->iLayers-2; L++) {
-			//Check the whether there are roots in this layer:
-			if (pLR->fLengthDens==(double)0.0)           break;
-			
-			//Nitrogen in layer L: SNO3,SNH4 (kg N/ha)
-/*            if (pLR->fActLayNO3NUpt*pTi->pTimeStep->fAct > pSLN->fNO3N-0.005)
-                pLR->fActLayNO3NUpt = (pSLN->fNO3N-0.005)/pTi->pTimeStep->fAct;
-                
-            if (pLR->fActLayNH4NUpt*pTi->pTimeStep->fAct > pSLN->fNH4N-0.005)
-                pLR->fActLayNH4NUpt = (pSLN->fNH4N-0.005)/pTi->pTimeStep->fAct;*/
-           
-			pSLN->fNO3N -= pLR->fActLayNO3NUpt;
-			pSLN->fNH4N -= pLR->fActLayNH4NUpt;
-
-			pLR =pLR ->pNext;
-			pSLN=pSLN->pNext;
-		}
-	}
-
-/*	if NewDayAndPlantGrowing {
 	//Wird nur berechnet wenn der Feldaufgang erreicht wurde
 	if (pPl->pDevelop->iDayAftEmerg > 0) {
 			ceres_NitrogenUptake_run(self);
@@ -286,7 +256,7 @@ int ceres_nitrogen_uptake(ceres *self)
 			pLR =pLR ->pNext;
 			pSLN=pSLN->pNext;
 		}
-	}*/
+	}
 
 	ceres_integrate_small_time_step_vars(self);
 
@@ -349,11 +319,12 @@ int ceres_potential_transpiration(ceres *self)
 	expertn_modul_base *xpn = &(self->parent);
 	PTIME pTi = xpn->pTi;
 	PPLANT pPl = xpn->pPl;
-
+    
+    
 	double EvTeiler;
 
 	EvTeiler = (pTi->pTimeStep->fAct < (double)0.11)?
-	           ceres_SolPartTime(pTi)
+	           ceres_SolPartTime(self)
 	           : (double)1.0;
 
 	if ((int)NewDay(pTi)) self->weather.fPotTraDay=(double)0;
@@ -370,7 +341,8 @@ int ceres_potential_transpiration(ceres *self)
 
 	pPl->pPltWater->fPotTranspR = self->weather.fPotTraDay * EvTeiler / DeltaT;
 	pPl->pPltWater->fPotTranspdt = self->weather.fPotTraDay*DeltaT * EvTeiler / DeltaT;
-	// ep 210599 to avoid "initial value = daily value" in balance.c by using
+
+    // ep 210599 to avoid "initial value = daily value" in balance.c by using
 	// pPl->pPltWater->fPotTranspdt = pPl->pPltWater->fPotTranspDay * DeltaT;
 
 	// since pPl->pPltWater->fPotTranspDay is used as cumulative variable which
@@ -390,20 +362,73 @@ int ceres_actual_transpiration(ceres *self)
 	PSPROFILE pSo = xpn->pSo;
 	PTIME pTi = xpn->pTi;
 	PWATER pWa = xpn->pWa;
-	
+    PPLTWATER		pPltW	=pPl->pPltWater;
+    PLAYERROOT pLR	=pPl->pRoot->pLayerRoot;
+    PSLAYER         pSL     =pSo->pSLayer;
+    PWLAYER         pSLW=pWa->pWLayer;
+    
 	double EvTeiler;
 
 	if ((int)NewDay(pTi)) self->weather.fActTraDay=(double)0;
+	//if ((int)NewDay(pTi)) self->weather.fPotUptakeDay=(double)0;
 	if (((int)NewDay(pTi))&&((pPl!=NULL))) pPl->pRoot->fUptakeR =(double)0.0;
 	//ep 05.02.01  not reinitialized after harvest (in capacity water flow module)!
 
 	// SolPartTime(pTi) can be found in evapotranspiration_fao.c
 	EvTeiler = (pTi->pTimeStep->fAct < (double)0.11)?
-	           ceres_SolPartTime(pTi)
+	           ceres_SolPartTime(self)
 	           : (double)1.0;
 	//if(pPl->pPltWater->fActTranspR > 0.0)		   
 	
+    // FH 20191210 also take water when plant is not growing if we use the AF module
+    if(pPl->pDevelop->iAFTrue == 1)
+    {
+        pLR	=pPl->pRoot->pLayerRoot;
+        pSL     =pSo->pSLayer->pNext;
+        pSLW=pWa->pWLayer->pNext;
+        
+        int L;
+            //printf("%f \n", pTi->pSimTime->fTimeY);
+            for (L=1;L<=pSo->iLayers-2;L++)   
+                {
+                pLR->fPotLayWatUpt = pLR->fPotLayWatUptAF;
+                pLR->fActLayWatUpt = pLR->fActLayWatUptAF;
+                self->afActLayRootWatUpt[L]=pLR->fActLayWatUpt;
+                //printf("SP %f \n", pLR->fPotLayWatUptAF);
+                pLR = pLR->pNext;
+                pSL =pSL ->pNext;
+                pSLW=pSLW->pNext;
+                }
+            //pPltW->fPotTranspR = pPltW->fPotTranspAF;
+            //self->weather.fPotTraDay = pPltW->fPotTranspAF;
+            pPltW->fActTranspR = pPltW->fActTranspAF;
+            
+            //self->weather.fActTraDay = pPl->pPltWater->fActTranspR;
+            
+           pPltW->fPotUptakeR =  pPltW->fPotUptakeAF;
+           //printf("%f %f \n", pPltW->fPotUptakeR, self->weather.fPotUptakeDay);
+           //self->weather.fPotUptakeDay =  pPltW->fPotUptakeR;
+           
+           if (NewDay(pTi))
+                ceres_PlantWaterStress_run(self);
+           
+          pSL     =pSo->pSLayer->pNext;
+          pSLW=pWa->pWLayer->pNext;
 
+        for (L=1; L<=pSo->iLayers-2; L++) 
+            {
+			pSLW->fContAct -= self->afActLayRootWatUpt[L] *pTi->pTimeStep->fAct/pSL->fThickness; //mm/mm
+			//if (xpn_time_compare_date(pTi->pSimTime->iyear,pTi->pSimTime->mon,pTi->pSimTime->mday,1982,12,24)>0)
+			//if (L==23)
+			//printf("%d %f %f \n", L, pSLW->fContAct, self->afActLayRootWatUpt[L]);
+            pSL =pSL ->pNext;
+			pSLW=pSLW->pNext;
+//                              pLR =pLR ->pNext;
+		}
+           
+    }
+    else
+    {
 	if NewDayAndPlantGrowing {
 	int L;
 	PLAYERROOT     pLR     =pPl->pRoot->pLayerRoot;
@@ -412,7 +437,7 @@ int ceres_actual_transpiration(ceres *self)
 
 	if (pPl->pDevelop->iDayAftEmerg > 0) {
 			ceres_ActualTranspiration_run(self);
-			ceres_PlantWaterStress_run(self);
+			//ceres_PlantWaterStress_run(self);
 		}
 	self->weather.fActTraDay = pPl->pPltWater->fActTranspR;
 		//-------------------------------------------------------------------
@@ -458,11 +483,15 @@ int ceres_actual_transpiration(ceres *self)
 //                              pLR =pLR ->pNext;
 		}
 
-
 	} //end if plant is growing
-	
+
+    } //end iAFTrue != 0
+
 	ceres_integrate_small_time_step_vars(self);
 	
+    //if(pPl->pDevelop->iAFTrue == 1)
+    //    pPltW->fPotUptakeR = self->weather.fPotUptakeDay;
+    
 	return RET_SUCCESS;
 }
 
@@ -474,6 +503,12 @@ int ceres_integrate_small_time_step_vars(ceres *self)
 	PWEATHER pWe = pCl->pWeather;
 	PWATER pWa = xpn->pWa;
 	double dt;
+
+    double EvTeiler;
+    
+    EvTeiler = (pTi->pTimeStep->fAct < (double)0.11)?
+	           ceres_SolPartTime(self)
+	           : (double)1.0;
 
 	if ((pTi->pSimTime->fTimeY==self->weather.fTimeY_save) && (pTi->pSimTime->iyear == self->weather.iyear_save)) {
 		return RET_SUCCESS;
@@ -494,6 +529,12 @@ int ceres_integrate_small_time_step_vars(ceres *self)
 		//self->weather.fEvapPotDay = self->__weather.fEvapPotDay;
 		//self->weather.fActTraDay = self->__weather.fActTraDay;
 		self->weather.fDaylySolRad = self->__weather.fDaylySolRad;
+		self->weather.fPotUptakeDay = self->__weather.fPotUptakeDay *dt * self->__weather.iNumDay;
+        self->weather.fDayStart = self->__weather.fDayStart;
+        self->weather.fDayEnd = self->__weather.fDayEnd;
+		//self->weather.fPotUptakeDay = self->__weather.fPotUptakeDay ;
+        //printf("%d \n", self->__weather.iNumDay);
+        //printf("%s %f \n", xpn->pXSys->reg_str, self->weather.fPotUptakeDay);
 
 		//printf("%f %f %f %f \n", self->weather.fTempMin, self->weather.fTempAve, self->weather.fTempMax, self->weather.fDaylySolRad);
 
@@ -503,6 +544,11 @@ int ceres_integrate_small_time_step_vars(ceres *self)
 		self->__weather.fEvapPotDay=0.0;
 		self->__weather.fPotETDay = 0.0;
 		self->__weather.fDaylySolRad=0.0;
+		self->__weather.fPotUptakeDay=0.0;
+        self->__weather.iNumDay = 0;
+        self->__weather.fDayStart = 0.0;
+        self->__weather.fDayEnd = 0.0;
+        self->iDayTimeSave = 0;
 	} else {
 		if (pWe->fTempAir_daily_models > self->__weather.fTempMax) {
 			self->__weather.fTempMax = pWe->fTempAir_daily_models;
@@ -515,6 +561,29 @@ int ceres_integrate_small_time_step_vars(ceres *self)
 		self->__weather.fEvapPotDay += pWa->pEvap->fPotR * dt;
 		self->__weather.fPotETDay += pWa->fPotETR*dt;
 		self->__weather.fDaylySolRad += pWe->fSolRad_daily_models * dt;
+        
+        if ((pWe->fSolRad > 0) && (self->iDayTimeSave == 0))
+            {
+             self->__weather.fDayStart = pTi->pSimTime->fTimeDay;
+            self->iDayTimeSave = 1;
+            }
+            
+        if ((pWe->fSolRad <= 0) && (self->iDayTimeSave == 1))
+            {
+             self->__weather.fDayEnd = pTi->pSimTime->fTimeDay;
+            self->iDayTimeSave = 2;
+            }
+            
+        if ((pWe->fSolRad > 0) && (self->iDayTimeSave == 2))
+            {
+            self->iDayTimeSave = 1;
+            }
+        
+        // FH 20191213 might not be correct: still needs some rethinking, but without "if" AF crop grows better than non-AF crop
+            
+        self->__weather.fPotUptakeDay += xpn->pPl->pPltWater->fPotUptakeR *dt;
+        if ( EvTeiler > 0.0)
+              self->__weather.iNumDay += 1;
 
 	}
 	
@@ -525,25 +594,42 @@ int ceres_integrate_small_time_step_vars(ceres *self)
 	return RET_SUCCESS;
 }
 
-double ceres_SolPartTime(PTIME pTi)
+//20190103 FH rework to match different daylengths
+double ceres_SolPartTime(ceres *self)
 {
+ 	expertn_modul_base *xpn = &(self->parent);   
+    PTIME pTi = xpn->pTi;
+    
 	double T1, T2, y;
 	double DayTime     = pTi->pSimTime->fTimeDay;
 	double DeltaT;
+    double DayStart, DayEnd, DayLen;
+    
+    if (self->iFlexDayLen == 1)
+        {
+        DayStart = self->weather.fDayStart;
+        DayEnd = self->weather.fDayEnd;
+        }
+    else //old CERES version
+        {
+        DayStart = 0.3;
+        DayEnd = 0.8;
+        }
+    DayLen = DayEnd - DayStart;
 
 	DeltaT = pTi->pTimeStep->fAct;
 
 
-	if ((DayTime <= (double)0.3)||(DayTime > (double)0.8)) {
+	if ((DayTime <= DayStart)||(DayTime > DayEnd)) {
 		T1 = (double)0.0;
 		T2 = (double)0.0;
 	} else {
-		T1 = max((double)0.0,(DayTime - DeltaT - (double)0.3));
-		T2 = min((double)0.5,(DayTime - (double)0.3));
+		T1 = min(DayLen,max((double)0.0,(DayTime - DeltaT - DayStart)));
+		T2 = min(DayLen,(DayTime - DayStart));
 	} /* else DayTime  */
 
 
-	y = (double)(cos((double)(2.0*PI*T1)) - cos((double)(2.0*PI*T2))) / (double)2.0;
+	y = (double)(cos((double)(PI*T1/DayLen)) - cos((double)(PI*T2/DayLen))) / (double)2.0;
 
 	return y;
 }
@@ -633,16 +719,21 @@ void ceres_init_structures(ceres *self)
 	self->Uptake=0;
 	self->iDayAftSow=0;
 	self->fEmergValue=0.0;         //Thermal time reqired from germination to emergence (Degree.days)
-	self->weather.fTempMax=0.0;
+	self->iDayTimeSave = 0;
+    self->weather.fTempMax=0.0;
 	self->weather.fTempMin=0.0;
 	self->weather.fTempAve=0.0;
 	self->weather.fPotTraDay=0.0;
 	self->weather.fEvapPotDay=0.0;
 	self->weather.fPotETDay=0.0;	
 	self->weather.fActTraDay=0.0;
+	self->weather.fPotUptakeDay=0.0;
+     self->weather.iNumDay;
 	self->weather.fDaylySolRad=0.0;
 	self->weather.fTimeY_save=0.0;
 	self->weather.iyear_save=0;
+    self->weather.fDayStart = 0.0;
+    self->weather.fDayEnd = 0.0;
 	self->__weather.fTempMax=0.0;
 	self->__weather.fTempMin=0.0;
 	self->__weather.fTempAve=0.0;
@@ -650,9 +741,13 @@ void ceres_init_structures(ceres *self)
 	self->__weather.fEvapPotDay=0.0;
 	self->__weather.fPotETDay=0.0;		
 	self->__weather.fActTraDay=0.0;
+	self->__weather.fPotUptakeDay=0.0;
+     self->__weather.iNumDay = 0.0;
 	self->__weather.fDaylySolRad=0.0;
 	self->__weather.fTimeY_save=0.0;
 	self->__weather.iyear_save=0;
+    self->__weather.fDayStart = 0.0;
+    self->__weather.fDayEnd = 0.0;
 
 }
 

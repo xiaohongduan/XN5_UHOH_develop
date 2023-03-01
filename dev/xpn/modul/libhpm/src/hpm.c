@@ -40,8 +40,7 @@ expertn_modul_base *xpn = &(self->parent);
 	int count_max;
 	int count2;
 	
-	//fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
-	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-2); //SG20191203 cm --> m
+	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
 	if (self->__USE_STATIC_ROOT_LENGTH==TRUE) {
 		count_max=self->__STATIC_ROOT_LENGTH;
 	} else {		
@@ -57,8 +56,7 @@ expertn_modul_base *xpn = &(self->parent);
 	}
 
 	fDepth = 0.0;
-	//fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
-	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-2); //SG20191203 cm --> m
+	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
 	vars->Namm = 0.0;
 	vars->Nnit = 0.0;
 	vars->theta_soil=0.0;
@@ -66,9 +64,8 @@ expertn_modul_base *xpn = &(self->parent);
 	count = 0;
 	count2=0;
 	
-	//SG20191205: pSL muss wieder auf die erste Schicht gesetzt werden, da es im Fall 
-    //dynamischen Wurzelwachstumsbereits bis count_max heruntergezählt wurde!
-	pSL = xpn->pSo->pSLayer->pNext;	
+	
+		
 	while(1) {
 		if (count >= xpn->pSo->iLayers-1) break;		
 		fDepth += pSL->fThickness*1.0E-3; //fThickness: mm -> m		
@@ -124,12 +121,7 @@ void create_output(hpm *self)
 	
 	// cum harvest mass
 	self->Output.cum_harvest_mass = self->Harvest.Sum_CSsh_hv * self->parameter.photosynthesis.rmmCS/12.0 + self->Harvest.Sum_NSsh_hv * self->parameter.photosynthesis.rmmNS/14.0 + hpm_math_sum4(self->Harvest.Sum_Lam_hv4) + hpm_math_sum4(self->Harvest.Sum_ss_hv4);
-	//SG20210930: total harvested nitrogen:
-    self->Output.cum_harvest_N = self->Harvest.Sum_NSsh_hv + self->Harvest.Sum_NXsh_hv;
-    //SG20211008: daily harvest amounts:
-    self->Output.daily_harvest_mass = self->Harvest.Daily_mass_hv;
-    self->Output.daily_harvest_N = self->Harvest.Daily_N_hv;
-    
+	
 	// MSsh:
 	self->Output.MSsh = self->Plant.MCSsh * self->parameter.photosynthesis.rmmCS/12.0 + self->Plant.MNSsh * self->parameter.photosynthesis.rmmNS/14.0 + self->Plant.MNph_ul * 100.0 / 14.0;
 	//printf("%f %f %f %f %f %f %f\n",xpn->pTi->pSimTime->fTimeDay, self->Output.MSsh,  self->Plant.MCSsh, self->parameter.photosynthesis.rmmCS,  self->Plant.MNSsh, self->parameter.photosynthesis.rmmNS, self->Plant.MNph_ul);

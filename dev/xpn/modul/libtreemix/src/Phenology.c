@@ -175,10 +175,10 @@ int libtreemix_ThinningScenario(libtreemix *self)
 					(self->plant[i].NWd*self->plant[i].UgWdFr));
 			
 			//Hong added on 20180731 for C-balance			
-		pCB->dCInputSurf += Cut*(self->plant[i].CLfMass + self->plant[i].CFRtMass + self->plant[i].CFrMass +
-					(self->plant[i].UgWdFr*(self->plant[i].CWdWeight + self->plant[i].CAss))); 
-		/*pCB->dCInputCum += Cut*(self->plant[i].CLfMass + self->plant[i].CFRtMass + self->plant[i].CFrMass +
-					(self->plant[i].UgWdFr*(self->plant[i].CWdWeight + self->plant[i].CAss))); 	*/		
+		/*pCB->dCInputSurf += Cut*(self->plant[i].CLfMass + self->plant[i].CFRtMass + self->plant[i].CFrMass +
+					(self->plant[i].UgWdFr*(self->plant[i].CWdWeight + self->plant[i].CAss))); */
+		/*pCB->dCInputProfile += Cut*(self->plant[i].CLfMass + self->plant[i].CFRtMass + self->plant[i].CFrMass +
+					(self->plant[i].UgWdFr*(self->plant[i].CWdWeight + self->plant[i].CAss))); 	*/ //Test of Hong	
 			//xpn->pCh->pCProfile->fCLitterSurf =xpn->pCh->pCProfile->fCLeafLitterSurf+ xpn->pCh->pCProfile->fCBranchLitterSurf + xpn->pCh->pCProfile->fCStemLitterSurf;//20181016, notwendig			
 					
 			}
@@ -211,8 +211,10 @@ int libtreemix_ThinningScenario(libtreemix *self)
 				xpn->pCh->pCProfile->fNBranchLitterSurf += (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr * self->plant[i].NWdResp)*self->plant[i].TreeDistr);
 				
 				//Hong added on 20180731 for C-balance			
-				pCB->dCInputSurf +=(float)((0.05 * Cut * self->plant[i].CLfMass)*self->plant[i].TreeDistr)+ (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr)*self->plant[i].TreeDistr); //notwendig
-				/*pCB->dCInputCum +=(float)((0.05 * Cut * self->plant[i].CLfMass)*self->plant[i].TreeDistr)+ (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr)*self->plant[i].TreeDistr);*/
+				/*pCB->dCInputSurf +=(float)((0.05 * Cut * self->plant[i].CLfMass)*self->plant[i].TreeDistr)+ (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr)*self->plant[i].TreeDistr);*/ //notwendig
+				
+				pCB->dCInputProfile +=(float)((0.05 * Cut * self->plant[i].CLfMass)*self->plant[i].TreeDistr)+ (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr)*self->plant[i].TreeDistr);//Added on 20190801
+				pCB->dCInputProfile_30 +=(float)((0.05 * Cut * self->plant[i].CLfMass)*self->plant[i].TreeDistr)+ (float)((0.01 * Cut * self->plant[i].CWdWeight * (1.0-self->plant[i].UgWdFr) * self->plant[i].BrWdFr)*self->plant[i].TreeDistr);//Added on 20190801
                  
 				//xpn->pCh->pCProfile->fCLitterSurf =xpn->pCh->pCProfile->fCLeafLitterSurf+ xpn->pCh->pCProfile->fCBranchLitterSurf + xpn->pCh->pCProfile->fCStemLitterSurf;//20181016, notwendig	 
 				 
@@ -244,8 +246,6 @@ int libtreemix_ThinningScenario(libtreemix *self)
 					
 					//Hong added on 20180731 for C-balance			
 				pCB->dCInputProfile += (float)((Cut * self->plant[i].CFRtMass * self->plant[i].LyFc[z])*self->plant[i].TreeDistr) + (float)((Cut * self->plant[i].CWdWeight * self->plant[i].UgWdFr * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);
-				
-				/*pCB->dCInputCum += (float)((Cut * self->plant[i].CFRtMass * self->plant[i].LyFc[z])*self->plant[i].TreeDistr) + (float)((Cut * self->plant[i].CWdWeight * self->plant[i].UgWdFr * self->plant[i].LyFc[z])*self->plant[i].TreeDistr);*/
 				
 				//Hong 20190507: balance for 0-30 cm profile:	
 	           fCumDepth +=(double)0.1*pSL->fThickness; //cm

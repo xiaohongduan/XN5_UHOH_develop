@@ -14,7 +14,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           	// global run Function
 														NULL,									// mosaic run Function
 														"libtreemix_potential_transpiration_run",	        	// run Funktion
-														NULL) ,
+														"libtreemix_done") ,
 														
 	/*2 WATER UPTAKE*/				register_modul_new("TREEMIX",  // Bezeichnung
 													   "plant",									// Modul
@@ -24,7 +24,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           	// global run Function
 														NULL,						// mosaic run Function
 														"libtreemix_actual_transpiration_run",	        	// run Funktion
-														NULL) ,
+														"libtreemix_done") ,
 														
 	/*3 PHENOLOGICAL DEVELOPMENT*/	register_modul_new("TREEMIX",  // Bezeichnung
 													   "plant",						            // Modul
@@ -34,7 +34,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           	// global run Function
 														NULL,									// mosaic run Function
 														"libtreemix_Phenology",					// run Funktion
-														NULL) ,
+														"libtreemix_done") ,
 	
 	/*4 CANOPY GROSS PHOTOSYNTHESIS*/	register_modul_new("TREEMIX",  // Bezeichnung
 													   "plant",						           // Modul
@@ -44,7 +44,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           // global run Function
 														NULL,									// mosaic run Function
 														"libtreemix_Photosynthesis",	       // run Funktion
-														NULL) ,                                // done Function
+														"libtreemix_done") ,                                // done Function
 														
 	/*5 BIOMASS GROWTH*/				register_modul_new("TREEMIX",  // Bezeichnung
 													   "plant",						           // Modul
@@ -54,7 +54,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           // global run Function
 														NULL,								   // mosaic run Function
 														"libtreemix_BiomassGrowth",	           // run Funktion
-														NULL) ,                                // done Function
+														"libtreemix_done") ,                                // done Function
 																							
 	/*6 CANOPY FORMATION*/				register_modul_new("TREEMIX",  // Bezeichnung
 													   "plant",									// Modul
@@ -64,7 +64,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           	// global run Function
 														NULL,									// mosaic run Function
 														"libtreemix_CanopyFormation",	        // run Funktion
-														NULL) ,
+														"libtreemix_done") ,
 
 	/*7 ROOT LENGHT GROWTH*/			register_modul_new("TREEMIX",  // Bezeichnung
 													   "plant",									// Modul
@@ -74,7 +74,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           	// global run Function
 														NULL,									// mosaic run Function
 														"libtreemix_RootLengthGrowth",	        // run Funktion
-														NULL) ,
+														"libtreemix_done") ,
 
 	/*8 NITROGEN DEMAND*/				register_modul_new("TREEMIX",  // Bezeichnung
 													   "plant",									// Modul
@@ -84,7 +84,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           	// global run Function
 														NULL,									// mosaic run Function
 														"libtreemix_NitrogenDemand",	        // run Funktion
-														NULL) ,
+														"libtreemix_done") ,
 															
 	/*9 NITROGEN UPTAKE*/				register_modul_new("TREEMIX",  // Bezeichnung
 													   "plant",									// Modul
@@ -94,7 +94,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           	// global run Function
 														NULL,									// mosaic run Function
 														"libtreemix_NitrogenUptake",	        // run Funktion
-														NULL) ,	
+														"libtreemix_done") ,	
 	
 	/*10 SENESCENCE*/					register_modul_new("TREEMIX",  // Bezeichnung
 													   "plant",									// Modul
@@ -104,7 +104,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           	// global run Function
 														NULL,									// mosaic run Function
 														"libtreemix_Senescence",	        	// run Funktion
-														NULL) ,
+														"libtreemix_done") ,
 	/*11 N-MINERALISATION*/					register_modul_new("TREEMIX",  // Bezeichnung
 													   "nitrogen",									// Modul
 													   "mineralisation",	        			// Sub Modul
@@ -113,7 +113,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           	// global run Function
 														NULL,									// mosaic run Function
 														"libtreemix_NitrogenMineralisation",	        	// run Funktion
-														NULL) ,
+														"libtreemix_done") ,
 	/*12 N-NITRIFICATION*/					register_modul_new("TREEMIX",  // Bezeichnung
 													   "nitrogen",									// Modul
 													   "nitrification",	        			// Sub Modul
@@ -122,7 +122,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           	// global run Function
 														NULL,									// mosaic run Function
 														"libtreemix_NitrogenNitrification",	        	// run Funktion
-														NULL)
+														"libtreemix_done")
 									
 									);
 								   

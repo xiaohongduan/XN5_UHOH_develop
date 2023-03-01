@@ -108,7 +108,11 @@ int schaaf_tillage_load_config(schaaf_manag *self)
 				deleteSpaceBegEnd(self->tillage_code[i]); //Added by Hong on 20191001
 				tillage->acCode = self->tillage_code[i];
                 tillage->fDepth = self->tillage_depth[i]*(double)10.0; //[cm] -> [mm]
-                if (i == 0) {
+
+                //relocated by Hong in Okt. 2019, InitOrgDuenger should by done during reading the input. 
+				InitBBGeraet(tillage);
+               
+				if (i == 0) {
                     tillage_first = tillage;
                     tillage_act = tillage;
                 } else {
@@ -378,3 +382,212 @@ int schaaf_irrigation_load_config(schaaf_manag *self)
 
 	return RET_SUCCESS;
 }
+
+//Relocated by Hong 
+int InitBBGeraet(PTILLAGE tillage)
+ {
+	if (strcmp(tillage->acCode,"TI047\0")==0)        
+	{ //Schaelpflug
+		tillage->fEffMix = (double)0.4;
+		tillage->fEffLoose = (double)0.75;
+		tillage->fEffIncorp = (double)0.75;
+	}
+
+	if (strcmp(tillage->acCode,"TI048\0")==0)        	
+	{ //Scharpflug
+		tillage->fEffMix = (double)0.4;
+		tillage->fEffLoose = (double)0.75;
+		tillage->fEffIncorp = (double)0.75;
+	}
+	if (strcmp(tillage->acCode,"TI005\0")==0)        	
+	{ //Volldrehpflug
+		tillage->fEffMix = (double)0.4;
+		tillage->fEffLoose = (double)0.95;
+		tillage->fEffIncorp = (double)0.75;
+	}
+	if (strcmp(tillage->acCode,"TI049\0")==0)        	
+	{ //Scheibenpflug
+		tillage->fEffMix = (double)0.4;
+		tillage->fEffLoose = (double)0.75;
+		tillage->fEffIncorp = (double)0.75;
+	}
+	if (strcmp(tillage->acCode,"TI007\0")==0)        	
+	{ //Scheibenpflug
+		tillage->fEffMix = (double)0.4;
+		tillage->fEffLoose = (double)0.75;
+		tillage->fEffIncorp = (double)0.75;
+	}
+	if (strcmp(tillage->acCode,"TI030\0")==0)        	
+	{ //Schichtengubber
+		tillage->fEffMix = (double)0.6;
+		tillage->fEffLoose = (double)0.55;
+		tillage->fEffIncorp = (double)0.55;
+	}
+	if (strcmp(tillage->acCode,"TI010\0")==0)        	
+	{ //Schaelgrubber
+		tillage->fEffMix = (double)0.6;
+		tillage->fEffLoose = (double)0.55;
+		tillage->fEffIncorp = (double)0.35;
+	}
+	if (strcmp(tillage->acCode,"TI012\0")==0)        	
+	{ //Federzahnegge
+		tillage->fEffMix = (double)0.2;
+		tillage->fEffLoose = (double)0.05;
+		tillage->fEffIncorp = (double)0.1;
+	}
+	if (strcmp(tillage->acCode,"TI037\0")==0)        	
+	{ //Feingrubber
+		tillage->fEffMix = (double)0.2;
+		tillage->fEffLoose = (double)0.05;
+		tillage->fEffIncorp = (double)0.1;
+	}
+	if (strcmp(tillage->acCode,"TI032\0")==0)        	
+	{ //Spatenrollegge
+		tillage->fEffMix = (double)0.2;
+		tillage->fEffLoose = (double)0.05;
+		tillage->fEffIncorp = (double)0.1;
+	}
+	if (strcmp(tillage->acCode,"TI042\0")==0)        	
+	{ //Ackerfraese
+		tillage->fEffMix = (double)0.8;
+		tillage->fEffLoose = (double)0.75;
+		tillage->fEffIncorp = (double)0.64;
+	}
+	if (strcmp(tillage->acCode,"TI036\0")==0)        	
+	{ //Striegelegge
+		tillage->fEffMix = (double)0.2;
+		tillage->fEffLoose = (double)0.0;
+		tillage->fEffIncorp = (double)0.1;
+	}
+	if (strcmp(tillage->acCode,"TI033\0")==0)        	
+	{ //Loeffelegge
+		tillage->fEffMix = (double)0.5;
+		tillage->fEffLoose = (double)0.0;
+		tillage->fEffIncorp = (double)0.1;
+	}
+	if (strcmp(tillage->acCode,"TI035\0")==0)        	
+	{ //Ruettelegge
+		tillage->fEffMix = (double)0.7;
+		tillage->fEffLoose = (double)0.0;
+		tillage->fEffIncorp = (double)0.1;
+	}
+	if (strcmp(tillage->acCode,"TI034\0")==0)        	
+	{ //Kreiselegge
+		tillage->fEffMix = (double)0.7;
+		tillage->fEffLoose = (double)0.05;
+		tillage->fEffIncorp = (double)0.1;
+	}
+	if (strcmp(tillage->acCode,"TI013\0")==0)        	
+	{ //Saategge
+		tillage->fEffMix = (double)0.2;
+		tillage->fEffLoose = (double)0.0;
+		tillage->fEffIncorp = (double)0.1;
+	}
+	if (strcmp(tillage->acCode,"TI031\0")==0)        	
+	{ //Scheibenegge
+		tillage->fEffMix = (double)0.7;
+		tillage->fEffLoose = (double)0.5;
+		tillage->fEffIncorp = (double)0.5;
+	}
+	if (strcmp(tillage->acCode,"TI043\0")==0)        	
+	{ //Zinkenroter
+		tillage->fEffMix = (double)0.8;
+		tillage->fEffLoose = (double)0.64;
+		tillage->fEffIncorp = (double)0.64;
+	}
+	if (strcmp(tillage->acCode,"TI015\0")==0)        	
+	{ //Rotortiller
+		tillage->fEffMix = (double)0.8;
+		tillage->fEffLoose = (double)0.64;
+		tillage->fEffIncorp = (double)0.64;
+	}
+	if (strcmp(tillage->acCode,"TI024\0")==0)        	
+	{ //Pflug mit Untergrundlockerer
+		tillage->fEffMix = (double)0.4;
+		tillage->fEffLoose = (double)0.95;
+		tillage->fEffIncorp = (double)0.75;
+	}
+	if (strcmp(tillage->acCode,"TI025\0")==0)        	
+	{ // Volldrehpflug mit Packer
+		tillage->fEffMix = (double)0.4;
+		tillage->fEffLoose = (double)0.55;
+		tillage->fEffIncorp = (double)0.75;
+	}
+	if (strcmp(tillage->acCode,"TI004\0")==0)        	
+	{ // Beetpflug
+		tillage->fEffMix = (double)0.4;
+		tillage->fEffLoose = (double)0.65;
+		tillage->fEffIncorp = (double)0.75;
+	}
+	if (strcmp(tillage->acCode,"TI027\0")==0)        	
+	{ // Spatenmaschine
+		tillage->fEffMix = (double)0.3;
+		tillage->fEffLoose = (double)0.75;
+		tillage->fEffIncorp = (double)0.5;
+	}
+	if (strcmp(tillage->acCode,"TI029\0")==0)
+	{ // Schwergrubber
+		tillage->fEffMix = (double)0.65;
+		tillage->fEffLoose = (double)0.65;
+		tillage->fEffIncorp = (double)0.650;
+	}
+	if (strcmp(tillage->acCode,"TI038\0")==0)        	
+	{ // Schleppegge
+		tillage->fEffMix = (double)0.0;
+		tillage->fEffLoose = (double)-0.05;
+		tillage->fEffIncorp = (double)0.0;
+	}
+	if (strcmp(tillage->acCode,"TI039\0")==0)        	
+	{ // Cambridge-Walze
+		tillage->fEffMix = (double)0.0;
+		tillage->fEffLoose = (double)-0.5;
+		tillage->fEffIncorp = (double)0.0;
+	}
+	if (strcmp(tillage->acCode,"TI040\0")==0)        	
+	{ // Crosskill-Walze
+		tillage->fEffMix = (double)0.0;
+		tillage->fEffLoose = (double)-0.5;
+		tillage->fEffIncorp = (double)0.0;
+	}
+	if (strcmp(tillage->acCode,"TI041\0")==0)        	
+	{ // Ringel-Walze
+		tillage->fEffMix = (double)0.0;
+		tillage->fEffLoose = (double)-0.5;
+		tillage->fEffIncorp = (double)0.0;
+	}
+	if (strcmp(tillage->acCode,"TI044\0")==0)        	
+	{ // Dammfraese
+		tillage->fEffMix = (double)0.55;
+		tillage->fEffLoose = (double)0.65;
+		tillage->fEffIncorp = (double)0.15;
+	}
+	if (strcmp(tillage->acCode,"TI045\0")==0)        	
+	{ // Tiefenmeissel
+		tillage->fEffMix = (double)0.0;
+		tillage->fEffLoose = (double)-0.65;
+		tillage->fEffIncorp = (double)0.0;
+	}
+	if (strcmp(tillage->acCode,"TI046\0")==0)        	
+	{ // Mulchgeraet
+		tillage->fEffMix = (double)0.15;
+		tillage->fEffLoose = (double)0.0;
+		tillage->fEffIncorp = (double)0.25;
+	}
+
+      /* Wenn fuer das gewaehlte Geraet keine Zuordnung stattgefunden 
+           hat wird es hier mit Standarwerten belegt. */
+		if ((tillage->fEffMix ==(double)0.0) &&
+		   (tillage->fEffLoose ==(double)0.0) &&
+		   (tillage->fEffIncorp ==(double)0.0))
+		   {
+			tillage->fEffMix = (double)0.1;
+			tillage->fEffLoose = (double)0.1;
+			tillage->fEffIncorp = (double)0.1;
+		   }
+
+
+  // PRINT_MESSAGE(xpn,4,"InitBBGeraet geladen!")
+   
+   return RET_SUCCESS;
+ }      /*===== Ende der Initialisierung der Bodenbearbeitungsgeraete =============*/
+ 

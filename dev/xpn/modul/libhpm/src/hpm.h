@@ -334,7 +334,7 @@ typedef struct {
 	double aWrt; // Water activity (Wurzel)
 	double aWsh; // Water activity (shoot)
 	double theta_sh; // shoot water content
-	double theta_so; // soil water content
+	//double theta_so; // soil water content
 	double theta_rt; // root water content
 
 	// Variablen, nur fürs Wassermodell
@@ -391,19 +391,11 @@ typedef struct {
 	double ONSsh_hv;  // Shoot output N an harvest
 	double ONph_hv;  // Photosynthesisch aktiver Stickstoff
 	double OWsh_hv;
-    
+
 	double Sum_Lam_hv4[4];
 	double Sum_ss_hv4[4];
 	double Sum_CSsh_hv;
 	double Sum_NSsh_hv;
-
-    //SG20210928: additional variables for N in harvested structural biomass
-    double Sum_NXsh_hv;
-    
-    double Daily_mass_hv;
-    double Daily_N_hv;
-    
-    
 
 	double fharv;  // fraction of the shoot material removed in a harvest
 	double Pulseharv; // Pulsfunktion, wenn geerntet wird
@@ -466,9 +458,6 @@ typedef struct{
 	double MSPl;
 	
 	double cum_harvest_mass;
-	double cum_harvest_N; //SG20210930
-    double daily_harvest_mass;//SG20211008
-    double daily_harvest_N;//SG20211008
 	
 	double Nnit;
 	double Namm;
@@ -504,23 +493,19 @@ struct _hpm
 	double (*WCont)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, 
-                    double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	double (*HCond)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, 
-                    double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	double (*DWCap)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, 
-                    double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
     double (*MPotl)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, 
-                    double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	
 	int __INIT_DONE;
 	int __DONE_DONE;

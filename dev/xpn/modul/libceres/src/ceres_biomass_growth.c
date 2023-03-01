@@ -25,45 +25,19 @@ int ceres_biomass_growth_run(ceres *self)
 		                                *((double)1.0-pCan->fPlantSenesLA/pCan->fPlantLA);
 		pPl->pBiomass->fLeafDeathRate = max((double)0.0,pPl->pBiomass->fLeafDeathRate);
 		pPl->pBiomass->fStemDeathRate = pBiom->fStemWeight*((double)0.000267)*pDev->fDTT;
-
-//		pPl->pBiomass->fRootDeathRate = ((double)0.4)*pBiom->fRootGrowR
-//		                                +((double)0.005)*pBiom->fRootWeight;
-        //SG20220325: N content of dead biomass
-		pPl->pBiomass->fRootDeathRate = ((double)0.005)*pBiom->fRootWeight;
+		pPl->pBiomass->fRootDeathRate = ((double)0.4)*pBiom->fRootGrowR
+		                                +((double)0.005)*pBiom->fRootWeight;
 
 		pPl->pBiomass->fDeadLeafWeight += pPl->pBiomass->fLeafDeathRate;
 		pPl->pBiomass->fDeadStemWeight += pPl->pBiomass->fStemDeathRate;
-//		pPl->pBiomass->fDeadRootWeight += pPl->pBiomass->fRootDeathRate;
-        pPl->pBiomass->fDeadRootWeight += pPl->pBiomass->fRootDeathRate + ((double)0.4)*pBiom->fRootGrowR; //SG20220325: N content of dead biomass
-//		pPl->pBiomass->fDeadRootWeight += (double)0.005*pBiom->fRootWeight;
-
-  
-        //SG20220325: N content of dead biomass
-        pPl->pPltNitrogen->fDeadLeafNw += pPl->pBiomass->fLeafDeathRate*pPl->pPltNitrogen->fTopsMinConc;
-        pPl->pPltNitrogen->fDeadStemNw += pPl->pBiomass->fStemDeathRate*pPl->pPltNitrogen->fTopsMinConc;
-        pPl->pPltNitrogen->fDeadRootNw += pPl->pBiomass->fRootDeathRate*pPl->pPltNitrogen->fRootMinConc;
-         
-        pPl->pPltNitrogen->fLeafCont   -= pPl->pBiomass->fLeafDeathRate*pPl->pPltNitrogen->fTopsMinConc;
-        pPl->pPltNitrogen->fStemCont -= pPl->pBiomass->fStemDeathRate*pPl->pPltNitrogen->fTopsMinConc;
-        pPl->pPltNitrogen->fRootCont  -= pPl->pBiomass->fRootDeathRate*pPl->pPltNitrogen->fRootMinConc;
-
-/*        pPl->pPltNitrogen->fDeadLeafNw += pPl->pBiomass->fLeafDeathRate*pPl->pPltNitrogen->fLeafMinConc;
-        pPl->pPltNitrogen->fDeadStemNw += pPl->pBiomass->fStemDeathRate*pPl->pPltNitrogen->fStemMinConc;
-        pPl->pPltNitrogen->fDeadRootNw += pPl->pBiomass->fRootDeathRate*pPl->pPltNitrogen->fRootMinConc;
-         
-        pPl->pPltNitrogen->fLeafCont   -= pPl->pBiomass->fLeafDeathRate*pPl->pPltNitrogen->fLeafMinConc;
-        pPl->pPltNitrogen->fStemCont -= pPl->pBiomass->fStemDeathRate*pPl->pPltNitrogen->fStemMinConc;
-        pPl->pPltNitrogen->fRootCont  -= pPl->pBiomass->fRootDeathRate*pPl->pPltNitrogen->fRootMinConc;*/
-          
+		pPl->pBiomass->fDeadRootWeight += pPl->pBiomass->fRootDeathRate;
 
 		//====================================================================================
 		//      Organ Dry weight
 		//====================================================================================
 		pBiom->fLeafWeight += pBiom->fLeafGrowR - pPl->pBiomass->fLeafDeathRate;
 		pBiom->fStemWeight += pBiom->fStemGrowR - pPl->pBiomass->fStemDeathRate;
-		//pBiom->fRootWeight += pBiom->fRootGrowR - pPl->pBiomass->fRootDeathRate;
-        //SG20220329:
-		pBiom->fRootWeight += (double)0.6*pBiom->fRootGrowR - ((double)0.005)*pBiom->fRootWeight;
+		pBiom->fRootWeight += pBiom->fRootGrowR - pPl->pBiomass->fRootDeathRate;
 
 		pBiom->fGrainWeight+= pBiom->fGrainGrowR;
 //      pBiom->fEarWeight        =pBiom->fGrainWeight;
@@ -1610,6 +1584,8 @@ int ceres_spass_RootLengthDensity(ceres *self)
 		else
 			pLR->fWatStressRoot = (double)1.0;
 
+        //printf("%s  %d %f \n", xpn->pXSys->reg_str, L, pLR->fWatStressRoot);
+        
 		//SG/12/04/99:	folgende Zeile aus PLAGEN:
 		// if(L==1) pLR->fWatStressRoot = (double)1.0;	Streß auch bei L=1!
 

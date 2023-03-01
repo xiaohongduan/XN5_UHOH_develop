@@ -288,28 +288,23 @@ double Get_Rewet(int iLog, stickstoff *self)
 int Reduce_C_Via_Denit(stickstoff *self,double fDenitrifCC, double DeltaT, PSLAYER pSL, PCLAYER pCL)
 {
     expertn_modul_base *xpn = &(self->parent);
-	// double fLitterDenitrifCC, fManureDenitrifCC, fHumusDenitrifCC;
+	double fLitterDenitrifCC, fManureDenitrifCC, fHumusDenitrifCC;
 	
 
     /** Litter-C Abbau  */
     Set_At_Least_Epsilon(xpn,&pSL->fCHumus, "pSL->fCHumus");
 
-    //fLitterDenitrifCC = fDenitrifCC * RelAnteil(pCL->fCLitter, pCL->fCManure + pSL->fCHumus);
-    //pCL->fCLitter    -= fLitterDenitrifCC * DeltaT;
-    pCL->fLitterDenitrifCC = fDenitrifCC * RelAnteil(pCL->fCLitter, pCL->fCManure + pSL->fCHumus); //SG20210715
-    pCL->fCLitter    -= pCL->fLitterDenitrifCC * DeltaT;
+    fLitterDenitrifCC = fDenitrifCC * RelAnteil(pCL->fCLitter, pCL->fCManure + pSL->fCHumus);
+    pCL->fCLitter    -= fLitterDenitrifCC * DeltaT;
 
     /** Manure-C Abbau  */
-    //fManureDenitrifCC = fDenitrifCC * RelAnteil(pCL->fCManure, pCL->fCLitter + pSL->fCHumus);
-    //pCL->fCManure    -= fManureDenitrifCC * DeltaT;
-    pCL->fManureDenitrifCC = fDenitrifCC * RelAnteil(pCL->fCManure, pCL->fCLitter + pSL->fCHumus); //SG20210715
-    pCL->fCManure    -= pCL->fManureDenitrifCC * DeltaT;
+    fManureDenitrifCC = fDenitrifCC * RelAnteil(pCL->fCManure, pCL->fCLitter + pSL->fCHumus);
+			
+    pCL->fCManure    -= fManureDenitrifCC * DeltaT;
 	
     /** Humus-C Abbau  */
-    //fHumusDenitrifCC  = fDenitrifCC  * RelAnteil(pSL->fCHumus, pCL->fCManure + pCL->fCLitter);
-    //pSL->fCHumus      -= fHumusDenitrifCC * DeltaT;
-    pCL->fHumusDenitrifCC  = fDenitrifCC  * RelAnteil(pSL->fCHumus, pCL->fCManure + pCL->fCLitter); //SG20210715
-    pSL->fCHumus      -= pCL->fHumusDenitrifCC * DeltaT;
+    fHumusDenitrifCC  = fDenitrifCC  * RelAnteil(pSL->fCHumus, pCL->fCManure + pCL->fCLitter);
+    pSL->fCHumus      -= fHumusDenitrifCC * DeltaT;
 
     return 1;
 }
@@ -602,20 +597,15 @@ int leachn_denit_run(stickstoff *self, double fN2Fraction, double fN2OReduction,
 
             /* C-Abbau durch Denitrifikation */
 
-           fDenitrifCC = pCL->fNO3DenitR * (double)72/(double)56;
+            fDenitrifCC = pCL->fNO3DenitR * (double)72/(double)56;
 
-           Reduce_C_Via_Denit(self,fDenitrifCC, DeltaT, pSL, pCL);
+            Reduce_C_Via_Denit(self,fDenitrifCC, DeltaT, pSL, pCL);
 
             /* Denitrifikation */
 
             /**** results ***/
 
             pCL->fNO3N -= pCL->fNO3DenitR * DeltaT;
-            
-            //debug
-            //printf("time, %f, layer, %i, NO3DenitR, %f, fCLimitDenR, %f, NO3DenitMaxR, %f, f2, %f, corr.Temp , %f,  corr.Feucht, %f, corr.NO3, %f, corr.Frost, %f, corr.WiederBefeucht, %f\n",pTi->pSimTime->fTimeY, iLayer, pCL->fNO3DenitR, fCLimitDenR, pCL->fNO3DenitMaxR, f2, corr.Temp, corr.Feucht,corr.NO3, corr.Frost, corr.WiederBefeucht);
-            //printf("time, %f, layer, %i, fNO3N, %f\n",pTi->pSimTime->fTimeY, iLayer, pCL->fNO3N);
-
 		
 			CHECK_VALID(pCL->fNO3N)
 		

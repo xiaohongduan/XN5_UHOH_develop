@@ -4,7 +4,7 @@
 
 G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 {
-	return register_modul_list_new(30,  // Anzahl der Modelle														
+	return register_modul_list_new(23,  // Anzahl der Modelle														
 									register_modul_new("Penman Monteith",	// Bezeichnung
 													   "water",									// Modul
 													   "potential evapotranspiration",			// Sub Modul
@@ -167,15 +167,6 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           // mosaic run Function
 														"penman_monteith_gh_run_with_LAI",					// run Funktion
 														NULL),									// done Function												
-                                    register_modul_new("FAO GH",						    // Bezeichnung
-													   "heat",								// Modul
-													   "ground heat",					    // Sub Modul
-													   "evapotranspiration",				// Klasse
-														NULL,		                        // load/init Function
-														NULL,								// global run Function
-														NULL,						        // mosaic run Function
-														"penman_monteith_gh_run_FAO",		// run Funktion
-														NULL),								// done Function												
 									register_modul_new("Penman Monteith",						// Bezeichnung
 													   "heat",									// Modul
 													   "net radiation",					// Sub Modul
@@ -185,15 +176,6 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,						           // mosaic run Function
 														"penman_monteith_nr_run",					// run Funktion
 														NULL),									// done Function
-									register_modul_new("Penman Monteith (FAO)",				    // Bezeichnung
-													   "heat",								// Modul
-													   "net radiation",					    // Sub Modul
-													   "evapotranspiration",				// Klasse
-														"penman_monteith_nr_load",			// load/init Function
-														NULL,								// global run Function
-														NULL,						        // mosaic run Function
-														"penman_monteith_nr_run_FAO",		// run Funktion
-														NULL),								// done Function
 									register_modul_new("Penman Monteith",						// Bezeichnung
 													   "heat",									// Modul
 													   "emissivity",					// Sub Modul
@@ -229,52 +211,6 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 														NULL,									// global run Function
 														NULL,						           // mosaic run Function
 														"kc_factor_LAI3rd_run",					// run Funktion
-														NULL),							// done Function
-                                                        //AS: added models for soil surface resistance:
-                                    register_modul_new("Anadranistakis (2000)",				// Bezeichnung
-													   "water",								// Modul
-													   "soil surface resistance",			// Sub Modul
-													   "evapotranspiration",				// Klasse
-                                                        NULL,			                    // load/init Function
-														NULL,								// global run Function
-														NULL,						        // mosaic run Function
-														"rs_anadranistakis_run",			// run Funktion
-														NULL),		                        // done Function
-                                    register_modul_new("Van de Griend and Owe (1994)",		// Bezeichnung
-													   "water",								// Modul
-													   "soil surface resistance",			// Sub Modul
-													   "evapotranspiration",				// Klasse
-                                                       "rs_VanDeGriend_load",			    // load/init Function
-														NULL,								// global run Function
-														NULL,						        // mosaic run Function
-														"rs_VanDeGriend_run",			// run Funktion
-														NULL),		                        // done Function
-                                    register_modul_new("Camillo and Gurney (1986)",		    // Bezeichnung
-													   "water",								// Modul
-													   "soil surface resistance",			// Sub Modul
-													   "evapotranspiration",				// Klasse
-                                                        NULL,			                    // load/init Function
-														NULL,								// global run Function
-														NULL,						        // mosaic run Function
-														"rs_CamilloGurney_run", 			// run Funktion
-														NULL),		                        // done Function
-                                    register_modul_new("Sun (1982)",                		// Bezeichnung
-													   "water",								// Modul
-													   "soil surface resistance",			// Sub Modul
-													   "evapotranspiration",				// Klasse
-                                                        NULL,			                    // load/init Function
-														NULL,								// global run Function
-														NULL,						        // mosaic run Function
-														"rs_Sun82_run",          			// run Funktion
-														NULL),		                        // done Function
-                                    register_modul_new("Sun (1998)",                		// Bezeichnung
-													   "water",								// Modul
-													   "soil surface resistance",			// Sub Modul
-													   "evapotranspiration",				// Klasse
-                                                        NULL,			                    // load/init Function
-														NULL,								// global run Function
-														NULL,						        // mosaic run Function
-														"rs_Sun98_run",          			// run Funktion
 														NULL)									// done Function
 									);
 }

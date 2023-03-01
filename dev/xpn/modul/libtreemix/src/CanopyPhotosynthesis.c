@@ -421,7 +421,7 @@ int libtreemix_CanopyProductionNumericalAdvanced(libtreemix *self)
 				//LfLayTranspirationdt	= self->plant[i].Transpiration_Layerdt; 			// [mm]
 				LfLayTranspirationdt	= self->plant[i].Transpiration_LayerR/24.0; 			// [mm]
 				
-				LfLayPhotosynthesisdt	= self->plant[i].NetPhotoMolLay;					// [µmol/m2/s]
+                LfLayPhotosynthesisdt	= self->plant[i].NetPhotoMolLay;					// [µmol/m2/s]
 				LfLayGPPdt				= self->plant[i].GPP_Layer;							// [µmol/m2/s]
 				LfLayMaintRespdt 		= self->plant[i].MainRespLfLay_R;					// [µmol/m2/s]
 			}
@@ -1332,7 +1332,7 @@ int libtreemix_LeafPhotosynthesisFALGE_simple(libtreemix *self, int i, double ra
 	
     //printf("%f %f %f %f %f %f %f \n",StomCond, rH, self->plant[i].GFac, Pnet1, self->plant[i].fac, self->plant[i].DarkResp,pWe->fAtmCO2ppm);
     
-	self->plant[i].StomCond = StomCond/400.0; 						//[mmolH2O/m2(total)*s] -> [cm/s]
+    self->plant[i].StomCond = StomCond/400.0; 						//[mmolH2O/m2(total)*s] -> [cm/s]
 	
 	Transpiration = self->plant[i].vpd/AirPressure * StomCond;						// [mmol/m2*s]
 	TranspirationR = Transpiration * 1.5552;										// [mmolH2O/m2*s] -> [mm/m2*d] = [mm/d]

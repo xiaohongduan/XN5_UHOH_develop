@@ -66,6 +66,27 @@ G_BEGIN_DECLS
 							g_free(S);\
 						} \
 
+#define GET_INI_DOUBLE_OPTIONAL(var,groupname,key,std_value)\
+{\
+		gboolean key_exists;\
+		error = NULL; \
+		key_exists = g_key_file_has_key(keyfile,groupname,key,&error);\
+		if (key_exists==FALSE) \
+			{ \
+				gchar *S;\
+				S = g_strdup_printf  ("Init var %s.%s (in file %s) is missing. Standard Value (%f) taken instead!\n",groupname,key,filename,std_value);\
+				PRINT_ERROR(S);\
+				g_free(S);\
+			}\
+		if (key_exists==FALSE)\
+			{\
+				var = std_value;\
+			} else\
+			{\
+				GET_INI_DOUBLE(var,groupname,key);\
+			}\
+	}\
+
 #define GET_INI_STRING(var,groupname,key) \
 						error = NULL; \
 						var = g_key_file_get_string (keyfile,groupname,key,&error); \
@@ -77,9 +98,27 @@ G_BEGIN_DECLS
 							g_free(S);\
 						} \
 						
-#define GET_INI_STRING_LIST(var,groupname,key,length) \
+#define GET_INI_STRING_LIST(var,groupname,key,var_size) \
+				{\
+						gsize _var_size;\
 						error = NULL; \
-						var = g_key_file_get_string_list (keyfile,groupname,key,length,&error); \
+						var = g_key_file_get_string_list (keyfile,groupname,key,&_var_size,&error); \
+						if (error!=NULL) \
+						{ \
+							gchar *S;\
+							S = g_strdup_printf  ("Error init var %s.%s (%s)!\n Error Message: %s",groupname,key,filename,error->message);\
+							PRINT_ERROR(S);\
+							g_free(S);\
+						}\
+						var_size = (int)_var_size;\
+				}\
+							
+					
+#define GET_INI_DOUBLE_LIST(var,groupname,key,var_size) \
+					{\
+						gsize _var_size;\
+						error = NULL; \
+						var = g_key_file_get_double_list(keyfile, groupname, key, &_var_size, &error); \
 						if (error!=NULL) \
 						{ \
 							gchar *S;\
@@ -87,17 +126,9 @@ G_BEGIN_DECLS
 							PRINT_ERROR(S);\
 							g_free(S);\
 						} \
-						
-#define GET_INI_DOUBLE_LIST(var,groupname,key,length) \
-						error = NULL; \
-						var = g_key_file_get_double_list(keyfile, groupname, key, length, &error); \
-						if (error!=NULL) \
-						{ \
-							gchar *S;\
-							S = g_strdup_printf  ("Error init var %s.%s (%s)!\n Error Message: %s",groupname,key,filename,error->message);\
-							PRINT_ERROR(S);\
-							g_free(S);\
-						} \
+						var_size = (int)_var_size;\
+					}\
+
 						
 #define GET_INI_INTEGER_LIST(var,groupname,key,length) \
 						error = NULL; \
@@ -109,6 +140,17 @@ G_BEGIN_DECLS
 							PRINT_ERROR(S);\
 							g_free(S);\
 						} \
+
+#define CHECK_LEN(var1,var2)\
+	{\
+		if (var1!=var2)\
+			{\
+				gchar *S;\
+				S = g_strdup_printf  ("%s is not %s. Check your configuration in file: %s!",#var1,#var2,filename);\
+				PRINT_ERROR_ID(xpn,S);\
+				g_free(S);\
+			}\
+	}\
 
 #define C_DEBUG(var) \
 	xpn_register_var_add_double(self->parent.pXSys->var_list,#var,var,__LINE__,TRUE);
@@ -154,6 +196,17 @@ typedef struct
 	int Rainfall_Interception;
 	int Nitrogen_Deposition;
 } P_Conf;
+
+typedef struct stFruitHarvest *FRUITHARVEST; //FruitHarvest
+typedef struct stFruitHarvest
+{
+	double Fraction;
+	int Year;
+	int Month;
+	int Day;
+	FRUITHARVEST pNext;
+	FRUITHARVEST pBack;
+} STFRUITHARVEST;
 
 // [Plant]
 typedef struct		
@@ -750,6 +803,8 @@ typedef struct
 	
 	int LfFallStart;	//Start of Leaf Fall [DOY]
 	int LfFallEnd;	//End of Leaf Fall [DOY]
+	double WdGrStart;	//Start of Wood Growth [DOY]
+	double WdGrEnd;	//End of Wood Growth [DOY]
 	double LfFall;		//Leaf Fall Rate [1/yr]
 	double LfFlush;		//Leaf Flush Rate [1/yr]
 	double LfBudBurst;	//Bud Burst Constant
@@ -856,13 +911,29 @@ typedef struct
 	double MortCrowd;	//Crowding Mortality Rate [1/yr]
 	double MortTotal;			// Total Mortality Rate [1/yr]
 
+		//FH 20200313
+		// Fruit harvest
+	int HarvestFruitTrue; //yes or no
+	int HarvestFruitFractionLen;
+	int HarvestFruitDatesLen;
+	FRUITHARVEST HarvestFruitFirst, HarvestFruitInterm, HarvestFruitAct, HarvestFruit;
+	
+	int CalcFreshMass;
+	double FracCWood;
+	double FracCRoot;
+	double FracCLeaf;
+	double FracCFruit;
+
 } P_Plant;
+
+
+
 
 typedef struct		// [Silviculture]
 {
 	int ThinningEvents;		//number of thinning events
-	gdouble *ThinningInterval;
-	gdouble *ThinningFraction;
+	double *ThinningInterval;
+	double *ThinningFraction;
 	double LitterRemoval;		// litter removal fraction [-]
 	int ThinningCounter;
 	int ThinningMethod;
@@ -986,10 +1057,12 @@ struct _libtreemix
 	P_Silv *silv;
 	
 	//double *mean_temp;
-
+    int iWaterAF;
 	
 	int __INIT_DONE;
 	int __ERROR;
+	
+	int __DONE_DONE;
 };
 
 

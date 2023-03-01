@@ -218,7 +218,11 @@ int libtreemix_CanopyFormation(libtreemix *self)
 			self->plant[i].IncrSt = IncrSt;
 		
 		    self->plant[i].CanopyFormation = 7.0;
+
+		    if(self->silv[i].Crowding == 1.0)
+		    { self->plant[i].IncrD  = 0; //Added by Hong on 20210712
 		
+			}
 	}
 //End of Hong
 				

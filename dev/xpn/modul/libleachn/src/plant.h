@@ -46,6 +46,7 @@ struct _leachn_plant
     double fp1Global;// for WaterUptakeVanGenuchten	
     int iRootNTrue; //FH 20190702 for correctly setting pPM to pPM->pNext this variable is needed: 0 when root and N model not selected, 1 when root model selected and 2 when N model selected
     double  fLengthDensOld; //FH 20190705 for debugging
+	int iSetRootsToZeroAtEndOfSeaon; //FH 20200327 flag for end of season if roots are set to zero or not: 0 when roots persist, all other values fLengthDens is set to zero (default = 1)
 };
 
 

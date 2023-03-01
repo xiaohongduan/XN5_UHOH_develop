@@ -36,19 +36,19 @@ struct _stickstoff
 	double (*WCont)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	double (*HCond)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	double (*DWCap)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
     double (*MPotl)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 double DENIT_REWET_FACTOR;
 double DENIT_FROST_FACTOR;
 double SimTime;
@@ -153,11 +153,6 @@ G_MODULE_EXPORT int leachn_miner_done(stickstoff *self);
 G_MODULE_EXPORT int leachn_hydro_load(stickstoff *self);	
 G_MODULE_EXPORT int leachn_hydro_run(stickstoff *self);	
 G_MODULE_EXPORT int leachn_hydro_done(stickstoff *self);
-//SG20200626:
-G_MODULE_EXPORT int leachn_NH3Volat1_load(stickstoff *self);	
-G_MODULE_EXPORT int leachn_NH3Volat1_run(stickstoff *self);	
-G_MODULE_EXPORT int leachn_NH3Volat1_done(stickstoff *self);
-
 
 int leachn_denit_run(stickstoff *self, double fN2Fraction, double fN2OReduction, int iRewet, int iNO3Kin);
 

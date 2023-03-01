@@ -148,17 +148,17 @@ int libtreemix_Senescence(libtreemix *self)
 
 				// for the CENTURY model [kgC/ha]:
 				xpn->pCh->pCProfile->fCLeafLitterSurf += (self->plant[j].TreeDistr * self->plant[j].LitLf/365.25*dt);
-				xpn->pCh->pCProfile->fNLeafLitterSurf += (self->plant[j].TreeDistr * self->plant[j].NLossLf/365.25*dt);
+				xpn->pCh->pCProfile->fNLeafLitterSurf += (self->plant[j].TreeDistr * self->plant[j].NLossLf/365.25*dt);			    				
 	            xpn->pCh->pCProfile->fCNLeafLitterSurf = 1.0 /self->plant[j].NLfDead;//added by Hong on 26032019 for agroforestry
-
+				             
 				xpn->pCh->pCProfile->fCBranchLitterSurf += (self->plant[j].TreeDistr * self->plant[j].LitBr/365.25*dt);
-				xpn->pCh->pCProfile->fNBranchLitterSurf += (self->plant[j].TreeDistr * self->plant[j].NLossBr/365.25*dt);
+				xpn->pCh->pCProfile->fNBranchLitterSurf += (self->plant[j].TreeDistr * self->plant[j].NLossBr/365.25*dt);                 							  				 
                 xpn->pCh->pCProfile->fCNBranchLitterSurf =1.0 /self->plant[j].NWdDead;//added by Hong on 26032019 for agroforestry
-
+				
 				xpn->pCh->pCProfile->fCStemLitterSurf += (self->plant[j].TreeDistr * self->plant[j].LitSt/365.25*dt);
 				xpn->pCh->pCProfile->fNStemLitterSurf += (self->plant[j].TreeDistr * self->plant[j].NLossSt/365.25*dt);
 				xpn->pCh->pCProfile->fCNStemLitterSurf = 1.0 /self->plant[j].NWdDead;//added by Hong on 26032019 for agroforestry
-				
+												
 				//Hong added on 20180731 for C-balance, not needed		
 				pCB->dCInputSurf += (self->plant[j].TreeDistr * self->plant[j].LitLf/365.25*dt) + (self->plant[j].TreeDistr * self->plant[j].LitBr/365.25*dt) + (self->plant[j].TreeDistr * self->plant[j].LitSt/365.25*dt); 
 				/*pCB->dCInputCum += (self->plant[j].TreeDistr * self->plant[j].LitLf/365.25*dt) + (self->plant[j].TreeDistr * self->plant[j].LitBr/365.25*dt) + (self->plant[j].TreeDistr * self->plant[j].LitSt/365.25*dt); */
@@ -206,11 +206,11 @@ int libtreemix_Senescence(libtreemix *self)
 
 				// for the CENTURY model:
 				pChL->fCFineRootLitter += (self->plant[j].TreeDistr * (self->plant[j].LitRt*self->plant[j].LyFc[i])/365.25*dt);
-				pChL->fNFineRootLitter += (self->plant[j].TreeDistr * self->plant[j].NLossRt*self->plant[j].LyFc[i]/365.25*dt);
+				pChL->fNFineRootLitter += (self->plant[j].TreeDistr * self->plant[j].NLossRt*self->plant[j].LyFc[i]/365.25*dt);								
 				pChL->fCNFineRootLitter = 1.0 /self->plant[j].NFRt;//added by Hong on 26032019 for agroforestry
-
+								
 				pChL->fCGrossRootLitter += (self->plant[j].TreeDistr * self->plant[j].LitGrRt*self->plant[j].LyFc[i]/365.25*dt);
-				pChL->fNGrossRootLitter += (self->plant[j].TreeDistr * self->plant[j].NLossGrRt*self->plant[j].LyFc[i]/365.25*dt);
+				pChL->fNGrossRootLitter += (self->plant[j].TreeDistr * self->plant[j].NLossGrRt*self->plant[j].LyFc[i]/365.25*dt);				
 				pChL->fCNGrossRootLitter = 1.0 /self->plant[j].NWdDead;//added by Hong on 26032019 for agroforestry				
 
 				// used in nitrogen mineralization
@@ -284,10 +284,12 @@ int libtreemix_IntegrateModelEquations(libtreemix *self)
 	//PHLAYER		pHL = xpn->pHe->pHLayer;
 	//PSLAYER		pSL		= xpn->pSo->pSLayer;
 	//PLAYERROOT	pLRt	= xpn->pPl->pRoot->pLayerRoot;
+	PTIME pTi = xpn->pTi;
 	
 	/* Variables */
 	int i; // species looping variable
 	double dt = xpn->pTi->pTimeStep->fAct;	// timestep	
+	double Day = xpn->pTi->pSimTime->fTimeY;
 	
 	/*Functions*/
 	
@@ -306,8 +308,8 @@ int libtreemix_IntegrateModelEquations(libtreemix *self)
 		/* Leaf Weight */
 		//orig: pBio->fLeafWeight += (1000.0*(pBio->fLeafGrowR-pBio->fLeafDeathRate-PRATES->CLossLf)*dt);		
 		self->plant[i].CLfMass += ((1000.0*(self->plant[i].LfGrR - self->plant[i].LeafDeathRate - self->plant[i].CLossLf))/365.25*dt);	// [1/yr] -> [1/d]
-		//printf("%f %f %f \n", self->plant[i].LfGrR ,self->plant[i].LeafDeathRate , self->plant[i].CLossLf);
-		pBio->fLeafWeight += (self->plant[i].TreeDistr * self->plant[i].CLfMass);
+		//printf("Leaf %f %f %f %f \n", self->plant[i].CLfMass, self->plant[i].LfGrR ,self->plant[i].LeafDeathRate , self->plant[i].CLossLf);
+        pBio->fLeafWeight += (self->plant[i].TreeDistr * self->plant[i].CLfMass);
 		if(pBio->fLeafWeight < 0.0){
 			pBio->fLeafWeight = 0.0;
 		}
@@ -320,9 +322,34 @@ int libtreemix_IntegrateModelEquations(libtreemix *self)
 			pBio->fRootWeight = 0.0;
 		}
 
+
+	
+		//FH 20200813 Add FruitHarvest, but fruits can still continue to grow after harvest
+		if (self->plant[i].HarvestFruitTrue == 1)
+		{
+			if ((NewDay(pTi)) && (xpn_time_compare_date(pTi->pSimTime->year,pTi->pSimTime->mon,pTi->pSimTime->mday,self->plant[i].HarvestFruit->Year,self->plant[i].HarvestFruit->Month,self->plant[i].HarvestFruit->Day) == 0))
+			{
+			self->plant[i].CFrMass = (1.0 - self->plant[i].HarvestFruit->Fraction) * self->plant[i].CFrMass;
+			self->plant[i].HarvestFruit = self->plant[i].HarvestFruit->pNext;
+			}
+		}
+		
+		
 		/* Fruit Weight */
 		//pBio->fFruitWeight += (1000.0*(pBio->fFruitGrowR-pBio->fFruitDeathRate-PRATES->CLossFr)*dt);		
 		self->plant[i].CFrMass += ((1000.0*(self->plant[i].FrGrR - self->plant[i].FruitDeathRate - self->plant[i].CLossFr))/365.25*dt);
+		//printf("Fruit %f %f %f %f \n",self->plant[i].CFrMass,self->plant[i].FrGrR,self->plant[i].FruitDeathRate,self->plant[i].CLossFr);
+		
+		// FH 20200818 No fruit growth without leaves
+/*		if(!strcmp(self->plant[i].type, "deciduous"))
+		{
+			if(((Day <= self->plant[i].LfFallStart)&&(Day >= self->plant[i].LfFallEnd)&&(self->plant[i].LfFallStart <= self->plant[i].LfFallEnd))
+			||((Day <= self->plant[i].LfFallStart)||(Day >= self->plant[i].LfFallEnd)&&(self->plant[i].LfFallStart >= self->plant[i].LfFallEnd)))
+			{
+			self->plant[i].CFrMass = 0.0;
+			}
+		}*/
+		
 		pBio->fFruitWeight += (self->plant[i].TreeDistr * self->plant[i].CFrMass);
 		if(pBio->fFruitWeight < 0.0){
 			pBio->fFruitWeight = 0.0;
@@ -334,6 +361,15 @@ int libtreemix_IntegrateModelEquations(libtreemix *self)
 		pBio->fWoodWeight += (self->plant[i].TreeDistr * self->plant[i].CWdWeight);
 		if(pBio->fWoodWeight < 0.0){
 			pBio->fWoodWeight = 0.0;
+		}
+		
+		// FH 20200818 Add possibility to calculate fresh mass
+		if(self->plant[i].CalcFreshMass != 0)
+		{
+			pBio->fLeafWeight /= self->plant[i].FracCLeaf;
+			pBio->fRootWeight /= self->plant[i].FracCRoot;
+			pBio->fFruitWeight /= self->plant[i].FracCFruit;
+			pBio->fWoodWeight /= self->plant[i].FracCWood;
 		}
 		
 		//Added by Hong on 20180705: fStemWeight and fBranchWeight added for output graphics

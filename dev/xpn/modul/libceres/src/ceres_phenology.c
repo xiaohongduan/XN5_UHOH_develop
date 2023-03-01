@@ -92,12 +92,10 @@ int ceres_CERES_TO_COMVR(ceres *self)
 	PDEVELOP        pDev;
 	double          fValue, VR[10];
 //      double          DVR[]={0.0,     0.1425, 0.45,   0.656,  0.91,   1.00,   1.15,   1.50,   1.99,   2.0};
+
 	//SG 2006 03 28, test: (DVR[] aus SUCROS)
     //double          DVR[]={0.0,     0.15,   0.35,   0.55,   0.70,   1.00,   1.25,   1.60,   1.90,   2.0};
-	//double              DVR[]= {0.0,     0.4,    0.55,   0.656,  0.91,   1.00,   1.15,   1.50,   1.95,   2.0};
-
-    //SG 2021 07 01 from XN3:
-    double		DVR[]={0.0,	0.15,	0.35,	0.55,	0.70,	1.00,	1.25,	1.60,	1.90,	2.0};
+	double              DVR[]= {0.0,     0.4,    0.55,   0.656,  0.91,   1.00,   1.15,   1.50,   1.95,   2.0};
 
 	for (i=0; i<10; i++)
 		VR[i]=(double)DVR[i];
@@ -1076,9 +1074,7 @@ double ceres_Vernalization_CERES(ceres *self)
 	//SG/14/06/99:
 	//      wegen pPl->pGenotype->iVernCoeff = 0 VF immer gleich 1.
 	//VF=1.0-(double)pPl->pGenotype->iVernCoeff*(50.0-CumVD); //vernalization factor.
-	//VF=min((double)1.0,1.0-(double)(1.0/pPl->pGenotype->iVernCoeff)*(50.0-CumVD)); //vernalization factor.
-	//SG 20210708:
-    VF=min(1.0,1.0-(1.0/pPl->pGenotype->VernCoeff)*(50.0-CumVD)); //vernalization factor.
+	VF=min((double)1.0,1.0-(double)(1.0/pPl->pGenotype->iVernCoeff)*(50.0-CumVD)); //vernalization factor.
 
 	if (VF<=0.0)    VF=0.0;
 	if (VF>1.0)     VF=1.0;

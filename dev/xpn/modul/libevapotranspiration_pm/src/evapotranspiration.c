@@ -54,13 +54,7 @@ int evapotranspiration_load(evapotranspiration *self)
 	xpn->pSo->fSoilCover = xpn_register_var_get_pointer_convert_to_double(self->parent.pXSys->var_list,"Config.Penman Monteith.soil cover",0.0);
 	//self->Time_Zone = xpn_register_var_get_pointer_convert_to_double(self->parent.pXSys->var_list,"Config.Penman Monteith.time zone",0.0);
 
-    //AS: added information about weather data resolution
-    char *S;
-	S = xpn_register_var_get_pointer(xpn->pXSys->var_list,"Config.Expert N Standard Read INI.use high resolution climate data");
-	if ((S==NULL) || (atoi(S)==0))
-		{self->high_res_weather=0;} 
-    else 
-        {self->high_res_weather=1;}
+
 
 	return RET_SUCCESS;
 }
@@ -81,7 +75,7 @@ static double calc_lh_of_vap(double T)
 	// The latent heat of condensation of water in the temperature range from −40 °C to 40 °C is approximated by the following empirical cubic function:
 	T2 = T*T;
 	T3 = T2*T;
-	L = (0.0000614342*T3 + 0.00158927*T2 - 2.36418*T + 2500.79)*1e-3; // für MJ /m2 ; AS: this is probably in MJ/kg or MJ/L
+	L = (0.0000614342*T3 + 0.00158927*T2 - 2.36418*T + 2500.79)*1e-3; // für MJ /m2
 	return L;
 }
 
@@ -148,7 +142,7 @@ int penman_monteith_gh_run(evapotranspiration *self)
 		}
 
 
-	xpn->pHe->pHEBalance->fGroundHeat = -G; //convert to flux defined positive if oriented towards soil surface
+	xpn->pHe->pHEBalance->fGroundHeat = -G;
 	return RET_SUCCESS;
 }
 
@@ -184,41 +178,18 @@ int penman_monteith_gh_run_with_LAI(evapotranspiration *self)
 		}
 	G = KG * exp(-0.5*xpn->pPl->pCanopy->fLAI)*Rn;
 
-	xpn->pHe->pHEBalance->fGroundHeat = -G; //convert to flux defined positive if oriented towards soil surface
+	xpn->pHe->pHEBalance->fGroundHeat = -G;
 
 	return RET_SUCCESS;
 }
 
-int penman_monteith_gh_run_FAO(evapotranspiration *self)
-{
-	expertn_modul_base *xpn = &(self->parent);
-	double G = 0;
-    double dt = xpn->pTi->pTimeStep->fAct;
 
-    if(NewDay(self->parent.pTi)) {
-        // In case of daily weather data use T=(Tmin+Tmax)/2, in case of high-res weather data use actual daily mean temperature:
-        self->weather.fTempAve = (xpn->pCl->pWeather->fTempMax + xpn->pCl->pWeather->fTempMin)/2.0;
-        // For daily weather data start calculating G at the second day, for high-res weather data start at the third day
-        // as there is no yesterday before (--> G is shifted by one day for high-res weather data!)
-        if( ((SimStart(self->parent.pTi) == FALSE) && (self->high_res_weather == 0)) || ((xpn->pTi->pSimTime->year+xpn->pTi->pSimTime->fTimeY_old >= xpn->pTi->pSimTime->iStart_year+xpn->pTi->pSimTime->fStart_TimeY+2) && (self->high_res_weather == 1)) ){
-            G = 0.38*(self->weather.fTempAve - self->fTempYesterday)*1.0e6/(24*3600); //[MJ m-2 d-1] -> [W m-2]
-        }
-        self->fTempYesterday = self->weather.fTempAve;
-        xpn->pHe->pHEBalance->fGroundHeat = -G; //convert to flux defined positive if oriented towards soil surface
-    }
-    // Get daily average of high-res weather data
-    if(self->high_res_weather == 1) {
-        self->__weather.fTempAve += xpn->pCl->pWeather->fTempAir_daily_models*dt;
-    }
-	return RET_SUCCESS;
-}
 
 int penman_monteith_nr_load(evapotranspiration *self)
 {
 	self->night_rad = 0.0;
 	self->night_rad2 = 0.0;
 	self->night_count = 0;
-    self->night_count_2 = 0;
 	self->night_time = 0.0;
 
 	self->cloud_cover_factor=0.5;
@@ -228,13 +199,13 @@ int penman_monteith_nr_load(evapotranspiration *self)
 int penman_monteith_nr_run(evapotranspiration *self)
 {
 	expertn_modul_base *xpn = &(self->parent);
-	double Rn,Rns,Rnl,Ra; //AS: added extraterrestrial radiation Ra
+	double Rn,Rns,Rnl;
 
 	Rns = 0.0;
 	Rnl = 0.0;
-    Ra = 0.0;
 
-	Rn = evapotranspiration_get_Rn(self,&Rns,&Rnl,&Ra,0);
+	Rn = evapotranspiration_get_Rn(self,&Rns,&Rnl);
+
 
 	xpn->pHe->pHEBalance->fNetRad=Rn;
 	xpn->pHe->pHEBalance->fShortNetRad=Rns;
@@ -243,68 +214,6 @@ int penman_monteith_nr_run(evapotranspiration *self)
 	xpn->pCl->pWeather->fSolNet = xpn->pHe->pHEBalance->fNetRad/86400.0*1.0e-6; // W/m2 --> MJ/m2/day
 
 
-	return RET_SUCCESS;
-}
-
-int penman_monteith_nr_run_FAO(evapotranspiration *self)
-{
-	expertn_modul_base *xpn = &(self->parent);
-	double Rn,Rns,Rnl,Ra;
-    
-    Rn = 0.0;
-	Rns = 0.0;
-	Rnl = 0.0;
-    Ra = 0.0;
-    
-    // calculate net radiation at the start of a new day using daily averaged weather data (of the day before -> Rn is shifted by one day!)
-    if(NewDay(xpn->pTi)) {
-        if(self->high_res_weather == 1) {
-            self->weather.fTempMax = self->__weather.fTempMax;
-            self->weather.fTempMin = self->__weather.fTempMin;
-            self->weather.fDailyHumidity = self->__weather.fDailyHumidity;
-            self->weather.fDaylySolRad = self->__weather.fDaylySolRad;
-            self->__weather.fTempMax = -99;
-            self->__weather.fTempMin = 99;
-            self->__weather.fDailyHumidity = 0;
-            self->__weather.fDaylySolRad = 0;
-        }
-        else {
-            self->weather.fDailyHumidity = self->__weather.fDailyHumidity;
-            self->weather.fDaylySolRad = self->__weather.fDaylySolRad;
-            self->__weather.fDailyHumidity = 0;
-            self->__weather.fDaylySolRad = 0;
-        }
-        if(SimStart(xpn->pTi)==FALSE) {
-            Rn = evapotranspiration_get_Rn(self,&Rns,&Rnl,&Ra,1);
-//            xpn->pHe->pHEBalance->fNetRadDay=Rn;
-//            xpn->pHe->pHEBalance->fShortNetRadDay=Rns;
-//            xpn->pHe->pHEBalance->fLongNetRadDay=Rnl;
-//            xpn->pHe->pHEBalance->fExtRadDay=Ra;
-            // add net radiation also to variables used in the sub daily models
-            xpn->pHe->pHEBalance->fNetRad=Rn;
-            xpn->pHe->pHEBalance->fShortNetRad=Rns;
-            xpn->pHe->pHEBalance->fLongNetRad=Rnl;
-            //xpn->pHe->pHEBalance->fExtRad=Ra;
-        }
-    }
-   // Get daily averages of weather data:
-    self->__weather.fDailyHumidity += xpn->pCl->pWeather->fHumidity_daily_models * xpn->pTi->pTimeStep->fAct;
-    self->__weather.fDaylySolRad += xpn->pCl->pWeather->fSolRad * xpn->pTi->pTimeStep->fAct;
-    if(self->high_res_weather == 1) { // for high res weather data Tmin and Tmax have to be updated every timestep:
-        if(self->__weather.fTempMax < xpn->pCl->pWeather->fTempAir) {
-            self->__weather.fTempMax = xpn->pCl->pWeather->fTempAir;
-        }
-        if(self->__weather.fTempMin > xpn->pCl->pWeather->fTempAir) {
-            self->__weather.fTempMin = xpn->pCl->pWeather->fTempAir;
-        }
-    }
-    else{ // for daily weather data Tmin and Tmax can be extracted from the dataset:
-        int LastStep = 24*(1-xpn->pTi->pTimeStep->fAct);
-        if(xpn->pTi->pSimTime->hour >= LastStep){ //at the last timestep of a day get daily min and max Temp for Rn calculation
-            self->weather.fTempMax = xpn->pCl->pWeather->fTempMax;
-            self->weather.fTempMin = xpn->pCl->pWeather->fTempMin;
-        }
-    }
 	return RET_SUCCESS;
 }
 
@@ -379,7 +288,7 @@ int evapotranspiration_run(evapotranspiration *self)
 	double Delta, es, ea;
 	double Rn;
 	double G;
-	double measurementheight, u2, plant_height;
+	double measurementheight, u2;
 	double wind;
 	double P, gamma;
 	double ETpot;
@@ -400,9 +309,6 @@ int evapotranspiration_run(evapotranspiration *self)
 		{
 			measurementheight = 2.0;
 		}
-    //AS: set measurementheight always at least 10cm above the crop height
-    plant_height = xpn->pPl->pCanopy->fPlantHeight;
-    measurementheight = max(measurementheight,plant_height+0.1);
 
 	/* Get time */
 	dT = xpn->pTi->pTimeStep->fAct;
@@ -469,7 +375,6 @@ int evapotranspiration_run(evapotranspiration *self)
 		{
 			xpn->pCl->pWeather->fPreciRate-=self->ETpot;
 			xpn->pCl->pWeather->fLiquPreciRate-=self->ETpot;
-
 		}
 	self->ETpot = MAX(0.0, ETpot)*xpn->pWa->kc_factor;		// [mm/d]
 	//self->ETpot = ETpot*self->KC_Factor;
@@ -522,17 +427,17 @@ int evapotranspiration_run(evapotranspiration *self)
 // Peneman Monteith Method 1965,81
 int evapotranspiration_run65_0(evapotranspiration *self)
 {
-	return evapotranspiration_run65(self,0); //PM_ASCE
+	return evapotranspiration_run65(self,0);
 }
 
 int evapotranspiration_run65_1(evapotranspiration *self)
 {
-	return evapotranspiration_run65(self,1); //PM_ASCE (MO 1)
+	return evapotranspiration_run65(self,1);
 }
 
 int evapotranspiration_run65_2(evapotranspiration *self)
 {
-	return evapotranspiration_run65(self,2); //PM_ASCE crop
+	return evapotranspiration_run65(self,2);
 }
 
 int evapotranspiration_run65(evapotranspiration *self, int opt_sfc)
@@ -580,8 +485,6 @@ int evapotranspiration_run65(evapotranspiration *self, int opt_sfc)
 		{
 			measurementheight = 2.0;
 		}
-    //AS: set measurementheight always at least 10cm above the crop height
-    measurementheight = max(measurementheight,plant_height+0.1);
 
 	/* Get time */
 	dT = xpn->pTi->pTimeStep->fAct;
@@ -633,7 +536,7 @@ int evapotranspiration_run65(evapotranspiration *self, int opt_sfc)
 
 	switch (opt_sfc)
 		{
-		case 0: //Penman Monteith ASCE81
+		case 0:
 			{
 			// eq: B.2
 			double d;
@@ -651,14 +554,14 @@ int evapotranspiration_run65(evapotranspiration *self, int opt_sfc)
 			C_DEBUG(ch);
 			}
 			break;
-		case 1: //Penman Monteith ASCE81 (MO)
+		case 1:
 			{
 			double ch;
 			ch = surface_layer_get_ch(xpn);
 			ra = 1.0/(ch*wind);
 			}
 			break;
-		case 2: //Penman Monteith ASCE81 (crop)
+		case 2:
 			{	
 			// eq: B.2
 			double d;
@@ -668,6 +571,7 @@ int evapotranspiration_run65(evapotranspiration *self, int opt_sfc)
 			d=    max(0.10,0.67 * plant_height);
 			zom = max(0.05,0.123 * plant_height);
 			zoh = max(0.005,0.0123 * plant_height);
+			
 			psi_h = 0.0;
 			psi_m = 0.0;
 			ra = log((measurementheight-d)/zom-psi_m)*log((measurementheight-d)/zoh-psi_h)/(0.41*0.41*wind);
@@ -677,33 +581,19 @@ int evapotranspiration_run65(evapotranspiration *self, int opt_sfc)
 		}
 
 	// eq: B.3
-    double rss,rsc,rl,LAI_active;
-    //rl = 100.0; // [s m-1] stomatal resistiance
+	{
+		double rl,LAI_active;
+		//rl = 100.0; // [s m-1] stomata resistiance
 		rl = xpn->pPl->pCanopy->fsto_res;
-    //AS: fsto_res somehow is 0 for every plant in crop rotation after the first one. Set to back to standard value 100:
-    if (xpn->pPl->pCanopy->fsto_res == 0) {
-        xpn->pPl->pCanopy->fsto_res = 100;
-    }
-    LAI_active = xpn->pPl->pCanopy->fLAI*0.5;
-    //AS: changed to include soil surface resistance rss in parallel to crop surface resistance rsc
-    // rs = rl / LAI_active;  // AS: changed from rl*LAI_active to rl/LAI_active according to FAO56
-    if (LAI_active > 0.05) {
-        rsc = rl / LAI_active; // crop surface resistance (see FAO56)
-        rss = self->rss; // soil surface resistance
-        rs = rss*rsc/(rss+rsc);
-    }
-    else { // if there is no crop yet, use soil surface resistance only
-        rs = self->rss;
-    }
-    //ad resistances to output:
-    xpn->pWa->rss = self->rss;
-    xpn->pWa->rsc = rsc;
-    xpn->pWa->rs = rs;
-    xpn->pWa->ra = ra;
+		//LAI_active = xpn->pPl->pCanopy->fLAI*0.5;
+		//rs = rl * LAI_active; 
+        //SG 20190625: 
+		LAI_active = max(xpn->pPl->pCanopy->fLAI*0.5,0.1);
+		rs = rl / LAI_active; //FAO56-guideline eq. 5
+	}
+
+
 	C_DEBUG(rs/ra)
-    //AS: debugging:
-    xpn->pWa->rsra = rs/ra;
-    xpn->pWa->PM_numerator = Delta+gamma*(1.0+rs/ra);
 
 	//es=ea;
 	ETpot = ((Delta*(Rn-G)+3600.0*rho_a*c_p*(es-ea)/ra)/(Delta+gamma*(1.0+rs/ra)))/L_evap*24.0;
@@ -781,6 +671,7 @@ double evapotranspiration_calc_crop_cover_frac1(double LAI)
 		{
 			SoilCoverFrac = 1.0;
 		}
+		
 	return SoilCoverFrac;
 }
 
@@ -983,8 +874,8 @@ int pot_transpiration_run(evapotranspiration *self)
 	return RET_SUCCESS;
 }
 
-/*Calculate Net Radiation from Solar Radiation [W/m2]; AS: added extraterrestrial radiation for debugging and FAO version*/
-double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rnl, double *Ra, int version)
+/*Calculate Net Radiation from Solar Radiation [W/m2]*/
+double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rnl)
 {
 	expertn_modul_base *xpn = &(self->parent);
 	/* Abbreviations */
@@ -999,14 +890,14 @@ double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rn
 	double w, w1, w2, ws;
 	double dr;
 	double Rs, Rs0;
-	double ea, es, es_Tmax, es_Tmin;
+	double ea, es;
 	double Rn;
 	double fcd, N;
 	double ftime_day;
 	double measurementheight;
 	double dT;
 	double Lm;
-	// double Ra; AS: Ra now already is defined in the input
+	double Ra;
 	double mid_of_day;
 	double dusk_time;
 	double dawn_time;
@@ -1014,19 +905,12 @@ double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rn
 	double time_for_night_rad2;
 	double Rs_Rs0;
 	double Lz,Time_Zone;
-    double fDelta, fJ, fdr, fdelta, fphi, ftemp, fomegas; //AS: for calculation of daily Ra as in "Penman Monteith (FAO)"
-    double sol_elev1, sol_elev2; //AS: solar elevation angle (used to decide, if fcd should be calculated)
 
 	Time_Zone = xpn->pTi->pSimTime->fTimeZone;
 
 	T	= xpn->pCl->pWeather->fTempAir;
 	RH	= xpn->pCl->pWeather->fHumidity;
-    //AS: use current solar radiation for sub daily model (case 0) and daily average for daily model (case 1)
-    // Rs = xpn->pCl->pWeather->fSolRad/24.0;
-    switch(version) {
-        case 0: {Rs = xpn->pCl->pWeather->fSolRad/24.0; break;}
-        case 1: {Rs = self->weather.fDaylySolRad/24.0; break;} 
-    }
+	Rs = xpn->pCl->pWeather->fSolRad/24.0;
 
 
 	latitude = xpn->pLo->pFarm->fLatitude * M_PI/180.0; //rad eqn 49
@@ -1058,8 +942,6 @@ double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rn
 		}
 
 
-    // AS: added calculation of actual vapor pressure according to "Penman Monteith (FAO)" ETpot model
-	/*
 	//Saturation Vapor Pressure (es)
 	es = 0.6108*exp(17.27*T/(T+237.3)); //eqn. 37, [kPa/°C]
 
@@ -1067,28 +949,6 @@ double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rn
 	//Method nr. 3 in table 4, eqn 37, 41, [kPa/°C]
 	//using rel. humidity and temperature at the hour
 	ea = RH/100.0 * es;
-    xpn->pCl->pWeather->ea = ea;
-    */
-    switch(version) {
-        case 0: { // original version as above, suitable for sub-daily resolution
-            es = 0.6108*exp(17.27*T/(T+237.3)); //eqn. 37, [kPa/°C]
-            //Actual Vapor Pressure (ea)
-            //Method nr. 3 in table 4, eqn 37, 41, [kPa/°C]
-            //using rel. humidity and temperature at the hour
-            ea = RH/100.0 * es;
-            //xpn->pCl->pWeather->ea = ea;
-            break;
-        }
-        case 1: { // as in "Penman Monteith (FAO)", sutiable for daily resolution
-            // saturaion vapor pressure:
-            es_Tmax = 0.611*exp(17.27*self->weather.fTempMax / (self->weather.fTempMax+237.3));
-            es_Tmin = 0.611*exp(17.27*self->weather.fTempMin / (self->weather.fTempMin+237.3));   
-            // actual vapor pressure:
-            ea = 2.0*self->weather.fDailyHumidity*0.01/(1.0/es_Tmin + 1.0/es_Tmax);
-            //xpn->pCl->pWeather->ea = ea;
-            break;
-        }
-    }
 
 	//Extraterrestrial radiation (Ra)
 	soldec = 0.409*sin(2*M_PI/365.0*iJulianDay-1.39); //solar declination [radians]
@@ -1114,44 +974,22 @@ double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rn
 	{
 
 		// Ra: MJ/(m2 h)
-		//AS: exchanged for pointer
-		//Ra = 12.0/M_PI * 4.92 *dr*((w2-w1)*sin(latitude)*sin(soldec)+cos(latitude)*cos(soldec)*(sin(w2)-sin(w1)));		// [MJ/m2*dt]		//self->Ra_h = 12.0/M_PI * 4.92 *dr*((w2-w1)*sin(latitude)*sin(soldec)+cos(latitude)*cos(soldec)*(sin(w2)-sin(w1)));		// [MJ/m2*h], orig eq. 48
-		//Ra = *Ra/(dT*24.0);
-		*Ra = 12.0/M_PI * 4.92 *dr*((w2-w1)*sin(latitude)*sin(soldec)+cos(latitude)*cos(soldec)*(sin(w2)-sin(w1)));		// [MJ/m2*dt]		//self->Ra_h = 12.0/M_PI * 4.92 *dr*((w2-w1)*sin(latitude)*sin(soldec)+cos(latitude)*cos(soldec)*(sin(w2)-sin(w1)));		// [MJ/m2*h], orig eq. 48
-		*Ra = *Ra/(dT*24.0);
+		Ra = 12.0/M_PI * 4.92 *dr*((w2-w1)*sin(latitude)*sin(soldec)+cos(latitude)*cos(soldec)*(sin(w2)-sin(w1)));		// [MJ/m2*dt]		//self->Ra_h = 12.0/M_PI * 4.92 *dr*((w2-w1)*sin(latitude)*sin(soldec)+cos(latitude)*cos(soldec)*(sin(w2)-sin(w1)));		// [MJ/m2*h], orig eq. 48
+		Ra = Ra/(dT*24.0);
 	}
 	/*else
 	{
 		Ra = 24.0/M_PI * 4.92 *dr*(w*sin(latitude)*sin(soldec)+cos(latitude)*cos(soldec)*sin(w));	// [MJ/m2*day]
 	}*/
 
-	//if (Ra < 0.0) AS: exchanged for pointer
-	if (*Ra < 0.0)
+	if (Ra < 0.0)
 		{
-			//*Ra = 0.0; AS: exchanged for pointer
-			*Ra = 0.0;
+			Ra = 0.0;
 		}
 
-    // AS: calculation of daily Ra as done in "Penman Monteith (FAO)"
-    switch(version){
-        case 0: {/* Ra is used as calculated above*/ break;}
-        case 1: {/*daily Ra is calculated as in "Penman Monteith (FAO)"*/
-            fJ = (double)xpn->pTi->pSimTime->fTimeY;
-            fdr = (double)1 + (double)0.033*(double)cos((double)0.0172*fJ);	       //equation (21
-            fdelta = (double)0.409*(double)sin((double)0.0172*fJ - (double)1.39);  //equation (22)
-            fphi   = xpn->pLo->pFarm->fLatitude*(double)PI/(double)180;
 
-            ftemp = -(double)tan(fphi)*(double)tan(fdelta);					   //equation (20)
-            if(     ftemp <= (double)-1)	fomegas = (double)PI;
-            else if(ftemp >= (double)1 )	fomegas = (double)0;
-            else						fomegas = (double)acos(ftemp);
-            // Ra in [MJ/m2/d]
-            *Ra = (double)37.6*fdr*(fomegas*(double)sin(fphi)*(double)sin(fdelta)+(double)cos(fphi)*(double)cos(fdelta)*(double)sin(fomegas)); //equation (19)
-            *Ra = *Ra/24; // [MJ/m2/d] -> [MJ/m2/h]
-            break;
-        }
-    }
-    // end of AS
+
+
 
 
 	// day light hours:
@@ -1171,9 +1009,9 @@ double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rn
 		{
 			dawn_time+=24.0;
 		}
-    //AS: Solar elevation angle
-    sol_elev1 = asin( sin(latitude)*sin(soldec)+cos(latitude)*cos(soldec)*cos(w1) ); // at the beginning of the timestep
-    sol_elev2 = asin( sin(latitude)*sin(soldec)+cos(latitude)*cos(soldec)*cos(w2) ); // at the end of the timestep
+
+
+
 	/*time_for_night_rad1 = dusk_time-3.5;
 	time_for_night_rad2 = dusk_time-2.5;*/
 	time_for_night_rad1 = dawn_time;
@@ -1220,8 +1058,7 @@ double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rn
 
 
 	//Clear-sky solar radiation Rs0
-	// Rs0 = (0.75+2.0e-5*elevation)*Ra; //eqn 47 //AS: exchanged Ra for pointer *Ra
-	Rs0 = (0.75+2.0e-5*elevation)**Ra; //eqn 47
+	Rs0 = (0.75+2.0e-5*elevation)*Ra; //eqn 47
 
 
 	C_DEBUG(Rs0)
@@ -1241,11 +1078,9 @@ double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rn
 
 
 	//cloudiness factor
-	//if(Rs0>0.0)
-	if((sol_elev1>0.3) && (sol_elev2>0.3)) //AS: changed to procedure described in ASCE(2005)	
+	if(Rs0>0.0)
 		{
 			fcd= 1.35*Rs_Rs0 -0.35; //eqn 45
-			self->night_count_2 = 0; //AS: used to determine first timestep of nighttime
 		}
 	else
 		{
@@ -1276,14 +1111,12 @@ double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rn
 			Ra_noon = Ra_noon/(dT*24.0);
 			Rs0_noon = (0.75+2.0e-5*elevation)*Ra_noon;
 			fcd = 1.35*self->night_rad2/Rs0_noon-0.35;
+		}
 
-	        // AS: Trying to fix fcd for the night, which is too low, when calculated as above.
-	        if(self->night_count_2 == 0) { //At first timestep of nighttime get the last fcd calculated at daytime
-	            self->fcd_last = self->cloud_cover_factor;
-	        }
-	        fcd = self->fcd_last; //Use last fcd calculated at daytime as current fcd
-	        self->night_count_2++; //Don't reload last fcd calculated for the next timestep at nighttime
-    }
+
+
+
+
 
 	fcd = MAX(fcd,0.05);
 	fcd = MIN(fcd,1.0);
@@ -1296,70 +1129,16 @@ double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rn
 	//Rns = Rs - 0.23 *Rs; //eqn 43, albedo
 	*Rns = Rs - xpn->pSo->fAlbedo *Rs; //eqn 43, albedo
 
-	//Net Outgoing Long-Wave Radiation (Rnl )
+	//Net Long-Wave Radiation (Rnl )
 	*Rnl = 2.042*1e-10*fcd*(0.34-0.14*sqrt(ea))*pow(T+273.16,4.0); //eqn 44
 
 	//Net Radiation (Rn )
 
-	*Rns = *Rns / 3600.0*1.0e6; // MJ m-2 -h -> W m-2
-	*Rnl = *Rnl / 3600.0*1.0e6; // MJ m-2 -h -> W m-2
+	*Rns = *Rns / 3600.0*1.0e6;
+	*Rnl = *Rnl / 3600.0*1.0e6;
 
 	Rn = *Rns - *Rnl;
 
-    *Ra = *Ra/3600.0*1.0e6; // MJ m-2 -h -> W m-2
+
 	return Rn;
-}
-
-//AS: soil surface resistance models
-
-int rs_anadranistakis_run(evapotranspiration* self) { //Anadranistakis (2000)
-    expertn_modul_base *xpn = &(self->parent);
-    PSWATER pSW = xpn->pSo->pSWater;
-    self->rss = 100*(2.5*pSW->fContFK/xpn->pWa->pWLayer->pNext->fContAct-1.5);
-    return RET_SUCCESS;
-}
-
-int rs_VanDeGriend_load(evapotranspiration* self) { //Van de Griend and Owe (1994)
-    expertn_modul_base *xpn = &(self->parent);
-	PSWATER pSW = xpn->pSo->pSWater;
-	PWLAYER pWL = xpn->pWa->pWLayer;
-    self->WCont = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.WCont");
-    self->MPotl = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.MPotl");
-    //double a = xpn_register_var_get_pointer_convert_to_double(xpn->pXSys->var_list, "Config.Van de Griend and Owe (1994).a (empirical parameter 0<=a<=1)",0.7);
-     self->aVanDeGriend = xpn_register_var_get_pointer_convert_to_double(xpn->pXSys->var_list, "Config.Van_de_Griend_and_Owe.aVanDeGriend",0.7);
-    double pot_aev = 1/pSW->fVanGenA*1000*9.81; //water tension at air entry value
-    double pot_res = -MATRIX_POTENTIAL(pSW->fContRes); //residual water tension
-//    self->cont_ERRP = WATER_CONTENT(-pow(pot_res,a)*pow(pot_aev,1-a));
-    self->cont_ERRP = WATER_CONTENT(-pow(pot_res,self->aVanDeGriend)*pow(pot_aev,1-self->aVanDeGriend));
- //   double pot_res = -20000; //residual water tension
- //   self->cont_ERRP = 1.;
-    return RET_SUCCESS;
-}
-
-int rs_VanDeGriend_run(evapotranspiration* self) { //Van de Griend and Owe (1994)
-    expertn_modul_base *xpn = &(self->parent);
-    self->rss = 10*exp(0.3563*(self->cont_ERRP*100 - xpn->pWa->pWLayer->pNext->fContAct*100));
-    return RET_SUCCESS;
-}
-
-int rs_CamilloGurney_run(evapotranspiration* self) { //Camillo and Gurney (1986)
-    expertn_modul_base *xpn = &(self->parent);
-    PSWATER pSW = xpn->pSo->pSWater;
-    self->rss = -806+4140*(pSW->fContSat-xpn->pWa->pWLayer->pNext->fContAct);
-    self->rss = max(0,self->rss);
-    return RET_SUCCESS;
-}
-
-int rs_Sun82_run(evapotranspiration* self) { //Sun (1982)
-    expertn_modul_base *xpn = &(self->parent);
-    PSWATER pSW = xpn->pSo->pSWater;
-    self->rss = 3.5*pow(pSW->fContSat/xpn->pWa->pWLayer->pNext->fContAct,2.3)+33.5;
-    return RET_SUCCESS;
-}
-
-int rs_Sun98_run(evapotranspiration* self) { //Sun et al. (1998)
-    expertn_modul_base *xpn = &(self->parent);
-    PSWATER pSW = xpn->pSo->pSWater;
-    self->rss = exp(8.2-4.225*xpn->pWa->pWLayer->pNext->fContAct/pSW->fContSat);
-    return RET_SUCCESS;
 }

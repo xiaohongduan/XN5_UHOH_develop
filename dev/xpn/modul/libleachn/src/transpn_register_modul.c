@@ -4,7 +4,7 @@
 
 G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 {
-	return register_modul_list_new(15,  // Anzahl der Modelle
+	return register_modul_list_new(14,  // Anzahl der Modelle
 	                               register_modul_new("LEACHN",  // Bezeichnung
 	                                       "nitrogen",						                   // Modul
 	                                       "nitrogen transport",				           // Sub Modul
@@ -24,7 +24,6 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 	                                       NULL,						           // mosaic run Function
 	                                       "water_flow_hutson_run",	           // run Funktion
 	                                       "water_flow_hutson_done") ,                                                      // done Function
-                                           
 								    register_modul_new("LEACHN_pot_transpiration",  // Bezeichnung
 	                                       "plant",						                   // Modul
 	                                       "potential transpiration",				           // Sub Modul
@@ -35,7 +34,8 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 	                                       "leachn_plant_pot_transpiration",	           // run Funktion
 	                                       NULL),
 								   		   
-                                    register_modul_new("LEACHN_CK",  // Bezeichnung
+										   
+	                               register_modul_new("LEACHN_CK",  // Bezeichnung
 	                                       "plant",						                   // Modul
 	                                       "actual transpiration",				           // Sub Modul
 	                                       "leachn_plant",					           // Klasse
@@ -84,8 +84,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 	                                       NULL,						           // mosaic run Function
 	                                       "leachn_plant_act_biomass_growth",	           // run Funktion
 	                                       NULL),
-	                               
-                                   register_modul_new("LEACHN",  // Bezeichnung
+	                               register_modul_new("LEACHN",  // Bezeichnung
 	                                       "plant",						                   // Modul
 	                                       "root length growth",				           // Sub Modul
 	                                       "leachn_plant",					           // Klasse
@@ -94,8 +93,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 	                                       NULL,						           // mosaic run Function
 	                                       "leachn_plant_RootMaizeLeach",	           // run Funktion
 	                                       NULL),	                              
-	                               
-                                   register_modul_new("LEACHN",  // Bezeichnung
+	                               register_modul_new("LEACHN",  // Bezeichnung
 	                                       "plant",						                   // Modul
 	                                       "nitrogen uptake",				           // Sub Modul
 	                                       "leachn_plant",					           // Klasse
@@ -104,8 +102,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 	                                       NULL,						           // mosaic run Function
 	                                       "leachn_plant_NUptake",	           // run Funktion
 	                                       NULL),
-	                               
-                                   register_modul_new("LEACHN",	   // Bezeichnung
+	                               register_modul_new("LEACHN",	   // Bezeichnung
 	                                       "nitrogen",						       // Modul
 	                                       "nitrification",				           // Sub Modul
 	                                       "stickstoff",						   // Klasse
@@ -114,8 +111,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 	                                       NULL,						           // mosaic run Function
 	                                       "stickstoff_run",		               // run Funktion
 	                                       "stickstoff_done"),					   // done Function
-	                               
-                                   register_modul_new("LEACHN",     // Bezeichnung
+	                               register_modul_new("LEACHN",     // Bezeichnung
 	                                       "nitrogen",						        // Modul
 	                                       "denitrification",	           			// Sub Modul
 	                                       "stickstoff",					   		// Klasse
@@ -124,6 +120,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 	                                       NULL,						            // mosaic run Function
 	                                       "leachn_denit_run_call",	            // run Funktion
 	                                       "leachn_denit_done"),                // done Function
+
 
 	                               register_modul_new("LEACHN",     // Bezeichnung
 	                                       "nitrogen",						        // Modul
@@ -135,6 +132,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 	                                       "leachn_miner_run",	         		   // run Funktion
 	                                       "leachn_miner_done"),              	  // done Function
 
+
 	                               register_modul_new("LEACHN",     // Bezeichnung
 	                                       "nitrogen",						        // Modul
 	                                       "urea hydrolysis",	           			    // Sub Modul
@@ -143,17 +141,7 @@ G_MODULE_EXPORT struct_register_modul_list *ExpertN_Lib_Register()
 	                                       NULL,						            // global run Function
 	                                       NULL,						            // mosaic run Function
 	                                       "leachn_hydro_run",	         		   // run Funktion
-	                                       "leachn_hydro_done"),              	  // done Function
-
-	                               register_modul_new("LEACHN",     // Bezeichnung
-	                                       "nitrogen",						        // Modul
-	                                       "volatilization",	           			    // Sub Modul
-	                                       "stickstoff",					   		// Klasse
-	                                       "leachn_NH3Volat1_load",		            // load/init Function
-	                                       NULL,						            // global run Function
-	                                       NULL,						            // mosaic run Function
-	                                       "leachn_NH3Volat1_run",	         		   // run Funktion
-	                                       "leachn_NH3Volat1_done")              	  // done Function
+	                                       "leachn_hydro_done")              	  // done Function
 	                              );
 
 }

@@ -124,53 +124,20 @@ int		spass_PlantWaterStress(spass *self)
 	
 	//Stress factor on expension growth
    	//pPltW->fStressFacLeaf = min((double)1.0, (double)0.67*pPl->pPltWater->fPotUptakedt/pPltW->fPotTranspDay);
-   	if (pPltW->fPotTranspR != 0.0) pPltW->fStressFacLeaf = min((double)1.0, (double)0.67*pPl->pPltWater->fPotUptakedt/pPltW->fPotTranspR);
+    // 20191206 changed fPotUptakedt to fPotUptakeR
+   	if (pPltW->fPotTranspR != 0.0) pPltW->fStressFacLeaf = min((double)1.0, (double)0.67*pPl->pPltWater->fPotUptakeR/pPltW->fPotTranspR);
 
 	//Stress factor on carbohydrate partitioning
 	pPl->pPltWater->fStressFacPartition = min((double)1.0,(double)0.5+pPltW->fStressFacPhoto);
-    
-    if((strcmp(pPl->pGenotype->acCropCode,"WH")==0)
-			||(strcmp(pPl->pGenotype->acCropCode,"BA")==0)
-			||(strcmp(pPl->pGenotype->acCropCode,"S")==0))
-    {
-            if (pPl->pDevelop->iStageCERES<2)
-            {
-            pPltW->fStressFacPhoto		=(double)1.0;
-            pPltW->fStressFacLeaf		=(double)1.0;
-            pPltW->fStressFacTiller		=(double)1.0;
-            pPl->pPltWater->fStressFacPartition			=(double)1.0;
-            }
-    }
-    
-    if(strcmp(pPl->pGenotype->acCropCode,"PT")==0)
-    {
-        if (pPl->pDevelop->fStageXCERES<1)
-		{
-            pPltW->fStressFacPhoto		=(double)1.0;
-            pPltW->fStressFacLeaf		=(double)1.0;
-            pPltW->fStressFacTiller		=(double)1.0;
-            pPl->pPltWater->fStressFacPartition			=(double)1.0;
-		}
-    }
 
-    if(strcmp(pPl->pGenotype->acCropCode,"MZ")==0)
-    {
-            if (pPl->pDevelop->fStageSUCROS < 0.4)
-            {
-            pPltW->fStressFacPhoto		=(double)1.0;
-            pPltW->fStressFacLeaf		=(double)1.0;
-            pPltW->fStressFacTiller		=(double)1.0;
-            pPl->pPltWater->fStressFacPartition			=(double)1.0;
-            }
-            else
-            {
-            pPltW->fStressFacPhoto		=  pow(max(0.001,pPltW->fStressFacPhoto),0.5);
-            pPltW->fStressFacLeaf		=  pow(max(0.001,pPltW->fStressFacPhoto),0.5);
-            pPltW->fStressFacTiller		=  pow(max(0.001,pPltW->fStressFacPhoto),0.5);
-            pPl->pPltWater->fStressFacPartition			=  pow(max(0.001,pPltW->fStressFacPhoto),0.5);
-            }
-    }
-   
+	if (pPl->pDevelop->iStageCERES<2)
+		{
+		pPltW->fStressFacPhoto		=(double)1.0;
+		pPltW->fStressFacLeaf		=(double)1.0;
+		pPltW->fStressFacTiller		=(double)1.0;
+		pPl->pPltWater->fStressFacPartition			=(double)1.0;
+		}
+
 	return RET_SUCCESS;
 	}
 
@@ -285,6 +252,7 @@ int spass_actual_transpiration(spass *self)
       	}
    
 	pPl->pPltWater->fPotUptakedt=TRWU*pTi->pTimeStep->fAct;
+    pPl->pPltWater->fPotUptakeR = TRWU;
 	//=======================================================================================
 	//			Root Water Uptake Modification  and Soil Water Content
 	//=======================================================================================
@@ -350,18 +318,24 @@ int spass_actual_transpiration(spass *self)
 	pPl->pRoot->fUptakeR = pPltW->fActTranspDay;    
 	
 */
-
-   if (pPltW->fPotTranspR>=TRWU)
-        pPltW->fActTranspR=TRWU;
+    //FH 20191119 actually we should account here for the actual uptake, not for the potential
+    pPl->pRoot->fUptakeR = pPl->pPltWater->fActUptakedt / pTi->pTimeStep->fAct;
+   if (pPltW->fPotTranspR>=pPl->pRoot->fUptakeR)
+        pPltW->fActTranspR=pPl->pRoot->fUptakeR;
     else
         pPltW->fActTranspR=pPltW->fPotTranspR;
+/*    if (pPltW->fPotTranspR>=TRWU)
+        pPltW->fActTranspR=TRWU;
+    else
+        pPltW->fActTranspR=pPltW->fPotTranspR;*/
+        
         
 		//{double t_act_rate;
 		//t_act_rate = pPltW->fActTranspR;
 	//C_DEBUG(t_act_rate);
 		//}
 		
-   pPl->pRoot->fUptakeR = pPl->pPltWater->fActUptakedt/pTi->pTimeStep->fAct;    
+   //pPl->pRoot->fUptakeR = pPl->pPltWater->fActUptakedt/pTi->pTimeStep->fAct;    
 	//eigentlich: 	pPl->pRoot->fUptakeR = fActTraDay;    
 	
 
@@ -372,8 +346,29 @@ int spass_actual_transpiration(spass *self)
 //	pPltW->fCumWaterDemand   += pPltW->fPotTranspDay;
 //	pPltW->fCumWaterShortage += pPltW->fWaterShortage;
 
+  } //end PLANT_IS_GROWING
 
+        // FH 20191210 also take water when plant is not growing if we use the AF module
+        pLR	=pPl->pRoot->pLayerRoot;
+    	if(pPl->pDevelop->iAFTrue == 1)
+            {
+            //printf("%f \n", pTi->pSimTime->fTimeY);
+            for (L=1;L<=pSo->iLayers-2;L++)   
+                {
+                pLR->fPotLayWatUpt = pLR->fPotLayWatUptAF;
+                pLR->fActLayWatUpt = pLR->fActLayWatUptAF;
+                //printf("SP %f \n", pLR->fPotLayWatUptAF);
+                pLR = pLR->pNext;
+                }
+            pPltW->fActTranspR = pPltW->fActTranspAF;
+           pPltW->fPotUptakeR =  pPltW->fPotUptakeAF;
+            }
+
+    // stress function only if SPASS plant is growing
+	if ((pPl->pDevelop->iDayAftEmerg > 0) && (PLANT_IS_GROWING))
+    {
 	spass_PlantWaterStress(self);
+    }
 
 	//for (L=1;L<=pSo->iLayers-2;L++)
 	//   	{
@@ -411,7 +406,7 @@ int spass_actual_transpiration(spass *self)
         pLR =pLR ->pNext;
         }
 
-  } //end PLANT_IS_GROWING
+
 
     return RET_SUCCESS;
   }
