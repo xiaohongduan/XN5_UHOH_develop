@@ -11,8 +11,8 @@ BuildPath=$XPN_PATH/built
 fi
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BuildPath/bin:$BuildPath/lib:$BuildPath/models
-export PATH=$PATH:$BuildPath/bin:$XPN_PATH/gui
-export PYTHONPATH=$PYTHONPATH:$XPN_PATH/gui
+export PATH=$PATH:$BuildPath/bin:$XPN_PATH/expertn_tools
+export PYTHONPATH=$PYTHONPATH:$XPN_PATH/expertn_tools
 
 
 
