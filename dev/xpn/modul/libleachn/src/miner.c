@@ -119,7 +119,7 @@ int leachn_miner_run(stickstoff *self)
 
 	/*Variablen für die C-Flüsse*/
 	double fNTotal, fCTotal;
-	double rm, wmin,wlow,whigh,wmax;
+	double rm, wmin,wlow,whigh;
 	double f1,f3,f4;																	//auskommentiert 2.10.13
 	double fHumusMineralR,fLitterToHumusR,fLitterToCO2R,fLitterToMBiomassR;
 	double fManureToHumusR,fManureToCO2R,fManureToMBiomassR;
@@ -131,6 +131,7 @@ int leachn_miner_run(stickstoff *self)
 	double fManureImmC,fManImmReduc,fNH4ToManureC;
 	double fNO3ToLitterC,fNO3ToManureC;
 	double fLitterToHumusC,fManureToHumusC,fHumusToLitterC;
+	//double fLitterToSolC, fManureToSolC; //Added by Hong on 20190808
 
 	//double fBiomassToHumusR,fBiomassToCO2R,fBiomassToLitterR
 	//double fCBiomass, fNBiomass
@@ -204,27 +205,11 @@ int leachn_miner_run(stickstoff *self)
 //	  wmax  = pSL->fPorosity;
 //    whigh = wmax - (double)0.08;
 
-/*			corr.Feucht = Polygon4((pWL->fContAct + pWL->fIce),
-			                       wmin,(double)0,  wlow, (double)1 , whigh, (double)1,
-			                       pSL->fPorosity, pPA->fMinerSatActiv);
-                                   */
-                                   
-        //SG20200504: Anpassung an XN3
-    	/* Ansatz DAISY, Bezugswert Wasserspannung */
-	    f1= (float)-31622770;    //pF = 6.5
-        wmin = WATER_CONTENT(f1);
-        f1= (float)-3160;        //pF = 2.5
-        wlow = WATER_CONTENT(f1);
-        f1= (float)-316;         //pF = 1.5
-        whigh = WATER_CONTENT(f1);
-        f1= (float)0;
-        wmax = WATER_CONTENT(f1);
-
 			corr.Feucht = Polygon4((pWL->fContAct + pWL->fIce),
 			                       wmin,(double)0,  wlow, (double)1 , whigh, (double)1,
-			                       wmax, pPA->fMinerSatActiv);
+			                       pSL->fPorosity, pPA->fMinerSatActiv);
 
-			
+
 
 
 //	 wmin = WATER_CONTENT((double)-155330);
@@ -256,7 +241,7 @@ int leachn_miner_run(stickstoff *self)
 			CHECK_VALID(pCL->fCLitter)
 			
 			pCL->fCsolC  = pCL->fCLitter * fLitterToMBiomassR;
-			pCL->fCsolC += pCL->fCManure * fManureToMBiomassR;
+			pCL->fCsolC   += pCL->fCManure * fManureToMBiomassR;				
 			//pCL->fCsolC += pWL->fWaterFreezeR * lpXT->fIcefRedCsol;
 			//pCL->fCsolC += pSL->fCHumus * fHumusMineralR * lpXT->fHumusToCsol;
 
@@ -466,7 +451,7 @@ int StandingPoolDecrease(stickstoff *self)
 	PCPROFILE       pCP = xpn->pCh->pCProfile;
 	PCBALANCE	    pCB = xpn->pCh->pCBalance; //Added by Hong on 20180731
     /*Hilfsvariablen*/
-   double fCDecrease,fNDecrease,delta_N_Littersurf,NManureSurf;
+    double fCDecrease,fNDecrease;
 	  
 
   /*  Funktionsaufruf einmal täglich */
@@ -479,35 +464,10 @@ int StandingPoolDecrease(stickstoff *self)
     fNDecrease = (double)0.01 * pCP->fNStandCropRes;
 
 	pCP->fCStandCropRes -= fCDecrease;
-    
-    	// Moritz: activate new function with dyn_AOM_div =1
-
-
-    
-                             if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-                         {
-                             	pCP->fCLitterSurf += fCDecrease * (1-pCP->fStandCropRes_to_AOM2_part_LN);
-	pCP->fCManureSurf += fCDecrease * pCP->fStandCropRes_to_AOM2_part_LN;
-
-	pCP->fNStandCropRes -= fNDecrease;
-	delta_N_Littersurf= fCDecrease * (1-pCP->fStandCropRes_to_AOM2_part_LN)/150;
-	pCP->fNLitterSurf += delta_N_Littersurf; //Assumed C/N ratio of 150 for AOM1
-	NManureSurf=(fNDecrease-delta_N_Littersurf);
-					if(NManureSurf>0)
-					{
-			        pCP->fNManureSurf    += NManureSurf; //The rest of the N goes into the AOM2 pool
-					}
-                    }
-                         else{	pCP->fCLitterSurf += fCDecrease;
+	pCP->fCLitterSurf += fCDecrease;
 
 	pCP->fNStandCropRes -= fNDecrease;
 	pCP->fNLitterSurf += fNDecrease;
-}
-		//End of Moritz */
-
-//	if (pCP->fCLitterSurf>699.4)
-//		printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
-//	printf("pCP->fCLitterSurf:%f\n",pCP->fCLitterSurf);
 	
 	//Hong added on 20180807 for C-balance
 	pCB->dCInputSurf += fCDecrease;

@@ -27,14 +27,6 @@ int ceres_canopy_formation_run(ceres *self)
 		pCan->fLAI=pCan->fPlantGreenLA*(double)0.0001;
 		pCan->fLAI=max((double)0.0001,pCan->fLAI);
 
-            
-        //SG20230124//(works only for constant specific leaf weight!)
-         pCan->fDeadLAI = pCan->fPlantSenesLA*(double)0.0001;
-         pCan->fDeadLAI=max((double)0.0001,pCan->fDeadLAI);
-         pCan->fGreenLAI   = pCan->fPlantGreenLA*(double)0.0001;
-         pCan->fGreenLAI=max((double)0.0001,pCan->fGreenLAI);
-         pCan->fTotalLAI    =  pCan->fGreenLAI + pCan->fDeadLAI;       
- 
 	}
 
 	if (strcmp(pPl->pGenotype->acCropCode,"MZ")==0) {
@@ -496,12 +488,7 @@ int ceres_PlantLeafNumber_MZ(ceres *self)
 		else
 			fPhyllFac = (double)1.0;
 
-		//pCan->fLeafAppearR=pDev->fDTT/((float)38.9*fPhyllFac);
-		//SG20140910: Phyllochron-Intervall aus Maize.gtp
-		if(pPl->pGenotype->fPhyllochronInterval>(double)1.0)
-            pCan->fLeafAppearR=pDev->fDTT/(pPl->pGenotype->fPhyllochronInterval*fPhyllFac);
-        else
-            pCan->fLeafAppearR=pDev->fDTT/((float)38.9*fPhyllFac);
+		pCan->fLeafAppearR=pDev->fDTT/((double)38.9*fPhyllFac);
 
 	}
 	//else

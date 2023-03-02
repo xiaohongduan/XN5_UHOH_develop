@@ -36,9 +36,6 @@ typedef struct
 	double size; // [ha]
 	double wind_measure_height;
 	double temp_measure_height;
-    
-    //SG20220329
-    double mean_ground_water_level;
 	
 	//climate:
 	double AveYearTemp;
@@ -50,8 +47,7 @@ typedef struct
     //End of Hong
 	// soil
 	int layer_count;
-	//int layer_thickness; //SG20200219: int-->double
-	double layer_thickness;
+	int layer_thickness;
 	int *layers;
 	int layers_len;
 	double *clay;
@@ -92,19 +88,6 @@ typedef struct
 	int		van_gen_a_len;
 	double *van_gen_n;
 	int		van_gen_n_len;
-    //SG20200327: optional reading of pore-connectivity parameter tau, 
-	double *pore_connectivity;
-	int		pore_connectivity_len;
-     //SG20200327: optional parameter reading for Brunswick model, 
-   	double *cont_sat_c;
-	int		cont_sat_c_len;	
-	double *res_water_cont_c;
-	int 	res_water_cont_c_len;
-	double *cond_sat_c;
-	int	cond_sat_c_len;
-	double *cond_sat_nc;
-	int	cond_sat_nc_len;
-
 	double *max_pot;
 	int		max_pot_len;
 	double *cond_sat;
@@ -149,6 +132,9 @@ struct _expertn_standard_ini
 	int use_high_resolution_climate_data; // 1 or 0
 	int interpolate_climate_data; // 1 or 0
 	
+	// FH 20210316 high resolution input column specific for pressure, par, and wind direction
+	int read_pressure_from_column, read_par_from_column, read_winddirection_from_column, read_groundwater_from_column;
+	
 	int number_of_days;
 
 	int firstround;
@@ -166,6 +152,8 @@ struct _expertn_standard_ini
 	double snowdepth;
 	double par;
 	double pressure;
+	double winddirection; //FH 20210316
+	double groundwaterlevel; //FH 20210715
 	double Tair;
 	double Tairmax;
 	double Tairmin;
@@ -177,8 +165,8 @@ struct _expertn_standard_ini
     //double SoilT20;
     //double SoilT50;
     double AtmCO2ppm; //SG20190211
-    double CnpyDrn; //SG20220304
-    double WatTbl; //SG20220304
+    //double CnpyDrn;
+    //double WatTbl;
 
 
 	// run weather small time step:
@@ -196,19 +184,19 @@ struct _expertn_standard_ini
 	double (*WCont)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	double (*HCond)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	double (*DWCap)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
     double (*MPotl)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	
 	//End of Hong
 	

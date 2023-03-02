@@ -68,15 +68,14 @@ int ceres_ActualTranspiration_run(ceres *self)
 	PSPROFILE pSo = xpn->pSo;
 	PWATER pWa = xpn->pWa;
 	int   L;
-	double TRWU,WUF,TLL,RWUMX,fExtWater,fTotSoilWater,fThickness,fContAct;
-	double DUL, fRAT, fPAW;
+	double TRWU,WUF,TLL,RWUMX,fExtWater,fThickness,fContAct;
+	double fTotSoilWater,DUL, fRAT, fPAW;
 
-	PSLAYER                 pSL        = pSo->pSLayer;
-	PSWATER               pSWL    = pSo->pSWater;
-	PWLAYER               pSLW    = pWa->pWLayer;
-	PLAYERROOT         pLR       = pPl->pRoot->pLayerRoot;
-	PPLTWATER           pPltW   = pPl->pPltWater;
-//    PTIME                    pTi		  = xpn->pTi; 
+	PSLAYER                 pSL             =pSo->pSLayer;
+	PSWATER                 pSWL    =pSo->pSWater;
+	PWLAYER                 pSLW    =pWa->pWLayer;
+	PLAYERROOT              pLR             =pPl->pRoot->pLayerRoot;
+	PPLTWATER           pPltW   =pPl->pPltWater;
 
 
 	//RWUMX =(double)0.03;
@@ -131,19 +130,17 @@ int ceres_ActualTranspiration_run(ceres *self)
 		if (pSLW->fContAct<=pSWL->fContPWP)
 			pLR->fPotWatUpt=(double)0.0;
 		else {
-			/*      pLR->fPotWatUpt=(double)(2.67*1E-3*exp(min(62.0*(double)fExtWater,10.0))
+                if (self->iINRAWatUpt == 1)
+                {
+                //INRA-Ceres:
+                pLR->fPotWatUpt= (double)(2.67*1E-3*exp(min(35.0*(double)fExtWater,10.0))
 			                                                                /(6.68-log((double)pLR->fLengthDens)));
-			*/
-			//INRA-Ceres:
-
-			/*if (L==23)
-			printf("%d %f %f %f %f \n", L, pLR->fPotWatUpt, fExtWater, pLR->fLengthDens, log(pLR->fLengthDens));
-			if (L==24)
-				printf("Test \n")*/;
-
-
-			pLR->fPotWatUpt=(double)(2.67*1E-3*exp(min(35.0*(double)fExtWater,10.0))
+                }
+                else
+                {
+                pLR->fPotWatUpt=(double)(2.67*1E-3*exp(min(62.0*(double)fExtWater,10.0))
 			                         /(6.68-log((double)pLR->fLengthDens)));
+                }
 
 			pLR->fPotWatUpt=min(RWUMX,pLR->fPotWatUpt);
 		}
@@ -167,7 +164,7 @@ int ceres_ActualTranspiration_run(ceres *self)
 		pLR =pLR ->pNext;
 	}
 
-	pPl->pPltWater->fPotUptakedt=TRWU;
+	pPl->pPltWater->fPotUptakeR=TRWU;
 	//=======================================================================================
 	//                      Root Water Uptake Modification  and Soil Water Content
 	//=======================================================================================
@@ -185,7 +182,7 @@ int ceres_ActualTranspiration_run(ceres *self)
 
 	fTotSoilWater=(double)0.0;
 
-	pPl->pPltWater->fActUptakedt=(double)0.0;
+	pPl->pPltWater->fActUptakeR=(double)0.0;
 
 	pSL     =pSo->pSLayer->pNext;
 	pSWL=pSo->pSWater->pNext;
@@ -199,18 +196,19 @@ int ceres_ActualTranspiration_run(ceres *self)
 		fContAct -= pLR->fActLayWatUpt/pSL->fThickness; //mm/mm
 
 		if (fContAct<pSWL->fContPWP) {
+           //printf("%f %f \n", xpn->pTi->pSimTime->fTimeY, fContAct);
 			pLR->fActWatUpt    *= fContAct/pSWL->fContPWP;
 			pLR->fActLayWatUpt *= fContAct/pSWL->fContPWP;
 //                      pSLW->fContAct=pSWL->fContPWP;
 		}
 
 		fTotSoilWater   += fContAct*fThickness*(double)10.0;
-
-		pPl->pPltWater->fActUptakedt += pLR->fActLayWatUpt;
+                //printf("CE %f \n", fTotSoilWater);
+		pPl->pPltWater->fActUptakeR += pLR->fActLayWatUpt;
 		TLL   += pSWL->fContPWP*fThickness*(double)10.0;
 		DUL   += pSWL->fContFK*fThickness*(double)10.0;
-        
- 		pSL =pSL ->pNext;
+
+		pSL =pSL ->pNext;
 		pSWL=pSWL->pNext;
 		pSLW=pSLW->pNext;
 		pLR =pLR ->pNext;
@@ -224,16 +222,21 @@ int ceres_ActualTranspiration_run(ceres *self)
 //
 //      pPl->pRoot->fUptakeR = pPltW->fActTranspDay;
 
-
-	if (self->weather.fPotTraDay>=TRWU)
+    //FH 20191119 actually we should account here for the actual uptake, not for the potential
+		if (self->weather.fPotTraDay>=pPl->pPltWater->fActUptakeR)
+            pPltW->fActTranspR = pPl->pPltWater->fActUptakeR;
+	//	self->weather.fActTraDay=TRWU;
+        else
+            pPltW->fActTranspR = self->weather.fPotTraDay;
+   /* if (self->weather.fPotTraDay>=TRWU)
 		pPltW->fActTranspR = TRWU;
 	//	self->weather.fActTraDay=TRWU;
 	else
-		pPltW->fActTranspR = self->weather.fPotTraDay;
+		pPltW->fActTranspR = self->weather.fPotTraDay;*/
 	//	self->weather.fActTraDay=self->weather.fPotTraDay;
 
 	//pPl->pRoot->fUptakeR = fActTraDay;
-	pPl->pRoot->fUptakeR = pPl->pPltWater->fActUptakedt;
+	pPl->pRoot->fUptakeR = pPl->pPltWater->fActUptakeR;
 
 
 	//=======================================================================================
@@ -241,24 +244,23 @@ int ceres_ActualTranspiration_run(ceres *self)
 	//=======================================================================================
 //    if (pPl->pPltWater->fPotUptakedt/pPl->pPltWater->fPotTranspdt<(double)1.5)
 //        pPl->pPltWater->fStressFacLeaf = ((double)0.67)*pPl->pPltWater->fPotUptakedt/pPl->pPltWater->fPotTranspdt;
-	if (pPl->pPltWater->fPotUptakedt/self->weather.fPotTraDay<(double)1.5)
-		pPl->pPltWater->fStressFacLeaf = ((double)0.67)*pPl->pPltWater->fPotUptakedt/self->weather.fPotTraDay;
+	if (pPl->pPltWater->fPotUptakeR/self->weather.fPotTraDay<(double)1.5)
+		pPl->pPltWater->fStressFacLeaf = ((double)0.67)*pPl->pPltWater->fPotUptakeR/self->weather.fPotTraDay;
 	else
 		pPl->pPltWater->fStressFacLeaf = (double)1.0;
 
 	//INRA-Ceres:
 	if(pPl->pDevelop->iStageCERES>=4) {
-		if (pPl->pPltWater->fPotUptakedt/self->weather.fPotTraDay+(double)0.25<(double)1.5)
-			pPl->pPltWater->fStressFacLeaf = (double)0.67*(pPl->pPltWater->fPotUptakedt/self->weather.fPotTraDay+(double)0.25);
+		if (pPl->pPltWater->fPotUptakeR/self->weather.fPotTraDay+(double)0.25<(double)1.5)
+			pPl->pPltWater->fStressFacLeaf = (double)0.67*(pPl->pPltWater->fPotUptakeR/self->weather.fPotTraDay+(double)0.25);
 		else
 			pPl->pPltWater->fStressFacLeaf = (double)1.0;
 	}
 
-
 //    if (pPl->pPltWater->fPotTranspdt>=pPl->pPltWater->fPotUptakedt)
 //        pPl->pPltWater->fStressFacPhoto       =pPl->pPltWater->fPotUptakedt/pPl->pPltWater->fPotTranspdt;
-	if (self->weather.fPotTraDay>=pPl->pPltWater->fPotUptakedt)
-		pPl->pPltWater->fStressFacPhoto =pPl->pPltWater->fPotUptakedt/self->weather.fPotTraDay;
+	if (self->weather.fPotTraDay>=pPl->pPltWater->fPotUptakeR)
+		pPl->pPltWater->fStressFacPhoto =pPl->pPltWater->fPotUptakeR/self->weather.fPotTraDay;
 	else
 		pPl->pPltWater->fStressFacPhoto =(double)1.0;
 
@@ -279,7 +281,7 @@ int ceres_ActualTranspiration_run(ceres *self)
 			pPl->pPltWater->fStressFacLeaf = fRAT;
 	}
 
-
+//printf("%s %f %f\n", xpn->pXSys->reg_str, pPltW->fStressFacLeaf,pPltW->fStressFacPhoto );
 
 //  pPl->pPltWater->fShortage=pPl->pPltWater->fPotTranspdt-pPl->pPltWater->fActTranspdt;
 	pPl->pPltWater->fShortage=self->weather.fPotTraDay-pPltW->fActTranspR;
@@ -306,5 +308,107 @@ int ceres_ActualTranspiration_run(ceres *self)
 
 int ceres_PlantWaterStress_run(ceres *self)
 {
+    expertn_modul_base *xpn = &(self->parent);
+	PPLANT pPl = xpn->pPl;
+    PWATER pWa = xpn->pWa;
+    PPLTWATER		pPltW	=pPl->pPltWater;
+	PSPROFILE pSo = xpn->pSo;
+	PSLAYER                 pSL             =pSo->pSLayer;
+	PSWATER                 pSWL    =pSo->pSWater;
+	PWLAYER                 pSLW    =pWa->pWLayer;
+	PLAYERROOT              pLR             =pPl->pRoot->pLayerRoot;    
+    
+    int L;
+	double TLL, fContAct;
+	double fTotSoilWater, DUL, fRAT, fPAW;
+    double fPotUptakeDay, fPotTraDay, EvTeiler;
+    
+    pSL     =pSo->pSLayer->pNext;
+	pSWL=pSo->pSWater->pNext;
+	pSLW=pWa->pWLayer->pNext;
+    
+    EvTeiler = ceres_SolPartTime(self);
+    
+    fPotUptakeDay = self->weather.fPotUptakeDay; //* EvTeiler/ xpn->pTi->pTimeStep->fAct;
+    fPotTraDay = self->weather.fPotTraDay;// * EvTeiler/ xpn->pTi->pTimeStep->fAct;
+    
+    fTotSoilWater = 0.0;
+    TLL = 0.0;
+    DUL = 0.0;
+	for (L=1; L<=pSo->iLayers-2; L++) {
+
+		fContAct  = pSLW->fContAct;
+		fContAct -= pLR->fActLayWatUpt/pSL->fThickness; //mm/mm
+        
+        // FH 20191212 this calculation has already been done
+		//if (fContAct<pSWL->fContPWP) {
+		//	pLR->fActWatUpt    *= fContAct/pSWL->fContPWP;
+		//	pLR->fActLayWatUpt *= fContAct/pSWL->fContPWP;
+        //                      pSLW->fContAct=pSWL->fContPWP;
+		//}
+        
+        // FH 20191212 a little inexact because the PWP-correction should not have taken place to calculate fTotSoilWater, but don't really know why
+		fTotSoilWater   += fContAct*pSL->fThickness;
+        //printf("AF %f \n", fTotSoilWater);
+
+		TLL   += pSWL->fContPWP*pSL->fThickness;
+		DUL   += pSWL->fContFK*pSL->fThickness;
+
+		pSL =pSL ->pNext;
+		pSWL=pSWL->pNext;
+		pSLW=pSLW->pNext;
+	}
+    
+    
+    	//=======================================================================================
+	//      Soil Water Deficit Factors
+	//=======================================================================================
+//    if (pPl->pPltWater->fPotUptakedt/pPl->pPltWater->fPotTranspdt<(double)1.5)
+//        pPl->pPltWater->fStressFacLeaf = ((double)0.67)*pPl->pPltWater->fPotUptakedt/pPl->pPltWater->fPotTranspdt;
+	if ((fPotUptakeDay/fPotTraDay<(double)1.5)  && (fPotTraDay > 0.0))
+		pPltW->fStressFacLeaf = ((double)0.67)*fPotUptakeDay/fPotTraDay;
+	else
+		pPltW->fStressFacLeaf = (double)1.0;
+
+	//INRA-Ceres:
+	if(pPl->pDevelop->iStageCERES>=4) {
+		if ((fPotUptakeDay/fPotTraDay+(double)0.25<(double)1.5) && (fPotTraDay > 0.0))
+			pPltW->fStressFacLeaf = (double)0.67*(fPotUptakeDay/fPotTraDay+(double)0.25);
+		else
+			pPltW->fStressFacLeaf = (double)1.0;
+	}
+
+
+//    if (pPl->pPltWater->fPotTranspdt>=pPl->pPltWater->fPotUptakedt)
+//        pPl->pPltWater->fStressFacPhoto       =pPl->pPltWater->fPotUptakedt/pPl->pPltWater->fPotTranspdt;
+	if (fPotTraDay>= fPotUptakeDay)
+		pPltW->fStressFacPhoto = fPotUptakeDay/fPotTraDay;
+	else
+		pPltW->fStressFacPhoto =(double)1.0;
+
+	if (strcmp(pPl->pGenotype->acCropCode,"SF")==0) {
+		fPAW = (double)max(0.0,(fTotSoilWater - TLL)/(DUL - TLL));
+
+		if(pWa->fPotETDay > (double)0.0)
+			fRAT = (double)10.0*fPAW/pWa->fPotETDay;
+		else
+			fRAT = (double)1.0;
+
+		fRAT = (double)min(1.0,fRAT);
+
+		if((pPltW->fStressFacPhoto < (double)1.0)&&
+		   (fRAT > (double)0.5*pPl->pPltWater->fStressFacPhoto))
+			pPltW->fStressFacLeaf = (double)0.5*pPltW->fStressFacPhoto;
+		else
+			pPltW->fStressFacLeaf = fRAT;
+	}
+
+//printf("%s %f %f\n", xpn->pXSys->reg_str, pPltW->fStressFacLeaf,pPltW->fStressFacPhoto );
+
+//  pPl->pPltWater->fShortage=pPl->pPltWater->fPotTranspdt-pPl->pPltWater->fActTranspdt;
+	pPltW->fShortage=fPotTraDay-pPltW->fActTranspR;
+
+//      pPl->pPltWater->fCumDemand   += pPl->pPltWater->fPotTranspdt;
+	pPltW->fCumShortage += pPltW->fShortage;
 	return RET_SUCCESS;
 }

@@ -34,6 +34,10 @@ typedef struct {
 	double fEvapPotDay;
 	double fPotETDay;
 	double fActTraDay;
+    double fPotUptakeDay;
+    int iNumDay;
+    double fDayStart;
+    double fDayEnd;
 	
 	double fDaylySolRad;
 	
@@ -113,6 +117,9 @@ struct _ceres
 	struct_weather __weather;
 	
 	double *TairMin,*TairMax,*TairMean,*fSolRad;
+    int iDayTimeSave;
+    int iFlexDayLen;
+    int iINRAWatUpt;
 	
 	int __LOAD_DONE;
 	int __DONE_DONE;
@@ -142,7 +149,7 @@ int ceres_integrate_small_time_step_vars(ceres *self);
 
 int ceres_register_var(ceres *self);
 
-double ceres_SolPartTime(PTIME pTi);
+double ceres_SolPartTime(ceres *self);
 
 #define EPSILON 1.0e-6
 

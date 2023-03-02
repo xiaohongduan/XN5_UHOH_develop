@@ -112,19 +112,6 @@ typedef struct swater
 	double	fPotInflec; // mm Potential am Wendepunkt parabolisch / exponentieller Kennlinie hydraulischer Funktionen
 	double   fBiModWeight1; // Anteil des ersten Porenraumes
 	double   fBiModWeight2;// Anteil des zweiten Porenraumes
-    //SG20200327
-    double   fTau; //pore-connectivity parameter
-    double   fContSat_c; //capillary saturated water content
-    double   fContRes_c; //capillary residual water content
-    double   fCondSat_c; //capillarysaturated hydraulic conductivity
-    double   fCondSat_nc; //non-capillary saturated hydraulic conductivity
-    
-    //SG 20180920
-    RESPONSE *MatPot_2_WatCont;
-    RESPONSE *WatCont_2_MatPot;
-    RESPONSE *MatPot_2_HCond;
-    RESPONSE *MatPot_2_DifWC;
-
 	PSWATER   pNext;
 	PSWATER   pBack;
 	}

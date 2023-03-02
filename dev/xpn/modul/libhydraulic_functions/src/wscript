@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # encoding: utf-8
 # Christian Klein, 2012
-# modified Sebastian Gayler 27.03.2020
 
 
 LIBNAME='hydraulic_functions'
@@ -15,10 +14,7 @@ SOURCE_FILES=  [
                  'hydraulic_functions.c',
                  'hydraulic_functions_register_modul.c',
                  'math_functions.c',
-                 'VanGenuchten.c',
-                 'Brunswick_model.c',
-	             'shp_look_up_table.c',
-	             'shp_table_load.c'
+                 'VanGenuchten.c'
                 ]
 
 

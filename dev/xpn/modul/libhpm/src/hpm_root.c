@@ -59,15 +59,10 @@ int hpm_root_length_growth(hpm *self)
 
 	self->Plant.rort += Drort*dt;
 
-	//xpn->pPl->pRoot->fDepth = MAX(0.02, (self->Plant.MXrt/(self->Plant.rort*1.0e-3)));//cm
-    //SG20210928
- 	// Calculation of root depth [m] 3.9c:
-   xpn->pPl->pRoot->fDepth = MAX(self->parameter.plant.depthrtmin, (self->Plant.MXrt/(self->Plant.rort)))*1.0e2;//cm
+	xpn->pPl->pRoot->fDepth = MAX(0.02, (self->Plant.MXrt/(self->Plant.rort*1.0e-3)));
 
 	//Added by Hong on 20180806
-	//xpn->pPl->pRoot->fDepth =MIN(xpn->pPl->pRoot->fDepth, 120); //cm
-    //Modified by Sebastian on 20200121:
-	xpn->pPl->pRoot->fDepth =MIN(xpn->pPl->pRoot->fDepth, xpn->pSo->fDepth * 1.0e-1); //cm
+	xpn->pPl->pRoot->fDepth =MIN(xpn->pPl->pRoot->fDepth, 120);
 	
 	return self->__ERROR;	
 }

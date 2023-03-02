@@ -68,7 +68,7 @@ int nitrogen_deposition_run(nitrogen_deposition *self)
 	   pCh->pCLayer->pNext->fNH4N += NH4DeposR * pTi->pTimeStep->fAct;
 	   pCh->pCLayer->pNext->fNO3N += NO3DeposR * pTi->pTimeStep->fAct;
     
-	   pCh->pCBalance->dNInputCum += (NH4DeposR+NO3DeposR)*pTi->pTimeStep->fAct;
+	pCh->pCBalance->dNInputCum += (NH4DeposR+NO3DeposR)*pTi->pTimeStep->fAct;
        
        return RET_SUCCESS;
   }

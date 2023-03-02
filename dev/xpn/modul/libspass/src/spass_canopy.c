@@ -142,13 +142,6 @@ int spass_canopy_formation(spass *self)
   		fStemWeight =pBm->fStemWeight/((double)10.0*pMa->pSowInfo->fPlantDens);	//g per plant
   		
     	pCan->fGrainNum	 = fStemWeight*pPl->pGenotype->fStorageOrganNumCoeff;  			//Grains per plant
-
-        //SG20200117: from XN3
-        if (strcmp(pPl->pGenotype->acCropCode,"MZ")==0)
-		{   //Grains per plant
-			pCan->fGrainNum	 = pPl->pGenotype->fStorageOrganNumCoeff;  			
-		}           
-
     	pCan->fGrainNumSq= pCan->fGrainNum*pMa->pSowInfo->fPlantDens; //Grains per sq meter 	
 
 
@@ -288,7 +281,7 @@ double spass_CerealTillering(double fLfEmergRate, double fExpLfNum, double fTill
 
 	//Tiller number per square meter
 	//SG/25/05/99: Modifikation: fTillerNumSq kann nur wachsen
-   	fTillerNumSq = max(fPltDens*fTillNum, fPltDens*max((double)1.0, fTillerNumber*min((double)1.0,fStemWght/(fTotTillerDemand+1e-6))));
+   	fTillerNumSq = max(fPltDens*fTillNum, fPltDens*max((double)1.0, fTillerNumber*min((double)1.0,fStemWght/(fTotTillerDemand))));
 	return fTillerNumSq;
 	}
 

@@ -323,7 +323,6 @@ double calculateWaterRootPool(hpm *self,double *IWso_rt,double *OWrt_sh, double 
 		fDepth = 0.0;
 		count = 0;
 		fRootDepth = (double)(xpn->pPl->pRoot->fDepth*1.0e-3);
-		//fRootDepth = (double)(xpn->pPl->pRoot->fDepth*1.0e-2); //SG20191203: cm --> m
 		sumIWso_rt=0.0;
 
 		*IWso_rt=0.0;
@@ -348,7 +347,6 @@ double calculateWaterRootPool(hpm *self,double *IWso_rt,double *OWrt_sh, double 
 			Kso = Ksomax * pow(theta_so / theta_so_max,qpsi_soW + qpsi_soW + 3.0);
 			Kso = pWL->fHydrCond/86400.0;
 			rho_rt = self->Plant.MXrt / (xpn->pPl->pRoot->fDepth*1.0e-3);
-           // rho_rt = self->Plant.MXrt / (xpn->pPl->pRoot->fDepth*1.0e-2); // SG20191203: cm --> m
 			MXrt = self->Plant.MXrt;
 			rWso_rt = cWrs_rt/rho_rt * (MXrt + KWrs_rt)/ MXrt + cWso_rs*rho_rt / (Kso * MXrt);
 
@@ -497,10 +495,6 @@ double calculateWaterRootPool(hpm *self,double *IWso_rt,double *OWrt_sh, double 
 
 
 	DWrt = *IWso_rt - *OWrt_sh; // 6.3a: Differential
-    
-        //SG20210511 - für Bodenwaserbilanz wird Wasseraufnahme aus dem Boden benötigt, nicht Wasserabgabe der Blätter/Shoot an die Atmosphäre:
-		xpn->pPl->pPltWater->fActTranspR = *IWso_rt; // kg water / (m2 day) = mm / (m2 day)
-
 
 	C_DEBUG(DWrt);
 	return DWrt;
@@ -514,7 +508,7 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	int iLayer        = 0;
 	double DeltaT     = xpn->pTi->pTimeStep->fAct;
 	double roWpl20 = self->parameter.water.roWpl20; //Todo
-	double rWrt_sh,DWrt, gWrt_sh;
+	double rWrt_sh,DWrt;
 	int				L,i,count;
 	double			rRoot;
 	double			dxM;
@@ -534,20 +528,11 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	double fContAct;
     //End of Hong 
 
-/*	rWrt_sh = roWpl20 / self->Water.Wsh + roWpl20/self->Water.Wrt;
-    
-   	*OWrt_sh = (Psi_rt - Psi_sh) / rWrt_sh;*/
- 
-    //SG20200403: eq. 6.3c:
-    //gWrt_sh = 1/roWpl20*(self->Plant.MXLam+self->Plant.MXss)*self->Plant.MXrt/(self->Plant.MXLam+self->Plant.MXss+self->Plant.MXrt);
-    gWrt_sh = self->parameter.water.cWTpl*(self->Plant.MXLam+self->Plant.MXss)*self->Plant.MXrt/(self->Plant.MXLam+self->Plant.MXss+self->Plant.MXrt);
-    
-    *OWrt_sh = gWrt_sh*(Psi_rt - Psi_sh);
+	rWrt_sh = roWpl20 / self->Water.Wsh + roWpl20/self->Water.Wrt;
 
+	*OWrt_sh = (Psi_rt - Psi_sh) / rWrt_sh;
 	
-    
-	//fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
-	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-2); //SG20191203 cm --> m
+	fRootDepth = (xpn->pPl->pRoot->fDepth*1.0e-3);
 	if (self->__USE_STATIC_ROOT_LENGTH==TRUE) {
 		count=self->__STATIC_ROOT_LENGTH;
 	} else {		
@@ -586,10 +571,6 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	if (pot_water_uptake <= 0.0)
 		{
 			*IWso_rt=0.0;
-            
-        //SG20210511 - für Bodenwaserbilanz wird Wasseraufnahme aus dem Boden benötigt, nicht Wasserabgabe der Blätter/Shoot an die Atmosphäre:
-		xpn->pPl->pPltWater->fActTranspR = *IWso_rt; // kg water / (m2 day) = mm / (m2 day)
-        
 			return -*OWrt_sh;
 		}
 	
@@ -600,7 +581,7 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	for (SOIL2_LAYERS1(pWL, xpn->pWa->pWLayer->pNext, pLR, xpn->pPl->pRoot->pLayerRoot)) {
 		fEffectPot[iLayer] = min(0.0,pWL->fMatPotOld);
 		
-
+		
 		fRootDensTotal += pLR->fLengthDens;
 	}  /* for */
 
@@ -612,10 +593,6 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 	rRoot = pot_water_uptake;
 
 	//End of Hong
-    
-    //SG20191205: pSL muss wieder auf die erste Schicht gesetzt werden, da es 
-    // zuvor (im Fall nicht-statischer Wurzeln) schon heruntergezählt wurde!
-    pSL = xpn->pSo->pSLayer->pNext;
 	for (SOIL2_LAYERS1(pWL, xpn->pWa->pWLayer->pNext, pLR, xpn->pPl->pRoot->pLayerRoot)) {
 		if (pLR->fLengthDens > 0.0) {
 			dxM  = xpn->pSo->fDeltaZ;
@@ -669,11 +646,12 @@ double calculateWaterRootPool_feddes(hpm *self,double *IWso_rt,double *OWrt_sh, 
 		
 	}
 
-	DWrt = *IWso_rt - *OWrt_sh; // 6.3a: Differential
-    
-    //SG20210511 - für Bodenwaserbilanz wird Wasseraufnahme aus dem Boden benötigt, nicht Wasserabgabe der Blätter/Shoot an die Atmosphäre:
-		xpn->pPl->pPltWater->fActTranspR = *IWso_rt; // kg water / (m2 day) = mm / (m2 day)
 
+
+
+
+
+	DWrt = *IWso_rt - *OWrt_sh; // 6.3a: Differential
 
 	/*C_DEBUG(count);
 	C_DEBUG(*OWrt_sh);
@@ -864,9 +842,7 @@ double calculateWaterShootPool(hpm *self,double IWrt_sh, double Psirt, double Ps
 		}
 		//OWsh_atm=xpn->pPl->pPltWater->fPotTranspR;
 
-//SG20210511 auskommentiert (für Bodenwasserbilanz wird Aufnahme aus dem Boden benötigt; wird deshalb 
-//                        jetzt in hpm_water_uptake_hpm() bzw hpm_water_uptake_feddes() berechnet):
-//		xpn->pPl->pPltWater->fActTranspR = OWsh_atm; // kg water / (m2 day) = mm / (m2 day)
+		xpn->pPl->pPltWater->fActTranspR = OWsh_atm; // kg water / (m2 day) = mm / (m2 day)
 
 		C_DEBUG(OWsh_atm)
 

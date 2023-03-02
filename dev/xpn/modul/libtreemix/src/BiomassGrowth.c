@@ -202,7 +202,7 @@ int libtreemix_CalcTotalMaintenanceRespiration(libtreemix *self, int i)
 	self->plant[i].MainRespSt = self->plant[i].kTResp*self->plant[i].RespWd*self->plant[i].CWdResp;
 	
 	// fruit
-	self->plant[i].MainRespGr = self->plant[i].kTResp*self->plant[i].RespFr*(self->plant[i].RespPeriodFr/12.0)*self->plant[i].CFrMass; 
+	self->plant[i].MainRespGr = self->plant[i].kTResp*self->plant[i].RespFr*(self->plant[i].RespPeriodFr/12.0)*self->plant[i].CFrMass/1000.0; 
 	
 	// (fine) roots
 	self->plant[i].MainRespRt = self->plant[i].kTRespSoil*self->plant[i].RespRt*(self->plant[i].CFRtMass/1000.0);
@@ -407,7 +407,10 @@ int libtreemix_CalcLeafRenewalDemand(libtreemix *self, int i, double* LeafDemand
 	}
 	else if((self->conf.Phenology == 2)||(self->conf.Phenology == 3))
 	{
-		if((self->silv[i].Dormancy == FALSE)&&(Day <= self->plant[i].LfFallStart)&&(Day >= self->plant[i].LfFallEnd))
+		// FH 20200811 changed that this also works on the Southern Hemisphere
+		if((self->silv[i].Dormancy == FALSE)&&
+		(((Day <= self->plant[i].LfFallStart)&&(Day >= self->plant[i].LfFallEnd)&&(self->plant[i].LfFallStart >= self->plant[i].LfFallEnd))
+		||((Day <= self->plant[i].LfFallStart)||(Day >= self->plant[i].LfFallEnd)&&(self->plant[i].LfFallStart <= self->plant[i].LfFallEnd))))
 		{
 			if(!strcmp(self->plant[i].type, "deciduous"))	//deciduous stand
 			{ 				
@@ -528,7 +531,8 @@ int libtreemix_CalcAssimilateAvailability(libtreemix *self, int i, double LeafDe
 	self->plant[i].CLfRtTotDemand = CLfRtTotalDemand;
 	
 	// eq. 91, fruit loss rate
-	self->plant[i].FruitDeathRate = self->plant[i].CFrMass * self->plant[i].TOFr;	
+	// FH 20200811 Maybe add /1000.0 as for LeafDeathRate
+	self->plant[i].FruitDeathRate = self->plant[i].CFrMass/1000.0 * self->plant[i].TOFr;	
 	
 	// eq. 98, assimilate relocation before leaf and fine root abscission, [tC/ha*yr]
 	self->plant[i].CRelocGain = self->plant[i].CReloc*(self->plant[i].LeafDeathRate + self->plant[i].RootDeathRate);
@@ -822,6 +826,7 @@ int libtreemix_CalcBiomassGrowth(libtreemix *self, int i)
 	double PFruitC;
 	double PIncrN;
 	double PIncrC;
+	double WdGrStartFrac, WdGrEndFrac;
 		
 	/*Functions*/
 	
@@ -857,6 +862,7 @@ int libtreemix_CalcBiomassGrowth(libtreemix *self, int i)
 	
 	/* nitrogen rate available for increment, eq. 93, [tN/ha*yr] */
 	NSurplus = (self->plant[i].NUpLfRtR - self->plant[i].NIncrLeaf - self->plant[i].NIncrRoot);	
+
 	if(NSurplus < 0.0){
 		NSurplus = 0.0;
 	}
@@ -873,6 +879,7 @@ int libtreemix_CalcBiomassGrowth(libtreemix *self, int i)
 	{
 		CSurplus = 0.0;
 	}
+	
 	// [kgC/ha]
 	self->plant[i].CSurplus = 1000.0*CSurplus/365.25*dt;
 	
@@ -902,9 +909,13 @@ int libtreemix_CalcBiomassGrowth(libtreemix *self, int i)
 		else{
 			self->plant[i].FrGrR = PFruitC;
 		}
+		
+		
+		
 		CFrConstr = self->plant[i].FrGrR*self->plant[i].RespGr;
 		self->plant[i].NIncrFruit = self->plant[i].FrGrR*self->plant[i].NFr;
 
+		//printf("%f %f %f %f %f \n", self->plant[i].FrGrR,CFrConstr,self->plant[i].NIncrFruit,self->plant[i].NFr,self->plant[i].RespGr);
 		/* calculate remaining surplusses of C and N */
 		NSurplus -= self->plant[i].NIncrFruit;
 		if(NSurplus<0)
@@ -919,9 +930,15 @@ int libtreemix_CalcBiomassGrowth(libtreemix *self, int i)
 		}
 	}
 
+	// FH 20200811 account for Southern Hemisphere
 	/* calculation of wood increment if: C-, N- Surplus and vegetative season, [tC/ha*yr] */
 	self->clim.SeasTime = (xpn->pTi->pSimTime->fTimeY+10.0)/365.25;
-	if((self->clim.SeasTime>0.3)&&(self->clim.SeasTime<0.8)&&(CSurplus>0.0)&&(NSurplus>0.0))
+	WdGrStartFrac = self->plant[i].WdGrStart/365.25;
+	WdGrEndFrac = self->plant[i].WdGrEnd/365.25;
+
+	if((((self->clim.SeasTime>WdGrStartFrac)&&(self->clim.SeasTime<WdGrEndFrac) && (WdGrStartFrac <= WdGrEndFrac))
+	||((self->clim.SeasTime<WdGrStartFrac)||(self->clim.SeasTime>WdGrEndFrac) && (WdGrStartFrac >= WdGrEndFrac)))
+	&&(CSurplus>0.0)&&(NSurplus>0.0))
 	{
 		// increment under assimilate limitation or nitrogen limitation
 		/* eq. 94*/ PIncrC = CSurplus/self->plant[i].RespGr;															

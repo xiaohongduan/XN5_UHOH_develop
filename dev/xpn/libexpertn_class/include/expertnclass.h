@@ -38,7 +38,7 @@ typedef struct
 	GType (*get_type)();
 	char *libName;
 	char *ModulName; // eindeutiger Name des Moduls, z.B. Hurley Pasture Plant Growth
-	char *className; // Name der Klasse in der sich das Modul befindet (abgeleitet von ExpertNBaseClass)
+	char *className; // Name der Klasse in der das Modul befindet (abgeleitet von ExpertNBaseClase
 	char *Modul; // Modulname z.B. Plant
 	char *SubModul; // SubModulname z.B. Biomass_Growth
 	char *load_name;

@@ -14,7 +14,6 @@ double REAAND(double x, double y);
 double REANOR(double x, double y);
 
 double  abspowerDBL(double x, double y);
-int array_length(int var1,int var2);
 
 GDate *gecros_convert_str_to_gdate(char* S);
 

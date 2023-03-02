@@ -81,8 +81,8 @@ int schaaf_manag_load(schaaf_manag *self)
             if ((pTi->pSimTime->mday == tillage->Day) && (pTi->pSimTime->mon == tillage->Month) &&
                 (pTi->pSimTime->year == tillage->Year)) {
                 self->tillage_actual = tillage;
-				pMa->pTillage = tillage; //Test of Hong 
-				InitBBGeraet(self);  //Test of Hong 
+				//pMa->pTillage = tillage; //Test of Hong 
+				//Hong 20200311 InitBBGeraet(self);  //Test of Hong 
 				
 				S2 = xpn_time_get_formated_date(pTi->pSimTime->iyear, pTi->pSimTime->fTimeY, FALSE);
                 S = g_strdup_printf("%s: Soil loosening: %.1f cm depth.", S2, (double)(tillage->fDepth)/10.0); // [cm]
@@ -108,7 +108,7 @@ int schaaf_manag_load(schaaf_manag *self)
 	        self->tillage_done += 1;
 	
 		    // run functions:
-            // Test of Hong InitBBGeraet(self); 
+            //InitBBGeraet(self);  //relocated by Hong to schaaf_tillage_load_config()	
             LagerungNeu(self); 
 		  
 		 
@@ -151,8 +151,8 @@ int schaaf_manag_load(schaaf_manag *self)
             if ((pTi->pSimTime->mday == tillage->Day) && (pTi->pSimTime->mon == tillage->Month) &&
                 (pTi->pSimTime->year == tillage->Year)) {
                 self->tillage_actual = tillage;
-				pMa->pTillage = tillage; //Test of Hong 
-				InitBBGeraet(self);  //Test of Hong 
+				//pMa->pTillage = tillage; //Test of Hong 
+				//Hong 20200311 InitBBGeraet(self);  //Test of Hong 
 				
 				S2 = xpn_time_get_formated_date(pTi->pSimTime->iyear, pTi->pSimTime->fTimeY, FALSE);
                 S = g_strdup_printf("%s: Soil mixing: %.1f cm depth.", S2, (double)(tillage->fDepth)/10.0); // [cm]
@@ -181,7 +181,7 @@ int schaaf_manag_load(schaaf_manag *self)
 	     self->tillage_done += 1;
 	
 		 // run the functions
-         //Test of Hong InitBBGeraet(self);  	
+         //InitBBGeraet(self);  //relocated by Hong to schaaf_tillage_load_config()	
  	     EinarbeitRueckstaende(self);  
          DurchMisch(self); 
 		 		 		 
@@ -322,7 +322,7 @@ int TSIrrigation(schaaf_manag *self)
 /*                                                                               */
 /*********************************************************************************/
 
-int InitBBGeraet(schaaf_manag *self)
+/* int InitBBGeraet(schaaf_manag *self) //relocated by Hong
  {
 
 	expertn_modul_base* xpn = &(self->parent);
@@ -520,7 +520,7 @@ int InitBBGeraet(schaaf_manag *self)
 
       /* Wenn fuer das gewaehlte Geraet keine Zuordnung stattgefunden 
            hat wird es hier mit Standarwerten belegt. */
-		if ((pMa->pTillage->fEffMix ==(double)0.0) &&
+/*		if ((pMa->pTillage->fEffMix ==(double)0.0) &&
 		   (pMa->pTillage->fEffLoose ==(double)0.0) &&
 		   (pMa->pTillage->fEffIncorp ==(double)0.0))
 		   {
@@ -531,10 +531,10 @@ int InitBBGeraet(schaaf_manag *self)
 
 
    PRINT_MESSAGE(xpn,4,"InitBBGeraet geladen!")
-	
+   
    return RET_SUCCESS;
  }      /*===== Ende der Initialisierung der Bodenbearbeitungsgeraete =============*/
-   
+  
   
 /*********************************************************************************/
 /*  Name     : LagerungNeu                                                       */
@@ -628,6 +628,7 @@ int LagerungNeu(schaaf_manag *self)
 			  pSL->fBulkDens = (lagdichtevor[i1] - ((lagdichtevor[i1] 
 			  				- (((double)2.0 * (pSL->fBulkDens + lagdichteEnt[i1])) / (double)3.0))
 			  									 * pMa->pTillage->fEffLoose));
+			//printf("pMa->pTillage->fEffLoose-1 = %f \n", pMa->pTillage->fEffLoose); //Hong 20200311 
 
             }  /* Ende nur erste Schicht bearbeitet */
 			else  /* Mehrere Bodenschicht wurden bearbeitet */
@@ -641,7 +642,7 @@ int LagerungNeu(schaaf_manag *self)
 				lagvoll =  (lagdichtevor[i1] - ((lagdichtevor[i1] 
 			  				- (((double)2.0 * (pSL->fBulkDens + lagdichteEnt[i1])) / (double)3.0))
 			  									 * pMa->pTillage->fEffLoose));
-							  									 
+													
 				lockUnten = (pSL->fThickness * i1) - pMa->pTillage->fDepth;
 				lockOben = pSL->fThickness - lockUnten;
 				differ = ((lagvor - lagvoll)/ pSL->fThickness) * lockOben;
@@ -700,7 +701,8 @@ int LagerungNeu(schaaf_manag *self)
 	
 	restMenge = (double)0.0;	
 	
-	effektEinarbeitung = pMa->pTillage->fEffIncorp;					
+	effektEinarbeitung = pMa->pTillage->fEffIncorp;	
+    //printf("pMa->pTillage->fEffIncorp = %f \n", pMa->pTillage->fEffIncorp); //Hong 20200311				
 	tiefe = pMa->pTillage->fDepth; // mm
 	
 	if (pCP->fNO3NSurf >(double)0.0)
@@ -708,10 +710,10 @@ int LagerungNeu(schaaf_manag *self)
 		restMenge = pCP->fNO3NSurf * (double)exp((double)-0.0569* tiefe
 						 * (effektEinarbeitung * effektEinarbeitung));
 		pCL->fNO3N    += (pCP->fNO3NSurf - restMenge);
-
-        //Hong		pCh->pCBalance->fNInputCum += (pCP->fNO3NSurf - restMenge); //Hong: fNInoutCum = dNinputCum in Xpn 5.0
+//Hong		pCh->pCBalance->fNInputCum += (pCP->fNO3NSurf - restMenge); //Hong: fNInoutCum = dNinputCum in Xpn 5.0
 		pCh->pCBalance->dNInputCum += (pCP->fNO3NSurf - restMenge);
 		pCP->fNO3NSurf = restMenge;
+		
 	}
 
 	if (pCP->fNH4NSurf >(double)0.0)
@@ -730,73 +732,29 @@ int LagerungNeu(schaaf_manag *self)
 						 * (effektEinarbeitung * effektEinarbeitung));
 		pCL->fUreaN    += (pCP->fUreaNSurf - restMenge);
 //Hong		pCh->pCBalance->fNInputCum += (pCP->fUreaNSurf - restMenge); // fNInoutCum = dNinputCum in Xpn 5.0
-		pCh->pCBalance->dNInputCum += (pCP->fUreaNSurf - restMenge);
+	    pCh->pCBalance->dNInputCum += (pCP->fUreaNSurf - restMenge);
 		pCP->fUreaNSurf = restMenge;
 	}
 	
-/*	if (pCP->fNStandCropRes >(double)0.0)
+	if (pCP->fNStandCropRes >(double)0.0)
 	{
 		restMenge = pCP->fNStandCropRes * (double)exp((double)-0.0569* tiefe
 				      * (effektEinarbeitung * effektEinarbeitung));
 		pCP->fNLitterSurf += (pCP->fNStandCropRes - restMenge);
 		pCP->fNStandCropRes = restMenge;
 	}
-*/
-     
-     
-//Moritz: Added a partitioning of LitterSurf by Lig/N ratio
-	double delta_N_Littersurf,NManureSurf;
 
 	if (pCP->fCStandCropRes >(double)0.0)
 	{
 		restMenge = pCP->fCStandCropRes * (double)exp((double)-0.0569* tiefe
 						 * (effektEinarbeitung * effektEinarbeitung));
-                         
-        //Moritz: activate new function with dyn_AOM_div =1
-        if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-        {
-            pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to_AOM2_part_LN);
-            pCP->fCManureSurf += (pCP->fCStandCropRes - restMenge) * pCP->fStandCropRes_to_AOM2_part_LN;
-        }
-        else
-            pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge);                            
-
-
+		pCP->fCLitterSurf += (pCP->fCStandCropRes - restMenge);
 		//Hong added on 20180807 for C-balance
 		pCP->fCLeafLitterSurf += (pCP->fCStandCropRes - restMenge); //for century_n
 		pCB->dCInputSurf +=(pCP->fCStandCropRes - restMenge);
 		//pCB->dCInputCum +=(pCP->fCStandCropRes - restMenge);
 		
 		pCP->fCStandCropRes = restMenge;
-		
-        delta_N_Littersurf= (pCP->fCStandCropRes - restMenge) * (1-pCP->fStandCropRes_to_AOM2_part_LN)/150; // C/N ratio = 150
-	}
-
-    if (pCP->fNStandCropRes >(double)0.0)
-	{
-		restMenge = pCP->fNStandCropRes * (double)exp((double)-0.0569* tiefe
-				      * (effektEinarbeitung * effektEinarbeitung));
-                      
-        //Moritz: activate new function with dyn_AOM_div =1
-        if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-        {
-		    pCP->fNLitterSurf += delta_N_Littersurf; //Assumed C/N ratio of 150 for AOM1
-		    NManureSurf=((pCP->fNStandCropRes - restMenge)-delta_N_Littersurf);
-            if(NManureSurf>0)
-		    {
-		        pCP->fNManureSurf    += NManureSurf; //The rest of the N goes into the AOM2 pool
-		    } 
-        }
-        else
-            pCP->fNLitterSurf += (pCP->fNStandCropRes - restMenge);
-
-		pCP->fNStandCropRes = restMenge;
-		
-		//End of Moritz 
-
-
-		//Hong added on 20180807 for C-balance
-		//pCB->dCInputCum +=(pCP->fCStandCropRes - restMenge);
 		
 	}
 
@@ -807,6 +765,7 @@ int LagerungNeu(schaaf_manag *self)
 						 * (effektEinarbeitung * effektEinarbeitung));
 		pCL->fNManure    += (pCP->fNManureSurf - restMenge);
 		pCP->fNManureSurf = restMenge;
+        
 	}
 
 	if (pCP->fCManureSurf >(double)0.0)
@@ -819,6 +778,9 @@ int LagerungNeu(schaaf_manag *self)
 		
 		pCB->dCInputSurf -= (pCP->fCManureSurf - restMenge);
 		pCP->fCManureSurf = restMenge;
+		
+		
+		
 	}
 
 	if (pCP->fNLitterSurf >(double)0.0)
@@ -870,12 +832,10 @@ int LagerungNeu(schaaf_manag *self)
 		pCP->fCHumusSurf = restMenge;
 		pCP->fCMicLitterSurf = restMenge;//Hong for century_n
 		
-		//Begin of Hong: change in XN3
-		//SG 20161009: For DAISY model - 100% of fCorgManure that is partitioned to "fCHumusSurf" are SOM2 (see XN3: TSFertilizer, manage.c line 334-349)
-		pCL->fCHumusFast   += (pCP->fCHumusSurf - restMenge);
-
+		//SG 20161009: For DAISY model - 100% of fCorgManure that is partitioned to "fCHumusSurf" are SOM2 (see TSFertilizer, manage.c line 334-349)
+		
         pSL->fHumusCN    =pSL->fCHumus/pSL->fNHumus;
-		//End of Hong
+		
 	}
 
   PRINT_MESSAGE(xpn,4,"Ernterueckstaende geladen!")
@@ -911,13 +871,9 @@ int LagerungNeu(schaaf_manag *self)
     double	bearbTiefe,aktTiefe,obereTiefe,anteilschicht,anteil,no3ges,
     		nh4ges,ureages,humCges,humNges,humges,litterCges,litterNges,manureNges,
     		manureCges,mischeffekt;
-            
-	//SG20161009 - Mixing of DAISY pools			
-	float   FOMFastCges, FOMSlowCges, MicBiomDenitCges, MicBiomFastCges, MicBiomSlowCges, HumusFastCges, HumusSlowCges;
-	float   FOMFastNges, FOMSlowNges, MicBiomDenitNges, MicBiomFastNges, MicBiomSlowNges, HumusFastNges, HumusSlowNges;
-
 
 		mischeffekt = pMa->pTillage->fEffMix;
+		//printf("pMa->pTillage->fEffMix= %f \n", pMa->pTillage->fEffMix); //Hong 20200311 
 		
 		no3ges     = (double)0.0;
 		nh4ges     = (double)0.0;
@@ -929,21 +885,6 @@ int LagerungNeu(schaaf_manag *self)
 		litterNges = (double)0.0;
 		manureNges = (double)0.0;
 		manureCges = (double)0.0;
-		//SG20161009 - Mixing of DAISY pools			
-		FOMFastCges = (float)0.0;
-		FOMFastNges = (float)0.0;
-		FOMSlowCges = (float)0.0;
-		FOMSlowNges = (float)0.0;
-		MicBiomDenitCges = (float)0.0;
-		MicBiomDenitNges = (float)0.0;
-		MicBiomFastCges = (float)0.0;
-		MicBiomFastNges = (float)0.0;
-		MicBiomSlowCges = (float)0.0;
-		MicBiomSlowNges = (float)0.0;
-		HumusFastCges = (float)0.0;
-		HumusFastNges = (float)0.0;
-		HumusSlowCges = (float)0.0;
-		HumusSlowNges = (float)0.0;
 
 		/* Berechnung des anteils eine Bodenschicht 
 				an dem bearbeiteten Bodenvolumen. */
@@ -1001,23 +942,7 @@ int LagerungNeu(schaaf_manag *self)
 			manureNges += pCL->fNManure * anteil;
 			manureCges += pCL->fCManure * anteil;
 
- 			//SG20161009 - Mixing of DAISY pools			
-			FOMFastCges += pCL->fCFOMFast * anteil;
-			FOMFastNges += pCL->fNFOMFast * anteil;
-			FOMSlowCges += pCL->fCFOMSlow * anteil;
-			FOMSlowNges += pCL->fNFOMSlow * anteil;
-			MicBiomDenitCges += pCL->fCMicBiomDenit * anteil;
-			MicBiomDenitNges += pCL->fNMicBiomDenit * anteil;
-			MicBiomFastCges += pCL->fCMicBiomFast * anteil;
-			MicBiomFastNges += pCL->fNMicBiomFast * anteil;
-			MicBiomSlowCges += pCL->fCMicBiomSlow * anteil;
-			MicBiomSlowNges += pCL->fNMicBiomSlow * anteil;
-			HumusFastCges += pCL->fCHumusFast * anteil;
-			HumusFastNges += pCL->fNHumusFast * anteil;
-			HumusSlowCges += pCL->fCHumusSlow * anteil;
-			HumusSlowNges += pCL->fNHumusSlow * anteil;
-
-       } 	/* Ende der Schleife zum Summieren */
+        } 	/* Ende der Schleife zum Summieren */
 
 
 		/* Gleichmaessige Verteilung der Gesamtmengen auf die betroffenen
@@ -1055,37 +980,7 @@ int LagerungNeu(schaaf_manag *self)
 											+ (anteilschicht * mischeffekt * humCges);
 			pSL->fNHumus  = (((double)1.0 - mischeffekt) * pSL->fNHumus) 
 											+ (anteilschicht * mischeffekt * humNges);											
-		   
-            //SG20161009 - Mixing of DAISY pools			
-			pCL->fCFOMFast = (((float)1.0 - mischeffekt) * pCL->fCFOMFast) 
-											+ (anteilschicht * mischeffekt * FOMFastCges);
-			pCL->fNFOMFast = (((float)1.0 - mischeffekt) * pCL->fNFOMFast) 
-											+ (anteilschicht * mischeffekt * FOMFastNges);
-			pCL->fCFOMSlow = (((float)1.0 - mischeffekt) * pCL->fCFOMSlow) 
-											+ (anteilschicht * mischeffekt * FOMSlowCges);
-			pCL->fNFOMSlow = (((float)1.0 - mischeffekt) * pCL->fNFOMSlow) 
-											+ (anteilschicht * mischeffekt * FOMSlowNges);
-			pCL->fCMicBiomDenit = (((float)1.0 - mischeffekt) * pCL->fCMicBiomDenit) 
-											+ (anteilschicht * mischeffekt * MicBiomDenitCges);
-			pCL->fNMicBiomDenit = (((float)1.0 - mischeffekt) * pCL->fNMicBiomDenit) 
-											+ (anteilschicht * mischeffekt * MicBiomDenitNges);
-			pCL->fCMicBiomFast = (((float)1.0 - mischeffekt) * pCL->fCMicBiomFast) 
-											+ (anteilschicht * mischeffekt * MicBiomFastCges);
-			pCL->fNMicBiomFast = (((float)1.0 - mischeffekt) * pCL->fNMicBiomFast) 
-											+ (anteilschicht * mischeffekt * MicBiomFastNges);
-			pCL->fCMicBiomSlow = (((float)1.0 - mischeffekt) * pCL->fCMicBiomSlow) 
-											+ (anteilschicht * mischeffekt * MicBiomSlowCges);
-			pCL->fNMicBiomSlow = (((float)1.0 - mischeffekt) * pCL->fNMicBiomSlow) 
-											+ (anteilschicht * mischeffekt * MicBiomSlowNges);
-			pCL->fCHumusFast = (((float)1.0 - mischeffekt) * pCL->fCHumusFast) 
-											+ (anteilschicht * mischeffekt * HumusFastCges);
-			pCL->fNHumusFast = (((float)1.0 - mischeffekt) * pCL->fNHumusFast) 
-											+ (anteilschicht * mischeffekt * HumusFastNges);
-			pCL->fCHumusSlow = (((float)1.0 - mischeffekt) * pCL->fCHumusSlow) 
-											+ (anteilschicht * mischeffekt * HumusSlowCges);
-			pCL->fNHumusSlow = (((float)1.0 - mischeffekt) * pCL->fNHumusSlow) 
-											+ (anteilschicht * mischeffekt * HumusSlowNges);
-           } /* Ende der Schleife wenn akt. Schicht komplett bearbeitet */
+		   } /* Ende der Schleife wenn akt. Schicht komplett bearbeitet */
 		   else
 		   {
 			pCL->fNO3N    = (pCL->fNO3N * ((double)1.0 - anteil ))
@@ -1118,50 +1013,6 @@ int LagerungNeu(schaaf_manag *self)
 			pSL->fCHumus  = (pSL->fCHumus * ((double)1.0 - anteil ))
                                  +  (( (1 - mischeffekt) * ( pSL->fCHumus * anteil ))
                                             +  (anteilschicht * mischeffekt * humCges));
-
-			//SG20161009 - Mixing of DAISY pools			
-			pCL->fCFOMFast = (pCL->fCFOMFast * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fCFOMFast * anteil ))
-                                            +  (anteilschicht * mischeffekt * FOMFastCges));
-			pCL->fNFOMFast = (pCL->fNFOMFast * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fNFOMFast * anteil ))
-                                            +  (anteilschicht * mischeffekt * FOMFastNges));
-			pCL->fCFOMSlow = (pCL->fCFOMSlow * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fCFOMSlow * anteil ))
-                                            +  (anteilschicht * mischeffekt * FOMSlowCges));
-			pCL->fNFOMSlow = (pCL->fNFOMSlow * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fNFOMSlow * anteil ))
-                                            +  (anteilschicht * mischeffekt * FOMSlowNges));
-			pCL->fCMicBiomDenit = (pCL->fCMicBiomDenit * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fCMicBiomDenit * anteil ))
-                                            +  (anteilschicht * mischeffekt * MicBiomDenitCges));
-			pCL->fNMicBiomDenit = (pCL->fNMicBiomDenit * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fNMicBiomDenit * anteil ))
-                                            +  (anteilschicht * mischeffekt * MicBiomDenitNges));
-			pCL->fCMicBiomFast = (pCL->fCMicBiomFast * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fCMicBiomFast * anteil ))
-                                            +  (anteilschicht * mischeffekt * MicBiomFastCges));
-			pCL->fNMicBiomFast = (pCL->fNMicBiomFast * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fNMicBiomFast * anteil ))
-                                            +  (anteilschicht * mischeffekt * MicBiomFastNges));
-			pCL->fCMicBiomSlow = (pCL->fCMicBiomSlow * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fCMicBiomSlow * anteil ))
-                                            +  (anteilschicht * mischeffekt * MicBiomSlowCges));
-			pCL->fNMicBiomSlow = (pCL->fNMicBiomSlow * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fNMicBiomSlow * anteil ))
-                                            +  (anteilschicht * mischeffekt * MicBiomSlowNges));
-			pCL->fCHumusFast = (pCL->fCHumusFast * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fCHumusFast * anteil ))
-                                            +  (anteilschicht * mischeffekt * HumusFastCges));
-			pCL->fNHumusFast = (pCL->fNHumusFast * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fNHumusFast * anteil ))
-                                            +  (anteilschicht * mischeffekt * HumusFastNges));
-			pCL->fCHumusSlow = (pCL->fCHumusSlow * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fCHumusSlow * anteil ))
-                                            +  (anteilschicht * mischeffekt * HumusSlowCges));
-			pCL->fNHumusSlow = (pCL->fNHumusSlow * ((float)1.0 - anteil ))
-                                 +  (( (1 - mischeffekt) * ( pCL->fNHumusSlow * anteil ))
-                                            +  (anteilschicht * mischeffekt * HumusSlowNges));
 
 		   } /* Ende der Schleife wenn akt. Schicht teilweise bearbeitet */
 

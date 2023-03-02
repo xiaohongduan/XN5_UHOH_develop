@@ -86,7 +86,7 @@ int spass_canopy_gross_photosynthesis(spass *self)
 										pCan->fLAI,pLo->pFarm->fLatitude, pTi->pSimTime->fTimeY,
 										pTi->pSimTime->fTimeY_old, pTi->pSimTime->hour,
 										pWth->fSolRad,pWth->fTempAir,pCl->pWeather->fAtmCO2ppm,self);
-                                        
+
   }// end PLANT_IS_GROWING
 	return RET_SUCCESS;
   }

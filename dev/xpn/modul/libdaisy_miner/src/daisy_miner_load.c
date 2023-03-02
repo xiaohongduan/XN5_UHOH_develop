@@ -123,19 +123,6 @@ int daisy_miner_load_config(daisy_miner *self)
 		
 
 
-//START SOIL VALUES C-, N-POOLS
-//20003, 20008, 20009
-//[start values general]
-//20003
-//SG20190731: auskommentiert, wird schon in stickstoff_load.c (leachn.ini) eingelesen
-//GET_INI_INT_ARRAY(layers,layers_len,"start values general","layers");
-//GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCLitter,"c_litter","start values general",PCLAYER,xpn->pCh->pCLayer);
-//GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNLitter,"n_litter","start values general",PCLAYER,xpn->pCh->pCLayer);
-//GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCManure,"c_manure","start values general",PCLAYER,xpn->pCh->pCLayer);
-//GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNManure,"n_manure","start values general",PCLAYER,xpn->pCh->pCLayer);
-//GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCHumus,"c_humus","start values general",PSLAYER,xpn->pSo->pSLayer);
-//GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNHumus,"n_humus","start values general",PSLAYER,xpn->pSo->pSLayer);
-
 G_FREE_IF_NOT_0(layers);
 	layers_len=0;
 
@@ -153,6 +140,43 @@ GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCHumusSlow,"SOM1_C","start values daisy",
 GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCHumusFast,"SOM2_C","start values daisy",PCLAYER,xpn->pCh->pCLayer);
 GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCsolC,"Csol","start values daisy",PCLAYER,xpn->pCh->pCLayer);
 
+//START SOIL VALUES C-, N-POOLS
+     //20003, 20008, 20009
+     //[start values general]
+//20003
+GET_INI_INT_ARRAY(layers,layers_len,"start values general","layers");
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCLitter,"c_litter","start values general",PCLAYER,xpn->pCh->pCLayer);
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNLitter,"n_litter","start values general",PCLAYER,xpn->pCh->pCLayer);
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCManure,"c_manure","start values general",PCLAYER,xpn->pCh->pCLayer);
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNManure,"n_manure","start values general",PCLAYER,xpn->pCh->pCLayer);
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fCHumus,"c_humus","start values general",PSLAYER,xpn->pSo->pSLayer);
+GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNHumus,"n_humus","start values general",PSLAYER,xpn->pSo->pSLayer);
+ 
+//Added by Hong on 20190703: if [start values general] = -99.0
+	 for (pSL=xpn->pSo->pSLayer->pNext,pCL = xpn->pCh->pCLayer->pNext, i=0; pSL!=NULL,pCL!=NULL; pSL=pSL->pNext, pCL=pCL->pNext,i++)
+		{
+		if (pCL->fCLitter<0 ||pCL->fNLitter<0)
+		   {
+			   pCL->fCLitter = pCL->fCFOMSlow; 
+               pCL->fNLitter = pCL->fNFOMSlow; 
+		   }
+	    if (pCL->fCManure <0 || pCL->fNManure <0)
+           {
+			   pCL->fCManure = pCL->fCFOMFast; 
+               pCL->fNManure = pCL->fNFOMFast; 
+		    }
+	
+		if (pSL->fCHumus <0 ||pSL->fNHumus<0)
+            {
+				pSL->fCHumus = pCL->fCMicBiomSlow + pCL->fCMicBiomFast			
+                   + pCL->fCHumusSlow + pCL->fCHumusFast; 
+				pSL->fNHumus = pCL->fNMicBiomSlow + pCL->fNMicBiomFast			
+                   + pCL->fNHumusSlow + pCL->fNHumusFast;   
+				   
+				  }				   
+	     }
+//End of Hong
+
 //20009
 GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNFOMSlow,"AOM1_N","start values daisy",PCLAYER,xpn->pCh->pCLayer);
 GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNFOMFast,"AOM2_N","start values daisy",PCLAYER,xpn->pCh->pCLayer);
@@ -163,99 +187,6 @@ GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNMicBiomDenit,"BOMD_N","start values dais
 GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNHumusStable,"SOM0_N","start values daisy",PCLAYER,xpn->pCh->pCLayer);
 GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNHumusSlow,"SOM1_N","start values daisy",PCLAYER,xpn->pCh->pCLayer);
 GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNHumusFast,"SOM2_N","start values daisy",PCLAYER,xpn->pCh->pCLayer);
-
-// if [start values daisy] = -99.0;
-//SG20190725: in case that no initial values for Daisy-pools are supplied, estimate initial values from soil organic matter
-// Müller et al. (1998), Ecol. Modelling 111, 1-15 and Bruun & Jensen (2002), Ecol. Modelling 153, 291-295
-
-	 for (pSL=xpn->pSo->pSLayer->pNext,pCL = xpn->pCh->pCLayer->pNext, i=0; pSL!=NULL,pCL!=NULL; pSL=pSL->pNext, pCL=pCL->pNext,i++)
-		{
- 		if (pCL->fCFOMSlow<0 ||pCL->fNFOMSlow<0) //AOM1
-		   {
-			   pCL->fCFOMSlow =  pCL->fCLitter; 
-               pCL->fNFOMSlow =  pCL->fNLitter; 
-		   }
-		if (pCL->fCFOMFast<0 ||pCL->fNFOMFast<0) //AOM2
-		   {
-			   pCL->fCFOMFast =  pCL->fCManure; 
-               pCL->fNFOMFast =  pCL->fNManure; 
-		   }
-		if (pCL->fCFOMVeryFast<0 ||pCL->fNFOMVeryFast<0) //AOM3
-		   {
-			   pCL->fCFOMVeryFast =  0; 
-               pCL->fNFOMVeryFast =  0; 
-		   }
-		if (pCL->fCMicBiomSlow<0 ||pCL->fNMicBiomSlow<0) //BOM1
-		   {
-			   pCL->fCMicBiomSlow = pSL->fCHumus*0.0045; 
-               pCL->fNMicBiomSlow =  pCL->fCMicBiomSlow/6.7; 
-		   }
-		if (pCL->fCMicBiomFast<0 ||pCL->fNMicBiomFast<0) //BOM2
-		   {
-			   pCL->fCMicBiomFast = pSL->fCHumus*0.0015; 
-               pCL->fNMicBiomFast =  pCL->fCMicBiomFast/6.7; 
-		   }
-		if (pCL->fCMicBiomDenit<0 ||pCL->fNMicBiomDenit<0) //BOMD
-		   {
-			   pCL->fCMicBiomDenit =  0; 
-               pCL->fNMicBiomDenit =  0; 
-		   }
-		if (pCL->fCHumusStable<0 ||pCL->fNHumusStable<0) //SOM0
-		   {
-			   pCL->fCHumusStable =  0; 
-               pCL->fNHumusStable =  0; 
-		   }
-		if (pCL->fCHumusSlow<0 ||pCL->fNHumusSlow<0) //SOM1
-		   {
-			   pCL->fCHumusSlow =  (pSL->fCHumus - pCL->fCMicBiomSlow- pCL->fCMicBiomFast)*0.49; 
-               pCL->fNHumusSlow =  pCL->fCHumusSlow /12.0; 
-		   }
-		if (pCL->fCHumusFast<0 ||pCL->fNHumusFast<0) //SOM2
-		   {
-			   pCL->fCHumusFast =   pSL->fCHumus - pCL->fCMicBiomSlow- pCL->fCMicBiomFast-pCL->fCHumusSlow ; 
-               pCL->fNHumusFast =  pCL->fCHumusFast/10.0; 
-		   }
-        } // End initialization Daisy pools
-
-
-
-//Added by Hong on 20190703: if [start values general] = -99.0
-//	 for (pSL=xpn->pSo->pSLayer->pNext,pCL = xpn->pCh->pCLayer->pNext, i=0; pSL!=NULL,pCL!=NULL; pSL=pSL->pNext, pCL=pCL->pNext,i++)
-//		{
-//		if (pCL->fCLitter<0 ||pCL->fNLitter<0)
-//		   {
-//			   pCL->fCLitter = pCL->fCFOMSlow; 
-//               pCL->fNLitter = pCL->fNFOMSlow; 
-//		   }
-//	    if (pCL->fCManure <0 || pCL->fNManure <0)
-//           {
-//			   pCL->fCManure = pCL->fCFOMFast; 
-//               pCL->fNManure = pCL->fNFOMFast; 
-//		    }
-//	
-//		if (pSL->fCHumus <0 ||pSL->fNHumus<0)
-//            {
-//				pSL->fCHumus = pCL->fCMicBiomSlow + pCL->fCMicBiomFast			
-//                   + pCL->fCHumusSlow + pCL->fCHumusFast; 
-//				pSL->fNHumus = pCL->fNMicBiomSlow + pCL->fNMicBiomFast			
-//                   + pCL->fNHumusSlow + pCL->fNHumusFast;   
-//				   
-//				  }				   
-//	     }
-//End of Hong
-
-//SG20190731:  Immer die LeachN-Pools an Daisy-Pools anpassen (wegen C- und N-Bilanzen)
-	 for (pSL=xpn->pSo->pSLayer->pNext,pCL = xpn->pCh->pCLayer->pNext, i=0; pSL!=NULL,pCL!=NULL; pSL=pSL->pNext, pCL=pCL->pNext,i++)
-		{
-			   pCL->fCLitter = pCL->fCFOMSlow; 
-               pCL->fNLitter = pCL->fNFOMSlow; 
-			   pCL->fCManure = pCL->fCFOMFast; 
-               pCL->fNManure = pCL->fNFOMFast; 
-				pSL->fCHumus = pCL->fCMicBiomSlow + pCL->fCMicBiomFast			
-                   + pCL->fCHumusSlow + pCL->fCHumusFast; 
-				pSL->fNHumus = pCL->fNMicBiomSlow + pCL->fNMicBiomFast			
-                   + pCL->fNHumusSlow + pCL->fNHumusFast;   
-				  }				   
 
 
 G_FREE_IF_NOT_0(layers);
@@ -292,14 +223,6 @@ G_FREE_IF_NOT_0(layers);
 	GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fMinerSatActiv,"MinerSatActiv","mineralisation",PCPARAM,xpn->pCh->pCParam);
 	GET_INI_DOUBLE_ARRAY_AND_SET_TO_STRUC(fNitrifNO3NH4Ratio,"NitrifNO3NH4Ratio","mineralisation",PCPARAM,xpn->pCh->pCParam);
 	
-    //Moritz Switch for dynamic AOM 27.06.2019
-     GET_INI_INT_OPTIONAL_MO(xpn->pCh->pCProfile->dyn_AOM_div ,"mineralisation","dyn_AOM_div",0);
-     GET_INI_INT_OPTIONAL_MO(xpn->pCh->pCProfile->fSOM1_new ,"mineralisation","fSOM1_new",0);
-     GET_INI_INT_OPTIONAL_MO(xpn->pCh->pCProfile->dyn_CUE_AOM ,"mineralisation","dyn_CUE_AOM",0);  
-	 GET_INI_DOUBLE_OPTIONAL_MO(xpn->pCh->pCProfile->L_N_slope,"mineralisation","L_N_slope",0.018); //variable slope of dynamic L/N division (default = Parton 1987)
-     GET_INI_DOUBLE_OPTIONAL_MO(xpn->pCh->pCProfile->L_N_intercept,"mineralisation","L_N_intercept",0.85); //variable intercept of dynamic L/N division(default = Parton 1987)
-      //End of Moritz
-   
 	//Hong: Temperaturabhängigkeit für DAISY Abbauraten (für Scott Demyan)
 	GET_INI_INT(self->iTempCorr,"mineralisation","iTempCorr");	
 	GET_INI_DOUBLE(self->fParCAOM1Q10,"mineralisation","CAOM1Q10");

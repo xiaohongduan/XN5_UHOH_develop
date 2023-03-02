@@ -25,7 +25,7 @@ int century_n_Mineralisation_init(century_n *self)
 	int i;
 
 	century_n__general_init(self);
-
+	
 	self->fCHumus_old = (double *)g_malloc0((pSo->iLayers-2) * sizeof (double));//Hong
 
 	//set fixed parameters (values from Century file 'ffixed.100' for forests)
@@ -114,8 +114,6 @@ int century_n_Mineralisation_run(century_n *self) // returns total daily NNM [g/
 	PSLAYER		pSL;
 	PWLAYER		pWL;
 	PHLAYER		pHL;
-	//PCBALANCE	    pCB     = pCh->pCBalance; //Added by Hong on 20180731
-	
 	//int const TimeStepsPerDay=(int)(1.0/(pTi->pTimeStep->fAct));
 	//double dtDecompDC=(double)1.0/365./TimeStepsPerDay;	//fraction of year per timestep
 	double dtDecompDC=(double)1.0/365.0*(pTi->pTimeStep->fAct);	//fraction of year per timestep
@@ -207,9 +205,6 @@ frNO3=0.0;
 					pCh->pCProfile->fLignFracStrLitSurf = newlig;
 					pCh->pCProfile->fCMtbLitterSurf += mC * gpm2TOkgpha;
 					pCh->pCProfile->fNMtbLitterSurf += mN * gpm2TOkgpha;
-					
-					//Hong added on 20180807 for C-balance
-			        //pCB->dCInputCum += sC * gpm2TOkgpha+ mC * gpm2TOkgpha;
 				}
 
 // b) soil litter (fine roots)
@@ -253,9 +248,7 @@ frNO3=0.0;
 							pCL->fCMtbLitter += mC * gpm2TOkgpha;
 							pCL->fNMtbLitter += mN * gpm2TOkgpha;
 						}
-                    //Hong added on 20180807 for C-balance
-			        //pCB->dCInputCum += sC * gpm2TOkgpha+ mC * gpm2TOkgpha;
-				
+
 				}//loop over soil layers
 
 //************************************************************************************************
@@ -1440,7 +1433,7 @@ frNO3=0.0;
 			pCh->pCLayer->pNext->fNHumusImmobR = ImmBySOM;///pTi->pTimeStep->fAct;
 			pCh->pCLayer->pNext->fNLitterImmobR = (ImmByInput + ImmByStructLitter
 			                                      + ImmByMetabLitter+ ImmByWood); // pTi->pTimeStep->fAct; // - DailyCorrection;wird wohl nie verwendet
-												  
+							
 //write humus and FOS für Ceres-N Denitrifikation
 			for(i=0, pCL=pCh->pCLayer->pNext, pSL = pSo->pSLayer->pNext ; pSL->pNext != NULL ;
 			        pSL=pSL->pNext,pCL=pCL->pNext, i++)
@@ -1469,6 +1462,10 @@ frNO3=0.0;
 					pCL->fNHumusImmobR/=pTi->pTimeStep->fAct;
 					
 					pCL->fCO2C	+= pCL->fCO2C_dt;//Hong added for C balance
+					//Test of Hong
+                    //pSL->fNHumus  = pCL->fNHumusFast  + pCL->fNHumusSlow +pCL->fNHumusStable;
+					//pCL->fNLitter = pCL->fNStrcLitter + pCL->fNMtbLitter;
+					//End of TESt
 				}
 
 // Hong on 20190604: update of litterSurf and HumusSurf 

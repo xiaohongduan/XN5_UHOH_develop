@@ -161,10 +161,6 @@ int daisy_miner_run(daisy_miner *self)
 
 //activated by Hong on 20180724
 SurfaceMiner(self); //exp_p durch stickstoff *self ersetzt
- 
- //Moritz: activate new function 
- //
-StandingPoolDecrease(self); //Added by Moritz on 20181017
 //Hong
 //	rm    = (double)1.0;    /*orig :1.0; */			//analog crikle
 
@@ -192,7 +188,7 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
   /* Berechnung der Anteile aus dem Humus anhand der relativen           */
   /* Verhältnisse zum Ende des vorherigen Zeitsschritts.                 */
   /***********************************************************************/
- 
+
   pCL->fCFOMSlow = pCL->fCLitter;
   pCL->fCFOMFast = pCL->fCManure;
 
@@ -461,19 +457,7 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
     help6 = fCBOM2DecayR / fCN_MicBiomFast -  (fSOM2 / fCN_HumusFast + ((double) 1.0 - fSOM2) * self->fEff_BOM2 / fCN_MicBiomFast) * fBOM2_DeathC;
 	
    /*SOM2->BOM1*/
-   
-   //Moritz new fSOM1 function
-        if (xpn->pCh->pCProfile->fSOM1_new == 1)
-      { 
-      help7 = fCSOM2DecayR * ((double)1.0 / fCN_HumusFast - self->fEff_SOM2 / fCN_MicBiomSlow );
- }
-      else
-      {
-       help7 = fCSOM2DecayR * ((double)1.0 / fCN_HumusFast - fSOM1 / fCN_HumusSlow - self->fEff_SOM2 / fCN_MicBiomSlow + self->fEff_SOM2 * fSOM1 / fCN_MicBiomSlow);
-      }
-//End of Moritz
-
-
+    help7 = fCSOM2DecayR * ((double)1.0 / fCN_HumusFast - fSOM1 / fCN_HumusSlow - self->fEff_SOM2 / fCN_MicBiomSlow + self->fEff_SOM2 * fSOM1 / fCN_MicBiomSlow);
 // End of Hong	
 
    /*Summe über alle relevanten Flüsse*/
@@ -525,13 +509,14 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 
 	pCL->fNImmobR = fImmR;
     pCL->fMinerR = fToNH4R; 
+	//pCL->fMinerR = pCL->fLitterMinerR +pCL->fManureMinerR +pCL->fHumusMinerR; //Added by Hong on 20190904
 	
    /********************************************************************************/
    /*    Veraenderung der C-Pools pro Zeitschritt                                  */ 
    /*    Da CN-Verhältnis in den Pools konstant ist, ist eine separate             */
    /*    Modellierung des N redundant.                                             */
    /********************************************************************************/
-    //Moritz: Activate new fSOM1 flow with fSOM1_new == 1
+    
 	/*Gesamt C-Mengen vor dem Zeitschritt*/
 	fCTotal0 = pCL->fCFOMSlow + pCL->fCFOMFast + pCL->fCMicBiomSlow
               + pCL->fCMicBiomFast + pCL->fCHumusSlow + pCL->fCHumusFast
@@ -563,79 +548,34 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 	                       + fBOM1 * fCAOM1DecayR) - fCBOM1DecayR) * DeltaT;
 */		
     // Hong:changed for Scott Demyan et al. 2016.10.06 
-    
-    //Moritz: SOM2 > SOM1 will be set to 0 for new model formualtion 
-     if (xpn->pCh->pCProfile->fSOM1_new == 1)
-      {   
- pCL->fCMicBiomSlow += (self->fEff_SOM1 * fCSOM1DecayR + ((double)1.0) * self->fEff_SOM2 * fCSOM2DecayR
-	                       + fBOM1 * fCAOM1DecayR * self->fEff_AOM1 - fCBOM1DecayR) * DeltaT; 
-          
-          }
-      else {  
-       
     pCL->fCMicBiomSlow += (self->fEff_SOM1 * fCSOM1DecayR + ((double)1.0-fSOM1) * self->fEff_SOM2 * fCSOM2DecayR
 	                       + fBOM1 * fCAOM1DecayR * self->fEff_AOM1 - fCBOM1DecayR) * DeltaT;    
-    }
-    
-    
 	// End of Hong
-      if (xpn->pCh->pCProfile->fSOM1_new == 1)
-      {  
-     pCL->fCHumusSlow   += (fSOM2 * fSOM1* (fBOM1_DeathC + fBOM2_DeathC)- fCSOM1DecayR) * DeltaT;         
-      }
-      else
-          { 
 			   						   
     pCL->fCHumusSlow   += (fSOM1*fCSOM2DecayR - fCSOM1DecayR) * DeltaT;
-              }
+	
 /* // out-noted since 2016.10.06
     pCL->fCMicBiomFast += (fEff * (((double)1.0-fSOM2) * (fBOM1_DeathC + fBOM2_DeathC) 
                           + ((double)1.0-fBOM1) * fCAOM1DecayR + fCAOM2DecayR) - fCBOM2DecayR) * DeltaT; 
 */
     // Hong:changed for Scott Demyan et al.2016.10.06 
-    
-    
     pCL->fCMicBiomFast += ((((double)1.0-fSOM2) * (self->fEff_BOM1*fBOM1_DeathC + self->fEff_BOM2*fBOM2_DeathC) 
                           + ((double)1.0-fBOM1) * fCAOM1DecayR * self->fEff_AOM1 + fCAOM2DecayR * self->fEff_AOM2) - fCBOM2DecayR) * DeltaT;
     // End of Hong
-     if (xpn->pCh->pCProfile->fSOM1_new == 1)
-      { 
-    pCL->fCHumusFast   += (fSOM2 * ((double)1.0-fSOM1) * (fBOM1_DeathC + fBOM2_DeathC) - fCSOM2DecayR) * DeltaT;
-          }
-      
-          else{
+	
     pCL->fCHumusFast   += (fSOM2 * (fBOM1_DeathC + fBOM2_DeathC) - fCSOM2DecayR) * DeltaT;
-          }
-
-      	
+	
 /* // out-noted since 2016.10.06
     pCL->fCO2ProdR     = (((double)1.0 - fEff) * (fCAOM1DecayR + fCAOM2DecayR + fCSOM1DecayR + fCSOM2DecayR) + fCBOM1DecayR + fCBOM2DecayR
 	                      - (fSOM1 - fEff * fSOM1) * fCSOM2DecayR - (fEff + fSOM2 - fEff * fSOM2) * (fBOM1_DeathC + fBOM2_DeathC));
 */
     // Hong:changed for Scott Demyan et al. 2016.10.06 
-    
-      if (xpn->pCh->pCProfile->fSOM1_new == 1)
-      {
-  
-	pCL->fCO2ProdR     = ((double)1.0 - self->fEff_AOM1) * fCAOM1DecayR 
-    + ((double)1.0 - self->fEff_AOM2) * fCAOM2DecayR 
-    + ((double)1.0 - self->fEff_SOM1) * fCSOM1DecayR 
-    + ((double)1.0 - self->fEff_SOM2) *fCSOM2DecayR 
-    + fCBOM1DecayR + fCBOM2DecayR
-    - ((self->fEff_BOM1 * ((double)1.0 - fSOM2)) + fSOM2 ) * fBOM1_DeathC
-    - ((self->fEff_BOM2 * ((double)1.0 - fSOM2)) + fSOM2 ) * fBOM2_DeathC;
-        
-      }   
-      else 
-          { 
 	pCL->fCO2ProdR     = ((double)1.0 - self->fEff_AOM1) * fCAOM1DecayR + ((double)1.0 - self->fEff_AOM2) * fCAOM2DecayR + ((double)1.0 - self->fEff_SOM1) * fCSOM1DecayR + ((double)1.0 - self->fEff_SOM2) *fCSOM2DecayR + fCBOM1DecayR + fCBOM2DecayR
 	                      - (fSOM1 - self->fEff_SOM2 * fSOM1) * fCSOM2DecayR - (self->fEff_BOM1 + fSOM2 - self->fEff_BOM1 * fSOM2) * fBOM1_DeathC - (self->fEff_BOM2 + fSOM2 - self->fEff_BOM2 * fSOM2) * fBOM2_DeathC;
-          }   
- // End of Hong
+    // End of Hong
         
 	pCL->fCO2C += pCL->fCO2ProdR * DeltaT;
 
-// End of Moritz
    /*Die Raten pro Zeitschritt, eigentlich überflüssig aber für Punkt 4 und 5 nötig */
    /*Eventuell mit einem Fehler, da bei diesen Flüssen momentan keine Sterberate be-*/
    /*rücksichtigt wird.                                                             */
@@ -672,30 +612,7 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 	fCAOM2ToBOM2R    = self->fEff_AOM2 * fCAOM2DecayR;
     fCAOM2ToCO2R     = ((double)1.0 - self->fEff_AOM2) * fCAOM2DecayR;
 	
-
-
-//Moritz
-      if (xpn->pCh->pCProfile->fSOM1_new == 1)
-      {
-    fCBOM1ToBOM2R    = self->fEff_BOM1 *((double)1.0 - fSOM2) * fCBOM1DecayR;
-    fCBOM1ToSOM2R    = fSOM2 * ((double)1.0 - fSOM1) * fCBOM1DecayR;
-    fCBOM1ToCO2R     = ((double)1.0 - self->fEff_BOM1) * ((double)1.0 - fSOM2) * fCBOM1DecayR;
-
-	fBOM2InternC    = self->fEff_BOM2 * ((double)1.0 - fSOM2)* fCBOM2DecayR;  
-    fBOM2ToSOM2C    = fSOM2 * ((double)1.0 - fSOM1) * fCBOM2DecayR;
-    fBOM2ToCO2C     = ((double)1.0 - self->fEff_BOM2) * ((double)1.0 - fSOM2) * fCBOM2DecayR;
-	
-	fSOM1ToBOM1C    = self->fEff_SOM1 * fCSOM1DecayR;
-    fSOM1ToCO2C     = ((double)1.0 - self->fEff_SOM1) * fCSOM1DecayR;
-          
-	fSOM2ToBOM1C    = self->fEff_SOM2 * ((double)1.0 ) * fCSOM2DecayR;
-    fSOM2ToSOM1C    = ((double)1.0 - fSOM2) * fSOM1 * fCBOM1DecayR + ((double)1.0 - fSOM2) * fSOM1 * fCBOM2DecayR ; //Moritz: is now actually fBOM1/2 to SOM1C
-    fSOM2ToCO2C     = ((double)1.0 - self->fEff_SOM2) * ((double)1.0 - fSOM1) * fCSOM2DecayR;
-      }
-      else
-      {
-          
-    fCBOM1ToBOM2R    = self->fEff_BOM1 *((double)1.0 - fSOM2) * fCBOM1DecayR;
+	fCBOM1ToBOM2R    = self->fEff_BOM1 *((double)1.0 - fSOM2) * fCBOM1DecayR;
     fCBOM1ToSOM2R    = fSOM2 * fCBOM1DecayR;
     fCBOM1ToCO2R     = ((double)1.0 - self->fEff_BOM1) * ((double)1.0 - fSOM2) * fCBOM1DecayR;
 
@@ -705,12 +622,10 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
 	
 	fSOM1ToBOM1C    = self->fEff_SOM1 * fCSOM1DecayR;
     fSOM1ToCO2C     = ((double)1.0 - self->fEff_SOM1) * fCSOM1DecayR;
-          
+
 	fSOM2ToBOM1C    = self->fEff_SOM2 * ((double)1.0 - fSOM1) * fCSOM2DecayR;
     fSOM2ToSOM1C    = fSOM1 * fCSOM2DecayR;
-    fSOM2ToCO2C     = ((double)1.0 - self->fEff_SOM2) * ((double)1.0 - fSOM1) * fCSOM2DecayR;      
-      }
-    // End of Moritz
+    fSOM2ToCO2C     = ((double)1.0 - self->fEff_SOM2) * ((double)1.0 - fSOM1) * fCSOM2DecayR;
 	// End of Hong 
 
 
@@ -861,7 +776,6 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
   double fNH4ImmR,fNO3ImmR;
   double fCLitterToHumusR,fCLitterToLitterR,fCLitterToCO2R;
   double fCManureToHumusR,fCManureToLitterR,fCManureToCO2R;
-  double fCLitterToManureR,fCManureToManureR,fNLitterToManureR;//for new formulation of BOM in Manure instead of Litter
   double fCHumusToCO2R;
   
   double fNH4ToLitterR,fNO3ToLitterR;
@@ -908,29 +822,12 @@ for (N_SOIL_LAYERS)     //schichtweise Berechnung
   /*    C und N -Mineralisierungsraten (dC/dt bzw. dN/dt)           */
   /******************************************************************/
 
-//Moritz - with dyn_AOM_div use decay rates and CUE from DAISY, and include the BOM surface pool into manure (because this pool = AOM2 with higher CUE)
-if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-{
-    
-fHumusMinerMaxR  = pCL->pNext->fHumusFastMaxDecMaxR;
-fLitterMinerMaxR = pCL->pNext->fFOMSlowDecMaxR;
-fManureMinerMaxR = pCL->pNext->fFOMFastDecMaxR;
-fMinerEffFac     = pPA->pNext->fMinerEffFac;
-fMicBiomCN       = pCL->pNext->fMicBiomCN;
-fMinerHumFac     = pPA->pNext->fMinerHumFac;
-}
-
-else 
-{
 fHumusMinerMaxR  = pCL->pNext->fHumusMinerMaxR;
 fLitterMinerMaxR = pCL->pNext->fLitterMinerMaxR;
 fManureMinerMaxR = pCL->pNext->fManureMinerMaxR;
 fMinerEffFac     = pPA->pNext->fMinerEffFac;
 fMicBiomCN       = pCL->pNext->fMicBiomCN;
 fMinerHumFac     = pPA->pNext->fMinerHumFac;
-}
-
-
 
   fCHumusSurfDecay  = pCP->fCHumusSurf  * fHumusMinerMaxR  * corr.Temp * corr.Feucht;
   fCLitterSurfDecay = pCP->fCLitterSurf * fLitterMinerMaxR * corr.Temp * corr.Feucht;
@@ -959,27 +856,15 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   pCP->fCNManureSurf = (pCP->fNManureSurf > EPSILON)?
     	pCP->fCManureSurf / pCP->fNManureSurf
       	:(double)0.1; 
-        
-//SG20200508
-  pCP->fCNHumusSurf = (pCP->fNHumusSurf > EPSILON)?
-    	pCP->fCHumusSurf / pCP->fNHumusSurf
-      	:(double)0.1; 
 
   /*Mineralisierungs bzw. Immobilisierungsfaktor*/
    if (pCP->fCNLitterSurf > (double)0.1)
    {
-       if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-       {
-           f2     = (double)1 / pCP->fCNLitterSurf - self->fEff_AOM1 / fMicBiomCN; //REPLACED BY AOM1 CUE   
-       }
-     else
-     {
     f2     = (double)1 / pCP->fCNLitterSurf - fMinerEffFac / fMicBiomCN;
-     }
-	
 	fLitterToNH4K = (f2 > 0)? f2 : 0;
     fLitterImmK   = (f2 < 0)? (double)-1 * f2 : 0;
    }
+
   else
    {
     fLitterToNH4K = (double)0;
@@ -988,19 +873,11 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
 
   if (pCP->fCNManureSurf > (double)0.1)
    {
-        if (pCP->fCNLitterSurf > (double)0.1)
-        {
-            f3     = (double)1 / pCP->fCNManureSurf - self->fEff_AOM2 / fMicBiomCN;//REPLACED BY AOM2 CUE 
-        }
-        else
-        {
     f3     = (double)1 / pCP->fCNManureSurf - fMinerEffFac / fMicBiomCN;
-        }
-    
     fManureToNH4K = (f3 > 0)? f3 : 0;
     fManureImmK   = (f3 < 0)? (double)-1 * f3 : 0;
-   //Moritz: Erklärung: wenn f3 kleiner 0, dann gibt es Immobilisierung von N
-    } //end pCP->fCNManureSurf > (double)0.1
+   }
+  
   else
    {
     fManureToNH4K = (double)0;
@@ -1027,16 +904,7 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
 	 {
 	  NoImmLit = (double)0.0;
       fEffNew = fMicBiomCN / pCP->fCNLitterSurf;
-      
-      if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-       { 
-             fRedLit = min(fEffNew,self->fEff_AOM1);
-        }//REPLACED BY AOM1 CUE 
-       else 
-       {
       fRedLit = min(fEffNew,fMinerEffFac);
-       }
-      
       fLitterToNH4K = (double)0;
       fLitterImmK   = (double)0;
      }
@@ -1049,20 +917,12 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
     if (fManureImmK)
 	 {
 	  NoImmMan = (double)0.0;
-      fEffNew = fMicBiomCN / pCP->fCNManureSurf; //Moritz: hier könnte der Fehler liegen
-      
-      if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-         { 
-             fRedMan = min(fEffNew,self->fEff_AOM2);
-             }//REPLACED BY AOM2 CUE 
-      else 
-        {
+      fEffNew = fMicBiomCN / pCP->fCNManureSurf;
       fRedMan = min(fEffNew,fMinerEffFac);
-        }
-      
       fManureToNH4K = (double)0;
       fManureImmK   = (double)0;
      }
+    
 	else
 	 {
 	  NoImmMan = (double)1.0;
@@ -1070,7 +930,8 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
 	 }
 
 	fNToLitterR = (double)0.0; 
-  }  // end if (fNToLitterR  > (fNH4ImmR + fNO3ImmR))
+   }
+  
   else
    {
     fRedLit = (double)1.0;
@@ -1109,60 +970,35 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
 
   /* 2. Abbau des C-Litter Pools pro Zeitschritt */
   
-  //Moritz introduce new variables for BOM in Manure
   if(!NoImmLit)
    {
     fCLitterToCO2R    = fCLitterSurfDecay * fRedLit;
     fCLitterToHumusR  = (double)0.0;
     fCLitterToLitterR = (double)0.0;
-    fCLitterToManureR = (double)0.0;//Moritz
    }
-  else
-  {
-         if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-         {
-            fCLitterToHumusR  = fCLitterSurfDecay * self->fEff_AOM1 * fMinerHumFac;
-            fCLitterToCO2R    = fCLitterSurfDecay * ((double)1.0 - self->fEff_AOM1);
-            fCLitterToManureR = fCLitterSurfDecay * self->fEff_AOM1 * ((double)1.0 - fMinerHumFac);  //Moritz REPLACED BY AOM1 CUE
-            fCLitterToLitterR = fCLitterSurfDecay * self->fEff_AOM1 * ((double)1.0 - fMinerHumFac);
-   }
+
   else
    {
     fCLitterToHumusR  = fCLitterSurfDecay * fMinerEffFac * fMinerHumFac;
     fCLitterToCO2R    = fCLitterSurfDecay * ((double)1.0 - fMinerEffFac);
     fCLitterToLitterR = fCLitterSurfDecay * fMinerEffFac * ((double)1.0 - fMinerHumFac);
    }
-   }
   
   /* 3. Abbau des C-Manure Pools pro Zeitschritt */
-  
   
   if(!NoImmMan)
    {  
     fCManureToCO2R    = fCManureSurfDecay * fRedMan;
     fCManureToHumusR  = (double)0.0;
     fCManureToLitterR = (double)0.0;
-    fCManureToManureR = (double)0.0;//Moritz
    }
 
   else
    {
-         if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-         {
-            fCManureToHumusR  = fCManureSurfDecay * self->fEff_AOM2 * fMinerHumFac;
-            fCManureToCO2R    = fCManureSurfDecay * ((double)1.0 - self->fEff_AOM2);
-            fCManureToManureR = fCManureSurfDecay * self->fEff_AOM2 * ((double)1.0 - fMinerHumFac);    //Moritz  REPLACED BY AOM2 CUE 
-            fCManureToLitterR = fCManureSurfDecay * self->fEff_AOM2 * ((double)1.0 - fMinerHumFac);       
-        }
-        else
-        {
     fCManureToHumusR  = fCManureSurfDecay * fMinerEffFac * fMinerHumFac;
     fCManureToCO2R    = fCManureSurfDecay * ((double)1.0 - fMinerEffFac);
     fCManureToLitterR = fCManureSurfDecay * fMinerEffFac * ((double)1.0 - fMinerHumFac);
    }
-   }
-
-//End of Moritz
 
   /* 4. Abbau des C-Humus Pools */
   fCHumusToCO2R     = fCHumusSurfDecay;
@@ -1171,22 +1007,10 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   pCL->fCO2ProdR = fCLitterToCO2R +  fCManureToCO2R + fCHumusToCO2R;
 
   /* 6. Veraenderung in den C-Pools */
- if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
- {
-      pCP->fCLitterSurf -= (fCLitterToHumusR + fCLitterToCO2R + fCLitterToManureR) * DeltaT;
-      pCP->fCManureSurf -= (fCManureToHumusR + fCManureToCO2R - fCLitterToManureR) * DeltaT;
-      pCP->fCHumusSurf  += (fCLitterToHumusR + fCManureToHumusR - fCHumusToCO2R) * DeltaT;
-      pCL->fCO2C        += pCL->fCO2ProdR * DeltaT;
- }
- else
- {
   pCP->fCLitterSurf -= (fCLitterToHumusR + fCLitterToCO2R - fCManureToLitterR) * DeltaT;
   pCP->fCManureSurf -= (fCManureToHumusR + fCManureToCO2R + fCManureToLitterR) * DeltaT;
   pCP->fCHumusSurf  += (fCLitterToHumusR + fCManureToHumusR - fCHumusToCO2R) * DeltaT;
-  pCL->fCO2C        += pCL->fCO2ProdR * DeltaT;
- }
-                 
-
+  pCL->fCO2C        += pCL->fCO2ProdR * DeltaT; // Hong: 0 layer (surface)
   
   //Added by Hong on 20180731
   //if (pCL->fCO2C>0.0)
@@ -1209,30 +1033,20 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   fNO3ToLitterR = fNToLitterR * RelAnteil(pCP->fNO3NSurf,pCP->fNH4NSurf);
 
   /* 3. Bildung von mikrobieller Biomasse */
-  //fNManureToLitterR = fCManureToLitterR / fMicBiomCN;
- // fNLitterToManureR = fCLitterToManureR / fMicBiomCN;//Moritz
-
-//SG20200508: use CN ratio of Surface Litter and Surface Manure pools
-  fNManureToLitterR = fCManureToLitterR / pCP->fCNManureSurf;
-  fNLitterToManureR = fCLitterToManureR / pCP->fCNLitterSurf;
+  fNManureToLitterR = fCManureToLitterR / fMicBiomCN;
 
 
   /* 4. Humifizierung im Humus-Pool */
   if(!NoImmLit)
    fNLitterToHumusR = (double)0.0;
   else
-  // fNLitterToHumusR = fCLitterToHumusR / fMicBiomCN;
-  fNLitterToHumusR = fCLitterToHumusR / pCP->fCNLitterSurf;
+   fNLitterToHumusR = fCLitterToHumusR / fMicBiomCN;
 
   if(!NoImmMan)
    fNManureToHumusR = (double)0.0;
   else
-   //fNManureToHumusR = fCManureToHumusR / fMicBiomCN;
-    fNManureToHumusR = fCManureToHumusR / pCP->fCNManureSurf;
+   fNManureToHumusR = fCManureToHumusR / fMicBiomCN;
    
-   
-         
-         
   /* 5. Ammonium-Mineralisierung aus Humus, Litter und Manure */
   fNHumusToNH4R  = fNHumusSurfDecay;
   fNLitterToNH4R = fLitterToNH4K * fCLitterSurfDecay;
@@ -1242,23 +1056,9 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   pCP->fNH4NSurf += (fNHumusToNH4R  + fNLitterToNH4R  + fNManureToNH4R -  fNH4ToLitterR) * DeltaT;
   pCP->fNO3NSurf -= fNO3ToLitterR * DeltaT;
   
-  
-
-  
-                        if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-             {
-  pCP->fNLitterSurf += (fNToLitterR - fNLitterToNH4R - fNLitterToHumusR - fNLitterToManureR) * DeltaT;
-  pCP->fNManureSurf -= (fNManureToHumusR - fNLitterToManureR + fNManureToNH4R) * DeltaT;
-  pCP->fNHumusSurf += (fNLitterToHumusR + fNManureToHumusR - fNHumusToNH4R) * DeltaT;
-             }
-             else
-                 {
   pCP->fNLitterSurf += (fNToLitterR + fNManureToLitterR - fNLitterToNH4R - fNLitterToHumusR) * DeltaT;
   pCP->fNManureSurf -= (fNManureToHumusR + fNManureToLitterR + fNManureToNH4R) * DeltaT;
   pCP->fNHumusSurf += (fNLitterToHumusR + fNManureToHumusR - fNHumusToNH4R) * DeltaT;
-                 }
-  
-
   /* Veränderungen im N-Pool Ende */
 
   /* Übertragung auf globale Variablen */
@@ -1281,74 +1081,3 @@ fMinerHumFac     = pPA->pNext->fMinerHumFac;
   return 1;
  } /*Funktion Ende*/
 //End of Hong
-
-
-
-//Added by Moritz to DAISY on 20181017, because no daily decrease happened for StandingCropResidues
-/*************************************************************************************/
-/* Procedur    :   StandingPoolDecrease                                              */
-/* Beschreibung:   Abnahme des Standing-Pools                                        */
-/*                 Grundlage RESMAN (Stott et al. 1995)                              */
-/*                                                                                   */
-/*              GSF/ab  Axel Berkenkamp         18.06.01                             */
-/*                                                                                   */
-/*************************************************************************************/
-/*	veränd. Var.  pCh->pCProfile->fCLitterSurf    pCh->pCProfile->fNLitterSurf       */
-/*				  pCh->pCProfile->fCStandCropRes  pCh->pCProfile->fNStandCropRes     */
-/*                                                                                   */
-/*************************************************************************************/
-int StandingPoolDecrease(daisy_miner *self)
- {
-    expertn_modul_base *xpn = &(self->parent);
-	PTIME 			pTi = xpn->pTi;	 
-	PCPROFILE pCP = xpn->pCh->pCProfile;
-    /*Hilfsvariablen*/
-    double fCDecrease,fNDecrease,delta_N_Littersurf,NManureSurf;
-
-
-  /*  Funktionsaufruf einmal täglich */
-  if (NewDay(pTi))
-  {
-
-   if (pCP->fCStandCropRes > (double)0.0 && pCP->fNStandCropRes > (double)0.0)
-   {
-    fCDecrease = (double)0.01 * pCP->fCStandCropRes;
-    fNDecrease = (double)0.01 * pCP->fNStandCropRes;
-
-	pCP->fCStandCropRes -= fCDecrease;
-
-	// Moritz: activate new function with dyn_AOM_div =1
-    
-                                 if (xpn->pCh->pCProfile->dyn_AOM_div == 1)
-                         {	//Moritz: Added a partitioning of LitterSurf by Lig/N ratio 
-     //
-	pCP->fCLitterSurf += fCDecrease * (1-pCP->fStandCropRes_to_AOM2_part_LN);
-	pCP->fCManureSurf += fCDecrease * pCP->fStandCropRes_to_AOM2_part_LN;
-
-	pCP->fNStandCropRes -= fNDecrease;
-	delta_N_Littersurf= fCDecrease * (1-pCP->fStandCropRes_to_AOM2_part_LN)/150;
-	pCP->fNLitterSurf += delta_N_Littersurf; //Assumed C/N ratio of 150 for AOM1
-	NManureSurf=(fNDecrease-delta_N_Littersurf);
-					if(NManureSurf>0)
-					{
-			        pCP->fNManureSurf    += NManureSurf; //The rest of the N goes into the AOM2 pool
-					}
-                    }
-                         else{
-	pCP->fCLitterSurf += fCDecrease;
-	pCP->fNStandCropRes -= fNDecrease;
-	pCP->fNLitterSurf += fNDecrease;
-                         }
-
-
-
-	/*if (pCP->fCLitterSurf>699.4)
-		printf("mon-day-year: %d, %d, %d\n", xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->year);
-	printf("pCP->fCLitterSurf:%f\n",pCP->fCLitterSurf);*/
-   }
-
-   //End of Moritz */
-  }
-
- return 0;
- } 

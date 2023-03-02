@@ -10,8 +10,7 @@
 double M2_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha1, double N1, double M1, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double Weight1, double Weight2,   
-                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW)
+                double Alpha2, double N2, double M2, double Weight1, double Weight2)
 { 
   double WG = (double)0.0;
   double em1,em2,se;
@@ -44,8 +43,7 @@ double M2_WCont(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 double M2_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha1, double N1, double M1, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double Weight1, double Weight2,   
-                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW)
+                double Alpha2, double N2, double M2, double Weight1, double Weight2)
 {
  double tll,ttl,se,se1,se2,s1,s2,em1,em2,t1,t2;
  double K=(double)0;
@@ -95,8 +93,7 @@ double M2_HCond(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 double M2_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha1, double N1, double M1, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double Weight1, double Weight2,   
-                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW)
+                double Alpha2, double N2, double M2, double Weight1, double Weight2)
 {
  double s1,s2,t1,t2,se,em1,em2;
  double Wakt,Wvor;
@@ -107,9 +104,9 @@ double M2_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
  if (fabs(Hakt-Hvor) >= tolp)
  {
    Wakt = M2_WCont(Hakt,Takt,Ksat,Tsat,Tmin,Alpha1,N1,M1,Ca,Cb,Hc,Tc,Hmin,Hvor,Tvor,
-                   Alpha2,N2,M2,Weight1,Weight2,tau,Tsat_c,Tmin_c,Ksat_c,Ksat_nc,pSW);
+                   Alpha2,N2,M2,Weight1,Weight2);
    Wvor = M2_WCont(Hvor,Takt,Ksat,Tsat,Tmin,Alpha1,N1,M1,Ca,Cb,Hc,Tc,Hmin,Hvor,Tvor,
-                   Alpha2,N2,M2,Weight1,Weight2,tau,Tsat_c,Tmin_c,Ksat_c,Ksat_nc,pSW);
+                   Alpha2,N2,M2,Weight1,Weight2);
    DWC = (Wakt-Wvor)/(Hakt-Hvor);
  }
  else   
@@ -163,8 +160,7 @@ double M2_DWCap(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
 double M2_MPotl(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                 double Alpha, double N, double M, double Ca, double Cb,
                 double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                double Alpha2, double N2, double M2, double W1, double W2,   
-                double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW)
+                double Alpha2, double N2, double M2, double W1, double W2)
 
 {
  return Hakt;  

@@ -2369,7 +2369,7 @@ void expertn_database_help_func_set_time_step(expertn_modul_base *self,const cha
                         char *ERROR_STR;
 						S = "0.1";
 						ERROR_STR = g_strdup_printf("Varname is not defined (%s or %s), take default value (%s)!\n",local_config_str,"Global_Config.options.time step",S);
-                        PRINT_ERROR_ID(self,ERROR_STR);
+                        PRINT_WARNING_ID(self,ERROR_STR);
 						g_free(ERROR_STR);
                     }
             }
@@ -2444,23 +2444,19 @@ int expertn_database_help_func_init_water(expertn_modul_base *self)
     double (*WCont)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, 
-                    double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	double (*HCond)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, 
-                    double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	double (*DWCap)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, 
-                    double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
     double (*MPotl)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
                     double Alpha, double N, double M, double Ca, double Cb,
                     double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, 
-                    double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
+                    double Alpha2, double N2, double M2, double W1, double W2);
 	double (*PedoTransfer)(double dClayF, double dSiltF, double dSandF, 
                             double dBD, double dCarbonF, double dPS, int i);
 
@@ -2507,14 +2503,14 @@ int expertn_database_help_func_init_water(expertn_modul_base *self)
 
 
     // Hydraulische Funktionen laden:
-/*    WCont = xpn_register_var_get_pointer(self->pXSys->var_list,"hydraulic_fuctions.WCont");
+    WCont = xpn_register_var_get_pointer(self->pXSys->var_list,"hydraulic_fuctions.WCont");
     HCond = xpn_register_var_get_pointer(self->pXSys->var_list,"hydraulic_fuctions.HCond");
     DWCap = xpn_register_var_get_pointer(self->pXSys->var_list,"hydraulic_fuctions.DWCap");
     MPotl = xpn_register_var_get_pointer(self->pXSys->var_list,"hydraulic_fuctions.MPotl");
     if ((WCont==NULL) || (HCond==NULL) || (DWCap==NULL) || (MPotl==NULL))
         {
             PRINT_ERROR_ID(self,"Problem with hydraulic functions!");
-        }*/ //--> SG20200326 wird hier nicht mehr gebraucht, da Initialisierung der Matrixpotentiale zu den hydraulischen Funktionen verschoben wurde!
+        }
 
     PedoTransfer = xpn_register_var_get_pointer(self->pXSys->var_list,"xpn_pedotransfer.function");
 
@@ -2876,9 +2872,7 @@ int expertn_database_help_func_init_water(expertn_modul_base *self)
        Loeser der Richardsgleichung.  */
     // initSoilPotential(exp_p);  // newly calculation of soil water potential
 	
-    //--> SG20200326 Initialisierung der Matrixpotentiale zu den hydraulischen Funktionen verschoben!
-
-/*for(pSL = pSo->pSLayer->pNext,
+for(pSL = pSo->pSLayer->pNext,
             pSW = pSo->pSWater->pNext,
             pWL = pWa->pWLayer->pNext,
             iLayer = 1; ((pSL->pNext != NULL)&&
@@ -2892,19 +2886,19 @@ int expertn_database_help_func_init_water(expertn_modul_base *self)
             pWL->fMatPotOld = pWL->fMatPotAct;
         }
 
-    //  Auf die virtuelle erste Simulationsschicht werden
-    //   Werte der zweiten Simulationsschicht geschrieben  
+    /* Auf die virtuelle erste Simulationsschicht werden
+       Werte der zweiten Simulationsschicht geschrieben  */
 
     pWa->pWLayer->fMatPotOld = pWa->pWLayer->pNext->fMatPotOld;
     pWa->pWLayer->fMatPotAct = pWa->pWLayer->pNext->fMatPotAct;
 
 
-   // Auf die virtuelle letzte Simulationsschicht werden
-   //    Werte der vorletzten Simulationsschicht geschrieben  
+    /* Auf die virtuelle letzte Simulationsschicht werden
+       Werte der vorletzten Simulationsschicht geschrieben  */
 
     pWL->fMatPotOld = pWL->pBack->fMatPotOld;
     pWL->fMatPotAct = pWL->pBack->fMatPotAct;
-	*/
+	
 	
 	
 
@@ -3144,24 +3138,31 @@ void expertn_database_help_func_init_Soil_Organic_Matter(expertn_modul_base *sel
             pMa->pLitter->fTotalCN = 0.1;
 
             if (pCh->pCProfile->fCLitterSurf< 0)
-            pCh->pCProfile->fCLitterSurf = 0.0;
-			if (pCh->pCProfile->fNLitterSurf <0)
-            pCh->pCProfile->fNLitterSurf = 0.0;
+                pCh->pCProfile->fCLitterSurf = 0.0;
+
+	    if (pCh->pCProfile->fNLitterSurf <=0)
+                pCh->pCProfile->fNLitterSurf = EPSILON; //Changed by Hong on 20200305
 
             if(pCh->pCProfile->fCManureSurf<0)
-			pCh->pCProfile->fCManureSurf = 0.0;
-			if(pCh->pCProfile->fNManureSurf<0)
-            pCh->pCProfile->fNManureSurf = 0.0;
+		pCh->pCProfile->fCManureSurf = 0.0;
+
+	    if(pCh->pCProfile->fNManureSurf<=0)
+                pCh->pCProfile->fNManureSurf = EPSILON;
 
             if(pCh->pCProfile->fCHumusSurf<0)
-			pCh->pCProfile->fCHumusSurf = 0.0;
-			if(pCh->pCProfile->fNHumusSurf<0)
-            pCh->pCProfile->fNHumusSurf = 0.0;
+		pCh->pCProfile->fCHumusSurf = 0.0;
+
+	    if(pCh->pCProfile->fNHumusSurf<=0)
+                pCh->pCProfile->fNHumusSurf = EPSILON;
 
             if(pCh->pCProfile->fCStandCropRes < 0)
-            pCh->pCProfile->fCStandCropRes = 0.0;
-			if(pCh->pCProfile->fNStandCropRes< 0)
-            pCh->pCProfile->fNStandCropRes = 0.0;
+                pCh->pCProfile->fCStandCropRes = 0.0;
+
+	    if(pCh->pCProfile->fNStandCropRes<= 0)
+                pCh->pCProfile->fNStandCropRes = EPSILON;
+		
+		if (pCh->pCProfile->fNH4ManureSurf <=0)
+			  pCh->pCProfile->fNH4ManureSurf = EPSILON; //Added by Hong on 20200305
 
             /* Berechnen schichtmaessiger Anteil. Zur Vereinfachung
               Variable pCL->fCLitter benutzt um Anteile zu uebergeben. */
@@ -3187,10 +3188,8 @@ void expertn_database_help_func_init_Soil_Organic_Matter(expertn_modul_base *sel
                        File eingelesen und sollte nicht ueberschrieben werden   */
 
                     pCL->fCLitter = 0.0;
-//                    pCL->fNLitter = 0.1;
-//                    pCL->fLitterCN = 0.1; 
-                     pCL->fNLitter = 1e-6;
-                     pCL->fLitterCN = 1e-6;
+                    pCL->fNLitter = 0.1;
+                    pCL->fLitterCN = 0.1;
 
                 }
         }

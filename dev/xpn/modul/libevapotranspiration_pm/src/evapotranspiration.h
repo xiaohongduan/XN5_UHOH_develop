@@ -22,61 +22,6 @@ G_BEGIN_DECLS
 #define IS_EVAPOTRANSPIRATION_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),\
 			EVAPOTRANSPIRATION_TYPE))
 
-//AS: hydraulic functions, used by the soil surface resistance models:
-#define WATER_CONTENT(x) (*self->WCont)((double)x,\
-                                            (double)pWL->fContAct,\
-                                            (double)pSW->fCondSat,\
-                                            (double)pSW->fContSat,\
-                                            (double)pSW->fContRes,\
-                                            (double)pSW->fVanGenA,\
-                                            (double)pSW->fVanGenN,\
-                                            (double)pSW->fVanGenM,\
-                                            (double)pSW->fCampA,\
-                                            (double)pSW->fCampB,\
-                                            (double)pSW->fPotInflec,\
-                                            (double)pSW->fContInflec,\
-                                            (double)pSW->fMinPot,\
-                                            (double)pWL->fMatPotOld,\
-                                            (double)pWL->fContOld,\
-                                            (double)pSW->fVanGenA2,\
-                                            (double)pSW->fVanGenN2,\
-                                            (double)pSW->fVanGenM2,\
-                                            (double)pSW->fBiModWeight1,\
-                                            (double)pSW->fBiModWeight2,\
-                                            (double)pSW->fTau,\
-                                            (double)pSW->fContSat_c,\
-                                            (double)pSW->fContRes_c,\
-                                            (double)pSW->fCondSat_c,\
-                                            (double)pSW->fCondSat_nc,\
-                                            pSW)
-                                            
-#define MATRIX_POTENTIAL(x) (float) (*self->MPotl)((double)pWL->fMatPotAct,\
-                                            (double)x,\
-                                            (double)pSW->fCondSat,\
-                                            (double)pSW->fContSat,\
-                                            (double)pSW->fContRes,\
-                                            (double)pSW->fVanGenA,\
-                                            (double)pSW->fVanGenN,\
-                                            (double)pSW->fVanGenM,\
-                                            (double)pSW->fCampA,\
-                                            (double)pSW->fCampB,\
-                                            (double)pSW->fPotInflec,\
-                                            (double)pSW->fContInflec,\
-                                            (double)pSW->fMinPot,\
-                                            (double)pWL->fMatPotOld,\
-                                            (double)pWL->fContOld,\
-                                            (double)pSW->fVanGenA2,\
-                                            (double)pSW->fVanGenN2,\
-                                            (double)pSW->fVanGenM2,\
-                                            (double)pSW->fBiModWeight1,\
-                                            (double)pSW->fBiModWeight2,\
-                                            (double)pSW->fTau,\
-                                            (double)pSW->fContSat_c,\
-                                            (double)pSW->fContRes_c,\
-                                            (double)pSW->fCondSat_c,\
-                                            (double)pSW->fCondSat_nc,\
-                                            pSW)
-
 typedef struct _evapotranspiration			evapotranspiration;
 typedef struct _evapotranspirationClass		evapotranspirationClass;
 
@@ -108,30 +53,6 @@ struct _evapotranspiration
 	double Rs;
 	double Rs_Day;
 
-    int counter; //AS: counter variable for debugging
-    int high_res_weather; //AS: =1 if high res weather input is used, if not =0
-    
-    //AS: variables for summing up to get daily average
-    double Rs_Day_;
-    double _fNetRadDay;
-    double _fShortNetRadDay;
-    double _fLongNetRadDay;
-    double _fExtRadDay;
-    
-    //AS: variables for calculation of soil surface resistance
-    double rss; // soil surface resistance
-    double cont_ERRP; // water content at the "evaporation-rate reduction point" (Tran et al. 2014: Improvements to the calculation of actual evaporation frombare soil surfaces)
- 	double (*WCont)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
-                    double Alpha, double N, double M, double Ca, double Cb,
-                    double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
-
-    double (*MPotl)(double Hakt, double Takt, double Ksat, double Tsat, double Tmin,
-                    double Alpha, double N, double M, double Ca, double Cb,
-                    double Hc, double Tc, double Hmin, double Hvor, double Tvor,
-                    double Alpha2, double N2, double M2, double W1, double W2, double tau, double Tsat_c, double Tmin_c, double Ksat_c, double Ksat_nc, PSWATER pSW);
-
-
 	/* Evapotranspiration */
 	double ETpot;
 	double ETpot_dt;
@@ -158,8 +79,6 @@ struct _evapotranspiration
 	double night_rad;
 	double night_rad2;
 	int night_count;
-    int night_count_2; //AS: added for calculation of fcd according to ASCE report
-    double fcd_last;   //AS: added for calculation of fcd according to ASCE report
 	double night_time;
 	
 	/* Evapotranspiration FAO */
@@ -176,9 +95,6 @@ struct _evapotranspiration
 	
 	int iHaudeFalse, iHaudePan;
 	int iHaudeTime;
-    
-    //SG20221702:
-    double aVanDeGriend;
 	
 	int __ERROR;
 };
@@ -205,10 +121,8 @@ G_MODULE_EXPORT int penman_monteith_sh_run2(evapotranspiration *self);
 G_MODULE_EXPORT int penman_monteith_gh_run(evapotranspiration *self);
 G_MODULE_EXPORT int penman_monteith_gh_run_plus(evapotranspiration *self);
 G_MODULE_EXPORT int penman_monteith_gh_run_with_LAI(evapotranspiration *self);
-G_MODULE_EXPORT int penman_monteith_gh_run_FAO(evapotranspiration *self); //AS: added GH algorithm used in ET model "Evapotranspiration (FAO)" as separate GH model
 G_MODULE_EXPORT int penman_monteith_nr_load(evapotranspiration *self);
 G_MODULE_EXPORT int penman_monteith_nr_run(evapotranspiration *self);
-G_MODULE_EXPORT int penman_monteith_nr_run_FAO(evapotranspiration *self); //AS: added calculation of Rn on a daily basis
 
 G_MODULE_EXPORT int evapotranspiration_FAO_run(evapotranspiration *self);
 G_MODULE_EXPORT int evapotranspiration_FAO_load(evapotranspiration *self);
@@ -216,13 +130,6 @@ G_MODULE_EXPORT int evapotranspiration_FAO_load(evapotranspiration *self);
 G_MODULE_EXPORT int evapotranspiration_haude_run(evapotranspiration *self);
 G_MODULE_EXPORT int evapotranspiration_haude_load(evapotranspiration *self);
 
-//AS: added models for calculation of soil surface resistance
-G_MODULE_EXPORT int rs_anadranistakis_run(evapotranspiration *self);
-G_MODULE_EXPORT int rs_VanDeGriend_run(evapotranspiration *self);
-G_MODULE_EXPORT int rs_VanDeGriend_load(evapotranspiration *self);
-G_MODULE_EXPORT int rs_CamilloGurney_run(evapotranspiration *self);
-G_MODULE_EXPORT int rs_Sun82_run(evapotranspiration *self);
-G_MODULE_EXPORT int rs_Sun98_run(evapotranspiration *self);
 
 int evapotranspiration_run65(evapotranspiration *self, int opt_sfc);
 
@@ -232,8 +139,7 @@ double surface_layer_get_ch(expertn_modul_base *xpn);
 
 
 /*Calculate Net Radiation from Solar Radiation [MJ/m2*d]*/
-//double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rnl);
-double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rnl,double *Ra, int version); //AS: added extraterrestrial radion to output and algorithm used in "Penman Monteith (FAO)" as separate model
+double evapotranspiration_get_Rn(evapotranspiration *self,double *Rns,double *Rnl);
 
 int evapotranspiration_integrate_small_time_step_vars(evapotranspiration *self);
 int evapotranspiration_get_Haude_weather(evapotranspiration *self);

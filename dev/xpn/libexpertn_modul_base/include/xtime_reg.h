@@ -7,6 +7,7 @@ xpn_register_var_init_pdouble( var_list, pTi->pSimTime->fTimeY,"pTi.pSimTime.fTi
 xpn_register_var_init_pint( var_list, pTi->pSimTime->iyear,"pTi.pSimTime.iyear",0.0);\
 xpn_register_var_init_pdouble( var_list, pTi->pSimTime->fTimeZone,"pTi.pSimTime.fTimeZone",0.0);\
 xpn_register_var_init_pdouble( var_list, pTi->pSimTime->fSimDuration,"pTi.pSimTime.fSimDuration",0.0);\
+xpn_register_var_init_pdouble( var_list, pTi->pSimTime->fCompTimeY,"pTi.pSimTime.fCompTimeY",-99.9);\
 \
 xpn_register_var_init_pdouble( var_list, pTi->pTimeStep->fAct,"pTi.pTimeStep.fAct",0.0f);\
 xpn_register_var_init_pdouble( var_list, pTi->pTimeStep->fOld,"pTi.pTimeStep.fOld",0.0f);\

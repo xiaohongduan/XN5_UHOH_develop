@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 	// glib Klassen initiatisieren
 	g_type_init();
 	
-	// Wenn man das nicht macht, kann man keine Dateien öffnen, die Umlaute haben oder printf mit Umlauten geht nicht
+	// Wenn man das nicht macht, kann man keine Dateien öffnent, die Umlaute haben oder printf mit Umlauten geht nicht
 	setlocale(LC_ALL, "en_US.UTF-8");
 
 	// Command Line Parser:
@@ -355,9 +355,8 @@ int main(int argc, char **argv)
 		if ((i3-1 >= loop_min) && (i3-1 < loop_max)) {
 #endif
 
-//			if ((fraction < (1.0- EPSILON)) || ((fraction > (1.0+ EPSILON)))) {
-			if ((fraction < (0.99)) || ((fraction > (1.01)))) { //SG20200212: to avoid unnecessary error messages
-				S2 = g_strdup_printf("Sum of the landcover fractions %s is not 100%% +/-1%%. It is: %f",xpn_class[i3-1]->pXSys->reg_str,fraction*100.0);
+			if ((fraction < (1.0- EPSILON)) || ((fraction > (1.0+ EPSILON)))) {
+				S2 = g_strdup_printf("Sum over the landcover of grids %s are not 100%%. It is: %f",xpn_class[i3-1]->pXSys->reg_str,fraction*100.0);
 				PRINT_ERROR(S2);
 				g_free(S2);
 			}
@@ -455,11 +454,7 @@ int main(int argc, char **argv)
 
 
 #ifdef USE_OPENMP
-//LINUX
-//#pragma omp parallel for schedule(dynamic) reduction(||: finish)
-
-//WINDOWS (works also under LINUX )
-#pragma omp parallel for reduction(||: finish) //SG202206: use this variant to avoid initialisation problems during parallelization (obeserved in Spass model)
+#pragma omp parallel for schedule(dynamic) reduction(||: finish)
 #endif
 			for (i=loop_min; i<loop_max; i++) {
 

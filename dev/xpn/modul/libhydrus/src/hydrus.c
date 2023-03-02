@@ -38,6 +38,7 @@ static void hydrus_init(hydrus *self)
 	self->mob_imm = 0;
 	self->use_infiltration_limit=TRUE;
 	self->use_infiltration_limit_layer=TRUE;
+	self->constant_ground_water_level = 2000.0; //Hong added 20210715
 	self->WCont=NULL;
 	self->HCond=NULL;
 	self->DWCap=NULL;
@@ -80,13 +81,13 @@ int hydrus_water_flow_init(hydrus *self)
 
 
 	// Boundary Condition aus der INI Datei lesen (falls undefiniert --> 1)
-	self->iBotBC = xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.hydrus.bottombc",1);
+	self->iBotBC = xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.hydrus.bottombc",1); 
 	// Mobil Immobil (Standartmäßig aus = 0)
 	self->mob_imm = xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.hydrus.mobil",0);
 
 	self->use_infiltration_limit=xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.hydrus.infiltration_limit",TRUE);
 	self->use_infiltration_limit_layer=xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.hydrus.infiltration_layer_limit",TRUE);
-
+    self->constant_ground_water_level=xpn_register_var_get_pointer_convert_to_double(xpn->pXSys->var_list,"Config.hydrus.ground_water_level", 2000.0);	//Hong added 20210715 for constant ground water level input by GUI
 	// Hydraulische Funktionen laden:
 	self->WCont = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.WCont");
 	self->HCond = xpn_register_var_get_pointer(xpn->pXSys->var_list,"hydraulic_fuctions.HCond");
@@ -689,12 +690,13 @@ int hydrus_water_flow_run(hydrus *self)
 			)
 
 				{
-					pLR->fActLayWatUpt = self->Sink[iLayer];
+					// FH 20191205 added multiplication with pSL->fThickness to make it consistent with other moduls and potential uptake
+                    pLR->fActLayWatUpt = self->Sink[iLayer] * pSL->fThickness;
 					///*
 					switch (self->mob_imm)
 						{
 						case 1:
-							pLR->fActLayWatUpt = -(pWL->fContAct-pWL->fContMobAct-pWL->fContImmAct)/DeltaT;
+							pLR->fActLayWatUpt = -(pWL->fContAct-pWL->fContMobAct-pWL->fContImmAct)* pSL->fThickness/DeltaT;
 							break;
 						default:
 							break;
@@ -845,7 +847,6 @@ int hydrus_water_flow_run(hydrus *self)
 	
 	pWa->fPercolR     =  max(self->vBot,(double)0);
 	self->fCapillRiseR      = -min(self->vBot,(double)0);
-     pWa->fCapillaryRiseR = self->fCapillRiseR; //SG20210714
 //Maximal actual evaporation rate
 	pWL->pNext->fHydrCond = NEXT_CONDUCTIVITY(pWL->pNext->fMatPotAct); // first layer
 	pWL->fHydrCond        = pWL->pNext->fHydrCond;  // zero layer same value as first layer
@@ -912,7 +913,6 @@ int hydrus_water_flow_run(hydrus *self)
 		}*/
 
 	return RET_SUCCESS;
-//	return self->__ERROR; //Abbruch sobald für eine Variable CHECK_VALID(var) negativ ist (nur bei DEBUG_LEVEL > 2)
 }
 
 
@@ -997,7 +997,7 @@ void hydrus_rain_limit_infiltration_layer(hydrus *self)
 
 			if (pWLayer->fContAct > pSLayer->fPorosity)
 				{
-					water_pond = (pWLayer->fContAct - pSLayer->fPorosity)*20.0; //SG20220920 ??? warum *20? sollte das vielleicht water_pond = (pWLayer->fContAct - pSLayer->fPorosity)/pSLayer->fThickness heissen?
+					water_pond = (pWLayer->fContAct - pSLayer->fPorosity)*20.0;
 					pWLayer->fContAct -= water_pond;
 					water_pond *= pSLayer->fThickness;
 					//pWLayer->fContAct = pWLayer->fContOld;
@@ -1092,7 +1092,6 @@ int hydrus_water_flow_setBC(hydrus *self)
 
 	PSPROFILE pSo = self->parent.pSo;
 	PWATER pWa = self->parent.pWa;
-    PCLIMATE pCl = self->parent.pCl;
 
 //	PSLAYER     pSL;
 //	PSWATER     pSW;
@@ -1135,15 +1134,12 @@ int hydrus_water_flow_setBC(hydrus *self)
 			if (self->iBotBC == (int)3) self->rBot=(double)-0.0;//no flux
 			//if(abs(rBotOld-rBot)>(double)1.e-8) MinStep=TRUE;
 			self->hBotOld=self->hBot;
-			self->hBot=(double)99;
-
-			pWa->fGrdWatLvlPot = pSo->fDepth - pWa->fGrdWatLevel + pSo->fDeltaZ/(double)2;
-			if (self->iBotBC == (int)2) self->hBot=pWa->fGrdWatLvlPot;
-			//if(abs(hBotOld-hBot)>(double)1.e-8) MinStep=TRUE;
+			self->hBot=(double)99;  
             
-           //SG20220304: dynamic groundwater table:
-           if (pWa->iBotBC == (int)5) 
-               self->hBot= pSo->fDepth - pCl->pWeather->fWaterTable + pSo->fDeltaZ/(float)2;
+			if (self->iBotBC == (int)2) pWa->fGrdWatLevel = self->constant_ground_water_level; //Hong added 20210715 for constant ground water level input by GUI
+			pWa->fGrdWatLvlPot = pSo->fDepth - pWa->fGrdWatLevel + pSo->fDeltaZ/(double)2;
+			if ((self->iBotBC == (int)2) || (self->iBotBC == (int)5)) self->hBot=pWa->fGrdWatLvlPot;
+			//if(abs(hBotOld-hBot)>(double)1.e-8) MinStep=TRUE;
 		}
 
 	return RET_SUCCESS;

@@ -23,6 +23,9 @@ G_BEGIN_DECLS
 			GECROS_TYPE))
 //Test of Hong
 #define SET_IF_99(x1,y1) if (x1==-99.0) x1=(y1);
+#define  EPSILON         1e-9
+//#define  EPSILON_WC         1e-2 //Test of Hong
+
 //End of Test
 typedef struct _gecros			gecros;
 typedef struct _gecrosClass		gecrosClass;
@@ -345,7 +348,8 @@ struct _gecros
 	// Globale Variablen:
 	PGECROSPLANT	pGecrosPlant;
 	double SC,DS0,SINLD,COSLD,DAYL,DDLP,DSINB,DSINBE;//Astronomy
-	
+	double SUNRIS, SUNSET; //Added by Hong on 20191024
+
 	double fEmergValue; //added by F.Heinlein and Hong 20170512 
 	
     ///*
@@ -368,16 +372,11 @@ struct _gecros
 	double LNCI;
     //[photosynthesis]                 
 	double EAJMAX,XVN,XJN,THETA;
-    //SG20210209: new optional parameter GCMIN
-    double GCMIN;
 	//[genotype] 
 	double SEEDW,SEEDNC,BLD,HTMX,MTDV,MTDR; 
     
     //SG20180410. additional paramterfor sugarbeet
     double SINKBEET, EFF, CFS;
-    
-    //SG20220620: additional parameter for winter crops
-    double DSCRIT;
 
     //%** Soil parameters
     //double PNLS=1.
@@ -400,6 +399,8 @@ struct _gecros
    double CLVI,CRTI,NPL,NLVI,NRTI;
    double LAII,SLNBI,RDI,HTI;
 
+   //Test of Hong
+   double LAI;
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //*/

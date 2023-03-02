@@ -168,18 +168,6 @@ int transpn_get_DON_TransformationRates(transpn *self)
 			wlow  = wmin + (double)0.10;
 			wmax  = pSL->fPorosity;
 			whigh = wmax - (double)0.08; */
-            
-      //SG20200504: Anpassung an LeachN-Mineralisation      
-      /* Ansatz DAISY, Bezugswert Wasserspannung */
-	  f1= (float)-31622770;    //pF = 6.5
-      wmin = WATER_CONTENT(f1);
-      f1= (float)-3160;        //pF = 2.5
-      wlow = WATER_CONTENT(f1);
-      f1= (float)-316;         //pF = 1.5
-      whigh = WATER_CONTENT(f1);
-//    f1= (float)0;
-//    wmax = WATER_CONTENT(f1);
-
 
 			corr.Feucht = Polygon4((pWL->fContAct + pWL->fIce),
 			                       wmin,(double)0,  wlow, (double)1 , whigh, (double)1,
@@ -841,7 +829,6 @@ int transpn_NTransp(transpn *self, int N2O_IN_SOLUTION)
 	double     fDuengungAktuellUrea = (double)0.0;
 	double     fDuengungAktuellDON  = (double)0.0;
 	double     fDuengungAktuellDOC  = (double)0.0;
-    
 
 	pCP = pCh->pCProfile;
 	pCB = pCh->pCBalance;
@@ -849,19 +836,6 @@ int transpn_NTransp(transpn *self, int N2O_IN_SOLUTION)
 	
 	self->__ERROR=0;
 
-    //SG20200826
-//    #define NewDay(pz) ((pz->pSimTime->bFirstRound==TRUE)||(pz->pSimTime->fTimeDay==0.0)||((int)(pz->pSimTime->fTimeY) != (int)(pz->pSimTime->fTimeY_old)))? 1 : 0
-  if ((pTi->pSimTime->bFirstRound==TRUE)||(pTi->pSimTime->fTimeDay==0.0)||((int)(pTi->pSimTime->fTimeY) != (int)(pTi->pSimTime->fTimeY_old)))
-//    if((pTi->pSimTime->fTimeDay > pTi->pTimeStep->fAct/2.0)&&(pTi->pSimTime->fTimeDay < 3.0*pTi->pTimeStep->fAct/2.0))
-    {
-        pCP->fUreaLeachDay = 0.0;
-        pCP->fNH4LeachDay  = 0.0;
-        pCP->fNO3LeachDay  = 0.0;
-        pCP->fN2ODrainDay  = 0.0;
-        pCP->fDOCLeachDay  = 0.0;
-        pCP->fDONLeachDay  = 0.0;
-    }
-        
 	/* ************************* Kh-Wert fuer N2O berechnen. ************ */
 	for ( SOIL2_LAYERS0(pCL, pCh->pCLayer->pNext, pHL, pHe->pHLayer->pNext))
 		{
@@ -1198,14 +1172,14 @@ int transpn_NTransp(transpn *self, int N2O_IN_SOLUTION)
 			pCP->fNH4LeachDay  += pWL->fFlux
 			                      * (pCL->fNH4NSoilConcOld + pCL->fNH4NSoilConc)
 			                      / (double)2.0 / kgPhaTomgPsqm;
-			pCP->fNO3LeachDay += pWL->fFlux
+			pCP->fNO3LeachDay  += pWL->fFlux
 			                      * (pCL->fNO3NSoilConcOld + pCL->fNO3NSoilConc)
 			                      / (double)2.0 / kgPhaTomgPsqm;
 			// Variable noch nicht vorhanden
-			pCP->fN2ODrainDay  += pWL->fFlux
-			                               * (pCL->fN2ONGasConcOld + pCL->fN2ONGasConc)
-			                               * pCL->fN2OKh
-			                               / (double)2.0 / kgPhaTomgPsqm;
+			//pCP->fN2ODrainDay  += pWL->fFlux
+			//                               * (pCL->fN2ONGasConcOld + pCL->fN2ONGasConc)
+			//                               * pCL->fN2OKh
+			//                               / (double)2.0 / kgPhaTomgPsqm;
 
 			pCP->fDONLeachDay += pWL->fFlux
 			                     * (pCL->fDONSoilConcOld + pCL->fDONSoilConc)
@@ -1213,31 +1187,6 @@ int transpn_NTransp(transpn *self, int N2O_IN_SOLUTION)
 			pCP->fDOCLeachDay += pWL->fFlux
 			                     * (pCL->fDOCSoilConcOld + pCL->fDOCSoilConc)
 			                     / (double)2.0 / kgPhaTomgPsqm;
-                                 
-   			pCP->fUreaLeachR = pWL->fFlux
-			                      * (pCL->fUreaNSoilConcOld + pCL->fUreaNSoilConc)
-			                      / (double)2.0 / kgPhaTomgPsqm;
-			pCP->fNH4LeachR  = pWL->fFlux
-			                      * (pCL->fNH4NSoilConcOld + pCL->fNH4NSoilConc)
-			                      / (double)2.0 / kgPhaTomgPsqm;
-			pCP->fNO3LeachR = pWL->fFlux
-			                      * (pCL->fNO3NSoilConcOld + pCL->fNO3NSoilConc)
-			                      / (double)2.0 / kgPhaTomgPsqm;
-			// Variable noch nicht vorhanden
-			pCP->fUreaLeachR  = pWL->fFlux
-			                               * (pCL->fN2ONGasConcOld + pCL->fN2ONGasConc)
-			                               * pCL->fN2OKh
-			                               / (double)2.0 / kgPhaTomgPsqm;
-
-			pCP->fDONLeachR = pWL->fFlux
-			                     * (pCL->fDONSoilConcOld + pCL->fDONSoilConc)
-			                     / (double)2.0 / kgPhaTomgPsqm;
-			pCP->fDOCLeachR = pWL->fFlux
-			                     * (pCL->fDOCSoilConcOld + pCL->fDOCSoilConc)
-			                     / (double)2.0 / kgPhaTomgPsqm;
-                                 
-                                 
-                                 
 
 			pCP->dUreaLeachCum += (double)(pWL->fFlux
 			                               * (pCL->fUreaNSoilConcOld + pCL->fUreaNSoilConc)

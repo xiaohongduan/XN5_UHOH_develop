@@ -13,7 +13,7 @@
 
 G_DEFINE_TYPE(daisy, daisy, EXPERTN_MODUL_BASE_TYPE);
 
-#define check_soil_temp(temp) if (temp>60.0) \
+#define check_soil_temp(temp) if (temp>50.0) \
 										{\
 											PRINT_WARNING_ID(xpn,"Soil Temp too high");\
 											self->too_high_or_low_temp=1;\
@@ -532,14 +532,14 @@ int Solve_LGS(daisy *self,EXP_POINTER, int Frost_Rad_Flag)
 		case 2:
 			/* Dirichletbedingung mit sinusförmiger Temperatur  */
 			/*          (Periode: 1Jahr)     */
-
+            
 			CHECK_VALID(pHL->fSoilTemp)
 			//if ((NewDay(pTi)) || SimStart(pTi))
 			pHL->fSoilTemp =  daisy_Get_Daisy_LowerBC(self,exp_p);
 			check_soil_temp(pHL->fSoilTemp);
 
 		} /* switch */
-
+ 
 	CHECK_VALID(pHL->fSoilTemp);
     check_soil_temp(pHL->fSoilTemp);
 
@@ -799,9 +799,12 @@ int Solve_LGS(daisy *self,EXP_POINTER, int Frost_Rad_Flag)
 									iLayer++)
 							{					
 									pHL->fSoilTemp = (((double)iLayer-1.0)/(double)(xpn->pSo->iLayers-2))*(lower_temp-upper_temp)+upper_temp;
+				
 							}
 		
-			PRINT_ERROR_ID(xpn,"Soil Temperatures new initialized");
+			//changed error to warning by Hong on 20230210
+			//PRINT_ERROR_ID(xpn,"Soil Temperatures new initialized");
+			PRINT_WARNING_ID(xpn,"Soil Temperatures new initialized");
 			self->too_high_or_low_temp=0;
 	}
 

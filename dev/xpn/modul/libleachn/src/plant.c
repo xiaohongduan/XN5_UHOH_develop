@@ -87,7 +87,7 @@ int leachn_plant_load(leachn_plant *self)
 
 	self->fRootPot = 0.0;
 	xpn->pPl->pDevelop->fDevStage = 0.0;
-
+	
     //FH 20190701 for correctly setting pPM to pPM->pNext this variable is needed
     self->iRootNTrue = 0;
     
@@ -107,7 +107,7 @@ int leachn_plant_load(leachn_plant *self)
 					char *S2;
 					S2 = expertn_modul_base_replace_std_templates(xpn,waterUptakePara_filename);
 					if (S2!=NULL)
-			{
+						{
 							waterUptakePara_filename = get_fullpath_from_relative(self->parent.pXSys->base_path, S2);
 							self->waterUptakePara_filename = g_strdup_printf("%s",waterUptakePara_filename);
 							waterUptakePara_load_config(self);
@@ -115,7 +115,7 @@ int leachn_plant_load(leachn_plant *self)
 							free(S2);
 						}
 
-			}
+				}
 
 		}
     //End of Hong   
@@ -147,6 +147,7 @@ int leachn_plant_load(leachn_plant *self)
 
 		}
 
+   self->iSetRootsToZeroAtEndOfSeaon= xpn_register_var_get_pointer_convert_to_int(xpn->pXSys->var_list,"Config.leachn.RootsTo0AtEndOfSeason",1);
 
 	self->IsConstRootDens = 0;
 	self->iCropCover = 0;
@@ -250,6 +251,7 @@ int load_plant_measurement_data(leachn_plant *self,char *filename)
 			values = data->valuelist[i2];
 			pPltM->iyear = data->iyear[i2];
 			pPltM->fTimeY = data->fTimeY[i2];
+			
 			//fNConcLeaf=0.0;
 			//fNConcStem=0.0;
 			fNConcCrop=0.0;
@@ -581,7 +583,7 @@ int leachn_plant_WaterUptakeNimahHanks(leachn_plant *self)
 		}  /* for */
 		
 		
-        //printf("%f \n", fRootDensTotal);
+       //printf("%f \n", fRootDensTotal);
         
 		fPotMax = (double)0.0;
 		
@@ -642,7 +644,7 @@ int leachn_plant_WaterUptakeNimahHanks(leachn_plant *self)
 				}                 
 			}  /*  Iteration   */
 			
-			fUptake = (double)0;  
+			fUptake = (double)0.0;  
 			
 			for (SOIL2_LAYERS1(pWL, pWa->pWLayer->pNext, pLR, pPl->pRoot->pLayerRoot->pNext))
 			{          
@@ -661,15 +663,16 @@ int leachn_plant_WaterUptakeNimahHanks(leachn_plant *self)
 					// wateruptake in each layer is realized by decreasing
 					// the actual watercontent in this layer:
 					fd = fUptakeLay / pSo->fDeltaZ;
+
 					
 					//Added by Hong after SPASS on 20190411
-/*					fContAct  = pWL->fContAct; 
+					fContAct  = pWL->fContAct; 
 					fContAct -= fd; 
 					if (fContAct<=1.1*pSWL->fContPWP)
 						{
 						fd *= fContAct/pSWL->fContPWP*xpn->pTi->pTimeStep->fAct/pSL->fThickness;
-						fd = 0;
-						} */
+						//fd = 0;
+						} 
 					//End of Hong
 					
 					pWL->fContAct -= fd;  /* [1] */
@@ -684,14 +687,14 @@ int leachn_plant_WaterUptakeNimahHanks(leachn_plant *self)
 			//if (fUptake > pPl->pPltWater->fPotTranspdt + (double)0.1)
 			if (fUptake > pPl->pPltWater->fPotTranspR * DeltaT + (double)0.1)
 			{
-				PRINT_ERROR_ID(xpn,"Water updake too high");
+				PRINT_ERROR_ID(xpn,"Water uptake too high");
 				
 			}    
 		
 		} /* Wasserentzug möglich */
 		else
 		{
-			PRINT_ERROR_ID(xpn,"No Roots");
+			PRINT_ERROR_ID(xpn,"No roots, please set Rooting 'Depth [cm] (fRootDepth)' in _leachn_plant_measurement.xno");
         }
 				
 	}   /*  if Transpiration */
@@ -932,7 +935,7 @@ int leachn_plant_WaterUptakeVanGenuchten(leachn_plant *self)
 		{
 			dxM  = pSo->fDeltaZ;
 			Alfa = FWStrs(fEffectPot[iLayer], self->fh50Global, self->fp1Global);		  
-			Sink = Alfa * pLR->fLengthDens / fRootDensTotal * rRoot/dxM;
+			Sink = Alfa * pLR->fLengthDens / fRootDensTotal * rRoot/dxM * 10.0;
 
             //Added by Hong after SPASS on 20190411
 		    fContAct  = pWL->fContAct; 
@@ -1109,7 +1112,16 @@ int leachn_plant_act_transpiration_CK(leachn_plant *self)
 									fd = 0;
 			                         } */
 		                            //End of Hong
-																		
+															
+
+									fContAct  = pWL->fContAct; 
+									fContAct -= fd; 
+									if (fContAct<=1.01*pSWL->fContPWP)
+									{
+									fd *= fContAct/pSWL->fContPWP*xpn->pTi->pTimeStep->fAct/pSL->fThickness;
+									fUptakeLay*= fContAct/pSWL->fContPWP*xpn->pTi->pTimeStep->fAct/pSL->fThickness;
+									}
+			
 									pWL->fContAct -= fd;  /* [1] */
 
 									pLR->fPotLayWatUpt          = fUptakeLay / DeltaT;   /* [mm/day] */
@@ -1155,7 +1167,7 @@ int leachn_plant_act_transpiration_CK(leachn_plant *self)
 				} /* Wasserentzug möglich */
 			else
 				{
-					PRINT_ERROR_ID(xpn,"No Roots");
+					PRINT_ERROR_ID(xpn,"No roots, please set Rooting Depth [cm] (fRootDepth) in _leachn_plant_measurement.xno");
 
 
 				}
@@ -1249,7 +1261,7 @@ int leachn_plant_LeafMaizeLeach(leachn_plant *self) //CH
                                 printf("GT Biom next pPM time %d %d %.17f  %d %.17f\n",xpn_time_compare_time(xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,pPM->pNext->iyear,pPM->pNext->fTimeY), xpn->pTi->pSimTime->iyear, xpn->pTi->pSimTime->fTimeY,pPM->pNext->iyear,pPM->pNext->fTimeY);
                     */
 
-					if(GROWING_TIME)
+                    if(GROWING_TIME)
 						{
 							
 							
@@ -1354,12 +1366,13 @@ int leachn_plant_LeafMaizeLeach(leachn_plant *self) //CH
                 {       
                     if ((pPM->pNext != NULL) && (xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,EPSILON) <= 0.0))
                         {
+							//printf("Next %f \n",xpn->pTi->pSimTime->fTimeY);
                             pPM = xpn->pPl->pPMeasure;
                             pPM = pPM->pNext;
-					xpn->pPl->pPMeasure=pPM;
+                            xpn->pPl->pPMeasure=pPM;
                         }    
                 }
-			 } //NewDay
+            } //NewDay
 
 
 		}
@@ -1406,7 +1419,7 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 		}
 	else
 		{
-
+            
             //20190705 FH: Use Plant Numbers (fTillers) from input file as plant density in case there is a value specified
             if (pPC->fPlantDensity > 0)
             {
@@ -1414,9 +1427,9 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
             }
             else
             {
-			fPlantDensity = (double)100;
+            fPlantDensity = (double)100;
             }
-			
+            
 			/*if (pPM->pNext != NULL)
 						{
 							if (xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,EPSILON) <= 0.0)
@@ -1519,7 +1532,7 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
                                     // FH 20190705 Test: timetomeasure shouldn't timetomeasure be something like iDayAftEmerg? At least in this case here.
                                     timetomeasure =  max(xpn_time_get_number_of_dates(xpn->pPl->pModelParam->EmergenceDay,xpn->pPl->pModelParam->EmergenceMonth,xpn->pPl->pModelParam->EmergenceYear,xpn->pTi->pSimTime->mday,xpn->pTi->pSimTime->mon,xpn->pTi->pSimTime->year),1.0);
 									//fTimeConst  =  (double)113.0 * (double)xpn->pPl->pDevelop->iDayAftEmerg / fTotalTime;
-									fTimeConst  =  (double)113.0 * (double)timetomeasure / fTotalTime;
+                                    fTimeConst  =  (double)113.0 * (double)timetomeasure / fTotalTime;
 
 //									fTimeBreak  = fTotalTime *(double)24/(double)113;
 
@@ -1601,7 +1614,7 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 									{
 										xpn->pPl->pRoot->fTotalLength+=pLR->fLengthDens;
 									}
-										
+									
 /*                                    if (xpn->pPl->pRoot->fTotalLength < self->fLengthDensOld)
                                     {
                                         printf("%f %f\n", self->fLengthDensOld, xpn->pPl->pRoot->fTotalLength);
@@ -1621,7 +1634,7 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
 
 							xpn->pPl->pDevelop->iDayAftEmerg  = 0;
 							
-							if(xpn->pPl->pRoot->pLayerRoot->pNext->fLengthDens > EPSILON)
+							if((xpn->pPl->pRoot->pLayerRoot->pNext->fLengthDens > EPSILON) && (self->iSetRootsToZeroAtEndOfSeaon != 0))
 								for ((pLR=xpn->pPl->pRoot->pLayerRoot->pNext, iLayer = 1); (pLR->pNext!=NULL)&&(iLayer < xpn->pSo->iLayers-1); (pLR = pLR->pNext, iLayer++))
 									{
 										pLR->fLengthDens = (double)0;
@@ -1638,9 +1651,10 @@ int leachn_plant_RootMaizeLeach(leachn_plant *self)
                     {
                       if ((pPM->pNext != NULL) && (xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,EPSILON) <= 0.0))
                         {
+						//printf("Next  2 %f \n",xpn->pTi->pSimTime->fTimeY);
                           pPM = xpn->pPl->pPMeasure;
                           pPM = pPM->pNext;
-							xpn->pPl->pPMeasure=pPM;
+                          xpn->pPl->pPMeasure=pPM;
                         }    
                     }           
 				} //NewDay
@@ -1898,13 +1912,6 @@ int leachn_plant_NUptake(leachn_plant *self)	//CH
 					pPM = pPM->pNext;
 				}*/
 
-                    if ((pPM->pNext != NULL) && (xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,EPSILON) <= 0.0))
-                        {
-                          pPM = xpn->pPl->pPMeasure;
-                          pPM = pPM->pNext;
-                          xpn->pPl->pPMeasure=pPM;
-				}
-
 			if (pPM->pNext == NULL)
 				{
 					return RET_SUCCESS;
@@ -1948,7 +1955,7 @@ int leachn_plant_NUptake(leachn_plant *self)	//CH
 						{
 							pPN->fActNUpt = pPN->fActNUptR = (double)0;
 
-							PRINT_ERROR_ID(xpn,"No Roots");
+							PRINT_ERROR_ID(xpn,"No roots, please set Rooting 'Depth [cm] (fRootDepth)' in _leachn_plant_measurement.xno");
 
 							return -1;
 						}
@@ -2000,6 +2007,16 @@ int leachn_plant_NUptake(leachn_plant *self)	//CH
 		{
 			//pPN->fCumPotNUpt = pPN->fCumActNUpt = pPN->fActNUpt = pPN->fActNUptR = pPN->fActNO3NUpt = pPN->fActNH4NUpt = (double)0; //removed by Hong. It made no sence!!!
 		}
+
+
+		// FH 20200326 When we have more than one plant/season we need the setting to pNext also when fDevStage not greater than EPSILON...
+		if ((pPM->pNext != NULL) && (xpn_compare_to_added_date(pPM->pNext->iyear,pPM->pNext->fTimeY,xpn->pTi->pSimTime->iyear,xpn->pTi->pSimTime->fTimeY,EPSILON) <= 0.0))
+			{
+			//printf("Next 4 %f \n", xpn->pTi->pSimTime->fTimeY);
+			pPM = xpn->pPl->pPMeasure;
+			pPM = pPM->pNext;
+			xpn->pPl->pPMeasure=pPM;
+			}    
 
     pPN->fCumActNUpt			+=  pPN->fActNUptR*DeltaT; //added by Hong 
 

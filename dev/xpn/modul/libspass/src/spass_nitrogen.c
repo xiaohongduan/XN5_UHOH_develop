@@ -64,8 +64,6 @@ int spass_nitrogen_uptake(spass *self)
 	//C_DEBUG(self->fStemRatio);
 	//C_DEBUG(self->fTRNU_zwischen);
 	
-    fFNO3 = 0.0;
-	fFNH4 = 0.0;
 	L1 = 1;
 
 	if ((pPl->pDevelop->iDayAftEmerg > 0) && (PLANT_IS_GROWING))
@@ -115,14 +113,6 @@ int spass_nitrogen_uptake(spass *self)
 
 		//The last layer of root:
 		L1=L;
-
-		// SG20140604: for further plant species (e.g. catch crops)
-		fFNO3=(float)(1.0-exp(-0.030*((double)(pSLN->fNO3N/pSLN->fNO3Nmgkg))));
-		fFNH4=(float)(1.0-exp(-0.030*(((double)(pSLN->fNH4N/pSLN->fNH4Nmgkg))-0.5)));
-
-		if (fFNO3<(float)0.01) fFNO3=(float)0.0;
-		if (fFNH4<(float)0.01) fFNH4=(float)0.0;
-
 
 		//Potential nitrogen availability fFACTOR for NO3 (fFNO3) and NH4 (fFNH4) (0-1):
 		if ((strcmp(pPl->pGenotype->acCropCode,"MZ")==0)
@@ -178,10 +168,6 @@ int spass_nitrogen_uptake(spass *self)
 		fRFAC=pLR->fLengthDens*fSMDFR*fSMDFR*(double)0.1*pSL->fThickness*((double)100.0);
 		//SG 20111115: für AgMip nur linearer Stress bei Wasserknappheit
 		//fRFAC=pLR->fLengthDens*fSMDFR*(double)0.1*pSL->fThickness*((double)100.0);
-        
-       double ExpNuptH2OStress = xpn->pPl->pGenotype->dNUptH2OStress;
-       fRFAC=pLR->fLengthDens*pow(fSMDFR,ExpNuptH2OStress)*(double)0.1*pSL->fThickness*((double)100.0);
-
 		}
      
 		//SG/10/11/99
@@ -409,7 +395,6 @@ int spass_PlantNitrogenTranslocation(spass *self)
 	
 	//Time constant for N translocation
 	fTransNconst = (double)20.0;
-	//fTransNconst = (double)10.0; //SG20220527: faster N translocation from stem, leaves, roots to grain
 	
 	//SG/17/05/99:Etwas anders bei Kartoffel (aus PLAGEN)
 	if(strcmp(pPl->pGenotype->acCropCode,"PT")==0)
@@ -453,11 +438,8 @@ int spass_PlantNitrogenTranslocation(spass *self)
         if (pBiom->fGrainGrowR>(double)0.0)
 			{
 			pPl->pPltNitrogen->fGrainDemand = fGrainNcumRate*pCan->fGrainNum*pSI->fPlantDens*(double)1E-2;
-/*			fGrainDemand = (pBiom->fGrainWeight-pBiom->fGrainGrowR*pTi->pTimeStep->fAct)*max((double)0.0, (double)0.02-pPltN->fGrainConc)
-					  +pBiom->fGrainGrowR*(double)0.02*pTi->pTimeStep->fAct;*/
-            //SG20220527: readmaximum grain N concentration from *.ini file
-			fGrainDemand = (pBiom->fGrainWeight-pBiom->fGrainGrowR*pTi->pTimeStep->fAct)*max((double)0.0, pPltN->fFruitOptConc - pPltN->fGrainConc)
-					  + pBiom->fGrainGrowR * pPltN->fFruitOptConc * pTi->pTimeStep->fAct;
+			fGrainDemand = (pBiom->fGrainWeight-pBiom->fGrainGrowR*pTi->pTimeStep->fAct)*max((double)0.0, (double)0.02-pPltN->fGrainConc)
+					  +pBiom->fGrainGrowR*(double)0.02*pTi->pTimeStep->fAct;
 
 			if (strcmp(pPl->pGenotype->acCropCode,"PT")==0)			
 			//	

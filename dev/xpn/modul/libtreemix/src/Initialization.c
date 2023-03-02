@@ -18,7 +18,7 @@ int libtreemix_load(libtreemix *self)
     xpn_register_var *var_list;         
     var_list = xpn->pXSys->var_list;
     
-    
+    self->iWaterAF = 0;
     
     
     // Wenn die Init bereits geladen ist
@@ -88,12 +88,14 @@ int libtreemix_load(libtreemix *self)
     {
         //parameter_filename = xpn_register_var_get_pointer_convert_to_array_string(self->parent.pXSys->var_list,"Config.treemix.parameter_filename", &(self->conf.Species_Count));             
         parameter_filename = get_fullpath_from_relative(self->parent.pXSys->base_path,self->conf.Parameter_Files[i] );
-        if (load_parameter(self,parameter_filename, i)!=0)
+        g_free(self->conf.Parameter_Files[i]);
+		if (load_parameter(self,parameter_filename, i)!=0)
         {
             PRINT_ERROR("Error Read TREEMIX PARAMETER File");
         }   
     }
-    free(parameter_filename);
+    
+	free(parameter_filename);
     
     //}
     
@@ -135,7 +137,7 @@ int load_config(libtreemix *self,const char* configfile)
     GKeyFileFlags flags;
     GError *error = NULL;
     const char* filename=configfile;
-    gsize count;
+    int count;
     //char *parameter_files;
     
     //allocate memory
@@ -157,8 +159,8 @@ int load_config(libtreemix *self,const char* configfile)
     }
     
     // get [Configuration Variables]
-    GET_INI_DOUBLE(self->conf.Species_Count,"Configuration","species_count");
-    GET_INI_STRING_LIST(self->conf.Parameter_Files, "Configuration", "parameter_files", &(count));
+    GET_INI_INTEGER(self->conf.Species_Count,"Configuration","species_count");
+    GET_INI_STRING_LIST(self->conf.Parameter_Files, "Configuration", "parameter_files", count);
     GET_INI_DOUBLE(self->conf.Operating,"Configuration","operating");//Added by Hong on 20180621
 	//self->conf.Species_Count = (int)count;
     GET_INI_DOUBLE(self->conf.Photosynthesis,"Configuration","photosynthesis");
@@ -191,6 +193,10 @@ int load_parameter(libtreemix *self,const char* paramfile, int i)
     GError *error = NULL;
     const char* filename=paramfile;
     
+	char **HarvestFruitDates;
+	double *HarvestFruitFraction;
+	int sim_i;
+	GDate *HarvestFruitGDate;
 
     /* Create a new GKeyFile object and a bitwise list of flags. */
     keyfile = g_key_file_new ();
@@ -292,6 +298,8 @@ int load_parameter(libtreemix *self,const char* paramfile, int i)
     GET_INI_DOUBLE(self->plant[i].LfBudBurst,"Phenology","bud_burst_const");
     GET_INI_DOUBLE(self->plant[i].LfFallStart,"Phenology","leaf_fall_start");   
     GET_INI_DOUBLE(self->plant[i].LfFallEnd,"Phenology","leaf_fall_end");   
+    GET_INI_DOUBLE_OPTIONAL(self->plant[i].WdGrStart,"Phenology","wood_growth_start",110.0);   
+    GET_INI_DOUBLE_OPTIONAL(self->plant[i].WdGrEnd,"Phenology","wood_growth_end",292.0);   
     
     // [Root]
     GET_INI_DOUBLE(self->plant[i].RtLengthSpec,"Root","specific_root_length");
@@ -343,8 +351,8 @@ int load_parameter(libtreemix *self,const char* paramfile, int i)
     if(self->silv[i].Harvesting == 1)
     {
         GET_INI_DOUBLE(self->silv[i].ThinningEvents,"Silviculture","thinning_events");
-        GET_INI_DOUBLE_LIST(self->silv[i].ThinningInterval, "Silviculture", "thinning_interval", &(self->silv[i].ThinningEvents))
-        GET_INI_DOUBLE_LIST(self->silv[i].ThinningFraction, "Silviculture", "thinning_fraction", &(self->silv[i].ThinningEvents))
+        GET_INI_DOUBLE_LIST(self->silv[i].ThinningInterval, "Silviculture", "thinning_interval", self->silv[i].ThinningEvents)
+        GET_INI_DOUBLE_LIST(self->silv[i].ThinningFraction, "Silviculture", "thinning_fraction", self->silv[i].ThinningEvents)
         {
             int i2;
             char S[128];
@@ -361,6 +369,69 @@ int load_parameter(libtreemix *self,const char* paramfile, int i)
 		GET_INI_DOUBLE(self->silv[i].diameterAfterCut,"Silviculture","diameter_after_cut");
     }
     
+	// FH 20200813
+	// Fruit harvesting
+    GET_INI_INT_OPTIONAL(self->plant[i].HarvestFruitTrue,"FruitHarvest","harvesting_fruits",0);
+    if(self->plant[i].HarvestFruitTrue == 1)
+    {		
+		GET_INI_STRING_LIST(HarvestFruitDates,"FruitHarvest","harvest_dates",self->plant[i].HarvestFruitDatesLen)	
+		GET_INI_DOUBLE_LIST(HarvestFruitFraction,"FruitHarvest","harvest_fraction",self->plant[i].HarvestFruitFractionLen);
+		CHECK_LEN(self->plant[i].HarvestFruitDatesLen,self->plant[i].HarvestFruitFractionLen);
+		
+		//HarvestFruitFirst, HarvestFruit, HarvestFruitAct;
+		
+		 for (sim_i = 0; sim_i < self->plant[i].HarvestFruitDatesLen;sim_i++) 
+		 {
+				//printf("%d \n", sim_i);
+				self->plant[i].HarvestFruitInterm = g_malloc0_n(1, sizeof(STFRUITHARVEST));
+				deleteSpaceBegEnd(HarvestFruitDates[sim_i]);
+				HarvestFruitGDate = convert_str_to_gdate(HarvestFruitDates[sim_i]);
+				self->plant[i].HarvestFruitInterm->Day = g_date_get_day(HarvestFruitGDate);
+                self->plant[i].HarvestFruitInterm->Month = g_date_get_month(HarvestFruitGDate);
+                self->plant[i].HarvestFruitInterm->Year = g_date_get_year(HarvestFruitGDate);
+				self->plant[i].HarvestFruitInterm->Fraction = HarvestFruitFraction[sim_i];
+				
+				//printf("%d %d %d %f\n", self->plant[i].HarvestFruitInterm->Day, self->plant[i].HarvestFruitInterm->Month, self->plant[i].HarvestFruitInterm->Year, self->plant[i].HarvestFruitInterm->Fraction);
+
+				
+				if (sim_i == 0) {
+                    self->plant[i].HarvestFruitFirst = self->plant[i].HarvestFruitInterm;
+                    self->plant[i].HarvestFruitAct = self->plant[i].HarvestFruitInterm;
+					//printf("%d %d %d %f\n", self->plant[i].HarvestFruitFirst->Day, self->plant[i].HarvestFruitFirst->Month, self->plant[i].HarvestFruitFirst->Year, self->plant[i].HarvestFruitFirst->Fraction);
+                } else {
+                    self->plant[i].HarvestFruitAct->pNext = self->plant[i].HarvestFruitInterm;
+                    self->plant[i].HarvestFruitInterm->pBack = self->plant[i].HarvestFruitAct;
+                    self->plant[i].HarvestFruitAct = self->plant[i].HarvestFruitAct->pNext;
+                }
+				
+		 }
+		
+		
+		
+		if (self->plant[i].HarvestFruitDatesLen != 0) // Hong: why?
+			{
+                self->plant[i].HarvestFruitInterm = g_malloc0_n(1, sizeof(STFRUITHARVEST));
+                self->plant[i].HarvestFruitInterm->Day = 0;
+                self->plant[i].HarvestFruitInterm->Month = 0;
+                self->plant[i].HarvestFruitInterm->Year = 0;
+                self->plant[i].HarvestFruitInterm->Fraction = 0.0;
+                self->plant[i].HarvestFruitAct ->pNext = self->plant[i].HarvestFruitInterm;
+                self->plant[i].HarvestFruitInterm->pBack = self->plant[i].HarvestFruitAct ;
+                self->plant[i].HarvestFruitAct  = self->plant[i].HarvestFruitAct ->pNext;
+            }
+		
+		
+		self->plant[i].HarvestFruit = self->plant[i].HarvestFruitFirst;
+		
+		//printf("%d %d %d %f\n", self->plant[i].HarvestFruit->Day, self->plant[i].HarvestFruit->Month, self->plant[i].HarvestFruit->Year, self->plant[i].HarvestFruit->Fraction);
+		
+		g_strfreev(HarvestFruitDates);
+		g_free(HarvestFruitFraction);
+		g_free(HarvestFruitGDate);
+	
+	
+	}
+	
     // [Photosynthesis]
     GET_INI_DOUBLE(self->plant[i].DPhotoTime,"Photosynthesis","time_step");
     GET_INI_INTEGER(self->plant[i].DPhotoLayers,"Photosynthesis","intermediate_layers");
@@ -460,6 +531,15 @@ int load_parameter(libtreemix *self,const char* paramfile, int i)
     GET_INI_DOUBLE(self->plant[i].CUseSpec,"Miscellaneous","spec_assimilate_use");
     GET_INI_DOUBLE(self->plant[i].NUpSpecR,"Miscellaneous","spec_nitrogen_uptake");
     //GET_INI_DOUBLE(self->plant[i].C,"Miscellaneous","spec_nitrogen_uptake");
+	
+	GET_INI_INT_OPTIONAL(self->plant[i].CalcFreshMass,"Miscellaneous","calculate_fresh_mass",0)
+	if (self->plant[i].CalcFreshMass != 0)
+	{
+		GET_INI_DOUBLE(self->plant[i].FracCWood,"Miscellaneous","carbon_frac_wood")
+		GET_INI_DOUBLE(self->plant[i].FracCRoot,"Miscellaneous","carbon_frac_root")
+		GET_INI_DOUBLE(self->plant[i].FracCLeaf,"Miscellaneous","carbon_frac_leaf")
+		GET_INI_DOUBLE(self->plant[i].FracCFruit,"Miscellaneous","carbon_frac_fruit")
+	}	
     
 	//added by Hong on 26032019 for agroforestry:
 	//xpn->pCh->pCProfile->fCNLeafLitterSurf = 1.0 /self->plant[j].NLfDead;
@@ -829,14 +909,18 @@ int libtreemix_set_rootlength_density(libtreemix *self, int i)
     double RtLgthDensFacTot = 0.0;
     double Thickness;
     
+    double fRootDepth, fMaxRootDepth;
+    
     /* Functions */
     
     /****************************************************************************************************************/
     
     NLAYER = xpn->pSo->iLayers-2;
 
-    pRt->fDepth = xpn->pSo->fDepth*0.1;                     // roots reach through complete soil profile [cm]=[mm]*0.1
-    pRt->fMaxDepth = pRt->fDepth = 0.1*xpn->pSo->fDepth;    // [cm]
+    pRt->fDepth = xpn->pSo->fDepth;                     // [mm] for output
+    fRootDepth = xpn->pSo->fDepth*0.1;                     // roots reach through complete soil profile [cm]=[mm]*0.1
+    pRt->fMaxDepth = pRt->fDepth = xpn->pSo->fDepth;    // [mm] for output
+    fMaxRootDepth = 0.1*xpn->pSo->fDepth;    // [cm]
     
     //==================================================================================================================
     /* Calc Total Root Length out of Fine Root Mass using the specific root length */
@@ -858,7 +942,7 @@ int libtreemix_set_rootlength_density(libtreemix *self, int i)
     pSLW = xpn->pWa->pWLayer->pNext; 
     pSLN = xpn->pCh->pCLayer->pNext;
     pLR = pLR->pNext;   
-    while((CumDepth <= pRt->fDepth)&&(L<NLAYER))
+    while((CumDepth <= fRootDepth)&&(L<NLAYER))
     {
         L++;
 
@@ -866,7 +950,7 @@ int libtreemix_set_rootlength_density(libtreemix *self, int i)
         CumDepth += pSL->fThickness*0.1;    // [cm]=[mm]*0.1
         
         // [-] {0...1}, mimic mechanical impedance for root expansion (CERES)
-        RtFac = exp(-4.0*((CumDepth - 0.5*Thickness)/pRt->fMaxDepth));          // [-]
+        RtFac = exp(-4.0*((CumDepth - 0.5*Thickness)/fMaxRootDepth));          // [-]
         
         self->plant[i].RtLengthDensFac[z-1] = RtFac * self->plant[i].RtLength * Thickness; // [-] = [-]*[cm/cm²]*[cm]
 
@@ -1109,7 +1193,7 @@ int libtreemix_set_litter_pools(libtreemix *self)
 			pCB->dCInputSurf += self->plant[j].FOCLfFr*self->plant[j].TreeDistr+
 							((self->plant[j].FOCBrSt*self->plant[j].FiBrWdFr)*self->plant[j].TreeDistr)+ 
 							((self->plant[j].FOCBrSt*(1.0-self->plant[j].FiBrWdFr))*self->plant[j].TreeDistr); 
-							
+			
 /*			pCB->dCInputCum += self->plant[j].FOCLfFr*self->plant[j].TreeDistr+
 							((self->plant[j].FOCBrSt*self->plant[j].FiBrWdFr)*self->plant[j].TreeDistr)+ 
 							((self->plant[j].FOCBrSt*(1.0-self->plant[j].FiBrWdFr))*self->plant[j].TreeDistr);*/
@@ -1129,24 +1213,48 @@ int libtreemix_set_litter_pools(libtreemix *self)
 
 int libtreemix_done(libtreemix *self)
 {
-    int i;
+	expertn_modul_base *xpn = &(self->parent);
     
+	if (self->__DONE_DONE == 0)
+		{
+			self->__DONE_DONE=1;
+		} else
+		{	
+			return RET_SUCCESS;
+		}
+	
+	int i;    
+	
     for(i=0; i<self->conf.Species_Count; i++)
     {
-        free(&self->plant[i]);      
-    }
+		g_free(self->plant[i].code);
+		//free(self->plant[i].name); //FH 20200827 wird nicht eingelesen, also kanns auch nicht g-freet werden
+		g_free(self->plant[i].type);
+		if(self->plant[i].HarvestFruitTrue == 1)
+			{
+			//g_free(self->plant[i].HarvestFruit);
+			//g_free(self->plant[i].HarvestFruitAct);
+			//g_free(self->plant[i].HarvestFruitFirst);
+			g_free(self->plant[i].HarvestFruitInterm);
+			}
+		//free(&self->plant[i]);    
+		if(self->silv[i].Harvesting == 1) // FH 20200827 wir sollten das nur free-en, wenn auch wirklich die Variablen vorher alloziert werden...
+			{  
+			g_free(self->silv[i].ThinningInterval);
+			g_free(self->silv[i].ThinningFraction);
+			}
+		//free(&self->silv[i]);
+	}
     
-    free(&self->conf);
-    
-    free(&self->silv);
-    free(&self->clim);
+	free(self->plant);
+	free(self->silv);
+	
+    //free(&self->conf);
+    //free(&self->clim);
     
     
     return RET_SUCCESS;
 }
-
-
-
 
 
 

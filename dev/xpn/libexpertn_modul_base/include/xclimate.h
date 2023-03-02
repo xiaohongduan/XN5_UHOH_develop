@@ -60,6 +60,9 @@ typedef struct weather
     double   fHumidity; // % --> wrf&RH wahrscheinlich
 /*?*/   double   fPanEvap;  // mm/day Kesselverdunstung
     double   fWindSpeed; // m/s SFCSPD Windspeed at speed at height ZLVL m AGL
+	/*neu*/ double fWindDirection; // FH 20210316 degree 0 = N, 90 = E, 180 = S, 270 = W
+	/*neu*/ double fWindAttenuationFactorTotal; // FH 20210511
+	/*neu*/ double fWindSpeedUndisturbed; // FH 20210511
 	double   fWindSpeedConv; // m/s convective wind speed
     double   fDewPoint;  // Grad Celsius Taupunkt --> Wikipedia/Taupunkt Formel 2.3 aus rel. Luftfeuchtikeit und Temperatur
     double   fSatDef;  // % Sättigungsdefizit der Luft  -> RCQ * 100% ???

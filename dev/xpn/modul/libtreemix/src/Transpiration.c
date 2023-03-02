@@ -77,6 +77,7 @@ int libtreemix_potential_transpiration_run(libtreemix *self)
 				{
 					// potential transpiration from Falge model (Photosynthesis)
 					self->plant[i].PotTrans = self->plant[i].TransCan_dt/dt;
+                    //printf("%f \n", self->plant[i].PotTrans);
 				}
 				else
 				{
@@ -85,6 +86,7 @@ int libtreemix_potential_transpiration_run(libtreemix *self)
 				}				
 				
 				pPW->fPotTranspR += self->plant[i].PotTrans*self->plant[i].TreeDistr;	// for whole stand
+
 			}
 			else
 			{
@@ -197,6 +199,8 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 	/* Variables */
 	int i;					//species looping variable
 	int L;					//soil layer looping variable
+    
+    gchar* S;
 	
 	double PotRtWaterUp;	// Total Potential Root Water Uptake
 	double ActRtWaterUp_P;	// Total Actual Root Water Uptake in Profile
@@ -214,7 +218,8 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 	double dt = xpn->pTi->pTimeStep->fAct;	// actual time step
 	
 	/* Functions */
-	int libtreemix_ActualTranspirationFAGUS(libtreemix *self);
+	// FH 20191128 why declare function here?
+    //int libtreemix_ActualTranspirationFAGUS(libtreemix *self);
 
 	/****************************************************************************************************************/
 	
@@ -244,6 +249,8 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 		pR->fUptakedt = 0.0;
 		pPW->fActTranspR = 0.0;
 		
+        pPl->pGenotype->fMaxWuptRate = 0.0;
+        
 		for(L=1; L<=(xpn->pSo->iLayers-2); L++)
 		{				
 			pLR->fActWatUpt	   	= 0.0;
@@ -319,11 +326,14 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 				
 				while(((self->plant[i].RtLengthDens[L-1] != 0.0)||(self->plant[i].RtLengthDens[L] != 0.0))&&(L < (xpn->pSo->iLayers-2)))
 				{
-					SoilWaterAv = MAX(0.0, (pSLW->fContAct - pSWL->fContPWP));	//[Vol%]
+					SoilWaterAv = max(0.0, (pSLW->fContAct - pSWL->fContPWP));	//[Vol%]
 					
-					//orig CERES: self->plant[i].PotRtWaterUp = 0.00267*exp(62.0*SoilWaterAv)/(6.68-log(self->plant[i].RtLengthDens[L-1]));
-					self->plant[i].PotRtWaterUp = 0.00267*exp(MIN(35.0*SoilWaterAv, 10.0))/(6.68-log(self->plant[i].RtLengthDens[L-1]));	// [cm³ H20/cm ROOT*day]
-					
+					//orig CERES: self->plant[i].PotRtWaterUp = 0.00267*exp(35.0*SoilWaterAv)/(6.68-log(self->plant[i].RtLengthDens[L-1]));
+					self->plant[i].PotRtWaterUp = 0.00267*exp(min(62.0*SoilWaterAv, 10.0))/(6.68-log(self->plant[i].RtLengthDens[L-1]));	// [cm³ H20/cm ROOT*day]
+					//TREEMIX
+                    //self->plant[i].PotRtWaterUp = 0.00267*exp(MIN(35.0*SoilWaterAv, 10.0))/(6.68-log(self->plant[i].RtLengthDens[L-1]));	// [cm³ H20/cm ROOT*day]
+                    //printf("%d RLD %f \n", L, self->plant[i].RtLengthDens[L-1]);                    
+                    
 					if(self->plant[i].PotRtWaterUp > self->plant[i].WaterUpMax)	// WaterUpMax in paragraph: [Root], [cm3 H20/cm ROOT*day]
 					{
 						self->plant[i].PotRtWaterUp = self->plant[i].WaterUpMax;
@@ -334,8 +344,11 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 					}
 					
 					//[mm H2O/day], rate
-					self->plant[i].PotLayRtWaterUp[L-1] = (self->plant[i].PotRtWaterUp * pSL->fThickness * self->plant[i].RtLengthDens[L-1]);
-					
+					//self->plant[i].PotLayRtWaterUp[L-1] = (self->plant[i].PotRtWaterUp * pSL->fThickness * self->plant[i].RtLengthDens[L-1]);
+                        self->plant[i].PotLayRtWaterUp[L-1] = (self->plant[i].PotRtWaterUp * pSL->fThickness * self->plant[i].RtLengthDens[L-1]);
+                       // printf ("2 %f \n", self->plant[i].PotLayRtWaterUp[L-1]);
+
+
 					// species specific total potential uptake, [mm H2O/day], rate
 					self->plant[i].PotRtWaterUpTot += (self->plant[i].PotLayRtWaterUp[L-1]);
 					
@@ -352,10 +365,15 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 				{
 					self->plant[i].WaterUpFac = self->plant[i].PotTrans/self->plant[i].PotRtWaterUpTot;
 				}			
+                
+                //printf("Treemix Pot Trans %f %f\n", self->plant[i].PotTrans,self->plant[i].WaterUpFac);
+                
 			}
 			
 			// uptake of all species = TRWU in TREEDYN
-			PotRtWaterUp += (self->plant[i].PotRtWaterUpTot*self->plant[i].TreeDistr);				
+			PotRtWaterUp += (self->plant[i].PotRtWaterUpTot*self->plant[i].TreeDistr);		
+            // FH 20191014 added the average maximum water uptake rate for agroforestry module
+            pPl->pGenotype->fMaxWuptRate += (self->plant[i].WaterUpMax*self->plant[i].TreeDistr);
 		}		
 		// Potential Uptake Over Time => Cumulated Total Potential Root Water Uptake Over All Species
 		pPW->fPotUptake = PotRtWaterUp;	// [mm/d], rate
@@ -389,22 +407,27 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 				{
 					self->plant[i].ActLayRtWaterUp[L-1] = (self->plant[i].PotLayRtWaterUp[L-1] 	* self->plant[i].WaterUpFac); //*10.0; 	// [mm/d]				
 					
+                    //printf("WaterUpFac %f \n", self->plant[i].WaterUpFac);
+                    
 					// if Root water uptake is to large, then it is diminished
 					SoilWaterAct = pSLW->fContAct;
 					//orig: SoilWaterAct -= ((self->plant[i].ActLayRtWaterUp[L-1]*self->plant[i].TreeDistr)/pSL->fThickness);	// every species takes up water according to distribution
 					
-					SoilWaterMin = (self->plant[i].ActLayRtWaterUp[L-1]/(pSL->fThickness)); //*self->plant[i].TreeDistr;
-					SoilWaterAct -= SoilWaterMin;
+					SoilWaterMin = (self->plant[i].ActLayRtWaterUp[L-1]); //*self->plant[i].TreeDistr;
+					// FH 20191126 added dt, realized ActLayRtWaterUp way too low 
+                    SoilWaterAct -= SoilWaterMin*dt/(pSL->fThickness);
 					
 					if(SoilWaterAct < pSWL->fContPWP)
 					{
 						self->plant[i].ActLayRtWaterUp[L-1] *= (SoilWaterAct/pSWL->fContPWP);	//aus SPASS
-						
+                    
 						//Test of Hong
-						self->plant[i].ActLayRtWaterUp[L-1]= 0;
+						//self->plant[i].ActLayRtWaterUp[L-1]= 0;
 						//End of Test
 					}
 					
+                    //printf("%d %d %f %f\n", i, L, self->plant[i].ActLayRtWaterUp[L-1], self->plant[i].WaterUpFac);                    
+                    
 					// total actual water uptake for every species
 					self->plant[i].ActRtWaterUpTot += self->plant[i].ActLayRtWaterUp[L-1];
 					
@@ -422,52 +445,55 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 		//==================================================================================================================
 		/*-----------------------------Calculate Actual Transpiration and Stress Factors--------------------------------------*/
 		//==================================================================================================================
-		for(i=0; i<self->conf.Species_Count; i++)
+		
+        // FH 20191129 replace PotRtWaterUpTot with ActRtWaterUpTot because there cannot transpire more than what is taken out of the soil
+        for(i=0; i<self->conf.Species_Count; i++)
 		{				
 			if((self->silv[i].PlantGrowth == 1) && (self->silv[i].Maturity == 0))
 			{
+				//printf("v %f %f %f \n", self->plant[i].ActTrans, self->plant[i].PotTrans, self->plant[i].PotRtWaterUpTot);                
 				// actual transpiration
-				self->plant[i].ActTrans = MIN(self->plant[i].PotTrans, self->plant[i].PotRtWaterUpTot);
+				self->plant[i].ActTrans = MIN(self->plant[i].PotTrans, self->plant[i].ActRtWaterUpTot);
 				
-				if(self->plant[i].PotTrans >= self->plant[i].PotRtWaterUpTot)
+				if(self->plant[i].PotTrans >= self->plant[i].ActRtWaterUpTot)
 				{
-					self->plant[i].ActTrans = self->plant[i].PotRtWaterUpTot;
+					self->plant[i].ActTrans = self->plant[i].ActRtWaterUpTot;
 				}
 				else
 				{
 					self->plant[i].ActTrans = self->plant[i].PotTrans;
 				}				
 				
+				//printf("n %f %f %f \n", self->plant[i].ActTrans, self->plant[i].PotTrans, self->plant[i].PotRtWaterUpTot);
 				
-				
-				self->plant[i].StressFacLf = 1.0;	//entspricht swdf2
-				if((self->plant[i].PotRtWaterUpTot/self->plant[i].PotTrans) < 1.5)
+                //FH 20191210 if we calculate the stress factors later, we have to comment them here
+                
+/*				self->plant[i].StressFacLf = 1.0;	//entspricht swdf2
+				if((self->plant[i].ActRtWaterUpTot/self->plant[i].PotTrans) < 1.5)
 				{
-					self->plant[i].StressFacLf  = 0.67*(self->plant[i].PotRtWaterUpTot/self->plant[i].PotTrans);
+					self->plant[i].StressFacLf  = 0.67*(self->plant[i].ActRtWaterUpTot/self->plant[i].PotTrans);
 				}
 
 				self->plant[i].StressFacPh = 1.0;	//entspricht swdf1
-				if(self->plant[i].PotTrans > self->plant[i].PotRtWaterUpTot)
+				if(self->plant[i].PotTrans > self->plant[i].ActRtWaterUpTot)
 				{		
-					self->plant[i].StressFacPh = MAX((self->plant[i].PotRtWaterUpTot/self->plant[i].PotTrans), 0.2);	//original: 0.02
+					self->plant[i].StressFacPh = MAX((self->plant[i].ActRtWaterUpTot/self->plant[i].PotTrans), 0.2);	//original: 0.02
 				}
 
-				self->plant[i].SWDefFac = ((self->plant[i].SWDefFac*xpn->pTi->pSimTime->fTimeY+self->plant[i].StressFacPh)/ (xpn->pTi->pSimTime->fTimeY+1));
+				self->plant[i].SWDefFac = ((self->plant[i].SWDefFac*xpn->pTi->pSimTime->fTimeY+self->plant[i].StressFacPh)/ (xpn->pTi->pSimTime->fTimeY+1));*/
 			}
 			
 			self->plant[i].ActTransdt = self->plant[i].ActTrans*dt;	// [mm/dt]
 			
-			//Hong pPW->fActTranspR += (self->plant[i].ActTrans*self->plant[i].TreeDistr);
-			pPW->fActTranspR = (self->plant[i].ActTrans*self->plant[i].TreeDistr); //changed by Hong on 20190529: 
+			// FH 20191024 after talking to Hong
+            pPW->fActTranspR += (self->plant[i].ActTrans*self->plant[i].TreeDistr);
+			//pPW->fActTranspR = (self->plant[i].ActTrans*self->plant[i].TreeDistr); //changed by Hong on 20190529: 
 			
 		}
 		
 		
 		// first layers
 		pLR = xpn->pPl->pRoot->pLayerRoot->pNext;
-		pSL = xpn->pSo->pSLayer->pNext;
-		pSWL = xpn->pSo->pSWater->pNext;
-		pSLW = xpn->pWa->pWLayer->pNext;
 
 		// !!! Here the actual water uptake from the soil layers happens !!!			
 		for(L=1; L <= (xpn->pSo->iLayers-2); L++)
@@ -475,19 +501,126 @@ int libtreemix_actual_transpiration_run(libtreemix *self)
 			for(i=0; i<self->conf.Species_Count; i++)
 			{
 				// every species takes up water according to distribution					
-				pLR->fActLayWatUpt += (self->plant[i].ActLayRtWaterUp[L-1]*self->plant[i].TreeDistr*dt);
+                // FH 20191126 division by fThickness might be wrong or at least not in accordance with other models
+			//printf("before TreeDistr %d %d  %f %f %f \n", L, self->conf.Species_Count,  self->plant[i].ActLayRtWaterUp[L-1], pLR->fActLayWatUpt, self->plant[0].TreeDistr);
+				pLR->fPotLayWatUpt += (self->plant[i].PotLayRtWaterUp[L-1]*self->plant[i].TreeDistr);//pSL->fThickness);
+				pLR->fActLayWatUpt += (self->plant[i].ActLayRtWaterUp[L-1]*self->plant[i].TreeDistr);//pSL->fThickness);
+			//printf("after TreeDistr %d %d  %f %f %f \n", L, self->conf.Species_Count,  self->plant[i].ActLayRtWaterUp[L-1], pLR->fActLayWatUpt, self->plant[0].TreeDistr);
 			}
-			
-			pSLW->fContAct -= (pLR->fActLayWatUpt/pSL->fThickness);	// [%]
-			
+
+            //FH 20191115 dt and fThickness to this equation to make the variables consistent with other XN functions
+			//printf("before TreeDistr %d %d  %f %f %f \n", L, self->conf.Species_Count,  pSLW->fContAct, pLR->fActLayWatUpt, self->plant[0].TreeDistr);
+            //pSLW->fContAct -= (pLR->fActLayWatUpt*dt/pSL->fThickness);	// [%]
+            //printf("after     TreeDistr %d %d  %f %f %f \n", L, self->conf.Species_Count,  pSLW->fContAct, pLR->fActLayWatUpt, self->plant[0].TreeDistr);
 			pLR = pLR->pNext;
-			pSL = pSL->pNext;
-			pSWL = pSWL->pNext;
-			pSLW = pSLW->pNext;	
-			
 		}
 		
-		
+    //FH 20191120 check if Agroforst transpiration modul  is used by checking if fPotTranspAF not 0.0
+	if(pPW->fPotTranspAF > 0.0)
+        {
+            if(self->iWaterAF == 0)
+                {
+                S  = g_strdup_printf("Treemix: Water uptake and transpiration is taken from the agroforestry module");
+                PRINT_MESSAGE(xpn,3,S);
+                g_free(S);
+                self->iWaterAF = 1;
+                }
+        
+        // Transpiration
+        for(i=0; i<self->conf.Species_Count; i++)
+            {
+            if (pPW->fActTranspR != 0.0) 
+                {
+                // scale the single plants to the new Transpiration from the agroforestry module
+                self->plant[i].ActTrans *= (pPW->fActTranspAF/pPW->fActTranspR);
+                }
+            else if (pPW->fActTranspAF != 0.0)
+                {
+                S  = g_strdup_printf("Treemix: Scaling of ActTrans to single trees according to agroforestry module not possible due to division by 0");
+                PRINT_MESSAGE(xpn,3,S);
+                g_free(S);
+                }
+            }
+        pPW->fActTranspR = pPW->fActTranspAF;
+
+        // Water uptake
+        // first layers
+		pLR = xpn->pPl->pRoot->pLayerRoot->pNext;
+        for(L=1; L <= (xpn->pSo->iLayers-2); L++)
+            {
+			for(i=0; i<self->conf.Species_Count; i++)
+                {
+                if (pLR->fPotLayWatUpt != 0.0)
+                    {
+                    self->plant[i].PotLayRtWaterUp[L-1] *= (pLR->fPotLayWatUptAF/pLR->fPotLayWatUpt);
+                    }
+                else if (pLR->fPotLayWatUptAF != 0.0)
+                    {
+                    S  = g_strdup_printf("Treemix: Scaling of PotLayRtWaterUp to single trees according to agroforestry module not possible due to division by 0");
+                    PRINT_MESSAGE(xpn,3,S);
+                    g_free(S);
+                    }
+                if (pLR->fActLayWatUpt != 0.0)
+                    {
+                    self->plant[i].ActLayRtWaterUp[L-1] *= (pLR->fActLayWatUptAF/pLR->fActLayWatUpt);
+                    }
+                else if (pLR->fActLayWatUptAF != 0.0)
+                    {
+                    S  = g_strdup_printf("Treemix: Scaling of ActLayRtWaterUp to single trees according to agroforestry module not possible due to division by 0");
+                    PRINT_MESSAGE(xpn,3,S);
+                    g_free(S);
+                    }
+                }
+                
+                pLR->fPotLayWatUpt = pLR->fPotLayWatUptAF;
+                pLR->fActLayWatUpt = pLR->fActLayWatUptAF;
+                
+                pLR = pLR->pNext;
+            }
+                
+        } //end PotTransAF	
+        
+        // Calculate the stress factors using ActTrans instead of ActRtWaterUpTot which should result to the same
+        for(i=0; i<self->conf.Species_Count; i++)
+            {
+           	if((self->silv[i].PlantGrowth == 1) && (self->silv[i].Maturity == 0))
+                {
+                self->plant[i].StressFacLf = 1.0;	//entspricht swdf2
+                if((self->plant[i].ActTrans/self->plant[i].PotTrans) < 0.67) //shouldn't that also be 0.67??? was 1.5 before
+                    {
+                    self->plant[i].StressFacLf  = 0.67*(self->plant[i].ActTrans/self->plant[i].PotTrans);
+                    }
+                self->plant[i].StressFacPh = 1.0;	//entspricht swdf1
+                if(self->plant[i].PotTrans > self->plant[i].ActTrans)
+                    {		
+                    self->plant[i].StressFacPh = MAX((self->plant[i].ActTrans/self->plant[i].PotTrans), 0.2);	//original: 0.02
+                    }
+
+                self->plant[i].SWDefFac = ((self->plant[i].SWDefFac*xpn->pTi->pSimTime->fTimeY+self->plant[i].StressFacPh)/ (xpn->pTi->pSimTime->fTimeY+1));
+                }
+            }
+        
+        // FH 20191205 moved the  change of fContAct to the end
+		// first layers
+		pLR = xpn->pPl->pRoot->pLayerRoot->pNext;
+		pSL = xpn->pSo->pSLayer->pNext;
+		//pSWL = xpn->pSo->pSWater->pNext;
+		pSLW = xpn->pWa->pWLayer->pNext;
+        for(L=1; L <= (xpn->pSo->iLayers-2); L++)
+		{
+            //FH 20191115 dt and fThickness to this equation to make the variables consistent with other XN functions
+			//printf("before TreeDistr %d %d  %f %f %f \n", L, self->conf.Species_Count,  pSLW->fContAct, pLR->fActLayWatUpt, self->plant[0].TreeDistr);
+            pSLW->fContAct -= (pLR->fActLayWatUpt*dt/pSL->fThickness);	// [%]
+            //printf("after     TreeDistr %d %d  %f %f %f \n", L, self->conf.Species_Count,  pSLW->fContAct, pLR->fActLayWatUpt, self->plant[0].TreeDistr);
+            
+			pLR = pLR->pNext;
+			pSL = pSL->pNext;
+			//pSWL = pSWL->pNext;
+			pSLW = pSLW->pNext;	
+		}
+        
+        
+        
 	}//SoilProcesses
 	
 	/***DAILY VARIABLES********************************************************************/	
